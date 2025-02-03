@@ -1,0 +1,90 @@
+{
+  "kind": "collectionType",
+  "collectionName": "accounts",
+  "info": {
+    "singularName": "account",
+    "pluralName": "accounts",
+    "displayName": "Account",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "username": {
+      "type": "string",
+      "required": true
+    },
+    "account_code": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "description": {
+      "type": "text"
+    },
+    "account_rank": {
+      "type": "string",
+      "required": true
+    },
+    "availability_status": {
+      "type": "enumeration",
+      "enum": [
+        "available",
+        "in_use",
+        "not_available"
+      ],
+      "required": true,
+      "default": "available"
+    },
+    "next_booking": {
+      "type": "datetime"
+    },
+    "next_booking_duration": {
+      "type": "integer"
+    },
+    "expire_at": {
+      "type": "datetime"
+    },
+    "total_rent_hour": {
+      "type": "integer",
+      "default": 0
+    },
+    "password": {
+      "type": "string",
+      "required": true
+    },
+    "password_updated_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "thumbnail": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": [
+        "images",
+        "files"
+      ]
+    },
+    "other_images": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files"
+      ]
+    },
+    "price_tier": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::price-tier.price-tier"
+    },
+    "skins": {
+      "type": "json",
+      "required": true
+    }
+  }
+}
