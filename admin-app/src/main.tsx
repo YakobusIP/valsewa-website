@@ -1,10 +1,18 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from "react";
 
-createRoot(document.getElementById('root')!).render(
+import { Toaster } from "@/components/ui/toaster.tsx";
+
+import { PriceTierProvider } from "@/contexts/PriceTierContext";
+import "@/index.css";
+import { router } from "@/routes/routes.tsx";
+import { createRoot } from "react-dom/client";
+import { RouterProvider } from "react-router";
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
-)
+    <PriceTierProvider>
+      <RouterProvider router={router} />
+      <Toaster />
+    </PriceTierProvider>
+  </StrictMode>
+);
