@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Status {
+  AVAILABLE
+  IN_USE
+  NOT_AVAILABLE
+}
+
+model Account {
+  id Int @id @default(autoincrement())
+  username String 
+  accountCode String @unique
+  description String?
+  accountRank String
+  status Status @default(AVAILABLE)
+  nextBooking DateTime?
+  nextBookingDuration Int?
+  expireAt DateTime?
+  totalRentHour Int @default(0)
+  password String
+  passwordUpdatedAt DateTime
+  skinList String[]
+  thumbnailUrl String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  priceTier PriceTier @relation(fields: [priceTierId], references: [id])
+  priceTierId Int
+
+  otherImages AccountImage[]
+}
+
+model PriceTier {
+  id Int @id @default(autoincrement())
+  code String
+  description String
+
+  accounts Account[]
+}
+
+model AccountImage {
+  id Int @id @default(autoincrement())
+  imageUrl String
+
+  account Account @relation(fields: [accountId], references: [id])
+  accountId Int
+}
+
