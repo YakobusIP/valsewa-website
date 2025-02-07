@@ -9,7 +9,7 @@ const createUploadService = () => {
     try {
       const formData = new FormData();
       images.forEach((image) => {
-        formData.append("files", image);
+        formData.append("images", image);
       });
 
       const response = await interceptedAxios.post<UploadResponse[]>(

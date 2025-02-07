@@ -13,7 +13,7 @@ import {
 
 import useWideScreen from "@/hooks/useWideScreen";
 
-import { PaginationMetadata } from "@/types/api.type";
+import { MetadataResponse } from "@/types/api.type";
 
 import {
   ColumnDef,
@@ -25,7 +25,7 @@ import {
 import { Loader2Icon } from "lucide-react";
 
 interface Identifiable {
-  documentId: string;
+  id: number;
 }
 
 interface DataTableProps<TData extends Identifiable, TValue> {
@@ -42,7 +42,7 @@ interface DataTableProps<TData extends Identifiable, TValue> {
   isLoadingDeleteData: boolean;
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
-  metadata?: PaginationMetadata;
+  metadata?: MetadataResponse;
 }
 
 export default function DataTable<TData extends Identifiable, TValue>({
@@ -62,14 +62,14 @@ export default function DataTable<TData extends Identifiable, TValue>({
   const table = useReactTable({
     data,
     columns,
-    getRowId: (row) => row.documentId,
+    getRowId: (row) => row.id.toString(),
     getCoreRowModel: getCoreRowModel(),
     onRowSelectionChange: setRowSelection,
     state: {
       rowSelection,
       pagination: {
         pageIndex: page - 1,
-        pageSize: metadata?.pageSize || 10
+        pageSize: metadata?.limit || 10
       }
     },
     manualPagination: true,

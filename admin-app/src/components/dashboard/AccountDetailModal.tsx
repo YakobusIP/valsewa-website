@@ -2,14 +2,11 @@ import {
   Dispatch,
   SetStateAction,
   useCallback,
-  useContext,
   useEffect,
-  useRef,
   useState
 } from "react";
 
 import { accountService } from "@/services/account.service";
-import { priceTierService } from "@/services/pricetier.service";
 import { uploadService } from "@/services/upload.service";
 
 import { Button } from "@/components/ui/button";
@@ -18,8 +15,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -53,16 +49,15 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 
-import { useToast } from "@/hooks/useToast";
+import { usePriceTier } from "@/hooks/usePriceTier";
+import { toast } from "@/hooks/useToast";
 
-import { AccountEntity, AccountEntityRequest } from "@/types/account.type";
-import { PriceTier } from "@/types/pricetier.type";
+import { AccountEntity } from "@/types/account.type";
 
 import { availabilityStatuses, ranks } from "@/lib/constants";
 import { AVAILABILITY_STATUS } from "@/lib/enums";
 import { cn, convertHoursToDays } from "@/lib/utils";
 
-import { PriceTierContext } from "@/contexts/PriceTierContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addHours, format } from "date-fns";
 import {
@@ -79,16 +74,16 @@ import { z } from "zod";
 
 const formSchema = z.object({
   username: z.string().nonempty("Username is required"),
-  account_code: z.string().nonempty("Code is required"),
+  accountCode: z.string().nonempty("Code is required"),
   description: z.string().optional(),
-  price_tier: z.number({ message: "Price tier is required" }),
-  account_rank: z.string().nonempty("Rank is required"),
-  availability_status: z.enum(["available", "in_use", "not_available"]),
-  next_booking: z.date().optional(),
-  expire_at: z.date().optional(),
-  next_booking_duration: z.string().optional(),
+  priceTier: z.number({ required_error: "Price tier is required" }),
+  accountRank: z.string().nonempty("Rank is required"),
+  availabilityStatus: z.enum(["AVAILABLE", "IN_USE", "NOT_AVAILABLE"]),
+  nextBooking: z.date().optional(),
+  nextBookingDuration: z.string().optional(),
+  expireAt: z.date().optional(),
   password: z.string().nonempty("Password is required"),
-  skins: z
+  skinList: z
     .array(z.object({ name: z.string().optional() }))
     .transform((listOfSkins) =>
       listOfSkins.filter((skin) => skin.name && skin.name.trim() !== "")
@@ -99,9 +94,16 @@ const formSchema = z.object({
     ),
   thumbnail: z.union([
     z.instanceof(File, { message: "Thumbnail is required" }),
-    z.string().nonempty("Thumbnail is required")
+    z.object({ id: z.number(), imageUrl: z.string().url() })
   ]),
-  other_images: z.array(z.union([z.instanceof(File), z.string()])).optional()
+  otherImages: z
+    .array(
+      z.union([
+        z.instanceof(File),
+        z.object({ id: z.number(), imageUrl: z.string().url() })
+      ])
+    )
+    .optional()
 });
 
 type Props = {
@@ -119,15 +121,7 @@ export default function AccountDetailModal({
   data,
   resetParent
 }: Props) {
-  const context = useContext(PriceTierContext);
-
-  if (!context) {
-    throw new Error("Price tier context is missing");
-  }
-
-  const { priceTierList } = context;
-
-  const toast = useToast();
+  const { priceTierList } = usePriceTier();
 
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
 
@@ -137,38 +131,35 @@ export default function AccountDetailModal({
       mode === "edit" && data
         ? {
             username: data.username,
-            account_code: data.account_code,
+            accountCode: data.accountCode,
             description: data.description,
-            price_tier: data.price_tier.id,
-            account_rank: data.account_rank,
-            availability_status:
-              data.availability_status as AVAILABILITY_STATUS,
-            next_booking: data.next_booking
-              ? new Date(data.next_booking)
+            priceTier: data.priceTier.id,
+            accountRank: data.accountRank,
+            availabilityStatus: data.availabilityStatus as AVAILABILITY_STATUS,
+            nextBooking: data.nextBooking
+              ? new Date(data.nextBooking)
               : undefined,
-            expire_at: data.expire_at ? new Date(data.expire_at) : undefined,
-            next_booking_duration: convertHoursToDays(
-              data.next_booking_duration
-            ),
+            nextBookingDuration: convertHoursToDays(data.nextBookingDuration),
+            expireAt: data.expireAt ? new Date(data.expireAt) : undefined,
             password: data.password,
-            skins: data.skins.names.map((skinName) => ({ name: skinName })),
-            thumbnail: data.thumbnail.url,
-            other_images: data.other_images?.map((img) => img.url)
+            skinList: data.skinList.map((skinName) => ({ name: skinName })),
+            thumbnail: data.thumbnail,
+            otherImages: data.otherImages ? data.otherImages : []
           }
         : {
             username: "",
-            account_code: "",
+            accountCode: "",
             description: "",
-            price_tier: undefined,
-            account_rank: "",
-            availability_status: "available",
-            next_booking: undefined,
-            expire_at: undefined,
-            next_booking_duration: "",
+            priceTier: undefined,
+            accountRank: "",
+            availabilityStatus: "AVAILABLE",
+            nextBooking: undefined,
+            nextBookingDuration: "",
+            expireAt: undefined,
             password: "",
-            skins: [{ name: "" }],
+            skinList: [{ name: "" }],
             thumbnail: undefined,
-            other_images: []
+            otherImages: []
           },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -180,21 +171,22 @@ export default function AccountDetailModal({
     remove: removeSkin
   } = useFieldArray({
     control: form.control,
-    name: "skins"
+    name: "skinList"
   });
 
   const handlePriceTierChange = (value: string) => {
-    form.setValue("price_tier", parseInt(value));
+    form.setValue("priceTier", parseInt(value));
+    form.trigger("priceTier");
   };
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      form.setValue("next_booking", date);
+      form.setValue("nextBooking", date);
     }
   };
 
   const handleTimeChange = (type: "hour" | "minute", value: string) => {
-    const currentDate = form.getValues("next_booking") || new Date();
+    const currentDate = form.getValues("nextBooking") || new Date();
     const newDate = new Date(currentDate);
 
     if (type === "hour") {
@@ -205,14 +197,14 @@ export default function AccountDetailModal({
       newDate.setMinutes(minute);
     }
 
-    form.setValue("next_booking", newDate);
+    form.setValue("nextBooking", newDate);
   };
 
   const parseDurationToHours = useCallback(
     (duration: string) => {
       const ms = parse(duration);
       if (ms === null) {
-        form.setError("next_booking_duration", {
+        form.setError("nextBookingDuration", {
           type: "validate",
           message: "Invalid date format"
         });
@@ -254,62 +246,122 @@ export default function AccountDetailModal({
     const password = form.watch("password");
     if (password) {
       await navigator.clipboard.writeText(password);
-      toast.toast({
+      toast({
         title: "All set!",
         description: "Copied to clipboard!"
       });
     }
   };
 
+  const handleAddAccount = async (
+    values: z.infer<typeof formSchema>,
+    thumbnail_id: number,
+    other_image_ids: number[]
+  ) => {
+    const data = {
+      ...values,
+      nextBookingDuration: parse(values.nextBookingDuration),
+      passwordUpdatedAt: new Date(),
+      thumbnail: thumbnail_id,
+      otherImages: other_image_ids,
+      skinList: values.skinList.map((skin) => skin.name || "")
+    };
+    try {
+      const response = await accountService.create(data);
+      onOpenChange(false);
+      await resetParent();
+
+      toast({
+        title: "All set!",
+        description: response.message
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occured";
+
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: errorMessage
+      });
+    } finally {
+      setIsLoadingSubmit(false);
+    }
+  };
+
+  const handleEditAccount = async (
+    id: number,
+    values: z.infer<typeof formSchema>,
+    thumbnail_id?: number,
+    other_image_ids?: number[]
+  ) => {
+    const data = {
+      ...values,
+      nextBookingDuration: parse(values.nextBookingDuration),
+      passwordUpdatedAt: new Date(),
+      thumbnail: thumbnail_id,
+      otherImages: other_image_ids,
+      skinList: values.skinList.map((skin) => skin.name || "")
+    };
+    try {
+      const response = await accountService.update(id, data);
+      onOpenChange(false);
+      await resetParent();
+
+      toast({
+        title: "All set!",
+        description: response.message
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occured";
+
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: errorMessage
+      });
+    } finally {
+      setIsLoadingSubmit(false);
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoadingSubmit(true);
-    let thumbnail_id = -1;
+
+    let thumbnail_id: number;
     if (values.thumbnail instanceof File) {
       thumbnail_id = (await uploadService.uploadImages([values.thumbnail]))[0]
         .id;
+    } else {
+      thumbnail_id = values.thumbnail.id;
     }
 
-    const other_images: File[] = [];
-    values.other_images?.forEach((image) => {
-      if (image instanceof File) {
-        other_images.push(image);
+    const otherImageIds: number[] = [];
+    const imagesToUpload: File[] = [];
+    const unchangedImageIds: number[] = [];
+
+    values.otherImages?.forEach((img) => {
+      if (img instanceof File) {
+        imagesToUpload.push(img);
+      } else if (typeof img === "object" && img.id) {
+        unchangedImageIds.push(img.id);
       }
     });
 
-    const other_image_ids = (
-      await uploadService.uploadImages(other_images)
-    ).map((response) => response.id);
+    if (imagesToUpload.length > 0) {
+      const uploadedIds = (
+        await uploadService.uploadImages(imagesToUpload)
+      ).map((response) => response.id);
+      otherImageIds.push(...unchangedImageIds, ...uploadedIds);
+    } else {
+      otherImageIds.push(...unchangedImageIds);
+    }
 
-    if (mode === "add") {
-      const data = {
-        ...values,
-        next_booking_duration: parse(values.next_booking_duration),
-        password_updated_at: new Date(),
-        thumbnail: thumbnail_id,
-        other_images: other_image_ids,
-        skins: { names: values.skins.map((skin) => skin.name || "") }
-      };
-      try {
-        const response = await accountService.create(data);
-        onOpenChange(false);
-        resetParent();
-
-        toast.toast({
-          title: "All set!",
-          description: "Account created successfully"
-        });
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "An unknown error occured";
-
-        toast.toast({
-          variant: "destructive",
-          title: "Uh oh! Something went wrong!",
-          description: errorMessage
-        });
-      } finally {
-        setIsLoadingSubmit(false);
-      }
+    if (mode === "edit" && data) {
+      await handleEditAccount(data.id, values, thumbnail_id, otherImageIds);
+    } else if (mode === "add") {
+      await handleAddAccount(values, thumbnail_id, otherImageIds);
     }
   };
 
@@ -319,15 +371,15 @@ export default function AccountDetailModal({
 
   const selectedStatusColor =
     availabilityStatuses.find(
-      (status) => status.value === form.watch("availability_status")
+      (status) => status.value === form.watch("availabilityStatus")
     )?.color || "bg-white";
   const hasPasswordError = !!form.formState.errors.password;
-  const hasSkinsError = !!form.formState.errors.skins;
+  const hasSkinsError = !!form.formState.errors.skinList;
   const hasThumbnail = !!form.getValues("thumbnail");
 
-  const durationValue = form.watch("next_booking_duration");
-  const nextBookingValue = form.watch("next_booking");
-  const expireAtValue = form.watch("expire_at");
+  const durationValue = form.watch("nextBookingDuration");
+  const nextBookingValue = form.watch("nextBooking");
+  const expireAtValue = form.watch("expireAt");
 
   useEffect(() => {
     if (durationValue) {
@@ -336,9 +388,15 @@ export default function AccountDetailModal({
       const nextBookingDate = new Date(nextBooking);
 
       const expireDate = addHours(nextBookingDate, hours);
-      form.setValue("expire_at", expireDate);
+      form.setValue("expireAt", expireDate);
     }
   }, [durationValue, nextBookingValue, form, parseDurationToHours]);
+
+  useEffect(() => {
+    if (!open) {
+      form.reset();
+    }
+  }, [open, form]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -367,7 +425,7 @@ export default function AccountDetailModal({
               />
               <FormField
                 control={form.control}
-                name="account_code"
+                name="accountCode"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Code</FormLabel>
@@ -398,7 +456,7 @@ export default function AccountDetailModal({
 
               <FormField
                 control={form.control}
-                name="price_tier"
+                name="priceTier"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Price Tier</FormLabel>
@@ -412,16 +470,22 @@ export default function AccountDetailModal({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {priceTierList.map((tier) => {
-                          return (
-                            <SelectItem
-                              key={tier.id}
-                              value={tier.id.toString()}
-                            >
-                              {tier.code}
-                            </SelectItem>
-                          );
-                        })}
+                        {priceTierList.length > 0 ? (
+                          priceTierList.map((tier) => {
+                            return (
+                              <SelectItem
+                                key={tier.id}
+                                value={tier.id.toString()}
+                              >
+                                {tier.code}
+                              </SelectItem>
+                            );
+                          })
+                        ) : (
+                          <SelectItem value="no_price_tier" disabled>
+                            No price tier available
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -430,7 +494,7 @@ export default function AccountDetailModal({
               />
               <FormField
                 control={form.control}
-                name="account_rank"
+                name="accountRank"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Rank</FormLabel>
@@ -461,7 +525,7 @@ export default function AccountDetailModal({
               <div className="flex flex-col xl:flex-row col-span-1 xl:col-span-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="availability_status"
+                  name="availabilityStatus"
                   render={({ field }) => (
                     <FormItem className="w-full xl:w-1/5">
                       <FormLabel>Status</FormLabel>
@@ -493,7 +557,7 @@ export default function AccountDetailModal({
                 />
                 <FormField
                   control={form.control}
-                  name="next_booking"
+                  name="nextBooking"
                   render={({ field }) => (
                     <FormItem className="flex flex-col w-full xl:w-2/5">
                       <FormLabel className="mt-[0.4rem] mb-[0.275rem]">
@@ -604,7 +668,7 @@ export default function AccountDetailModal({
                 />
                 <FormField
                   control={form.control}
-                  name="next_booking_duration"
+                  name="nextBookingDuration"
                   render={({ field }) => (
                     <FormItem className="w-full xl:w-2/5">
                       <FormLabel>Duration</FormLabel>
@@ -680,7 +744,7 @@ export default function AccountDetailModal({
                 <FormField
                   key={`skin-${field.id}`}
                   control={form.control}
-                  name={`skins.${index}.name`}
+                  name={`skinList.${index}.name`}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Skin {index + 1}</FormLabel>
@@ -722,9 +786,9 @@ export default function AccountDetailModal({
                 <CirclePlusIcon />
                 Add New Skin
               </Button>
-              {form.formState.errors.skins && (
+              {form.formState.errors.skinList && (
                 <p className="text-sm font-medium text-destructive col-span-2">
-                  {form.formState.errors.skins.root?.message}
+                  {form.formState.errors.skinList.root?.message}
                 </p>
               )}
 
@@ -764,9 +828,9 @@ export default function AccountDetailModal({
                             alt="Thumbnail Preview"
                             className="object-cover rounded-md border"
                           />
-                        ) : typeof field.value === "string" ? (
+                        ) : typeof field.value === "object" ? (
                           <img
-                            src={`${import.meta.env.VITE_AXIOS_BASE_URL}${field.value}`}
+                            src={field.value.imageUrl}
                             alt="Thumbnail Preview"
                             className="object-cover rounded-md border"
                           />
@@ -779,7 +843,7 @@ export default function AccountDetailModal({
 
               <FormField
                 control={form.control}
-                name="other_images"
+                name="otherImages"
                 render={({ field }) => (
                   <FormItem className="col-span-1 xl:col-span-2">
                     <FormLabel>Other Images</FormLabel>
@@ -794,7 +858,7 @@ export default function AccountDetailModal({
                             return;
                           }
                           const existingFiles =
-                            form.getValues("other_images") || [];
+                            form.getValues("otherImages") || [];
                           const appended = [
                             ...existingFiles,
                             ...Array.from(newFiles)
@@ -814,9 +878,9 @@ export default function AccountDetailModal({
                                 alt={`image-${idx}`}
                                 className="object-cover rounded-md border"
                               />
-                            ) : typeof file === "string" ? (
+                            ) : typeof file === "object" ? (
                               <img
-                                src={`${import.meta.env.VITE_AXIOS_BASE_URL}${file}`}
+                                src={file.imageUrl}
                                 alt={`image-${idx}`}
                                 className="object-cover rounded-md border"
                               />

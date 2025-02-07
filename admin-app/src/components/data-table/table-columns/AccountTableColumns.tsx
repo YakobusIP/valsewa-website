@@ -1,5 +1,7 @@
+import { accountService } from "@/services/account.service";
+
 import AccountTableAction from "@/components/data-table/AccountTableAction";
-import ProgressStatus from "@/components/data-table/ProgressStatus";
+import AvailabilityStatus from "@/components/data-table/AvailabilityStatus";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { AccountEntity } from "@/types/account.type";
@@ -37,7 +39,7 @@ export const accountColumns = (
       enableHiding: false
     },
     {
-      accessorKey: "account_code",
+      accessorKey: "accountCode",
       header: "Code",
       size: "auto" as unknown as number
     },
@@ -47,9 +49,9 @@ export const accountColumns = (
       size: "auto" as unknown as number
     },
     {
-      accessorKey: "account_rank",
-      accessorFn: ({ account_rank }) => {
-        const rank = ranks.find((rank) => rank.value === account_rank);
+      accessorKey: "accountRank",
+      accessorFn: ({ accountRank }) => {
+        const rank = ranks.find((rank) => rank.value === accountRank);
         return rank ? rank.label : "-";
       },
       header: "Rank",
@@ -57,21 +59,21 @@ export const accountColumns = (
     },
     {
       accessorKey: "progressStatus",
-      header: "Progress Status",
+      header: "Availability Status",
       cell: ({ row }) => {
         const account = row.original;
         return (
-          <ProgressStatus
+          <AvailabilityStatus
             id={account.id}
-            availabilityStatus={account.availability_status}
-            //   serviceFn={updateAnimeProgressStatusService}
+            availabilityStatus={account.availabilityStatus}
+            serviceFn={accountService.updateAvailability}
           />
         );
       },
       size: "auto" as unknown as number
     },
     {
-      accessorKey: "next_booking",
+      accessorKey: "nextBooking",
       header: "Next Booking",
       cell: ({ getValue }) => {
         const date = getValue<Date>();
@@ -83,7 +85,7 @@ export const accountColumns = (
       size: "auto" as unknown as number
     },
     {
-      accessorKey: "expire_at",
+      accessorKey: "expireAt",
       header: "Expire At",
       cell: ({ getValue }) => {
         const date = getValue<Date>();

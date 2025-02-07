@@ -29,17 +29,17 @@ export const ranks = [
 export const availabilityStatuses = [
   {
     label: "Available",
-    value: "available",
+    value: "AVAILABLE",
     color: "bg-green-300"
   },
   {
     label: "In Use",
-    value: "not_available",
+    value: "IN_USE",
     color: "bg-yellow-400"
   },
   {
     label: "Not available",
-    value: "in_use",
+    value: "NOT_AVAILABLE",
     color: "bg-destructive"
   }
 ];

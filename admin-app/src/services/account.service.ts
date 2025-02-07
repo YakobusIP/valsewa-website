@@ -1,38 +1,19 @@
 import { AccountEntity, AccountEntityRequest } from "@/types/account.type";
-import { ApiResponseList, PaginationMetadata } from "@/types/api.type";
+import { ApiResponseList, MessageResponse } from "@/types/api.type";
 
 import { handleAxiosError, interceptedAxios } from "@/lib/axios";
-
-import { stringify } from "qs";
+import { AVAILABILITY_STATUS } from "@/lib/enums";
 
 const BASE_ACCOUNT_URL = "/api/accounts";
 
 const createAccountService = () => {
-  const fetchAll = async () => {
-    const query = stringify(
-      {
-        populate: {
-          thumbnail: {
-            fields: ["id", "url"]
-          },
-          price_tier: {
-            fields: ["id", "code", "description"]
-          },
-          other_images: {
-            fields: ["id", "url"]
-          }
-        }
-      },
-      { encodeValuesOnly: true }
-    );
+  const fetchAll = async (page: number) => {
     try {
       const response = await interceptedAxios.get<
         ApiResponseList<AccountEntity>
-      >(`${BASE_ACCOUNT_URL}?${query}`);
-      return [response.data.data, response.data.meta.pagination] as [
-        AccountEntity[],
-        PaginationMetadata
-      ];
+      >(BASE_ACCOUNT_URL, { params: { page, limit: 100 } });
+
+      return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));
     }
@@ -40,30 +21,52 @@ const createAccountService = () => {
 
   const create = async (data: AccountEntityRequest) => {
     try {
-      await interceptedAxios.post(`${BASE_ACCOUNT_URL}`, { data });
+      const response = await interceptedAxios.post<MessageResponse>(
+        BASE_ACCOUNT_URL,
+        { ...data }
+      );
+
+      return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));
     }
   };
 
-  const update = async (data: AccountEntity) => {
+  const update = async (id: number, data: Partial<AccountEntityRequest>) => {
     try {
-      await interceptedAxios.put(`${BASE_ACCOUNT_URL}/${data.id}`, { data });
+      const response = await interceptedAxios.put<MessageResponse>(
+        `${BASE_ACCOUNT_URL}/${id}`,
+        { ...data }
+      );
+
+      return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));
     }
   };
 
-  const deleteMany = async (ids: string[]) => {
+  const updateAvailability = async (id: number, data: AVAILABILITY_STATUS) => {
     try {
-      const query = stringify({ ids });
-      await interceptedAxios.delete(`${BASE_ACCOUNT_URL}?${query}`);
+      const response = await interceptedAxios.put<MessageResponse>(
+        `${BASE_ACCOUNT_URL}/${id}`,
+        { availabilityStatus: data }
+      );
+
+      return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));
     }
   };
 
-  return { fetchAll, create, update, deleteMany };
+  const deleteMany = async (ids: number[]) => {
+    try {
+      await interceptedAxios.delete(BASE_ACCOUNT_URL, { data: { ids } });
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
+  return { fetchAll, create, update, updateAvailability, deleteMany };
 };
 
 const accountService = createAccountService();

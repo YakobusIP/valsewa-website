@@ -1,32 +1,28 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 
 import { accountService } from "@/services/account.service";
 
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
-import PriceTierDetailModal from "@/components/dashboard/PriceTierDetailModal";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
-import { accountColumns } from "@/components/data-table/AccountTableColumns";
 import DataTable from "@/components/data-table/DataTable";
+import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
+import PriceTierModal from "@/components/pricetier-management/PriceTierModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import { useToast } from "@/hooks/useToast";
+import { toast } from "@/hooks/useToast";
 
 import { AccountEntity } from "@/types/account.type";
-import { PaginationMetadata } from "@/types/api.type";
+import { MetadataResponse } from "@/types/api.type";
 
 import { CirclePlusIcon, SearchIcon } from "lucide-react";
 
 export default function Dashboard() {
-  const toast = useToast();
-  const toastRef = useRef(toast.toast);
-
-  const [openPriceTierDetail, setOpenPriceTierDetail] = useState(false);
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
 
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [accountList, setAccountList] = useState<AccountEntity[]>([]);
-  const [accountMetadata, setAccountMetadata] = useState<PaginationMetadata>();
+  const [accountMetadata, setAccountMetadata] = useState<MetadataResponse>();
   const [selectedAccountRows, setSelectedAccountRows] = useState({});
   const [accountListPage, setAccountListPage] = useState(1);
 
@@ -35,15 +31,14 @@ export default function Dashboard() {
   const fetchAllAccounts = useCallback(async () => {
     setIsLoadingAccount(true);
     try {
-      const [accountResponse, metadataResponse] =
-        await accountService.fetchAll();
-      setAccountList(accountResponse);
-      setAccountMetadata(metadataResponse);
+      const response = await accountService.fetchAll(1);
+      setAccountList(response.data);
+      setAccountMetadata(response.metadata);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occured";
 
-      toastRef.current({
+      toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong!",
         description: errorMessage
@@ -55,11 +50,13 @@ export default function Dashboard() {
 
   const deleteManyAccounts = async () => {
     setIsLoadingDeleteAccount(true);
-    const deletedIds = Object.keys(selectedAccountRows);
+    const deletedIds = Object.keys(selectedAccountRows).map((id) =>
+      parseInt(id)
+    );
     try {
       await accountService.deleteMany(deletedIds);
       fetchAllAccounts();
-      toastRef.current({
+      toast({
         title: "All set!",
         description: `${deletedIds.length} account(s) deleted successfully`
       });
@@ -67,7 +64,7 @@ export default function Dashboard() {
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occured";
 
-      toastRef.current({
+      toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong!",
         description: errorMessage
@@ -109,13 +106,7 @@ export default function Dashboard() {
           }
           rightSideComponent={
             <div className="flex flex-col xl:flex-row items-center justify-center gap-2 w-full xl:w-fit">
-              <Button
-                className="w-full xl:w-fit"
-                onClick={() => setOpenPriceTierDetail(true)}
-              >
-                <CirclePlusIcon />
-                Add New Price Tier
-              </Button>
+              <PriceTierModal />
               <Button
                 className="w-full xl:w-fit"
                 onClick={() => setOpenAccountDetail(true)}
@@ -127,11 +118,6 @@ export default function Dashboard() {
           }
         />
       </main>
-      <PriceTierDetailModal
-        open={openPriceTierDetail}
-        onOpenChange={setOpenPriceTierDetail}
-        mode="add"
-      />
       <AccountDetailModal
         open={openAccountDetail}
         onOpenChange={setOpenAccountDetail}
