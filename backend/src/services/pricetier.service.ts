@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { PriceTier, Prisma } from "@prisma/client";
 import {
   BadRequestError,
   InternalServerError,
@@ -6,13 +6,26 @@ import {
   PrismaUniqueError
 } from "../lib/error";
 import { prisma } from "../lib/prisma";
+import { Metadata } from "../types/metadata.type";
 
 export class PriceTierService {
-  getAllPriceTiers = async () => {
+  getAllPriceTiers = async (
+    page: number,
+    limit: number
+  ): Promise<[PriceTier[], Metadata]> => {
     try {
-      const priceTier = await prisma.priceTier.findMany();
+      const data = await prisma.priceTier.findMany();
+      const itemCount = await prisma.priceTier.count();
+      const pageCount = Math.ceil(itemCount / limit);
 
-      return priceTier;
+      const metadata = {
+        page,
+        limit,
+        pageCount,
+        total: itemCount
+      };
+
+      return [data, metadata];
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -42,7 +55,7 @@ export class PriceTierService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
       ) {
-        throw new PrismaUniqueError("Price tier already exists!");
+        throw new PrismaUniqueError("Price tier code is already in use!");
       }
 
       if (error instanceof Prisma.PrismaClientValidationError) {
@@ -62,6 +75,13 @@ export class PriceTierService {
         error.code === "P2025"
       ) {
         throw new NotFoundError("Price tier not found!");
+      }
+
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new PrismaUniqueError("Price tier code is already in use!");
       }
 
       if (error instanceof Prisma.PrismaClientValidationError) {

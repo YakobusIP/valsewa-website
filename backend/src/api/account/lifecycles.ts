@@ -12,9 +12,9 @@ export default {
           );
         }
 
-        if (entry.other_images && entry.other_images.length > 0) {
+        if (entry.otherImages && entry.otherImages.length > 0) {
           await Promise.all(
-            entry.other_images.map((file) =>
+            entry.otherImages.map((file) =>
               strapi.plugins["upload"].services.upload.remove(file)
             )
           );
