@@ -8,7 +8,9 @@ import {
   SelectValue
 } from "@/components/ui/select";
 
-import { useToast } from "@/hooks/useToast";
+import { toast } from "@/hooks/useToast";
+
+import { MessageResponse } from "@/types/api.type";
 
 import { availabilityStatuses } from "@/lib/constants";
 import { AVAILABILITY_STATUS } from "@/lib/enums";
@@ -23,17 +25,16 @@ type Props = {
   serviceFn?: (
     id: number,
     availabilityStatus: AVAILABILITY_STATUS
-  ) => Promise<void>;
+  ) => Promise<MessageResponse>;
 };
 
-export default function ProgressStatus({
+export default function AvailabilityStatus({
   id,
   availabilityStatus,
   setAvailabilityStatus,
   serviceFn
 }: Props) {
   const [selectedStatus, setSelectedStatus] = useState(availabilityStatus);
-  const toast = useToast();
 
   const selectedStatusColor =
     availabilityStatuses.find((option) => option.value === selectedStatus)
@@ -41,23 +42,26 @@ export default function ProgressStatus({
 
   const debouncedSubmit = useDebouncedCallback(async () => {
     if (serviceFn) {
-      const response = await serviceFn(
-        id,
-        selectedStatus as AVAILABILITY_STATUS
-      );
+      try {
+        const response = await serviceFn(
+          id,
+          selectedStatus as AVAILABILITY_STATUS
+        );
 
-      // if (response.success) {
-      //   toast.toast({
-      //     title: "All set!",
-      //     description: response.data.message
-      //   });
-      // } else {
-      //   toast.toast({
-      //     variant: "destructive",
-      //     title: "Uh oh! Something went wrong",
-      //     description: response.error
-      //   });
-      // }
+        toast({
+          title: "All set!",
+          description: response.message
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occured";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong!",
+          description: errorMessage
+        });
+      }
     }
   }, 1000);
 

@@ -1,7 +1,3 @@
-import { useState } from "react";
-
-import { authService } from "@/services/auth.service";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,54 +10,25 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 
-import { useToast } from "@/hooks/useToast";
+import { useAuth } from "@/hooks/useAuth";
 
-import { setAccessToken } from "@/lib/axios";
+import { loginFormSchema } from "@/types/zod.type";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2Icon } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router";
 import { z } from "zod";
 
-const formSchema = z.object({
-  identifier: z.string().nonempty("Username is required"),
-  password: z.string().nonempty("Password is required")
-});
-
 export default function Login() {
-  const [isLoadingLogin, setIsLoadingLogin] = useState(false);
-  const toast = useToast();
-  const navigate = useNavigate();
+  const { isLoadingLogin, login } = useAuth();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { identifier: "", password: "" }
+  const form = useForm<z.infer<typeof loginFormSchema>>({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: { username: "", password: "" }
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsLoadingLogin(true);
-    try {
-      const response = await authService.login(values);
-      setAccessToken(response.jwt);
-      navigate("/dashboard");
-
-      toast.toast({
-        title: "All set!",
-        description: "Login successful"
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occured";
-
-      toast.toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong!",
-        description: errorMessage
-      });
-    } finally {
-      setIsLoadingLogin(false);
-    }
+  const onSubmit = async (values: z.infer<typeof loginFormSchema>) => {
+    await login(values);
   };
 
   return (
@@ -77,7 +44,7 @@ export default function Login() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="identifier"
+                name="username"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Username</FormLabel>

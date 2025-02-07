@@ -1,7 +1,4 @@
 // import GeneralFooter from "@/components/GeneralFooter";
-import { Button } from "@/components/ui/button";
-
-import { Link } from "react-router";
 
 export default function NotFoundPage() {
   return (
@@ -17,11 +14,6 @@ export default function NotFoundPage() {
           <p className="mt-2 text-sm text-gray-600">
             Oops! The page you're looking for doesn't exist or has been moved.
           </p>
-        </div>
-        <div className="mt-8 space-y-6">
-          <Link to="/">
-            <Button className="w-full">Go back to homepage</Button>
-          </Link>
         </div>
       </div>
       <div className="absolute bottom-0 w-full">{/* <GeneralFooter /> */}</div>

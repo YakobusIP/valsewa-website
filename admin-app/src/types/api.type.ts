@@ -1,21 +1,26 @@
 type ApiResponseList<T> = {
   data: T[];
-  meta: { pagination: PaginationMetadata };
+  metadata: MetadataResponse;
 };
 
 type ApiResponseError = {
-  error: {
-    status: number;
-    name: string;
-    message: string;
-  };
+  error: string;
 };
 
-type PaginationMetadata = {
+type MessageResponse = {
+  message: string;
+};
+
+type MetadataResponse = {
   page: number;
-  pageSize: number;
+  limit: number;
   pageCount: number;
   total: number;
 };
 
-export type { ApiResponseList, ApiResponseError, PaginationMetadata };
+export type {
+  ApiResponseList,
+  ApiResponseError,
+  MessageResponse,
+  MetadataResponse
+};

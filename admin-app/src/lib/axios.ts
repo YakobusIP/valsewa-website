@@ -1,34 +1,54 @@
 import { ApiResponseError } from "@/types/api.type";
 
 import axios, { AxiosError, AxiosInstance } from "axios";
+import type { AxiosRequestConfig } from "axios";
 
-const LOCALSTORAGE_ACCESS_KEY = "accessToken";
+let accessToken: string | null = null;
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value: string) => void;
+  reject: (error: unknown) => void;
+}> = [];
+
+interface CustomAxiosRequestConfig extends AxiosRequestConfig {
+  _retry: boolean;
+}
 
 const interceptedAxios: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_AXIOS_BASE_URL
+  baseURL: import.meta.env.VITE_AXIOS_BASE_URL,
+  withCredentials: true
 });
 
 export const setAccessToken = (token: string | null) => {
   if (token) {
-    localStorage.setItem(LOCALSTORAGE_ACCESS_KEY, token);
+    accessToken = token;
     interceptedAxios.defaults.headers.common["Authorization"] =
       `Bearer ${token}`;
   } else {
-    localStorage.removeItem(LOCALSTORAGE_ACCESS_KEY);
     delete interceptedAxios.defaults.headers.common["Authorization"];
   }
 };
 
-const tokenFromStorage = localStorage.getItem(LOCALSTORAGE_ACCESS_KEY);
-if (tokenFromStorage) {
-  setAccessToken(tokenFromStorage);
-}
+/**
+ * Processes the queue of failed requests after token refresh.
+ * @param error Any error that occurred during the refresh.
+ * @param token The new access token.
+ */
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error);
+    } else if (token) {
+      promise.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
 
 interceptedAxios.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem(LOCALSTORAGE_ACCESS_KEY);
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+    if (accessToken) {
+      config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
     return config;
   },
@@ -36,8 +56,70 @@ interceptedAxios.interceptors.request.use(
 );
 
 interceptedAxios.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError) => {
+  (response) => {
+    return response;
+  },
+  async (error: AxiosError) => {
+    const originalRequest = error.config as CustomAxiosRequestConfig;
+
+    if (error.response?.status === 403) {
+      return Promise.reject(error);
+    }
+
+    if (
+      error.response?.status === 401 &&
+      !originalRequest.url?.includes("auth/login") &&
+      !originalRequest._retry
+    ) {
+      originalRequest._retry = true;
+
+      if (error.response.status === 401) {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((token) => {
+              if (originalRequest.headers) {
+                originalRequest.headers["Authorization"] = `Bearer ${token}`;
+              }
+              return interceptedAxios(originalRequest);
+            })
+            .catch((err) => {
+              Promise.reject(err);
+            });
+        }
+      }
+
+      isRefreshing = true;
+
+      return new Promise((resolve, reject) => {
+        axios
+          .get(
+            `${import.meta.env.VITE_AXIOS_BASE_URL}/api/auth/refresh-token`,
+            {
+              withCredentials: true
+            }
+          )
+          .then((response) => {
+            const newAccessToken = response.data.accessToken;
+            setAccessToken(newAccessToken);
+            processQueue(null, newAccessToken);
+            if (originalRequest.headers) {
+              originalRequest.headers["Authorization"] =
+                `Bearer ${newAccessToken}`;
+            }
+            resolve(interceptedAxios(originalRequest));
+          })
+          .catch((refreshError) => {
+            processQueue(refreshError, null);
+            reject(refreshError);
+          })
+          .finally(() => {
+            isRefreshing = false;
+          });
+      });
+    }
+
     return Promise.reject(error);
   }
 );
@@ -46,7 +128,7 @@ const handleAxiosError = (error: unknown) => {
   console.error(error);
   if (error instanceof AxiosError && error.response?.data) {
     const responseData = error.response.data as ApiResponseError;
-    return responseData.error.message;
+    return responseData.error;
   }
   return "There was a problem with your request.";
 };

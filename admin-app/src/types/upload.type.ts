@@ -1,6 +1,6 @@
 type UploadResponse = {
   id: number;
-  url: string;
+  imageUrl: string;
 };
 
 export type { UploadResponse };

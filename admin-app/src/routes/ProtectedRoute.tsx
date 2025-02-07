@@ -1,23 +1,13 @@
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode } from "react";
 
-import { useNavigate } from "react-router";
+import { useAuth } from "@/hooks/useAuth";
 
 type Props = {
   children: ReactNode;
 };
 
 export default function ProtectedRoute({ children }: Props) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      setIsAuthenticated(true);
-    } else {
-      navigate("/unauthorized");
-    }
-  }, [navigate]);
+  const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
     return null;
