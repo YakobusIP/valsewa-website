@@ -1,14 +1,25 @@
 import { Request, Response, NextFunction } from "express";
 import { AccountService } from "../services/account.service";
+import { UnprocessableEntityError } from "../lib/error";
 
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
   getAllAccounts = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const accounts = await this.accountService.getAllAccounts();
+      const page = req.query.page as string;
+      const limit = req.query.limit as string;
 
-      return res.json({ data: accounts });
+      if (!page || !limit) {
+        throw new UnprocessableEntityError("Pagination query params missing!");
+      }
+
+      const [data, metadata] = await this.accountService.getAllAccounts(
+        parseInt(page),
+        parseInt(limit)
+      );
+
+      return res.json({ data, metadata });
     } catch (error) {
       return next(error);
     }
@@ -28,7 +39,7 @@ export class AccountController {
 
   createAccount = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await this.accountService.createAccount(req.body.data);
+      await this.accountService.createAccount(req.body);
 
       return res.status(201).json({ message: "Account created successfully!" });
     } catch (error) {

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { PriceTierService } from "../services/pricetier.service";
 import { PriceTierController } from "../controllers/pricetier.controller";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 class PriceTierRouter {
   public router: Router;
@@ -15,11 +16,31 @@ class PriceTierRouter {
   }
 
   private initializeRoutes() {
-    this.router.get("/", this.priceTierController.getAllPriceTiers);
-    this.router.get("/:id", this.priceTierController.getPriceTierById);
-    this.router.post("/", this.priceTierController.createPriceTier);
-    this.router.put("/:id", this.priceTierController.updatePriceTier);
-    this.router.delete("/", this.priceTierController.deleteManyPriceTiers);
+    this.router.get(
+      "/",
+      authMiddleware,
+      this.priceTierController.getAllPriceTiers
+    );
+    this.router.get(
+      "/:id",
+      authMiddleware,
+      this.priceTierController.getPriceTierById
+    );
+    this.router.post(
+      "/",
+      authMiddleware,
+      this.priceTierController.createPriceTier
+    );
+    this.router.put(
+      "/:id",
+      authMiddleware,
+      this.priceTierController.updatePriceTier
+    );
+    this.router.delete(
+      "/",
+      authMiddleware,
+      this.priceTierController.deleteManyPriceTiers
+    );
   }
 }
 

@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { z } from "zod";
 
-dotenv.config()
+dotenv.config();
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]),
@@ -9,7 +9,20 @@ const envSchema = z.object({
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) throw new Error("Server port must be a number");
     return parsed;
-  })
+  }),
+  ACCESS_TOKEN_SECRET: z.string(),
+  REFRESH_TOKEN_SECRET: z.string(),
+  ACCESS_TOKEN_DURATION: z.string(),
+  REFRESH_TOKEN_DURATION: z.string(),
+
+  GCS_BUCKET_NAME: z.string(),
+
+  GCP_PROJECT_ID: z.string().optional(),
+  GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
+
+  ADMIN_APP_URL: z.string().url(),
+  CANONICAL_PUBLIC_APP_URL: z.string().url(),
+  PUBLIC_APP_URL: z.string().url()
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

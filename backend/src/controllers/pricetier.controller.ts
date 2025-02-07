@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { PriceTierService } from "../services/pricetier.service";
+import { UnprocessableEntityError } from "../lib/error";
 
 export class PriceTierController {
   constructor(private readonly priceTierService: PriceTierService) {}
@@ -10,9 +11,19 @@ export class PriceTierController {
     next: NextFunction
   ) => {
     try {
-      const priceTiers = await this.priceTierService.getAllPriceTiers();
+      const page = req.query.page as string;
+      const limit = req.query.limit as string;
 
-      return res.json({ data: priceTiers });
+      if (!page || !limit) {
+        throw new UnprocessableEntityError("Pagination query params missing!");
+      }
+
+      const [data, metadata] = await this.priceTierService.getAllPriceTiers(
+        parseInt(page),
+        parseInt(limit)
+      );
+
+      return res.json({ data, metadata });
     } catch (error) {
       return next(error);
     }
@@ -36,7 +47,7 @@ export class PriceTierController {
 
   createPriceTier = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await this.priceTierService.createPriceTier(req.body.data);
+      await this.priceTierService.createPriceTier(req.body);
 
       return res
         .status(201)

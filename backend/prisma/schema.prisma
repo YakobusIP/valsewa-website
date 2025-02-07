@@ -1,16 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
@@ -21,42 +15,57 @@ enum Status {
 }
 
 model Account {
-  id Int @id @default(autoincrement())
-  username String 
-  accountCode String @unique
-  description String?
-  accountRank String
-  status Status @default(AVAILABLE)
-  nextBooking DateTime?
+  id                  Int       @id @default(autoincrement())
+  username            String
+  accountCode         String    @unique
+  description         String?
+  accountRank         String
+  availabilityStatus  Status    @default(AVAILABLE)
+  nextBooking         DateTime?
   nextBookingDuration Int?
-  expireAt DateTime?
-  totalRentHour Int @default(0)
-  password String
-  passwordUpdatedAt DateTime
-  skinList String[]
-  thumbnailUrl String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  expireAt            DateTime?
+  totalRentHour       Int       @default(0)
+  password            String
+  passwordUpdatedAt   DateTime
+  skinList            String[]
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  priceTier PriceTier @relation(fields: [priceTierId], references: [id])
+  priceTier   PriceTier @relation(fields: [priceTierId], references: [id])
   priceTierId Int
 
-  otherImages AccountImage[]
+  thumbnail   ImageUpload? @relation("Thumbnail", fields: [thumbnailId], references: [id])
+  thumbnailId Int?         @unique
+
+  otherImages ImageUpload[] @relation("OtherImages")
 }
 
 model PriceTier {
-  id Int @id @default(autoincrement())
-  code String
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
   description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   accounts Account[]
 }
 
-model AccountImage {
-  id Int @id @default(autoincrement())
-  imageUrl String
+model ImageUpload {
+  id        Int      @id @default(autoincrement())
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  account Account @relation(fields: [accountId], references: [id])
-  accountId Int
+  thumbnailOf Account? @relation("Thumbnail")
+
+  account   Account? @relation("OtherImages", fields: [accountId], references: [id])
+  accountId Int?
 }
 
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
