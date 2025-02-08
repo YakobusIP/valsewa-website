@@ -48,7 +48,7 @@ export default async function Home() {
   const accountList = response.data.data;
   
   return (
-    <section className=" pb-64 bg-slate-200">
+    <section className=" bg-slate-200 pb-64">
       <div className="w-full ">
         <figure className="relative w-full h-[500px]">
           <Image

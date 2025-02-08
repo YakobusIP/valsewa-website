@@ -96,7 +96,7 @@ const CardModal: React.FC<CardModalProps> = ({
                 selectedCard.availabilityStatus == status.value ? (
                   <span
                     key={index}
-                    className={`text-xs me-2 py-0.5 rounded-full min-w-[100px] text-center font-semibold ${
+                    className={`text-xs py-1 rounded-full min-w-[100px] text-center font-semibold ${
                       status.value === "AVAILABLE"
                         ? "bg-green-300"
                         : status.value === "IN_USE"

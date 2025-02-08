@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ranks, availabilityStatuses } from "@/lib/constants";
 import CardModal from "./CardModal";
+
 // Define types for props and data items
 interface CardItem {
   id: number;
@@ -93,12 +94,12 @@ const Card: React.FC<CardProps> = ({ data }) => {
             key={item.id}
             onClick={() => setSelectedCard(item)}
           >
-            <div className="h-full w-full bg-white">
-              <figure className="relative mb-2 h-[200px] w-full max-ipad-mini:mt-1">
+            <div className="h-full w-full bg-white rounded-xl">
+              <figure className="relative mb-2 h-[200px] w-full">
                 <Image
                   src={item.thumbnail.imageUrl}
                   alt="service logo"
-                  className="object-cover object-center"
+                  className="object-cover object-center rounded-t-xl"
                   fill
                 />
               </figure>
