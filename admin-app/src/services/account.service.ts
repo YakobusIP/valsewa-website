@@ -1,4 +1,8 @@
-import { AccountEntity, AccountEntityRequest } from "@/types/account.type";
+import {
+  AccountEntity,
+  AccountEntityRequest,
+  RankResponse
+} from "@/types/account.type";
 import { ApiResponseList, MessageResponse } from "@/types/api.type";
 
 import { handleAxiosError, interceptedAxios } from "@/lib/axios";
@@ -7,11 +11,23 @@ import { AVAILABILITY_STATUS } from "@/lib/enums";
 const BASE_ACCOUNT_URL = "/api/accounts";
 
 const createAccountService = () => {
-  const fetchAll = async (page: number) => {
+  const fetchAll = async (page: number, query: string) => {
     try {
       const response = await interceptedAxios.get<
         ApiResponseList<AccountEntity>
-      >(BASE_ACCOUNT_URL, { params: { page, limit: 100 } });
+      >(BASE_ACCOUNT_URL, { params: { page, limit: 100, q: query } });
+
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
+  const fetchRank = async (name: string, tag: string) => {
+    try {
+      const response = await interceptedAxios.get<RankResponse>(
+        `${BASE_ACCOUNT_URL}/rank/${name}/${tag}`
+      );
 
       return response.data;
     } catch (error) {
@@ -66,7 +82,14 @@ const createAccountService = () => {
     }
   };
 
-  return { fetchAll, create, update, updateAvailability, deleteMany };
+  return {
+    fetchAll,
+    fetchRank,
+    create,
+    update,
+    updateAvailability,
+    deleteMany
+  };
 };
 
 const accountService = createAccountService();

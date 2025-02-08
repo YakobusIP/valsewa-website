@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { priceTierService } from "@/services/pricetier.service";
 
@@ -20,6 +20,7 @@ import { usePriceTier } from "@/hooks/usePriceTier";
 import { toast } from "@/hooks/useToast";
 
 import { CircleDollarSignIcon, SearchIcon } from "lucide-react";
+import { useDebounce } from "use-debounce";
 
 export default function PriceTierModal() {
   const {
@@ -28,12 +29,16 @@ export default function PriceTierModal() {
     isLoadingPriceTier,
     priceTierListPage,
     setPriceTierListPage,
+    setPriceTierSearch,
     refetchPriceTier
   } = usePriceTier();
 
   const [isLoadingDeletePriceTier, setIsLoadingDeletePriceTier] =
     useState(false);
   const [selectedPriceTierRows, setSelectedPriceTierRows] = useState({});
+
+  const [localSearch, setLocalSearch] = useState("");
+  const [debouncedSearch] = useDebounce(localSearch, 1000);
 
   const deleteManyPriceTiers = async () => {
     setIsLoadingDeletePriceTier(true);
@@ -61,6 +66,10 @@ export default function PriceTierModal() {
       setIsLoadingDeletePriceTier(false);
     }
   };
+
+  useEffect(() => {
+    setPriceTierSearch(debouncedSearch);
+  }, [debouncedSearch, setPriceTierSearch]);
 
   return (
     <Dialog>
@@ -92,7 +101,8 @@ export default function PriceTierModal() {
                 <SearchIcon size={18} className="text-muted-foreground" />
               }
               placeholder="Search price tier..."
-              parentClassName="w-full"
+              parentClassName="w-full xl:w-64"
+              onChange={(e) => setLocalSearch(e.target.value)}
             />
           }
           rightSideComponent={<PriceTierDetailModal mode="add" />}

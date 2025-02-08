@@ -15,6 +15,7 @@ type AccountEntity = {
   password: string;
   passwordUpdatedAt: Date;
   skinList: string[];
+  stale_password: boolean;
   thumbnail: UploadResponse;
   otherImages: UploadResponse[] | null;
   priceTier: PriceTier;
@@ -22,11 +23,22 @@ type AccountEntity = {
 
 type AccountEntityRequest = Omit<
   AccountEntity,
-  "id" | "priceTier" | "thumbnail" | "otherImages" | "totalRentHour"
+  | "id"
+  | "priceTier"
+  | "thumbnail"
+  | "otherImages"
+  | "totalRentHour"
+  | "stale_password"
 > & {
   priceTier: number;
   thumbnail: number;
   otherImages: number[];
 };
 
-export type { AccountEntity, AccountEntityRequest };
+type RankResponse = {
+  name: string;
+  tag: string;
+  currentRank: string;
+};
+
+export type { AccountEntity, AccountEntityRequest, RankResponse };

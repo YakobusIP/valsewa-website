@@ -81,7 +81,9 @@ export default function AvailabilityStatus({
       value={selectedStatus}
       onValueChange={handleStatusChange}
     >
-      <SelectTrigger className={cn("w-[180px]", selectedStatusColor)}>
+      <SelectTrigger
+        className={cn("w-[150px] xl:w-[180px]", selectedStatusColor)}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

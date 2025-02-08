@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 
 import { accountService } from "@/services/account.service";
+import { statisticService } from "@/services/statistic.service";
 
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
@@ -14,11 +15,16 @@ import { toast } from "@/hooks/useToast";
 
 import { AccountEntity } from "@/types/account.type";
 import { MetadataResponse } from "@/types/api.type";
+import { StatisticResponse } from "@/types/statistic.type";
 
 import { CirclePlusIcon, SearchIcon } from "lucide-react";
+import { useDebounce } from "use-debounce";
 
 export default function Dashboard() {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
+
+  const [isLoadingStatistics, setIsLoadingStatistics] = useState(false);
+  const [statistics, setStatistics] = useState<StatisticResponse>();
 
   const [isLoadingAccount, setIsLoadingAccount] = useState(false);
   const [accountList, setAccountList] = useState<AccountEntity[]>([]);
@@ -28,10 +34,35 @@ export default function Dashboard() {
 
   const [isLoadingDeleteAccount, setIsLoadingDeleteAccount] = useState(false);
 
+  const [searchAccount, setSearchAccount] = useState("");
+  const [debouncedSearch] = useDebounce(searchAccount, 1000);
+
+  const fetchStatistics = async () => {
+    setIsLoadingStatistics(true);
+    try {
+      const data = await statisticService.fetchAll();
+      setStatistics(data);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occured";
+
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: errorMessage
+      });
+    } finally {
+      setIsLoadingStatistics(false);
+    }
+  };
+
   const fetchAllAccounts = useCallback(async () => {
     setIsLoadingAccount(true);
     try {
-      const response = await accountService.fetchAll(1);
+      const response = await accountService.fetchAll(
+        accountListPage,
+        debouncedSearch
+      );
       setAccountList(response.data);
       setAccountMetadata(response.metadata);
     } catch (error) {
@@ -46,7 +77,7 @@ export default function Dashboard() {
     } finally {
       setIsLoadingAccount(false);
     }
-  }, []);
+  }, [accountListPage, debouncedSearch]);
 
   const deleteManyAccounts = async () => {
     setIsLoadingDeleteAccount(true);
@@ -76,6 +107,7 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    fetchStatistics();
     fetchAllAccounts();
   }, [fetchAllAccounts]);
 
@@ -83,7 +115,7 @@ export default function Dashboard() {
     <Fragment>
       <main className="container flex flex-col mx-auto min-h-[100dvh] p-4 xl:p-8 gap-4">
         <h1>Dashboard</h1>
-        <StatisticsGrid />
+        {statistics && <StatisticsGrid statistics={statistics} />}
         <DataTable
           columns={accountColumns(fetchAllAccounts)}
           data={accountList}
@@ -101,11 +133,12 @@ export default function Dashboard() {
                 <SearchIcon size={18} className="text-muted-foreground" />
               }
               placeholder="Search account..."
-              parentClassName="w-full xl:w-2/5"
+              parentClassName="w-full xl:w-[32rem]"
+              onChange={(e) => setSearchAccount(e.target.value)}
             />
           }
           rightSideComponent={
-            <div className="flex flex-col xl:flex-row items-center justify-center gap-2 w-full xl:w-fit">
+            <Fragment>
               <PriceTierModal />
               <Button
                 className="w-full xl:w-fit"
@@ -114,7 +147,7 @@ export default function Dashboard() {
                 <CirclePlusIcon />
                 Add New Account
               </Button>
-            </div>
+            </Fragment>
           }
         />
       </main>

@@ -11,11 +11,15 @@ import { Metadata } from "../types/metadata.type";
 export class PriceTierService {
   getAllPriceTiers = async (
     page: number,
-    limit: number
+    limit: number,
+    query?: string
   ): Promise<[PriceTier[], Metadata]> => {
     try {
-      const data = await prisma.priceTier.findMany();
-      const itemCount = await prisma.priceTier.count();
+      const whereCriteria: Prisma.PriceTierWhereInput = {
+        code: { contains: query, mode: "insensitive" }
+      };
+      const data = await prisma.priceTier.findMany({ where: whereCriteria });
+      const itemCount = await prisma.priceTier.count({ where: whereCriteria });
       const pageCount = Math.ceil(itemCount / limit);
 
       const metadata = {

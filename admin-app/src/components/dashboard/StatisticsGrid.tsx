@@ -1,25 +1,31 @@
-export default function StatisticsGrid() {
-  const statistics = [
+import { StatisticResponse } from "@/types/statistic.type";
+
+type Props = {
+  statistics: StatisticResponse;
+};
+
+export default function StatisticsGrid({ statistics }: Props) {
+  const data = [
     {
       title: "Currently Rented Ratio",
-      value: "31.32%"
+      value: `${statistics.rentedRatio.toFixed(2)}%`
     },
     {
       title: "Available Accounts",
-      value: "57"
+      value: statistics.availableAccounts
     },
     {
       title: "Rented Accounts",
-      value: "26"
+      value: statistics.inUseAccounts
     },
     {
       title: "Total Accounts",
-      value: "83"
+      value: statistics.totalAccounts
     }
   ];
   return (
     <div className="grid grid-cols-2 xl:grid-cols-4 grid-rows-2 xl:grid-rows-1 gap-2">
-      {statistics.map((stats) => (
+      {data.map((stats) => (
         <div className="flex flex-col border rounded-md p-4" key={stats.title}>
           <p className="font-bold text-sm xl:text-base">{stats.title}</p>
           <p className="font-bold text-2xl xl:text-4xl">{stats.value}</p>

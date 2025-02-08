@@ -30,7 +30,7 @@ export default function DataDeleteButton({
       <AlertDialogTrigger asChild>
         <Button
           variant="destructive"
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 w-full xl:w-fit"
           disabled={Object.keys(rowSelection).length === 0}
         >
           <Trash2Icon className="w-4 h-4" />

@@ -39,7 +39,11 @@ export const priceTierColumns: ColumnDef<PriceTier>[] = [
     header: "Description",
     cell: ({ row }) => {
       const data = row.original;
-      return <span className="whitespace-pre-wrap">{data.description}</span>;
+      return (
+        <span className="whitespace-pre-wrap line-clamp-5">
+          {data.description}
+        </span>
+      );
     },
     size: "auto" as unknown as number
   },

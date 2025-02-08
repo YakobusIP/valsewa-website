@@ -10,6 +10,7 @@ import AuthRouter from "./routes/auth.route";
 import AccountRouter from "./routes/account.route";
 import PriceTierRouter from "./routes/pricetier.route";
 import UploadRouter from "./routes/upload.route";
+import StatisticRouter from "./routes/statistic.route";
 
 const app: Express = express();
 
@@ -35,6 +36,7 @@ app.use("/api/auth", AuthRouter);
 
 app.use("/api/accounts", AccountRouter);
 app.use("/api/price-tiers", PriceTierRouter);
+app.use("/api/statistics", StatisticRouter);
 app.use("/api/upload", UploadRouter);
 
 app.use(errorMiddleware);

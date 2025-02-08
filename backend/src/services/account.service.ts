@@ -9,19 +9,35 @@ import { prisma } from "../lib/prisma";
 import { Metadata } from "../types/metadata.type";
 import { AccountEntityRequest } from "../types/account.type";
 import { UploadService } from "./upload.service";
+import { addHours } from "date-fns";
+import Fuse, { IFuseOptions } from "fuse.js";
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
 
   getAllAccounts = async (
     page: number,
-    limit: number
+    limit: number,
+    query: string
   ): Promise<[Account[], Metadata]> => {
     try {
       const data = await prisma.account.findMany({
         include: { priceTier: true, thumbnail: true, otherImages: true }
       });
-      const itemCount = await prisma.priceTier.count();
+
+      let filteredData: Account[] = data;
+      if (query && query.trim().length > 0) {
+        const fuseOptions: IFuseOptions<Account> = {
+          keys: ["accountRank", "skinList"],
+          threshold: 0.3
+        };
+
+        const fuse = new Fuse(data, fuseOptions);
+        const fuseResults = fuse.search(query);
+        filteredData = fuseResults.map((result) => result.item);
+      }
+
+      const itemCount = filteredData.length;
       const pageCount = Math.ceil(itemCount / limit);
 
       const metadata = {
@@ -31,7 +47,26 @@ export class AccountService {
         total: itemCount
       };
 
-      return [data, metadata];
+      const paginatedData = filteredData.slice(
+        (page - 1) * limit,
+        page * limit
+      );
+
+      const mappedData = paginatedData.map((item) => {
+        let stale_password = false;
+        if (item.nextBooking && item.nextBookingDuration) {
+          if (
+            addHours(item.nextBooking, item.nextBookingDuration) <
+            item.passwordUpdatedAt
+          ) {
+            stale_password = true;
+          }
+        }
+
+        return { ...item, stale_password };
+      });
+
+      return [mappedData, metadata];
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -89,19 +124,48 @@ export class AccountService {
 
       if (!currentAccount) throw new NotFoundError("Account not found!");
 
-      if (
-        currentAccount.thumbnail &&
-        data.thumbnail &&
-        currentAccount.thumbnail.id !== data.thumbnail
-      ) {
-        await this.uploadService.deleteImage(currentAccount.thumbnail.id);
+      const {
+        thumbnail,
+        otherImages,
+        priceTier,
+        nextBooking,
+        nextBookingDuration,
+        expireAt,
+        forceUpdateExpiry,
+        ...scalars
+      } = data;
+
+      const updateData: Prisma.AccountUpdateInput = { ...scalars };
+
+      if (nextBooking !== undefined && nextBookingDuration !== undefined) {
+        if (forceUpdateExpiry) {
+          updateData.expireAt = expireAt;
+        } else {
+          if (!currentAccount.expireAt) {
+            updateData.expireAt = undefined;
+          }
+        }
+
+        updateData.nextBooking = nextBooking;
+        updateData.nextBookingDuration = nextBookingDuration;
       }
 
-      if (currentAccount.otherImages && currentAccount.otherImages.length > 0) {
+      if (thumbnail !== undefined) {
+        if (
+          currentAccount.thumbnail &&
+          currentAccount.thumbnail.id !== thumbnail
+        ) {
+          await this.uploadService.deleteImage(currentAccount.thumbnail.id);
+        }
+
+        updateData.thumbnail = { connect: { id: thumbnail } };
+      }
+
+      if (otherImages !== undefined) {
         const oldOtherImageIds = currentAccount.otherImages.map(
           (img) => img.id
         );
-        const newOtherImageIds = data.otherImages ?? [];
+        const newOtherImageIds = otherImages || [];
 
         const imagesToDelete = oldOtherImageIds.filter(
           (id) => !newOtherImageIds.includes(id)
@@ -112,19 +176,19 @@ export class AccountService {
         );
 
         await Promise.all(deletePromises);
+
+        updateData.otherImages = {
+          set: newOtherImageIds.map((id) => ({ id }))
+        };
+      }
+
+      if (priceTier !== undefined) {
+        updateData.priceTier = { connect: { id: priceTier } };
       }
 
       return await prisma.account.update({
         where: { id },
-        data: {
-          ...data,
-          thumbnail: { connect: { id: data.thumbnail } },
-          availabilityStatus: data.availabilityStatus as Status,
-          otherImages: {
-            set: data.otherImages ? data.otherImages.map((id) => ({ id })) : []
-          },
-          priceTier: { connect: { id: data.priceTier } }
-        }
+        data: updateData
       });
     } catch (error) {
       if (error instanceof NotFoundError) {
