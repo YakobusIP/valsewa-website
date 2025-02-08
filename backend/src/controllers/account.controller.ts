@@ -1,14 +1,19 @@
 import { Request, Response, NextFunction } from "express";
 import { AccountService } from "../services/account.service";
 import { UnprocessableEntityError } from "../lib/error";
+import { RankService } from "../services/rank.service";
 
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(
+    private readonly accountService: AccountService,
+    private readonly rankService: RankService
+  ) {}
 
   getAllAccounts = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const page = req.query.page as string;
       const limit = req.query.limit as string;
+      const query = req.query.q as string;
 
       if (!page || !limit) {
         throw new UnprocessableEntityError("Pagination query params missing!");
@@ -16,7 +21,8 @@ export class AccountController {
 
       const [data, metadata] = await this.accountService.getAllAccounts(
         parseInt(page),
-        parseInt(limit)
+        parseInt(limit),
+        query
       );
 
       return res.json({ data, metadata });
@@ -31,7 +37,26 @@ export class AccountController {
         parseInt(req.params.id)
       );
 
-      return res.json({ data: account });
+      return res.json({ ...account });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getAccountRank = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const rankResponse = await this.rankService.getSingleAccountRank(
+        req.params.name,
+        req.params.tag
+      );
+
+      const data = rankResponse?.data;
+
+      return res.json({
+        name: data?.name,
+        tag: data?.tag,
+        currentRank: data?.current_data.currenttierpatched
+      });
     } catch (error) {
       return next(error);
     }

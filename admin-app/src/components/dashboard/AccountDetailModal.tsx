@@ -3,6 +3,7 @@ import {
   SetStateAction,
   useCallback,
   useEffect,
+  useRef,
   useState
 } from "react";
 
@@ -70,10 +71,19 @@ import {
 } from "lucide-react";
 import parse from "parse-duration";
 import { FieldErrors, useFieldArray, useForm } from "react-hook-form";
+import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
 
+import { Checkbox } from "../ui/checkbox";
+
 const formSchema = z.object({
-  username: z.string().nonempty("Username is required"),
+  username: z
+    .string()
+    .nonempty("Username is required")
+    .regex(
+      /^(?!.*#.*#)(.*\S)#(\S.*)$/,
+      "Username must be in the format name#tag"
+    ),
   accountCode: z.string().nonempty("Code is required"),
   description: z.string().optional(),
   priceTier: z.number({ required_error: "Price tier is required" }),
@@ -81,6 +91,7 @@ const formSchema = z.object({
   availabilityStatus: z.enum(["AVAILABLE", "IN_USE", "NOT_AVAILABLE"]),
   nextBooking: z.date().optional(),
   nextBookingDuration: z.string().optional(),
+  forceUpdateExpiry: z.boolean().default(false).optional(),
   expireAt: z.date().optional(),
   password: z.string().nonempty("Password is required"),
   skinList: z
@@ -123,7 +134,13 @@ export default function AccountDetailModal({
 }: Props) {
   const { priceTierList } = usePriceTier();
 
+  const isFirstRender = useRef(true);
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
+  const [isLoadingFetchRank, setIsLoadingFetchRank] = useState(false);
+  const [reminderText, setReminderText] = useState("");
+  const [isPasswordUpdated, setIsPasswordUpdated] = useState(
+    !data?.stale_password || false
+  );
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -138,7 +155,7 @@ export default function AccountDetailModal({
             availabilityStatus: data.availabilityStatus as AVAILABILITY_STATUS,
             nextBooking: data.nextBooking
               ? new Date(data.nextBooking)
-              : undefined,
+              : new Date(),
             nextBookingDuration: convertHoursToDays(data.nextBookingDuration),
             expireAt: data.expireAt ? new Date(data.expireAt) : undefined,
             password: data.password,
@@ -173,6 +190,34 @@ export default function AccountDetailModal({
     control: form.control,
     name: "skinList"
   });
+
+  const handleUsernameInput = useCallback(
+    async (username: string) => {
+      setIsLoadingFetchRank(true);
+      try {
+        const [name, tag] = username.split("#");
+        const rankResponse = await accountService.fetchRank(name, tag);
+        form.setValue("accountRank", rankResponse.currentRank);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occured";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong!",
+          description: errorMessage
+        });
+      } finally {
+        setIsLoadingFetchRank(false);
+      }
+    },
+    [form]
+  );
+
+  const debouncedUsernameHandler = useDebouncedCallback(
+    handleUsernameInput,
+    5000
+  );
 
   const handlePriceTierChange = (value: string) => {
     form.setValue("priceTier", parseInt(value));
@@ -240,9 +285,10 @@ export default function AccountDetailModal({
   const generateAndSetPassword = () => {
     const newPassword = generatePassword();
     form.setValue("password", newPassword, { shouldValidate: true });
+    setIsPasswordUpdated(true);
   };
 
-  const copyToClipboard = async () => {
+  const copyPasswordToClipboard = async () => {
     const password = form.watch("password");
     if (password) {
       await navigator.clipboard.writeText(password);
@@ -253,21 +299,29 @@ export default function AccountDetailModal({
     }
   };
 
+  const copyReminderToClipboard = async () => {
+    await navigator.clipboard.writeText(reminderText);
+    toast({
+      title: "All set!",
+      description: "Copied to clipboard!"
+    });
+  };
+
   const handleAddAccount = async (
     values: z.infer<typeof formSchema>,
     thumbnail_id: number,
     other_image_ids: number[]
   ) => {
-    const data = {
+    const payload = {
       ...values,
-      nextBookingDuration: parse(values.nextBookingDuration),
+      nextBookingDuration: parse(values.nextBookingDuration) / (1000 * 60 * 60),
       passwordUpdatedAt: new Date(),
       thumbnail: thumbnail_id,
       otherImages: other_image_ids,
       skinList: values.skinList.map((skin) => skin.name || "")
     };
     try {
-      const response = await accountService.create(data);
+      const response = await accountService.create(payload);
       onOpenChange(false);
       await resetParent();
 
@@ -295,16 +349,21 @@ export default function AccountDetailModal({
     thumbnail_id?: number,
     other_image_ids?: number[]
   ) => {
-    const data = {
+    const passwordUpdatedAt =
+      mode === "edit" && data && values.password === data.password
+        ? data.passwordUpdatedAt
+        : new Date();
+
+    const payload = {
       ...values,
-      nextBookingDuration: parse(values.nextBookingDuration),
-      passwordUpdatedAt: new Date(),
+      nextBookingDuration: parse(values.nextBookingDuration) / (1000 * 60 * 60),
+      passwordUpdatedAt,
       thumbnail: thumbnail_id,
       otherImages: other_image_ids,
       skinList: values.skinList.map((skin) => skin.name || "")
     };
     try {
-      const response = await accountService.update(id, data);
+      const response = await accountService.update(id, payload);
       onOpenChange(false);
       await resetParent();
 
@@ -377,6 +436,19 @@ export default function AccountDetailModal({
   const hasSkinsError = !!form.formState.errors.skinList;
   const hasThumbnail = !!form.getValues("thumbnail");
 
+  const usernameValue = form.watch("username");
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    if (mode === "add" && usernameValue && usernameValue.trim() !== "") {
+      debouncedUsernameHandler(usernameValue);
+    }
+  }, [mode, usernameValue, debouncedUsernameHandler]);
+
   const durationValue = form.watch("nextBookingDuration");
   const nextBookingValue = form.watch("nextBooking");
   const expireAtValue = form.watch("expireAt");
@@ -398,11 +470,22 @@ export default function AccountDetailModal({
     }
   }, [open, form]);
 
+  useEffect(() => {
+    setReminderText(`${form.watch("username")}\n${form.watch("password")}\n${form.watch("accountCode")}\nExpired on ${format(form.watch("expireAt") || new Date(), "dd MMMM yyyy 'at' HH:mm")}
+                  \nMOHON DILOGOUT AKUNNYA PADA/SEBELUM WAKTU RENTAL HABIS‼ agar tidak terkena penalty pada akun yang menyebabkan anda terkena DENDA❗
+                  \nJika sudah bisa login tolong bantu comment testimoni anda di postingan akun yang di sewa jika berkenan
+                  \nTHANK YOUU udah rental akun di @valsewa, enjoy and have a nice day! Kalau ada kendala langsung chat mimin yaa👌🏻.
+                  \nJangan lupa untuk ngisi form kepuasan yaa😼
+                  \nhttps://forms.gle/tLtQdX1SFyyFhXE86`);
+  }, [form]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full xl:w-2/5">
         <DialogHeader>
-          <DialogTitle>Add New Account</DialogTitle>
+          <DialogTitle>
+            {mode === "add" ? "Add New Account" : "Edit Account"}
+          </DialogTitle>
         </DialogHeader>
         <ScrollArea className="h-[80dvh]">
           <Form {...form}>
@@ -410,6 +493,10 @@ export default function AccountDetailModal({
               onSubmit={form.handleSubmit(onSubmit, handleError)}
               className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-4"
             >
+              <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
+                <p className="font-semibold">Account Details</p>
+                <hr />
+              </div>
               <FormField
                 control={form.control}
                 name="username"
@@ -462,7 +549,7 @@ export default function AccountDetailModal({
                     <FormLabel>Price Tier</FormLabel>
                     <Select
                       onValueChange={(value) => handlePriceTierChange(value)}
-                      defaultValue={field.value?.toString()}
+                      value={field.value?.toString()}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -500,7 +587,7 @@ export default function AccountDetailModal({
                     <FormLabel>Rank</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={isLoadingFetchRank ? "Loading" : field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -515,12 +602,44 @@ export default function AccountDetailModal({
                             </SelectItem>
                           );
                         })}
+                        <SelectItem value="Loading">
+                          Fetching rank...
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
+                <p className="font-semibold">Booking Details</p>
+                <hr />
+              </div>
+
+              {mode === "edit" && nextBookingValue && (
+                <FormField
+                  control={form.control}
+                  name="forceUpdateExpiry"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 col-span-1 xl:col-span-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Override Booking Date</FormLabel>
+                        <FormDescription>
+                          Override apabila terjadi kesalahan pada booking date
+                          atau booking duration
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <div className="flex flex-col xl:flex-row col-span-1 xl:col-span-2 gap-4">
                 <FormField
@@ -710,7 +829,7 @@ export default function AccountDetailModal({
                                     size={18}
                                     className="text-muted-foreground hover:cursor-pointer"
                                     aria-label="Copy password to clipboard"
-                                    onClick={() => copyToClipboard()}
+                                    onClick={() => copyPasswordToClipboard()}
                                   />
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -735,9 +854,18 @@ export default function AccountDetailModal({
                 Generate New Password
               </Button>
 
-              <div className="flex flex-col col-span-1 xl:col-span-2">
-                <h4 className="font-bold">Skins</h4>
-                <p>3 entri pertama akan ditampilkan di halaman utama</p>
+              {!isPasswordUpdated && (
+                <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
+                  Password needs to be updated!
+                </p>
+              )}
+
+              <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
+                <p className="font-semibold">Skins</p>
+                <hr />
+                <p className="text-sm">
+                  3 entri pertama akan ditampilkan di halaman utama
+                </p>
               </div>
 
               {skinFields.map((field, index) => (
@@ -787,7 +915,7 @@ export default function AccountDetailModal({
                 Add New Skin
               </Button>
               {form.formState.errors.skinList && (
-                <p className="text-sm font-medium text-destructive col-span-2">
+                <p className="text-sm font-medium text-destructive col-span-1 xl:col-span-2">
                   {form.formState.errors.skinList.root?.message}
                 </p>
               )}
@@ -906,6 +1034,32 @@ export default function AccountDetailModal({
                   </FormItem>
                 )}
               />
+
+              <div className="relative col-span-1 xl:col-span-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        size="icon"
+                        className="absolute top-1 right-1"
+                        onClick={() => copyReminderToClipboard()}
+                      >
+                        <CopyIcon />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copy to clipboard</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Textarea
+                  rows={16}
+                  className="whitespace-pre-wrap"
+                  value={reminderText}
+                  onChange={(e) => setReminderText(e.target.value)}
+                />
+              </div>
               <Button
                 type="submit"
                 className="xl:col-start-2 w-full xl:w-fit justify-self-end"

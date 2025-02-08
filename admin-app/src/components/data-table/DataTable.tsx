@@ -84,7 +84,7 @@ export default function DataTable<TData extends Identifiable, TValue>({
       <div className="flex flex-col mb-2">
         <div className="flex flex-col xl:flex-row justify-between items-center gap-2">
           <div className="flex gap-2 w-full xl:w-fit">{leftSideComponent}</div>
-          <div className="flex gap-2 items-end w-full xl:w-fit justify-end xl:justify-normal">
+          <div className="flex flex-col xl:flex-row gap-2 items-end w-full xl:w-fit justify-end xl:justify-normal">
             {rightSideComponent}
             <DataDeleteButton
               rowSelection={rowSelection}

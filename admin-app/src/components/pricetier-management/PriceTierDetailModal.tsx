@@ -127,7 +127,7 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
         {mode === "edit" ? (
           <Button className="justify-self-end">Edit</Button>
         ) : (
-          <Button>
+          <Button className="w-full xl:w-fit">
             <CirclePlusIcon />
             Add
           </Button>

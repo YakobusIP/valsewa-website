@@ -13,6 +13,7 @@ export class PriceTierController {
     try {
       const page = req.query.page as string;
       const limit = req.query.limit as string;
+      const query = req.query.q as string;
 
       if (!page || !limit) {
         throw new UnprocessableEntityError("Pagination query params missing!");
@@ -20,7 +21,8 @@ export class PriceTierController {
 
       const [data, metadata] = await this.priceTierService.getAllPriceTiers(
         parseInt(page),
-        parseInt(limit)
+        parseInt(limit),
+        query
       );
 
       return res.json({ data, metadata });

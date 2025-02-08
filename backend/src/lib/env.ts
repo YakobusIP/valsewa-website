@@ -22,7 +22,9 @@ const envSchema = z.object({
 
   ADMIN_APP_URL: z.string().url(),
   CANONICAL_PUBLIC_APP_URL: z.string().url(),
-  PUBLIC_APP_URL: z.string().url()
+  PUBLIC_APP_URL: z.string().url(),
+
+  HENRIKDEV_API_KEY: z.string()
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

@@ -22,6 +22,7 @@ type PriceTierContextProps = {
   isLoadingPriceTier: boolean;
   priceTierListPage: number;
   setPriceTierListPage: Dispatch<SetStateAction<number>>;
+  setPriceTierSearch: Dispatch<SetStateAction<string>>;
   refetchPriceTier: () => Promise<void>;
 };
 
@@ -42,10 +43,15 @@ export const PriceTierProvider = ({ children }: PriceTierProviderProps) => {
     useState<MetadataResponse>();
   const [priceTierListPage, setPriceTierListPage] = useState(1);
 
+  const [priceTierSearch, setPriceTierSearch] = useState("");
+
   const fetchAllPriceTiers = useCallback(async () => {
     setIsLoadingPriceTier(true);
     try {
-      const response = await priceTierService.fetchAll(priceTierListPage);
+      const response = await priceTierService.fetchAll(
+        priceTierListPage,
+        priceTierSearch
+      );
       setPriceTierList(response.data);
       setPriceTierMetadata(response.metadata);
     } catch (error) {
@@ -60,7 +66,7 @@ export const PriceTierProvider = ({ children }: PriceTierProviderProps) => {
     } finally {
       setIsLoadingPriceTier(false);
     }
-  }, [priceTierListPage]);
+  }, [priceTierListPage, priceTierSearch]);
 
   useEffect(() => {
     if (!isLoadingLogin && isAuthenticated) {
@@ -76,6 +82,7 @@ export const PriceTierProvider = ({ children }: PriceTierProviderProps) => {
         isLoadingPriceTier,
         priceTierListPage,
         setPriceTierListPage,
+        setPriceTierSearch,
         refetchPriceTier: fetchAllPriceTiers
       }}
     >

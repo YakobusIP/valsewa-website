@@ -1,11 +1,14 @@
+import { Status } from "@prisma/client";
+
 type AccountEntityRequest = {
   username: string;
   accountCode: string;
   description?: string;
   accountRank: string;
-  availabilityStatus: string;
+  availabilityStatus: Status;
   nextBooking?: Date;
   nextBookingDuration?: number;
+  forceUpdateExpiry: boolean;
   expireAt?: Date;
   totalRentHour: number;
   password: string;

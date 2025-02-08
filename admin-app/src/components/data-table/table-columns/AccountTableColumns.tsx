@@ -73,8 +73,8 @@ export const accountColumns = (
       size: "auto" as unknown as number
     },
     {
-      accessorKey: "nextBooking",
-      header: "Next Booking",
+      accessorKey: "expireAt",
+      header: "Expire At",
       cell: ({ getValue }) => {
         const date = getValue<Date>();
         if (date === null) {
@@ -85,8 +85,8 @@ export const accountColumns = (
       size: "auto" as unknown as number
     },
     {
-      accessorKey: "expireAt",
-      header: "Expire At",
+      accessorKey: "nextBooking",
+      header: "Next Booking",
       cell: ({ getValue }) => {
         const date = getValue<Date>();
         if (date === null) {
