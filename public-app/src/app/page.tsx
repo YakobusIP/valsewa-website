@@ -3,7 +3,16 @@ import Image from "next/image";
 import Card from "@/components/Card";
 import axios from "axios";
 import { useState, useEffect } from "react";
-
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 interface CardItem {
   id: number;
   username: string;
@@ -72,26 +81,28 @@ export default function Home() {
   }, []);
 
   return (
-    <section className=" bg-slate-200 pb-64">
+    <section className=" bg-gray-900 pb-64">
       <div className="w-full">
-        <figure className="relative w-full h-[500px]">
-          <Image
-            src="/top-picture2.jpg"
-            fill
-            alt="Main Pict"
-            className="object-contain object-center object-cover"
-          />
+        <figure className="relative w-full">
+          <AspectRatio ratio={16 / 4}>
+            <Image
+              src="/top-picture2.jpg"
+              fill
+              alt="Main Pict"
+              className="object-cover"
+            />
+          </AspectRatio>
         </figure>
-        <div className="mx-5 pt-10">
-          <div className="flex flex-col items-center">
-            <h1 className="font-bold text-5xl ">Cari Akun Impianmu Disini</h1>
-            <p className="font-extralight text-xl ">
+        <div className="mx-5 pt-10 ">
+          <div className="flex flex-col items-center text-white">
+            <h1 className="font-bold text-5xl text-center">Cari Akun Impianmu Disini</h1>
+            <p className="font-extralight text-xl text-center ">
               Buat yang pengen keliatan jago
             </p>
           </div>
 
-          <div className="flex justify-between items-center mt-12">
-            <form className="w-[40%]" onSubmit={handleSearchSubmit}>
+          <div className="flex sm:justify-between flex-col sm:flex-row sm:items-center items-start max-sm:gap-y-4 mt-12">
+            <form className="sm:w-[70%] w-full" onSubmit={handleSearchSubmit}>
               <label htmlFor="default-search" className="sr-only">
                 Search
               </label>
@@ -115,30 +126,28 @@ export default function Home() {
                 <input
                   type="search"
                   id="default-search"
-                  className="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg"
+                  className="block w-full p-4 ps-10 text-sm text-white border border-gray-300 rounded-lg bg-gray-800 transition duration-100 animated-bg"
                   placeholder="Search for items.."
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
                   required
                 />
-                <button
-                  type="submit"
-                  className="text-white absolute end-2.5 bottom-2.5 bg-red-700 hover:bg-red-800 px-4 py-2"
-                >
-                  Search
-                </button>
               </div>
             </form>
 
-            <form>
-              <select
-                id="countries"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg p-2.5"
-              >
-                <option value="all">All</option>
-                <option value="rank">Rank</option>
-                <option value="priceTiers">Price Tiers</option>
-              </select>
+            <form className="md:w-[15%] sm:w-[20%] w-[50%] ">
+              <Select>
+                <SelectTrigger className="">
+                  <SelectValue placeholder="Filter by:" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="rank">Rank</SelectItem>
+                    <SelectItem value="price_tier">Price Tier</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </form>
           </div>
 

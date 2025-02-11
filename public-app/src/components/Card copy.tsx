@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { fadeUpAnimation } from "@/data/animation";
 import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { ranks, availabilityStatuses } from "@/lib/constants";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import CardDialog from "./CardModal";
+import CardModal from "./CardModal";
 import { Badge } from "@/components/ui/badge";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import CardModal2 from "./CardModal2";
 // Define types for props and data items
 interface CardItem {
   id: number;
@@ -56,12 +57,10 @@ const Card: React.FC<CardProps> = ({ data }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [isAboveSmallDesktop, setIsAboveSmallDesktop] =
     useState<boolean>(false);
-  const [isAbovePhone, setIsAbovePhone] = useState<boolean>(false);
 
   // Function to determine if the screen size is above `small-desktop`
   const updateScreenSize = () => {
-    setIsAboveSmallDesktop(window.innerWidth >= 1024);
-    setIsAbovePhone(window.innerWidth >= 640);
+    setIsAboveSmallDesktop(window.innerWidth >= 768);
   };
 
   useEffect(() => {
@@ -76,13 +75,12 @@ const Card: React.FC<CardProps> = ({ data }) => {
 
   // Dynamically assign grid classes only if the screen size is above `small-desktop`
   const getGridClass = (index: number, total: number): string => {
-    if (!isAboveSmallDesktop && isAbovePhone) return "col-span-6";
-    if (!isAboveSmallDesktop && !isAbovePhone) return "col-span-12";
+    if (!isAboveSmallDesktop) return "col-span-12"; // Skip applying grid classes for smaller screens
     if (total === 5 && index >= 3) return "col-span-6"; // 3x2 grid with full-width bottom row
     if (total === 7 && index === 6) return "col-span-12"; // 3x3x1 grid with full-width last item
     return "col-span-4"; // Default to 3 columns
   };
-
+  
   const processCardData = (items: CardItem[] | undefined) => {
     return items?.map((item) => ({
       ...item,
@@ -91,28 +89,31 @@ const Card: React.FC<CardProps> = ({ data }) => {
         : item.otherImages,
     }));
   };
+
   const processedData = processCardData(data);
   return (
-    <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
+    <div className="w-full">
       <div
-        className="grid grid-cols-12 xl:gap-0 gap-4 justify-items-center w-full 2xl:gap-y-28 xl:gap-y-10 sm:gap-y-7 gap-y-8"
+        className="grid grid-cols-12 gap-0 justify-items-center w-full gap-y-28"
         ref={ref}
       >
         {processedData?.map((item, index) => (
           <div
-            className={`className="relative h-auto w-full max-w-[420px] sm:max-w-[300px] md:max-w-[350px] lg:max-w-[340px] xl:max-w-[400px] 2xl:max-w-[450px]"
-  ${getGridClass(index, processedData.length)}`}
+            className={`relative h-auto xl:w-[420px] ${getGridClass(
+              index,
+              processedData.length
+            )}`}
             key={item.id}
             onClick={() => setSelectedCard(item)}
           >
             <div className="h-full w-full bg-gray-800 rounded-xl">
               <figure className="relative mb-2  w-full">
-                <AspectRatio ratio={16 / 9}>
+                <AspectRatio ratio={16 / 4}>
                   <Image
                     src={item.thumbnail.imageUrl}
                     alt="service logo"
                     fill
-                    className="object-cover rounded-xl"
+                    className="object-cover"
                   />
                 </AspectRatio>
               </figure>
@@ -197,11 +198,12 @@ const Card: React.FC<CardProps> = ({ data }) => {
           </div>
         ))}
       </div>
-      <CardDialog
-        selectedCard={selectedCard}
+      <CardModal2
+        isOpen={!!selectedCard}
         onClose={() => setSelectedCard(null)}
+        selectedCard={selectedCard}
       />
-    </Dialog>
+    </div>
   );
 };
 
