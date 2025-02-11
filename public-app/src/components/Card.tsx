@@ -87,7 +87,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
       >
         {data?.map((item, index) => (
           <div
-            className={`relative h-auto max-w-[380px] min-w-[380px] ${getGridClass(
+            className={`relative h-auto w-[520px]  ${getGridClass(
               index,
               data.length
             )}`}

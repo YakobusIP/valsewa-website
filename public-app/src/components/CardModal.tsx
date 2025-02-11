@@ -24,7 +24,7 @@ const CardModal: React.FC<CardModalProps> = ({
   onClose,
   selectedCard,
 }) => {
-  if (!selectedCard) return null;
+  if (!isOpen) return null;
 
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
@@ -57,11 +57,11 @@ const CardModal: React.FC<CardModalProps> = ({
         <div className="w-full relative">
           <Carousel setApi={setApi}>
             <CarouselContent>
-              {selectedCard.otherImages.map((image: any, index:number) => (
+              {selectedCard.otherImages.map((image: any, index: number) => (
                 <CarouselItem key={index}>
                   <div className="h-64 w-full relative">
                     <Image
-                      src={image.imageUrl}
+                      src={image.imageUrl || "public/1920x500.svg"}
                       alt="Descriptive Alt Text"
                       className="object-cover"
                       fill
