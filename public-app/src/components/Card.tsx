@@ -54,12 +54,15 @@ interface CardProps {
 const Card: React.FC<CardProps> = ({ data }) => {
   const [selectedCard, setSelectedCard] = useState<CardItem | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const [isAboveLargeDesktop, setIsAboveLargeDesktop] =
+    useState<boolean>(false);
   const [isAboveSmallDesktop, setIsAboveSmallDesktop] =
     useState<boolean>(false);
   const [isAbovePhone, setIsAbovePhone] = useState<boolean>(false);
 
   // Function to determine if the screen size is above `small-desktop`
   const updateScreenSize = () => {
+    setIsAboveLargeDesktop(window.innerWidth >= 1700);
     setIsAboveSmallDesktop(window.innerWidth >= 1024);
     setIsAbovePhone(window.innerWidth >= 640);
   };
@@ -76,6 +79,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
 
   // Dynamically assign grid classes only if the screen size is above `small-desktop`
   const getGridClass = (index: number, total: number): string => {
+    if (isAboveLargeDesktop) return "col-span-3"
     if (!isAboveSmallDesktop && isAbovePhone) return "col-span-6";
     if (!isAboveSmallDesktop && !isAbovePhone) return "col-span-12";
     if (total === 5 && index >= 3) return "col-span-6"; // 3x2 grid with full-width bottom row
@@ -95,12 +99,12 @@ const Card: React.FC<CardProps> = ({ data }) => {
   return (
     <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
       <div
-        className="grid grid-cols-12 xl:gap-0 gap-4 justify-items-center w-full 2xl:gap-y-28 xl:gap-y-10 sm:gap-y-7 gap-y-8"
+        className="grid grid-cols-12 xl:gap-0 gap-4 justify-items-center w-full 2xl:gap-y-28 xl:gap-y-10 sm:gap-y-7 gap-y-8 "
         ref={ref}
       >
         {processedData?.map((item, index) => (
           <div
-            className={`className="relative h-auto w-full max-w-[420px] sm:max-w-[300px] md:max-w-[350px] lg:max-w-[340px] xl:max-w-[400px] 2xl:max-w-[450px]"
+            className={`rounded-xl relative h-auto w-full max-w-[420px] sm:max-w-[300px] md:max-w-[350px] lg:max-w-[340px] xl:max-w-[400px] 2xl:max-w-[420px] transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300
   ${getGridClass(index, processedData.length)}`}
             key={item.id}
             onClick={() => setSelectedCard(item)}
@@ -112,12 +116,12 @@ const Card: React.FC<CardProps> = ({ data }) => {
                     src={item.thumbnail.imageUrl}
                     alt="service logo"
                     fill
-                    className="object-cover rounded-xl"
+                    className="object-cover rounded-t-xl"
                   />
                 </AspectRatio>
               </figure>
-              <div className="relative mb-3 mx-3">
-                <div className="flex justify-between items-center">
+              <div className="relative mb-3 mx-3 pt-4">
+                <div className="flex justify-between items-center pb-2">
                   <Badge
                     variant="outline"
                     className="mb-1 font-bold text-red-500 text-2xl"
