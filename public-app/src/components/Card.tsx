@@ -58,7 +58,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
 
   // Function to determine if the screen size is above `small-desktop`
   const updateScreenSize = () => {
-    setIsAboveSmallDesktop(window.innerWidth >= 768);
+    setIsAboveSmallDesktop(window.innerWidth >= 1280);
   };
 
   useEffect(() => {
@@ -87,7 +87,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
       >
         {data?.map((item, index) => (
           <div
-            className={`relative h-auto w-[520px]  ${getGridClass(
+            className={`relative h-auto xl:w-[420px] ${getGridClass(
               index,
               data.length
             )}`}

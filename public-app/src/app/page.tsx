@@ -76,10 +76,10 @@ export default function Home() {
       <div className="w-full">
         <figure className="relative w-full h-[500px]">
           <Image
-            src="/1920x500.svg"
+            src="/top-picture2.jpg"
             fill
             alt="Main Pict"
-            className="  object-cover object-center "
+            className="object-contain object-center object-cover"
           />
         </figure>
         <div className="mx-5 pt-10">
