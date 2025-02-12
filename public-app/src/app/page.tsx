@@ -1,87 +1,44 @@
-'use client'
-import Image from "next/image";
+"use client";
 import Card from "@/components/Card";
-import axios from "axios";
-import { useState, useEffect } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-interface CardItem {
-  id: number;
-  username: string;
-  accountCode: string;
-  description: string;
-  accountRank: string;
-  availabilityStatus: string;
-  nextBooking?: Date | null;
-  nextBookingDuration?: Date | null;
-  expireAt?: Date | null;
-  totalRentHour: number;
-  password: string;
-  passwordUpdatedAt: Date | null;
-  skinList: string[];
-  createdAt: Date;
-  updatedAt: Date;
-  priceTierId: number;
-  thumbnailId: number;
-  priceTier: {
-    id: number;
-    code: string;
-    description: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
-  thumbnail: {
-    id: number;
-    imageUrl: string;
-    createdAt: Date;
-    updatedAt: Date;
-    accountId?: number | null;
-  };
-  otherImages: {
-    id: number;
-    imageUrl: string;
-    createdAt: Date;
-    updatedAt: Date;
-    accountId?: number | null;
-  }[];
-}
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAccountController } from "@/controllers/useAccountController";
+import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
+import Image from "next/image";
 
 export default function Home() {
-  const [accountList, setAccountList] = useState<CardItem[]>([]);
-  const [searchText, setSearchText] = useState("");
+  const {
+    accountList,
+    searchAccount,
+    setSearchAccount,
+    sortAccount,
+    sortDirection,
+    changeDirection,
+    getSortLabel,
+  } = useAccountController();
 
-  const fetchAccounts = async (search: string) => {
-    try {
-      const url = `http://localhost:5000/api/accounts?page=1&limit=100&q=${encodeURIComponent(
-        search
-      )}`;
-      const response = await axios.get<{ data: CardItem[] }>(url);
-      setAccountList(response.data.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+  const SortMenuItem = ({ label, value }: { label: string; value: string }) => (
+    <DropdownMenuItem
+      onClick={() => changeDirection(value)}
+      className="px-4 py-2 hover:bg-[#8B0000] transition duration-200 cursor-pointer flex justify-between"
+    >
+      {label}
+      {sortAccount === value && (
+        <span className="ml-2 text-lg">
+          {sortDirection === "asc" ? "▲" : "▼"}
+        </span>
+      )}
+    </DropdownMenuItem>
+  );
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchAccounts(searchText);
-  };
-
-  useEffect(() => {
-    // Initial fetch without any search text
-    fetchAccounts("");
-  }, []);
 
   return (
-    <section className=" bg-gray-900 pb-64">
+    <section className="bg-gray-900 pb-32">
       <div className="w-full">
         <figure className="relative w-full">
           <AspectRatio ratio={16 / 4}>
@@ -93,65 +50,62 @@ export default function Home() {
             />
           </AspectRatio>
         </figure>
-        <div className="mx-5 pt-10 ">
-          <div className="flex flex-col items-center text-white">
-            <h1 className="font-bold text-5xl text-center">Cari Akun Impianmu Disini</h1>
-            <p className="font-extralight text-xl text-center ">
+        <div className="mx-5 pt-10">
+          <div className="flex flex-col items-center text-roseWhite">
+            <h1 className="font-bold text-5xl text-center">
+              Cari Akun Impianmu Disini
+            </h1>
+            <p className="font-extralight text-xl text-center">
               Buat yang pengen keliatan jago
             </p>
           </div>
 
           <div className="flex sm:justify-between flex-col sm:flex-row sm:items-center items-start max-sm:gap-y-4 mt-12">
-            <form className="sm:w-[70%] w-full" onSubmit={handleSearchSubmit}>
-              <label htmlFor="default-search" className="sr-only">
-                Search
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                  <svg
-                    className="w-4 h-4 text-gray-500"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-                    />
-                  </svg>
-                </div>
-                <input
-                  type="search"
-                  id="default-search"
-                  className="block w-full p-4 ps-10 text-sm text-white border border-gray-300 rounded-lg bg-gray-800 transition duration-100 animated-bg"
-                  placeholder="Search for items.."
-                  value={searchText}
-                  onChange={(e) => setSearchText(e.target.value)}
-                  required
-                />
+            <div className="relative sm:w-[70%] w-full">
+              <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                <svg
+                  className="w-4 h-4 text-roseWhite font-bold  dark:text-gray-400"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                  />
+                </svg>
               </div>
-            </form>
-
-            <form className="md:w-[15%] sm:w-[20%] w-[50%] ">
-              <Select>
-                <SelectTrigger className="">
-                  <SelectValue placeholder="Filter by:" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="rank">Rank</SelectItem>
-                    <SelectItem value="price_tier">Price Tier</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </form>
+              <input
+                type="search"
+                className="block w-full p-4 ps-10 text-sm text-roseWhite border border-gray-300 rounded-lg bg-gray-800 animated-bg"
+                placeholder="Search for items.."
+                onChange={(e) => setSearchAccount(e.target.value)}
+              />
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="w-[150px] items-center gap-2 px-4 py-2 rounded-lg bg-[#8B0000] hover:bg-[#A00000] text-roseWhite border-white">
+                {getSortLabel()}
+                {["rank", "price_tier", "availability"].includes(
+                  sortAccount
+                ) && (
+                  <span className="ml-1 text-lg">
+                    {sortDirection === "asc" ? "▲" : "▼"}
+                  </span>
+                )}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-black border border-[#8B0000] text-roseWhite rounded-lg">
+                <SortMenuItem label="Rank" value="rank" />
+                <SortMenuItem label="Price Tier" value="price_tier" />
+                <SortMenuItem label="Availability" value="availability" />
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
-          <div className="mt-9 w-full mx-0">
+          <div className="mt-9 w-full mx-0 pt-10">
             <Card data={accountList} />
           </div>
         </div>

@@ -17,11 +17,7 @@ const app: Express = express();
 app.use(
   cors({
     credentials: true,
-    origin: [
-      env.CANONICAL_PUBLIC_APP_URL,
-      env.PUBLIC_APP_URL,
-      env.ADMIN_APP_URL
-    ]
+    origin: '*'
   })
 );
 app.use(json());

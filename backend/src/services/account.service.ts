@@ -1,4 +1,6 @@
 import { Account, Prisma, Status } from "@prisma/client";
+import { addHours } from "date-fns";
+import Fuse, { IFuseOptions } from "fuse.js";
 import {
   BadRequestError,
   InternalServerError,
@@ -6,24 +8,90 @@ import {
   PrismaUniqueError
 } from "../lib/error";
 import { prisma } from "../lib/prisma";
-import { Metadata } from "../types/metadata.type";
 import { AccountEntityRequest } from "../types/account.type";
+import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
-import { addHours } from "date-fns";
-import Fuse, { IFuseOptions } from "fuse.js";
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
 
+  private valorantRanks = [
+    "Iron 1",
+    "Iron 2",
+    "Iron 3",
+    "Bronze 1",
+    "Bronze 2",
+    "Bronze 3",
+    "Silver 1",
+    "Silver 2",
+    "Silver 3",
+    "Gold 1",
+    "Gold 2",
+    "Gold 3",
+    "Platinum 1",
+    "Platinum 2",
+    "Platinum 3",
+    "Diamond 1",
+    "Diamond 2",
+    "Diamond 3",
+    "Ascendant 1",
+    "Ascendant 2",
+    "Ascendant 3",
+    "Immortal 1",
+    "Immortal 2",
+    "Immortal 3",
+    "Radiant"
+  ];
+  private priceTierOrder = [
+    "C",
+    "B",
+    "A",
+    "S",
+    "V",
+    "SSS",
+    "LR-C",
+    "LR-B",
+    "LR-A",
+    "LR-S",
+    "LR-V",
+    "LR-SSS"
+  ];
   getAllAccounts = async (
     page: number,
     limit: number,
-    query: string
+    query?: string,
+    sortBy?: string,
+    direction?: Prisma.SortOrder
   ): Promise<[Account[], Metadata]> => {
     try {
       const data = await prisma.account.findMany({
+        orderBy: {
+          // priceTier: { code : sortBy === "price_tier" ? direction : undefined},
+          availabilityStatus: sortBy === "availability" ? direction : undefined
+        },
         include: { priceTier: true, thumbnail: true, otherImages: true }
       });
+
+      if (sortBy === "rank") {
+        data.sort((a, b) => {
+          const rankA = this.valorantRanks.indexOf(a.accountRank);
+          const rankB = this.valorantRanks.indexOf(b.accountRank);
+          return direction === "asc" ? rankA - rankB : rankB - rankA;
+        });
+      }
+
+      if (sortBy === "price_tier") {
+        data.sort((a, b) => {
+          const tierA = this.priceTierOrder.indexOf(a.priceTier?.code);
+          const tierB = this.priceTierOrder.indexOf(b.priceTier?.code);
+
+          // Handle cases where priceTier.code is missing
+          if (tierA === -1) return 1;
+          if (tierB === -1) return -1;
+
+          return direction === "asc" ? tierA - tierB : tierB - tierA;
+        });
+      }
 
       let filteredData: Account[] = data;
       if (query && query.trim().length > 0) {

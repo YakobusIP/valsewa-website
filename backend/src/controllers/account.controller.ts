@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { AccountService } from "../services/account.service";
 import { UnprocessableEntityError } from "../lib/error";
 import { RankService } from "../services/rank.service";
+import { Prisma } from "@prisma/client";
 
 export class AccountController {
   constructor(
@@ -14,6 +15,8 @@ export class AccountController {
       const page = req.query.page as string;
       const limit = req.query.limit as string;
       const query = req.query.q as string;
+      const sortBy = req.query.sortBy as string;
+      const direction = req.query.direction as Prisma.SortOrder;
 
       if (!page || !limit) {
         throw new UnprocessableEntityError("Pagination query params missing!");
@@ -22,7 +25,9 @@ export class AccountController {
       const [data, metadata] = await this.accountService.getAllAccounts(
         parseInt(page),
         parseInt(limit),
-        query
+        query,
+        sortBy,
+        direction
       );
 
       return res.json({ data, metadata });
