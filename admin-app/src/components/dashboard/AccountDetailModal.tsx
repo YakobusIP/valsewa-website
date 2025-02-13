@@ -263,8 +263,8 @@ export default function AccountDetailModal({
   );
 
   const generatePassword = () => {
-    const lowercase = "abcdefghijklmnopqrstuvwxyz";
-    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const lowercase = "abcdefghijkmnopqrstuvwxyz";
+    const uppercase = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
     const numbers = "0123456789";
     const specialChars = "!@#$%^&*()_+{}[]<>?/";
 
