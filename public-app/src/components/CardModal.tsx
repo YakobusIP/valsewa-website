@@ -47,7 +47,13 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
     return result.length > 0 ? result.join(" ") : "0 Hours";
   }
   const rentTime = convertHoursToDayHour(selectedCard.totalRentHour);
-
+ const visitTracker = (username: string) => {
+   const linkTracker =
+     "https://tracker.gg/valorant/profile/riot/" +
+     encodeURIComponent(username) +
+     "/overview";
+   window.open(linkTracker, "_blank");
+ };
   return (
     <DialogContent className="w-full sm:max-w-[600px] max-w-[380px] p-0 bg-gray-800 [&>button]:hidden border-0">
       <ScrollArea className="sm:max-h-[600px] max-h-[600px] no-scrollbar p-0 overflow-y-auto">
@@ -96,7 +102,10 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
               </div>
               <div className="flex justify-between items-center">
                 <p className="text-roseWhite pb-2">Rent Count: {rentTime}</p>
-                <p className="text-sm mb-2 text-roseWhite">
+                <p
+                  className="text-sm mb-2 text-roseWhite cursor-pointer underline"
+                  onClick={() => visitTracker(selectedCard.username)}
+                >
                   {selectedCard.username}
                 </p>
               </div>

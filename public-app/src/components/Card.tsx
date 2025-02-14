@@ -95,7 +95,15 @@ const Card: React.FC<CardProps> = ({ data }) => {
         : item.otherImages,
     }));
   };
+  const visitTracker = (username: string) => {
+    const linkTracker =
+      "https://tracker.gg/valorant/profile/riot/" +
+      encodeURIComponent(username) +
+      "/overview";
+    window.open(linkTracker, "_blank");
+  };
   const processedData = processCardData(data);
+
   return (
     <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
       <div
@@ -135,7 +143,12 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       {item.priceTier.code}
                     </Badge>
                   </div>
-                  <p className="text-sm mb-2 text-roseWhite">{item.username}</p>
+                  <p
+                    className="text-sm mb-2 text-roseWhite cursor-pointer underline"
+                    onClick={() => visitTracker(item.username)}
+                  >
+                    {item.username}
+                  </p>
                   <div className="flex gap-0 mb-3 flex-row">
                     {availabilityStatuses.map((status) =>
                       item.availabilityStatus == status.value ? (
