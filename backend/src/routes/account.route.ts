@@ -31,6 +31,14 @@ class AccountRouter {
       this.accountController.getAccountRank
     );
     this.router.post("/", authMiddleware, this.accountController.createAccount);
+    this.router.post(
+      "/update-rank",
+      this.accountController.updateAllAccountsRank
+    );
+    this.router.post(
+      "/update-rent-hour",
+      this.accountController.updateAllTotalRankHour
+    );
     this.router.put(
       "/:id",
       authMiddleware,

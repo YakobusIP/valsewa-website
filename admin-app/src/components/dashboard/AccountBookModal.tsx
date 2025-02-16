@@ -69,6 +69,7 @@ const formSchema = z.object({
   nextBooking: z.date().nullish(),
   nextBookingDuration: z.string().optional(),
   forceUpdateExpiry: z.boolean().default(false).optional(),
+  forceUpdateTotalRentHour: z.boolean().default(false).optional(),
   expireAt: z.date().optional()
 });
 
@@ -262,6 +263,29 @@ export default function AccountBookModal({
                   )}
                 />
               )}
+
+              <FormField
+                control={form.control}
+                name="forceUpdateTotalRentHour"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 col-span-1 xl:col-span-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Update Total Rent Hour</FormLabel>
+                      <FormDescription>
+                        Jika dicentang, maka saat formulir dikirim, sistem akan
+                        otomatis memperbarui nilai total rent hour pada jadwal
+                        berikutnya.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
 
               <div className="flex flex-col xl:flex-row col-span-1 xl:col-span-2 gap-4">
                 <FormField

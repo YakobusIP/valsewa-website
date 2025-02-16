@@ -92,7 +92,10 @@ export class AuthController {
         return res.json({ username: payload.username });
       });
     } catch (error) {
-      next(error);
+      if (error instanceof UnauthorizedError) {
+        return next(error);
+      }
+      return next(new InternalServerError((error as Error).message));
     }
   };
 

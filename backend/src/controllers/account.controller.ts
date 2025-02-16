@@ -90,6 +90,38 @@ export class AccountController {
     }
   };
 
+  updateAllAccountsRank = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const length = await this.rankService.updateAllAccountsRank();
+
+      return res.json({
+        message: `${length} account(s) updated successfully!`
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  updateAllTotalRankHour = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const length = await this.accountService.updateAllTotalRentHour();
+
+      return res.json({
+        message: `${length} account(s) updated successfully!`
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   deleteManyAccounts = async (
     req: Request,
     res: Response,

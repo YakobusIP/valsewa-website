@@ -25,6 +25,7 @@ model Account {
   nextBookingDuration Int?
   expireAt            DateTime?
   totalRentHour       Int       @default(0)
+  rentHourUpdated     Boolean   @default(false)
   password            String
   passwordUpdatedAt   DateTime
   skinList            String[]

@@ -8,7 +8,8 @@ type AccountEntityRequest = {
   availabilityStatus: Status;
   nextBooking?: Date;
   nextBookingDuration?: number;
-  forceUpdateExpiry: boolean;
+  forceUpdateExpiry?: boolean;
+  forceUpdateTotalRentHour?: boolean;
   expireAt?: Date;
   totalRentHour: number;
   password: string;
