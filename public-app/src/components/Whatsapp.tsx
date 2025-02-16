@@ -5,7 +5,8 @@ import { FC } from "react";
 
 
 const Whatsapp: FC = () => {
-  const whatsappUrl = "https://wa.me/6288888888"; // Replace with your actual number in international format
+  const whatsappUrl =
+    "https://wa.me/6285176983434?text=Halo admin VALFORUM aku mau JUAL BELI akun nih"; 
 
   return (
     <a

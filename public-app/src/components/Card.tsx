@@ -79,7 +79,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
 
   // Dynamically assign grid classes only if the screen size is above `small-desktop`
   const getGridClass = (index: number, total: number): string => {
-    if (isAboveLargeDesktop) return "col-span-3"
+    if (isAboveLargeDesktop) return "col-span-3";
     if (!isAboveSmallDesktop && isAbovePhone) return "col-span-6";
     if (!isAboveSmallDesktop && !isAbovePhone) return "col-span-12";
     // if (total === 5 && index >= 3) return "col-span-6"; // 3x2 grid with full-width bottom row
@@ -112,7 +112,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
       >
         {processedData?.map((item, index) => (
           <div
-            className={`rounded-xl relative h-auto w-full max-w-[420px] sm:max-w-[300px] md:max-w-[350px] lg:max-w-[340px] xl:max-w-[400px] 2xl:max-w-[420px] transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300
+            className={`rounded-xl relative h-auto w-full max-w-[420px] sm:max-w-[300px] md:max-w-[350px] lg:max-w-[340px] xl:max-w-[400px] 2xl:max-w-[420px] transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300 hover:cursor-pointer
   ${getGridClass(index, processedData.length)}`}
             key={item.id}
             onClick={() => setSelectedCard(item)}
@@ -138,9 +138,11 @@ const Card: React.FC<CardProps> = ({ data }) => {
                     </p>
                     <Badge
                       variant="outline"
-                      className="sm:text-2xl text-xl font-bold text-roseWhite "
+                      className="sm:text-2xl text-xl font-bold text-roseWhite"
                     >
+                    {/* <p className="sm:text-4xl text-xl font-bold text-roseWhite"> */}
                       {item.priceTier.code}
+                    {/* </p> */}
                     </Badge>
                   </div>
                   <p
@@ -149,12 +151,13 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   >
                     {item.username}
                   </p>
-                  <div className="flex gap-0 mb-3 flex-row">
+                  <div className="flex flex-wrap gap-y-2 gap-2 pb-5">
                     {availabilityStatuses.map((status) =>
                       item.availabilityStatus == status.value ? (
-                        <span
+                        <Badge
+                          variant="outline"
                           key={status.value}
-                          className={`text-sm max-sm:text-xs me-2 py-0.5 rounded-full min-w-[100px] text-center font-semibold text-zinc-100 px-3 ${
+                          className={`text-sm max-sm:text-xs text-center font-semibold text-zinc-100 px-3 ${
                             status.value === "AVAILABLE"
                               ? "bg-green-600"
                               : status.value === "IN_USE"
@@ -163,11 +166,13 @@ const Card: React.FC<CardProps> = ({ data }) => {
                           }`}
                         >
                           {status.label}
-                        </span>
+                        </Badge>
                       ) : null
                     )}
-                    <span
-                      className={`me-2 py-0.5 rounded-full min-w-[100px] text-center font-semibold text-primary-foreground max-sm:text-xs text-sm px-1 ${
+
+                    <Badge
+                      variant="outline"
+                      className={`px-3 text-center font-semibold text-primary-foreground max-sm:text-xs text-sm ${
                         item.accountRank.startsWith("Iron")
                           ? "bg-gray-600"
                           : item.accountRank.startsWith("Bronze")
@@ -186,25 +191,30 @@ const Card: React.FC<CardProps> = ({ data }) => {
                           ? "bg-red-800"
                           : item.accountRank === "Radiant"
                           ? "bg-yellow-600"
-                          : "bg-gray-200"
+                          : "bg-black"
                       }`}
                     >
                       {item.accountRank}
-                    </span>
-                  </div>
-                  <p className="font-semibold text-roseWhite text-sm">
-                    List of skins ({item.skinList.length}):
-                  </p>
-                  <div className="flex flex-wrap gap-2 pt-2 cursor-pointer whitespace-nowrap">
+                    </Badge>
+                    {/* <p className="font-semibold text-roseWhite text-sm pb-3">
+                    Skins ({item.skinList.length} items)
+                  </p> */}
                     {item.skinList?.slice(0, 3).map((skin, index) => (
-                      <Badge variant="secondary" key={index}>
+                      <Badge
+                        variant="secondary"
+                        key={index}
+                        className="bg-red-500 text-roseWhite text-sm max-sm:text-xs"
+                      >
                         {skin}
                       </Badge>
                     ))}
-                  </div>
-                  {/* <p className="text-sm  pt-6 text-roseWhite">{item.description}</p> */}
-                  <div className="flex justify-end pt-6 pb-3 text-roseWhite font-normal ">
-                    See more...
+                    <Badge
+                      variant="secondary"
+                      key={index}
+                      className="bg-red-500 text-roseWhite text-sm max-sm:text-xs"
+                    >
+                      + {item.skinList.length - 3} more
+                    </Badge>
                   </div>
                 </div>
               </div>

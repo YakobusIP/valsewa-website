@@ -1,3 +1,4 @@
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import {
   Carousel,
@@ -8,17 +9,15 @@ import {
 } from "@/components/ui/carousel";
 import {
   DialogContent,
-  DialogFooter,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { availabilityStatuses } from "@/lib/constants";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import Image from "next/image";
 import { useState } from "react";
-import Whatsapp from "./Whatsapp";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Button } from "./ui/button";
+import Whatsapp from "./Whatsapp";
 
 
 
@@ -110,12 +109,13 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                 </p>
               </div>
 
-              <div className="flex gap-0 mb-3 flex-row">
+              <div className="flex gap-2 mb-3 flex-row">
                 {availabilityStatuses.map((status) =>
                   selectedCard.availabilityStatus == status.value ? (
-                    <span
+                    <Badge
+                      variant="outline"
                       key={status.value}
-                      className={`text-sm max-sm:text-xs me-2 py-0.5 rounded-full min-w-[100px] text-center font-semibold text-zinc-100 px-3 ${
+                      className={`text-sm max-sm:text-xs text-center font-semibold text-zinc-100 px-3 ${
                         status.value === "AVAILABLE"
                           ? "bg-green-600"
                           : status.value === "IN_USE"
@@ -124,11 +124,13 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                       }`}
                     >
                       {status.label}
-                    </span>
+                    </Badge>
                   ) : null
                 )}
-                <span
-                  className={`me-2 py-0.5 rounded-full min-w-[100px] text-center font-semibold text-primary-foreground max-sm:text-xs text-sm px-1 ${
+
+                <Badge
+                  variant="outline"
+                  className={`px-3 text-center font-semibold text-primary-foreground max-sm:text-xs text-sm ${
                     selectedCard.accountRank.startsWith("Iron")
                       ? "bg-gray-600"
                       : selectedCard.accountRank.startsWith("Bronze")
@@ -147,11 +149,11 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                       ? "bg-red-800"
                       : selectedCard.accountRank === "Radiant"
                       ? "bg-yellow-600"
-                      : "bg-gray-200"
+                      : "bg-black"
                   }`}
                 >
                   {selectedCard.accountRank}
-                </span>
+                </Badge>
               </div>
               <p className="font-semibold text-roseWhite text-sm pt-2">
                 List of skins ({selectedCard.skinList.length})
@@ -163,14 +165,18 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                   </Badge>
                 ))}
               </div>
-              <div>
-                <p className="text-sm font-semibold pt-6 text-roseWhite">
-                  Description
-                </p>
-              </div>
-              <p className="text-sm pt-2 text-roseWhite">
-                {selectedCard.description}
-              </p>
+
+              {selectedCard.description.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold pt-6 text-roseWhite">
+                    Description
+                  </p>
+                  <p className="text-sm pt-2 text-roseWhite">
+                    {selectedCard.description}
+                  </p>
+                </div>
+              )}
+
               <div>
                 <p className="text-sm font-semibold pt-6 text-roseWhite">
                   Price List
