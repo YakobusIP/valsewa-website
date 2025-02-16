@@ -9,10 +9,6 @@ export class StatisticService {
         _count: { availabilityStatus: true }
       });
 
-      const totalAccounts = accounts.reduce(
-        (sum, { _count }) => sum + _count.availabilityStatus,
-        0
-      );
       const availableAccounts =
         accounts.find((a) => a.availabilityStatus === "AVAILABLE")?._count
           .availabilityStatus || 0;
@@ -20,10 +16,18 @@ export class StatisticService {
         accounts.find((a) => a.availabilityStatus === "IN_USE")?._count
           .availabilityStatus || 0;
 
+      const totalForRatio = availableAccounts + inUseAccounts;
+      const rentedRatio = totalForRatio
+        ? (inUseAccounts / totalForRatio) * 100
+        : 0;
+
+      const totalAccounts = accounts.reduce(
+        (sum, { _count }) => sum + _count.availabilityStatus,
+        0
+      );
+
       return {
-        rentedRatio: availableAccounts
-          ? (inUseAccounts / availableAccounts) * 100
-          : 0,
+        rentedRatio,
         availableAccounts,
         inUseAccounts,
         totalAccounts

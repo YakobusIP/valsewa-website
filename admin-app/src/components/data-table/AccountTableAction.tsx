@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import AccountBookModal from "@/components/dashboard/AccountBookModal";
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,7 @@ type Props = {
 
 export default function AccountTableAction({ data, resetParent }: Props) {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
+  const [openBookingModal, setOpenBookingModal] = useState(false);
 
   return (
     <Fragment>
@@ -54,7 +56,10 @@ export default function AccountTableAction({ data, resetParent }: Props) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => setOpenAccountDetail(true)}>
-              View Details
+              View Account Details
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setOpenBookingModal(true)}>
+              Edit Booking
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -63,6 +68,12 @@ export default function AccountTableAction({ data, resetParent }: Props) {
         open={openAccountDetail}
         onOpenChange={setOpenAccountDetail}
         mode="edit"
+        data={data}
+        resetParent={resetParent}
+      />
+      <AccountBookModal
+        open={openBookingModal}
+        onOpenChange={setOpenBookingModal}
         data={data}
         resetParent={resetParent}
       />

@@ -11,13 +11,18 @@ import AccountRouter from "./routes/account.route";
 import PriceTierRouter from "./routes/pricetier.route";
 import UploadRouter from "./routes/upload.route";
 import StatisticRouter from "./routes/statistic.route";
+import { throttleMiddleware } from "./middleware/throttle.middlware";
 
 const app: Express = express();
 
 app.use(
   cors({
     credentials: true,
-    origin: '*'
+    origin: [
+      env.CANONICAL_PUBLIC_APP_URL,
+      env.PUBLIC_APP_URL,
+      env.ADMIN_APP_URL
+    ]
   })
 );
 app.use(json());
@@ -29,6 +34,10 @@ if (env.NODE_ENV === "development") {
 }
 
 app.use("/api/auth", AuthRouter);
+
+if (env.NODE_ENV === "development") {
+  app.use(throttleMiddleware);
+}
 
 app.use("/api/accounts", AccountRouter);
 app.use("/api/price-tiers", PriceTierRouter);

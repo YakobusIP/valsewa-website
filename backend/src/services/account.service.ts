@@ -96,7 +96,7 @@ export class AccountService {
       let filteredData: Account[] = data;
       if (query && query.trim().length > 0) {
         const fuseOptions: IFuseOptions<Account> = {
-          keys: ["accountRank", "skinList"],
+          keys: ["username", "accountCode", "accountRank", "skinList"],
           threshold: 0.3
         };
 
@@ -209,8 +209,10 @@ export class AccountService {
         if (forceUpdateExpiry) {
           updateData.expireAt = expireAt;
         } else {
-          if (!currentAccount.expireAt) {
+          if (currentAccount.expireAt) {
             updateData.expireAt = undefined;
+          } else {
+            updateData.expireAt = expireAt;
           }
         }
 

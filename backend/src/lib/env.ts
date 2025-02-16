@@ -10,6 +10,10 @@ const envSchema = z.object({
     if (isNaN(parsed)) throw new Error("Server port must be a number");
     return parsed;
   }),
+  ENABLE_THROTTLE: z
+    .string()
+    .transform((value) => value === "true")
+    .optional(),
   ACCESS_TOKEN_SECRET: z.string(),
   REFRESH_TOKEN_SECRET: z.string(),
   ACCESS_TOKEN_DURATION: z.string(),

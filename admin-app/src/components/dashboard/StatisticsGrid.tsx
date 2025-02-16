@@ -1,26 +1,32 @@
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { StatisticResponse } from "@/types/statistic.type";
 
 type Props = {
-  statistics: StatisticResponse;
+  statistics?: StatisticResponse;
+  isLoadingStatistics: boolean;
 };
 
-export default function StatisticsGrid({ statistics }: Props) {
+export default function StatisticsGrid({
+  statistics,
+  isLoadingStatistics
+}: Props) {
   const data = [
     {
       title: "Currently Rented Ratio",
-      value: `${statistics.rentedRatio.toFixed(2)}%`
+      value: `${statistics?.rentedRatio.toFixed(2)}%`
     },
     {
       title: "Available Accounts",
-      value: statistics.availableAccounts
+      value: statistics?.availableAccounts
     },
     {
       title: "Rented Accounts",
-      value: statistics.inUseAccounts
+      value: statistics?.inUseAccounts
     },
     {
       title: "Total Accounts",
-      value: statistics.totalAccounts
+      value: statistics?.totalAccounts
     }
   ];
   return (
@@ -28,7 +34,11 @@ export default function StatisticsGrid({ statistics }: Props) {
       {data.map((stats) => (
         <div className="flex flex-col border rounded-md p-4" key={stats.title}>
           <p className="font-bold text-sm xl:text-base">{stats.title}</p>
-          <p className="font-bold text-2xl xl:text-4xl">{stats.value}</p>
+          {isLoadingStatistics ? (
+            <Skeleton className="h-10 w-[150px]" />
+          ) : (
+            <p className="font-bold text-2xl xl:text-4xl">{stats.value}</p>
+          )}
         </div>
       ))}
     </div>

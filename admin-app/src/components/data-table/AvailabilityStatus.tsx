@@ -10,6 +10,7 @@ import {
 
 import { toast } from "@/hooks/useToast";
 
+import { AccountEntityRequest } from "@/types/account.type";
 import { MessageResponse } from "@/types/api.type";
 
 import { availabilityStatuses } from "@/lib/constants";
@@ -24,15 +25,17 @@ type Props = {
   setAvailabilityStatus?: Dispatch<SetStateAction<string>>;
   serviceFn?: (
     id: number,
-    availabilityStatus: AVAILABILITY_STATUS
+    data: Partial<AccountEntityRequest>
   ) => Promise<MessageResponse>;
+  resetParent: () => Promise<void>;
 };
 
 export default function AvailabilityStatus({
   id,
   availabilityStatus,
   setAvailabilityStatus,
-  serviceFn
+  serviceFn,
+  resetParent
 }: Props) {
   const [selectedStatus, setSelectedStatus] = useState(availabilityStatus);
 
@@ -43,10 +46,11 @@ export default function AvailabilityStatus({
   const debouncedSubmit = useDebouncedCallback(async () => {
     if (serviceFn) {
       try {
-        const response = await serviceFn(
-          id,
-          selectedStatus as AVAILABILITY_STATUS
-        );
+        const response = await serviceFn(id, {
+          availabilityStatus: selectedStatus as AVAILABILITY_STATUS
+        });
+
+        await resetParent();
 
         toast({
           title: "All set!",

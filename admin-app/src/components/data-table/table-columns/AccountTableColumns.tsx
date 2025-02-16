@@ -66,7 +66,8 @@ export const accountColumns = (
           <AvailabilityStatus
             id={account.id}
             availabilityStatus={account.availabilityStatus}
-            serviceFn={accountService.updateAvailability}
+            serviceFn={accountService.update}
+            resetParent={resetParent}
           />
         );
       },

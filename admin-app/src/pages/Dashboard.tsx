@@ -4,6 +4,7 @@ import { accountService } from "@/services/account.service";
 import { statisticService } from "@/services/statistic.service";
 
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
+import LogoutButton from "@/components/dashboard/LogoutButton";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
 import DataTable from "@/components/data-table/DataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
@@ -19,6 +20,8 @@ import { StatisticResponse } from "@/types/statistic.type";
 
 import { CirclePlusIcon, SearchIcon } from "lucide-react";
 import { useDebounce } from "use-debounce";
+
+const PAGINATION_SIZE = 100;
 
 export default function Dashboard() {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
@@ -61,6 +64,7 @@ export default function Dashboard() {
     try {
       const response = await accountService.fetchAll(
         accountListPage,
+        PAGINATION_SIZE,
         debouncedSearch
       );
       setAccountList(response.data);
@@ -106,6 +110,12 @@ export default function Dashboard() {
     }
   };
 
+  const resetParent = async () => {
+    console.log("resetting");
+    await fetchAllAccounts();
+    await fetchStatistics();
+  };
+
   useEffect(() => {
     fetchStatistics();
     fetchAllAccounts();
@@ -113,49 +123,55 @@ export default function Dashboard() {
 
   return (
     <Fragment>
-      <main className="container flex flex-col mx-auto min-h-[100dvh] p-4 xl:p-8 gap-4">
-        <h1>Dashboard</h1>
-        {statistics && <StatisticsGrid statistics={statistics} />}
-        <DataTable
-          columns={accountColumns(fetchAllAccounts)}
-          data={accountList}
-          rowSelection={selectedAccountRows}
-          setRowSelection={setSelectedAccountRows}
-          isLoadingData={isLoadingAccount}
-          deleteData={deleteManyAccounts}
-          isLoadingDeleteData={isLoadingDeleteAccount}
-          page={accountListPage}
-          setPage={setAccountListPage}
-          metadata={accountMetadata}
-          leftSideComponent={
-            <Input
-              startIcon={
-                <SearchIcon size={18} className="text-muted-foreground" />
-              }
-              placeholder="Search account..."
-              parentClassName="w-full xl:w-[32rem]"
-              onChange={(e) => setSearchAccount(e.target.value)}
-            />
-          }
-          rightSideComponent={
-            <Fragment>
-              <PriceTierModal />
-              <Button
-                className="w-full xl:w-fit"
-                onClick={() => setOpenAccountDetail(true)}
-              >
-                <CirclePlusIcon />
-                Add New Account
-              </Button>
-            </Fragment>
-          }
-        />
+      <main className="relative min-h-[100dvh]">
+        <div className="container flex flex-col mx-auto p-4 xl:p-8 gap-4">
+          <h1>Dashboard</h1>
+          <StatisticsGrid
+            statistics={statistics}
+            isLoadingStatistics={isLoadingStatistics}
+          />
+          <DataTable
+            columns={accountColumns(resetParent)}
+            data={accountList}
+            rowSelection={selectedAccountRows}
+            setRowSelection={setSelectedAccountRows}
+            isLoadingData={isLoadingAccount}
+            deleteData={deleteManyAccounts}
+            isLoadingDeleteData={isLoadingDeleteAccount}
+            page={accountListPage}
+            setPage={setAccountListPage}
+            metadata={accountMetadata}
+            leftSideComponent={
+              <Input
+                startIcon={
+                  <SearchIcon size={18} className="text-muted-foreground" />
+                }
+                placeholder="Search account..."
+                parentClassName="w-full xl:w-[32rem]"
+                onChange={(e) => setSearchAccount(e.target.value)}
+              />
+            }
+            rightSideComponent={
+              <Fragment>
+                <PriceTierModal />
+                <Button
+                  className="w-full xl:w-fit"
+                  onClick={() => setOpenAccountDetail(true)}
+                >
+                  <CirclePlusIcon />
+                  Add New Account
+                </Button>
+              </Fragment>
+            }
+          />
+        </div>
+        <LogoutButton />
       </main>
       <AccountDetailModal
         open={openAccountDetail}
         onOpenChange={setOpenAccountDetail}
         mode="add"
-        resetParent={fetchAllAccounts}
+        resetParent={resetParent}
       />
     </Fragment>
   );

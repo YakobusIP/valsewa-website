@@ -8,9 +8,9 @@ type AccountEntity = {
   description?: string;
   accountRank: string;
   availabilityStatus: string;
-  nextBooking?: Date;
-  nextBookingDuration?: number;
-  expireAt?: Date;
+  nextBooking?: Date | null;
+  nextBookingDuration?: number | string | null;
+  expireAt?: Date | null;
   totalRentHour: number;
   password: string;
   passwordUpdatedAt: Date;

@@ -11,7 +11,6 @@ import { accountService } from "@/services/account.service";
 import { uploadService } from "@/services/upload.service";
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -21,20 +20,13 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -55,14 +47,11 @@ import { toast } from "@/hooks/useToast";
 
 import { AccountEntity } from "@/types/account.type";
 
-import { availabilityStatuses, ranks } from "@/lib/constants";
-import { AVAILABILITY_STATUS } from "@/lib/enums";
-import { cn, convertHoursToDays } from "@/lib/utils";
+import { ranks } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { addHours, format } from "date-fns";
 import {
-  CalendarIcon,
   CirclePlusIcon,
   CopyIcon,
   Loader2Icon,
@@ -73,8 +62,6 @@ import parse from "parse-duration";
 import { FieldErrors, useFieldArray, useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
-
-import { Checkbox } from "../ui/checkbox";
 
 const formSchema = z.object({
   username: z
@@ -137,7 +124,6 @@ export default function AccountDetailModal({
   const isFirstRender = useRef(true);
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const [isLoadingFetchRank, setIsLoadingFetchRank] = useState(false);
-  const [reminderText, setReminderText] = useState("");
   const [isPasswordUpdated, setIsPasswordUpdated] = useState(
     !data?.stale_password || false
   );
@@ -152,12 +138,6 @@ export default function AccountDetailModal({
             description: data.description,
             priceTier: data.priceTier.id,
             accountRank: data.accountRank,
-            availabilityStatus: data.availabilityStatus as AVAILABILITY_STATUS,
-            nextBooking: data.nextBooking
-              ? new Date(data.nextBooking)
-              : new Date(),
-            nextBookingDuration: convertHoursToDays(data.nextBookingDuration),
-            expireAt: data.expireAt ? new Date(data.expireAt) : undefined,
             password: data.password,
             skinList: data.skinList.map((skinName) => ({ name: skinName })),
             thumbnail: data.thumbnail,
@@ -169,10 +149,6 @@ export default function AccountDetailModal({
             description: "",
             priceTier: undefined,
             accountRank: "",
-            availabilityStatus: "AVAILABLE",
-            nextBooking: undefined,
-            nextBookingDuration: "",
-            expireAt: undefined,
             password: "",
             skinList: [{ name: "" }],
             thumbnail: undefined,
@@ -224,44 +200,6 @@ export default function AccountDetailModal({
     form.trigger("priceTier");
   };
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      form.setValue("nextBooking", date);
-    }
-  };
-
-  const handleTimeChange = (type: "hour" | "minute", value: string) => {
-    const currentDate = form.getValues("nextBooking") || new Date();
-    const newDate = new Date(currentDate);
-
-    if (type === "hour") {
-      const hour = parseInt(value, 10);
-      newDate.setHours(hour);
-    } else if (type === "minute") {
-      const minute = parseInt(value, 10);
-      newDate.setMinutes(minute);
-    }
-
-    form.setValue("nextBooking", newDate);
-  };
-
-  const parseDurationToHours = useCallback(
-    (duration: string) => {
-      const ms = parse(duration);
-      if (ms === null) {
-        form.setError("nextBookingDuration", {
-          type: "validate",
-          message: "Invalid date format"
-        });
-
-        return null;
-      }
-
-      return ms / (1000 * 60 * 60);
-    },
-    [form]
-  );
-
   const generatePassword = () => {
     const lowercase = "abcdefghijkmnopqrstuvwxyz";
     const uppercase = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
@@ -297,14 +235,6 @@ export default function AccountDetailModal({
         description: "Copied to clipboard!"
       });
     }
-  };
-
-  const copyReminderToClipboard = async () => {
-    await navigator.clipboard.writeText(reminderText);
-    toast({
-      title: "All set!",
-      description: "Copied to clipboard!"
-    });
   };
 
   const handleAddAccount = async (
@@ -350,13 +280,12 @@ export default function AccountDetailModal({
     other_image_ids?: number[]
   ) => {
     const passwordUpdatedAt =
-      mode === "edit" && data && values.password === data.password
+      mode === "edit" && data && values.password !== data.password
         ? data.passwordUpdatedAt
         : new Date();
 
     const payload = {
       ...values,
-      nextBookingDuration: parse(values.nextBookingDuration) / (1000 * 60 * 60),
       passwordUpdatedAt,
       thumbnail: thumbnail_id,
       otherImages: other_image_ids,
@@ -428,10 +357,6 @@ export default function AccountDetailModal({
     console.log(errors);
   };
 
-  const selectedStatusColor =
-    availabilityStatuses.find(
-      (status) => status.value === form.watch("availabilityStatus")
-    )?.color || "bg-white";
   const hasPasswordError = !!form.formState.errors.password;
   const hasSkinsError = !!form.formState.errors.skinList;
   const hasThumbnail = !!form.getValues("thumbnail");
@@ -449,35 +374,33 @@ export default function AccountDetailModal({
     }
   }, [mode, usernameValue, debouncedUsernameHandler]);
 
-  const durationValue = form.watch("nextBookingDuration");
-  const nextBookingValue = form.watch("nextBooking");
-  const expireAtValue = form.watch("expireAt");
-
   useEffect(() => {
-    if (durationValue) {
-      const hours = parseDurationToHours(durationValue) || 0;
-      const nextBooking = nextBookingValue || new Date();
-      const nextBookingDate = new Date(nextBooking);
-
-      const expireDate = addHours(nextBookingDate, hours);
-      form.setValue("expireAt", expireDate);
+    if (mode === "edit" && data) {
+      form.reset({
+        username: data.username,
+        accountCode: data.accountCode,
+        description: data.description,
+        priceTier: data.priceTier.id,
+        accountRank: data.accountRank,
+        password: data.password,
+        skinList: data.skinList.map((skinName) => ({ name: skinName })),
+        thumbnail: data.thumbnail,
+        otherImages: data.otherImages || []
+      });
+    } else if (mode === "add") {
+      form.reset({
+        username: "",
+        accountCode: "",
+        description: "",
+        priceTier: undefined,
+        accountRank: "",
+        password: "",
+        skinList: [{ name: "" }],
+        thumbnail: undefined,
+        otherImages: []
+      });
     }
-  }, [durationValue, nextBookingValue, form, parseDurationToHours]);
-
-  useEffect(() => {
-    if (!open) {
-      form.reset();
-    }
-  }, [open, form]);
-
-  useEffect(() => {
-    setReminderText(`${form.watch("username")}\n${form.watch("password")}\n${form.watch("accountCode")}\nExpired on ${format(form.watch("expireAt") || new Date(), "dd MMMM yyyy 'at' HH:mm")}
-                  \nMOHON DILOGOUT AKUNNYA PADA/SEBELUM WAKTU RENTAL HABIS‼ agar tidak terkena penalty pada akun yang menyebabkan anda terkena DENDA❗
-                  \nJika sudah bisa login tolong bantu comment testimoni anda di postingan akun yang di sewa jika berkenan
-                  \nTHANK YOUU udah rental akun di @valsewa, enjoy and have a nice day! Kalau ada kendala langsung chat mimin yaa👌🏻.
-                  \nJangan lupa untuk ngisi form kepuasan yaa😼
-                  \nhttps://forms.gle/tLtQdX1SFyyFhXE86`);
-  }, [form]);
+  }, [mode, data, form]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -502,7 +425,9 @@ export default function AccountDetailModal({
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>
+                      Username <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Enter username here" {...field} />
                     </FormControl>
@@ -515,7 +440,9 @@ export default function AccountDetailModal({
                 name="accountCode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Code</FormLabel>
+                    <FormLabel>
+                      Code <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input placeholder="Enter code here" {...field} />
                     </FormControl>
@@ -533,6 +460,7 @@ export default function AccountDetailModal({
                     <FormControl>
                       <Textarea
                         placeholder="Enter description here"
+                        rows={5}
                         {...field}
                       />
                     </FormControl>
@@ -546,7 +474,9 @@ export default function AccountDetailModal({
                 name="priceTier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price Tier</FormLabel>
+                    <FormLabel>
+                      Price Tier <span className="text-destructive">*</span>
+                    </FormLabel>
                     <Select
                       onValueChange={(value) => handlePriceTierChange(value)}
                       value={field.value?.toString()}
@@ -584,7 +514,9 @@ export default function AccountDetailModal({
                 name="accountRank"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Rank</FormLabel>
+                    <FormLabel>
+                      Rank <span className="text-destructive">*</span>
+                    </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       value={isLoadingFetchRank ? "Loading" : field.value}
@@ -602,9 +534,11 @@ export default function AccountDetailModal({
                             </SelectItem>
                           );
                         })}
-                        <SelectItem value="Loading">
-                          Fetching rank...
-                        </SelectItem>
+                        {isLoadingFetchRank && (
+                          <SelectItem value="Loading">
+                            Fetching rank...
+                          </SelectItem>
+                        )}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -612,210 +546,14 @@ export default function AccountDetailModal({
                 )}
               />
 
-              <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
-                <p className="font-semibold">Booking Details</p>
-                <hr />
-              </div>
-
-              {mode === "edit" && nextBookingValue && (
-                <FormField
-                  control={form.control}
-                  name="forceUpdateExpiry"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 col-span-1 xl:col-span-2">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Override Booking Date</FormLabel>
-                        <FormDescription>
-                          Override apabila terjadi kesalahan pada booking date
-                          atau booking duration
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              <div className="flex flex-col xl:flex-row col-span-1 xl:col-span-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="availabilityStatus"
-                  render={({ field }) => (
-                    <FormItem className="w-full xl:w-1/5">
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className={selectedStatusColor}>
-                            <SelectValue placeholder="Select a status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {availabilityStatuses.map((status) => {
-                            return (
-                              <SelectItem
-                                key={status.value}
-                                value={status.value}
-                              >
-                                {status.label}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="nextBooking"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col w-full xl:w-2/5">
-                      <FormLabel className="mt-[0.4rem] mb-[0.275rem]">
-                        Next Booking
-                      </FormLabel>
-                      <Popover modal>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "justify-start text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {field.value ? (
-                              format(field.value, "dd MMMM yyyy 'at' HH:mm")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <div className="sm:flex">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={handleDateSelect}
-                              initialFocus
-                            />
-                            <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
-                              <ScrollArea
-                                type="always"
-                                className="w-[17.25rem] sm:w-auto"
-                              >
-                                <div className="flex sm:flex-col p-2">
-                                  {Array.from({ length: 24 }, (_, i) => i)
-                                    .reverse()
-                                    .map((hour) => (
-                                      <Button
-                                        key={hour}
-                                        size="icon"
-                                        variant={
-                                          field.value &&
-                                          field.value.getHours() === hour
-                                            ? "default"
-                                            : "ghost"
-                                        }
-                                        className="sm:w-full shrink-0 aspect-square"
-                                        onClick={() =>
-                                          handleTimeChange(
-                                            "hour",
-                                            hour.toString()
-                                          )
-                                        }
-                                      >
-                                        {hour}
-                                      </Button>
-                                    ))}
-                                </div>
-                                <ScrollBar
-                                  orientation="horizontal"
-                                  className="sm:hidden"
-                                />
-                              </ScrollArea>
-                              <ScrollArea
-                                type="always"
-                                className="w-[17.25rem] sm:w-auto"
-                              >
-                                <div className="flex sm:flex-col p-2">
-                                  {Array.from(
-                                    { length: 12 },
-                                    (_, i) => i * 5
-                                  ).map((minute) => (
-                                    <Button
-                                      key={minute}
-                                      size="icon"
-                                      variant={
-                                        field.value &&
-                                        field.value.getMinutes() === minute
-                                          ? "default"
-                                          : "ghost"
-                                      }
-                                      className="sm:w-full shrink-0 aspect-square"
-                                      onClick={() =>
-                                        handleTimeChange(
-                                          "minute",
-                                          minute.toString()
-                                        )
-                                      }
-                                    >
-                                      {minute.toString().padStart(2, "0")}
-                                    </Button>
-                                  ))}
-                                </div>
-                                <ScrollBar
-                                  orientation="horizontal"
-                                  className="sm:hidden"
-                                />
-                              </ScrollArea>
-                            </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="nextBookingDuration"
-                  render={({ field }) => (
-                    <FormItem className="w-full xl:w-2/5">
-                      <FormLabel>Duration</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter duration here" {...field} />
-                      </FormControl>
-                      <FormDescription>Contoh format: 7d 1h</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              {expireAtValue && (
-                <Label className="col-span-1 xl:col-span-2 text-destructive">
-                  Status sewa akan expire pada{" "}
-                  <span className="font-bold">
-                    {format(expireAtValue, "dd MMMM yyyy 'at' HH:mm")}
-                  </span>
-                </Label>
-              )}
-
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>
+                      Password <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Enter password here"
@@ -875,7 +613,12 @@ export default function AccountDetailModal({
                   name={`skinList.${index}.name`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Skin {index + 1}</FormLabel>
+                      <FormLabel>
+                        Skin {index + 1}{" "}
+                        {index === 0 && (
+                          <span className="text-destructive">*</span>
+                        )}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Enter skin name here"
@@ -925,7 +668,9 @@ export default function AccountDetailModal({
                 name="thumbnail"
                 render={({ field }) => (
                   <FormItem className="col-span-1 xl:col-span-2">
-                    <FormLabel>Thumbnail</FormLabel>
+                    <FormLabel>
+                      Thumbnail <span className="text-destructive">*</span>
+                    </FormLabel>
                     <div className="flex flex-col-reverse xl:flex-row items-center justify-between gap-4">
                       <div
                         className={cn(
@@ -1035,31 +780,6 @@ export default function AccountDetailModal({
                 )}
               />
 
-              <div className="relative col-span-1 xl:col-span-2">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        size="icon"
-                        className="absolute top-1 right-1"
-                        onClick={() => copyReminderToClipboard()}
-                      >
-                        <CopyIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Copy to clipboard</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <Textarea
-                  rows={16}
-                  className="whitespace-pre-wrap"
-                  value={reminderText}
-                  onChange={(e) => setReminderText(e.target.value)}
-                />
-              </div>
               <Button
                 type="submit"
                 className="xl:col-start-2 w-full xl:w-fit justify-self-end"
