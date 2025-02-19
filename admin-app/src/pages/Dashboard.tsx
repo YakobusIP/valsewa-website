@@ -111,7 +111,6 @@ export default function Dashboard() {
   };
 
   const resetParent = async () => {
-    console.log("resetting");
     await fetchAllAccounts();
     await fetchStatistics();
   };

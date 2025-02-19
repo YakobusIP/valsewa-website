@@ -69,7 +69,8 @@ export default function PriceTierModal() {
 
   useEffect(() => {
     setPriceTierSearch(debouncedSearch);
-  }, [debouncedSearch, setPriceTierSearch]);
+    setPriceTierListPage(1);
+  }, [debouncedSearch, setPriceTierSearch, setPriceTierListPage]);
 
   return (
     <Dialog>

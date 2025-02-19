@@ -30,6 +30,8 @@ type PriceTierProviderProps = {
   children: ReactNode;
 };
 
+const PAGINATION_SIZE = 1;
+
 export const PriceTierContext = createContext<
   PriceTierContextProps | undefined
 >(undefined);
@@ -50,6 +52,7 @@ export const PriceTierProvider = ({ children }: PriceTierProviderProps) => {
     try {
       const response = await priceTierService.fetchAll(
         priceTierListPage,
+        PAGINATION_SIZE,
         priceTierSearch
       );
       setPriceTierList(response.data);

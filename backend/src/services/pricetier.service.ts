@@ -18,7 +18,12 @@ export class PriceTierService {
       const whereCriteria: Prisma.PriceTierWhereInput = {
         code: { contains: query, mode: "insensitive" }
       };
-      const data = await prisma.priceTier.findMany({ where: whereCriteria });
+
+      const data = await prisma.priceTier.findMany({
+        where: whereCriteria,
+        take: limit,
+        skip: (page - 1) * limit
+      });
       const itemCount = await prisma.priceTier.count({ where: whereCriteria });
       const pageCount = Math.ceil(itemCount / limit);
 
