@@ -12,7 +12,7 @@ const HENRIKDEV_BASE_URL = "https://api.henrikdev.xyz/valorant/v2/mmr";
 const REGION = "ap";
 
 export class RankService {
-  private callAPI = async (name: string, tag: string) => {
+  callAPI = async (name: string, tag: string) => {
     try {
       const rankResponse = await axios.get<RankDataResponse>(
         `${HENRIKDEV_BASE_URL}/${REGION}/${name}/${tag}`,
