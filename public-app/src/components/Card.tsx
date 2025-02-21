@@ -78,7 +78,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
   }, []);
 
   // Dynamically assign grid classes only if the screen size is above `small-desktop`
-  const getGridClass = (index: number, total: number): string => {
+  const getGridClass = (): string => {
     if (isAboveLargeDesktop) return "col-span-3";
     if (!isAboveSmallDesktop && isAbovePhone) return "col-span-6";
     if (!isAboveSmallDesktop && !isAbovePhone) return "col-span-12";
@@ -113,7 +113,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
         {processedData?.map((item, index) => (
           <div
             className={`rounded-xl relative h-auto w-full max-w-[420px] sm:max-w-[300px] md:max-w-[350px] lg:max-w-[340px] xl:max-w-[400px] 2xl:max-w-[420px] transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300 hover:cursor-pointer
-  ${getGridClass(index, processedData.length)}`}
+  ${getGridClass()}`}
             key={item.id}
             onClick={() => setSelectedCard(item)}
           >
@@ -140,9 +140,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       variant="outline"
                       className="sm:text-2xl text-xl font-bold text-roseWhite"
                     >
-                    {/* <p className="sm:text-4xl text-xl font-bold text-roseWhite"> */}
                       {item.priceTier.code}
-                    {/* </p> */}
                     </Badge>
                   </div>
                   <p
@@ -196,9 +194,6 @@ const Card: React.FC<CardProps> = ({ data }) => {
                     >
                       {item.accountRank}
                     </Badge>
-                    {/* <p className="font-semibold text-roseWhite text-sm pb-3">
-                    Skins ({item.skinList.length} items)
-                  </p> */}
                     {item.skinList?.slice(0, 3).map((skin, index) => (
                       <Badge
                         variant="secondary"

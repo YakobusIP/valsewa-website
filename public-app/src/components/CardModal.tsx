@@ -15,22 +15,57 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { availabilityStatuses } from "@/lib/constants";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import Image from "next/image";
-import { useState } from "react";
 import { Button } from "./ui/button";
 import Whatsapp from "./Whatsapp";
 
-
+interface CardItem {
+  id: number;
+  username: string;
+  accountCode: string;
+  description: string;
+  accountRank: string;
+  availabilityStatus: string;
+  nextBooking?: Date | null;
+  nextBookingDuration?: Date | null;
+  expireAt?: Date | null;
+  totalRentHour: number;
+  password: string;
+  passwordUpdatedAt: Date | null;
+  skinList: string[];
+  createdAt: Date;
+  updatedAt: Date;
+  priceTierId: number;
+  thumbnailId: number;
+  priceTier: {
+    id: number;
+    code: string;
+    description: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  thumbnail: {
+    id: number;
+    imageUrl: string;
+    createdAt: Date;
+    updatedAt: Date;
+    accountId?: number | null;
+  };
+  otherImages: {
+    id: number;
+    imageUrl: string;
+    createdAt: Date;
+    updatedAt: Date;
+    accountId?: number | null;
+  }[];
+}
 
 interface CardModalProps {
-  selectedCard: any;
+  selectedCard: CardItem|null;
   onClose: () => void;
 }
 
 const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
-  const [api, setApi] = useState<any>(null);
-  
   if (!selectedCard) return null;
-  
 
   function convertHoursToDayHour(hours: number): string {
     if (hours < 0) return "Invalid input"; // Handle negative inputs
@@ -38,7 +73,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
 
-    let result = [];
+    const result = [];
     if (days > 0) result.push(`${days} Day${days > 1 ? "s" : ""}`);
     if (remainingHours > 0)
       result.push(`${remainingHours} Hour${remainingHours > 1 ? "s" : ""}`);
@@ -57,9 +92,9 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
     <DialogContent className="w-full sm:max-w-[600px] max-w-[380px] p-0 bg-gray-800 [&>button]:hidden border-0">
       <ScrollArea className="sm:max-h-[600px] max-h-[600px] no-scrollbar p-0 overflow-y-auto">
         <div>
-          <Carousel setApi={setApi}>
+          <Carousel>
             <CarouselContent>
-              {selectedCard.otherImages.map((image: any, index: number) => (
+              {selectedCard.otherImages.map((image, index) => (
                 <CarouselItem key={index}>
                   <div className="h-auto w-full relative">
                     <AspectRatio ratio={16 / 9}>

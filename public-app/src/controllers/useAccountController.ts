@@ -17,7 +17,7 @@ export function useAccountController() {
 
   useEffect(() => {
     fetchAccounts("", sortDirection, sortAccount).then(setAccountList);
-  }, []);
+  }, [sortDirection, sortAccount]);
 
   const changeDirection = (key: string) => {
     if (sortAccount === key) {

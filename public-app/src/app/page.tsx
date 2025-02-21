@@ -4,8 +4,7 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { useAccountController } from "@/controllers/useAccountController";
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
@@ -14,7 +13,6 @@ import Image from "next/image";
 export default function Home() {
   const {
     accountList,
-    searchAccount,
     setSearchAccount,
     sortAccount,
     sortDirection,
