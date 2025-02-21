@@ -18,3 +18,18 @@ COPY prisma ./prisma/
 
 # Install dependencies.
 RUN npm install
+
+# Transpile TypeScript to JavaScript.
+RUN npm run build
+
+# Generate prisma client
+RUN npx prisma generate
+
+# Expose port
+EXPOSE 5000
+
+# Set the environment to production
+ENV NODE_ENV=production
+
+# Run the web service on container startup.
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
