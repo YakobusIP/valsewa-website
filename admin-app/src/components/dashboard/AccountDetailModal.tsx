@@ -58,7 +58,6 @@ import {
   LockIcon,
   Trash2Icon
 } from "lucide-react";
-import parse from "parse-duration";
 import { FieldErrors, useFieldArray, useForm } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
@@ -75,11 +74,6 @@ const formSchema = z.object({
   description: z.string().optional(),
   priceTier: z.number({ required_error: "Price tier is required" }),
   accountRank: z.string().nonempty("Rank is required"),
-  availabilityStatus: z.enum(["AVAILABLE", "IN_USE", "NOT_AVAILABLE"]),
-  nextBooking: z.date().optional(),
-  nextBookingDuration: z.string().optional(),
-  forceUpdateExpiry: z.boolean().default(false).optional(),
-  expireAt: z.date().optional(),
   password: z.string().nonempty("Password is required"),
   skinList: z
     .array(z.object({ name: z.string().optional() }))
@@ -244,7 +238,6 @@ export default function AccountDetailModal({
   ) => {
     const payload = {
       ...values,
-      nextBookingDuration: parse(values.nextBookingDuration) / (1000 * 60 * 60),
       passwordUpdatedAt: new Date(),
       thumbnail: thumbnail_id,
       otherImages: other_image_ids,

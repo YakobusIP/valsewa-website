@@ -140,6 +140,14 @@ export class AccountService {
     }
   };
 
+  getAllDatabaseAccounts = async (filter?: Prisma.AccountWhereInput) => {
+    try {
+      return await prisma.account.findMany({ where: filter });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   getAccountById = async (id: number) => {
     try {
       const account = await prisma.account.findFirst({ where: { id } });
@@ -303,8 +311,6 @@ export class AccountService {
           });
         })
       );
-
-      return accountsToUpdate.length;
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }

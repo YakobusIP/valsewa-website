@@ -30,7 +30,7 @@ type PriceTierProviderProps = {
   children: ReactNode;
 };
 
-const PAGINATION_SIZE = 1;
+const PAGINATION_SIZE = 5;
 
 export const PriceTierContext = createContext<
   PriceTierContextProps | undefined

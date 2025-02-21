@@ -34,7 +34,7 @@ const createAccountService = () => {
     }
   };
 
-  const create = async (data: AccountEntityRequest) => {
+  const create = async (data: Partial<AccountEntityRequest>) => {
     try {
       const response = await interceptedAxios.post<MessageResponse>(
         BASE_ACCOUNT_URL,

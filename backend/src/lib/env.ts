@@ -28,7 +28,13 @@ const envSchema = z.object({
   CANONICAL_PUBLIC_APP_URL: z.string().url(),
   PUBLIC_APP_URL: z.string().url(),
 
-  HENRIKDEV_API_KEY: z.string()
+  HENRIKDEV_API_KEY: z.string(),
+  BULL_REDIS_IP: z.string(),
+  BULL_REDIS_PORT: z.string().transform((value) => {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed)) throw new Error("Redis port must be a number");
+    return parsed;
+  })
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
