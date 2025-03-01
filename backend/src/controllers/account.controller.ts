@@ -3,6 +3,7 @@ import { AccountService } from "../services/account.service";
 import { UnprocessableEntityError } from "../lib/error";
 import { RankService } from "../services/rank.service";
 import { Prisma } from "@prisma/client";
+import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
 
 export class AccountController {
   constructor(
@@ -96,26 +97,17 @@ export class AccountController {
     next: NextFunction
   ) => {
     try {
-      const length = await this.rankService.updateAllAccountsRank();
+      const accounts = await this.accountService.getAllDatabaseAccounts();
 
-      return res.json({
-        message: `${length} account(s) updated successfully!`
+      accounts.forEach((account) => {
+        updateAllAccountRankQueue.add({
+          id: account.id,
+          username: account.username
+        });
       });
-    } catch (error) {
-      return next(error);
-    }
-  };
-
-  updateAllTotalRankHour = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const length = await this.accountService.updateAllTotalRentHour();
 
       return res.json({
-        message: `${length} account(s) updated successfully!`
+        message: `${accounts.length} account(s) updated successfully!`
       });
     } catch (error) {
       return next(error);

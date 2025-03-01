@@ -214,7 +214,11 @@ export class AccountService {
 
       const updateData: Prisma.AccountUpdateInput = { ...scalars };
 
-      if (forceUpdateTotalRentHour) updateData.rentHourUpdated = false;
+      if (forceUpdateTotalRentHour) {
+        updateData.totalRentHour = {
+          increment: currentAccount.nextBookingDuration ?? undefined
+        };
+      }
 
       if (nextBooking !== undefined && nextBookingDuration !== undefined) {
         if (forceUpdateExpiry) {
@@ -287,31 +291,6 @@ export class AccountService {
         throw new BadRequestError("Invalid request body!");
       }
 
-      throw new InternalServerError((error as Error).message);
-    }
-  };
-
-  updateAllTotalRentHour = async () => {
-    try {
-      const accountsToUpdate = await prisma.account.findMany({
-        where: { rentHourUpdated: false },
-        select: { id: true, nextBookingDuration: true }
-      });
-
-      await Promise.all(
-        accountsToUpdate.map((account) => {
-          return prisma.account.update({
-            where: { id: account.id },
-            data: {
-              totalRentHour: {
-                increment: account.nextBookingDuration ?? undefined
-              },
-              rentHourUpdated: true
-            }
-          });
-        })
-      );
-    } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
   };

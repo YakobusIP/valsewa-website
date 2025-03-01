@@ -55,48 +55,4 @@ export class RankService {
       throw new InternalServerError((error as Error).message);
     }
   };
-
-  updateAllAccountsRank = async () => {
-    try {
-      const account = await prisma.account.findMany();
-
-      const updatePromises = account.map(async (entry) => {
-        const [name, tag] = entry.username.split("#");
-
-        if (!name || !tag)
-          throw new UnprocessableEntityError(
-            "Invalid username format. Expected name#tag"
-          );
-
-        try {
-          const rankResponse = await this.callAPI(name, tag);
-
-          if (rankResponse) {
-            const accountCurrentRank =
-              rankResponse.data.current_data.currenttierpatched;
-
-            return prisma.account.update({
-              where: { id: entry.id },
-              data: { accountRank: accountCurrentRank }
-            });
-          }
-
-          return null;
-        } catch (error) {
-          console.error(`Error updating account with id ${entry.id}`, error);
-          return null;
-        }
-      });
-      await Promise.allSettled(updatePromises);
-    } catch (error) {
-      if (
-        error instanceof NotFoundError ||
-        error instanceof UnprocessableEntityError
-      ) {
-        throw error;
-      }
-
-      throw new InternalServerError((error as Error).message);
-    }
-  };
 }

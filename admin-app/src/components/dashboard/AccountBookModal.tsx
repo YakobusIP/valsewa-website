@@ -58,6 +58,7 @@ import { AVAILABILITY_STATUS } from "@/lib/enums";
 import { cn, convertHoursToDays } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CheckedState } from "@radix-ui/react-checkbox";
 import { addHours, format } from "date-fns";
 import { CalendarIcon, CopyIcon, Loader2Icon, Trash2Icon } from "lucide-react";
 import parse from "parse-duration";
@@ -70,7 +71,8 @@ const formSchema = z.object({
   nextBookingDuration: z.string().optional(),
   forceUpdateExpiry: z.boolean().default(false).optional(),
   forceUpdateTotalRentHour: z.boolean().default(false).optional(),
-  expireAt: z.date().optional()
+  expireAt: z.date().optional(),
+  totalRentHour: z.string().optional()
 });
 
 type Props = {
@@ -88,6 +90,8 @@ export default function AccountBookModal({
 }: Props) {
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const [reminderText, setReminderText] = useState("");
+  const [enableTotalRentHourEdit, setEnableTotalRentHourEdit] =
+    useState<CheckedState>();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -96,7 +100,8 @@ export default function AccountBookModal({
         (data.availabilityStatus as AVAILABILITY_STATUS) || "AVAILABLE",
       nextBooking: data.nextBooking ? new Date(data.nextBooking) : new Date(),
       nextBookingDuration: convertHoursToDays(data.nextBookingDuration) || "",
-      expireAt: data.expireAt ? new Date(data.expireAt) : undefined
+      expireAt: data.expireAt ? new Date(data.expireAt) : undefined,
+      totalRentHour: convertHoursToDays(data.totalRentHour) || ""
     },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -157,9 +162,16 @@ export default function AccountBookModal({
     id: number,
     values: z.infer<typeof formSchema>
   ) => {
+    const bookingDurationNumber = parse(values.nextBookingDuration);
+    const totalRentHourNumber = parse(values.totalRentHour);
     const payload = {
       ...values,
-      nextBookingDuration: parse(values.nextBookingDuration) / (1000 * 60 * 60)
+      ...(bookingDurationNumber !== null
+        ? { nextBookingDuration: bookingDurationNumber / (1000 * 60 * 60) }
+        : {}),
+      ...(totalRentHourNumber !== null && enableTotalRentHourEdit
+        ? { totalRentHour: totalRentHourNumber / (1000 * 60 * 60) }
+        : {})
     };
     try {
       const response = await accountService.update(id, payload);
@@ -233,9 +245,9 @@ export default function AccountBookModal({
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit, handleError)}
-              className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-4"
+              className="flex flex-col gap-4 p-4"
             >
-              <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
+              <div className="flex flex-col gap-2">
                 <p className="font-semibold">Booking Details</p>
                 <hr />
               </div>
@@ -245,7 +257,7 @@ export default function AccountBookModal({
                   control={form.control}
                   name="forceUpdateExpiry"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 col-span-1 xl:col-span-2">
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
                         <Checkbox
                           checked={field.value}
@@ -268,7 +280,7 @@ export default function AccountBookModal({
                 control={form.control}
                 name="forceUpdateTotalRentHour"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 col-span-1 xl:col-span-2">
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -276,18 +288,17 @@ export default function AccountBookModal({
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>Update Total Rent Hour</FormLabel>
+                      <FormLabel>Finish Previous Booking</FormLabel>
                       <FormDescription>
-                        Jika dicentang, maka saat formulir dikirim, sistem akan
-                        otomatis memperbarui nilai total rent hour pada jadwal
-                        berikutnya.
+                        Jika dicentang, maka booking sebelumnya selesai dan
+                        total rent hour akan ditambahkan
                       </FormDescription>
                     </div>
                   </FormItem>
                 )}
               />
 
-              <div className="flex flex-col xl:flex-row col-span-1 xl:col-span-2 gap-4">
+              <div className="flex flex-col xl:flex-row gap-4">
                 <FormField
                   control={form.control}
                   name="availabilityStatus"
@@ -458,7 +469,7 @@ export default function AccountBookModal({
               </div>
 
               {expireAtValue && (
-                <Label className="col-span-1 xl:col-span-2 text-destructive">
+                <Label className="text-destructive">
                   Status sewa akan expire pada{" "}
                   <span className="font-bold">
                     {format(expireAtValue, "dd MMMM yyyy 'at' HH:mm")}
@@ -466,7 +477,42 @@ export default function AccountBookModal({
                 </Label>
               )}
 
-              <div className="relative col-span-1 xl:col-span-2">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={enableTotalRentHourEdit}
+                    onCheckedChange={(checked) =>
+                      setEnableTotalRentHourEdit(checked)
+                    }
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Override Total Rent Hour
+                  </label>
+                </div>
+                {enableTotalRentHourEdit ? (
+                  <FormField
+                    control={form.control}
+                    name="totalRentHour"
+                    render={({ field }) => (
+                      <FormItem className="w-full xl:w-2/5">
+                        <FormLabel>Total Rent Hour</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter total rent hour here"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ) : null}
+              </div>
+
+              <div className="relative">
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -492,10 +538,12 @@ export default function AccountBookModal({
                 />
               </div>
 
-              <Button
-                type="submit"
-                className="xl:col-start-2 w-full xl:w-fit justify-self-end"
-              >
+              <p className="place-self-end text-sm">
+                Akun ini sudah pernah disewa selama{" "}
+                <b>{convertHoursToDays(data?.totalRentHour)}</b>
+              </p>
+
+              <Button type="submit" className="w-full xl:w-fit place-self-end">
                 {isLoadingSubmit && (
                   <Loader2Icon className="w-4 h-4 animate-spin" />
                 )}
