@@ -48,7 +48,7 @@ import { toast } from "@/hooks/useToast";
 import { AccountEntity } from "@/types/account.type";
 
 import { ranks } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, convertHoursToDays } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -772,6 +772,8 @@ export default function AccountDetailModal({
                   </FormItem>
                 )}
               />
+
+              <p className="xl:col-start-2 justify-self-end text-sm">Akun ini sudah pernah disewa selama <b>{convertHoursToDays(data?.totalRentHour)}</b></p>
 
               <Button
                 type="submit"

@@ -35,10 +35,6 @@ class AccountRouter {
       "/update-rank",
       this.accountController.updateAllAccountsRank
     );
-    this.router.post(
-      "/update-rent-hour",
-      this.accountController.updateAllTotalRankHour
-    );
     this.router.put(
       "/:id",
       authMiddleware,
