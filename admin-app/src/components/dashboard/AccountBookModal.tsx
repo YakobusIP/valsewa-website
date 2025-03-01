@@ -169,7 +169,7 @@ export default function AccountBookModal({
       ...(bookingDurationNumber !== null
         ? { nextBookingDuration: bookingDurationNumber / (1000 * 60 * 60) }
         : {}),
-      ...(totalRentHourNumber !== null
+      ...(totalRentHourNumber !== null && enableTotalRentHourEdit
         ? { totalRentHour: totalRentHourNumber / (1000 * 60 * 60) }
         : {})
     };
