@@ -34,7 +34,9 @@ const envSchema = z.object({
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) throw new Error("Redis port must be a number");
     return parsed;
-  })
+  }),
+
+  SCHEDULER_API_KEY: z.string()
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

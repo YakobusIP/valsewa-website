@@ -3,7 +3,9 @@ name: Deploy to Google Cloud Run
 on:
     pull_request:
         branches: ['production']
-        paths: ['.github/workflows/**', 'backend/**']
+        paths: 
+          - '.github/workflows/ci-cloudrun-backend.yml'
+          - 'backend/**'
 
 jobs:
     setup-build-publish-deploy:
@@ -62,3 +64,4 @@ jobs:
                   --set-env-vars=CANONICAL_PUBLIC_APP_URL=${{ vars.CANONICAL_PUBLIC_APP_URL }} \
                   --set-env-vars=PUBLIC_APP_URL=${{ vars.PUBLIC_APP_URL }} \
                   --set-env-vars=HENRIKDEV_API_KEY=${{ secrets.HENRIKDEV_API_KEY }}
+                  --set-env-vars=SCHEDULER_API_KEY=${{ secrets.SCHEDULER_API_KEY }}

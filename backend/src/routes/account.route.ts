@@ -4,6 +4,7 @@ import { AccountController } from "../controllers/account.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { UploadService } from "../services/upload.service";
 import { RankService } from "../services/rank.service";
+import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 
 class AccountRouter {
   public router: Router;
@@ -33,6 +34,7 @@ class AccountRouter {
     this.router.post("/", authMiddleware, this.accountController.createAccount);
     this.router.post(
       "/update-rank",
+      schedulerMiddleware,
       this.accountController.updateAllAccountsRank
     );
     this.router.put(
