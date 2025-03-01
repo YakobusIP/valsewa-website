@@ -8,7 +8,7 @@ RUN apt-get update -y && apt-get install -y openssl
 WORKDIR /usr/src/app
 
 # Copy application dependency manifests to the container image.
-COPY package.json package-lock.lock tsconfig.json ./
+COPY package.json package-lock.json tsconfig.json ./
 
 # Copy local code to the container image.
 COPY src/ ./src/
