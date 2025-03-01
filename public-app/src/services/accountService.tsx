@@ -6,7 +6,9 @@ export async function fetchAccounts(
   sortBy: string
 ) {
   try {
-    const url = `http://localhost:5000/api/accounts?page=1&limit=100&q=${encodeURIComponent(
+    const url = `${
+      process.env.NEXT_PUBLIC_AXIOS_BASE_URL
+    }/api/accounts?page=1&limit=100&q=${encodeURIComponent(
       search
     )}&sortBy=${encodeURIComponent(sortBy)}&direction=${encodeURIComponent(
       direction

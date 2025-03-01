@@ -118,7 +118,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
             </div>
           </Carousel>
         </div>
-        <div className="p-[16px]">
+        <div className="p-[16px] w-full">
           <DialogTitle></DialogTitle>
           <DialogDescription />
           <div className="px-4">
@@ -201,7 +201,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                 ))}
               </div>
 
-              {selectedCard.description.length > 0 && (
+              {!selectedCard.description && (
                 <div>
                   <p className="text-sm font-semibold pt-6 text-roseWhite">
                     Description
