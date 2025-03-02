@@ -103,6 +103,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                         alt="Content Image"
                         fill
                         className="object-cover rounded-t-xl"
+                        unoptimized
                       />
                     </AspectRatio>
                   </div>
