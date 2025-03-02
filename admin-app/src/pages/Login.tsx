@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -30,6 +32,10 @@ export default function Login() {
   const onSubmit = async (values: z.infer<typeof loginFormSchema>) => {
     await login(values);
   };
+
+  useEffect(() => {
+    document.title = "Login | Valsewa Admin";
+  }, []);
 
   return (
     <main className="container flex items-center justify-center mx-auto min-h-[100dvh]">

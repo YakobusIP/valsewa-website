@@ -17,50 +17,10 @@ import { DialogDescription } from "@radix-ui/react-dialog";
 import Image from "next/image";
 import { Button } from "./ui/button";
 import Whatsapp from "./Whatsapp";
-
-interface CardItem {
-  id: number;
-  username: string;
-  accountCode: string;
-  description: string;
-  accountRank: string;
-  availabilityStatus: string;
-  nextBooking?: Date | null;
-  nextBookingDuration?: Date | null;
-  expireAt?: Date | null;
-  totalRentHour: number;
-  password: string;
-  passwordUpdatedAt: Date | null;
-  skinList: string[];
-  createdAt: Date;
-  updatedAt: Date;
-  priceTierId: number;
-  thumbnailId: number;
-  priceTier: {
-    id: number;
-    code: string;
-    description: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
-  thumbnail: {
-    id: number;
-    imageUrl: string;
-    createdAt: Date;
-    updatedAt: Date;
-    accountId?: number | null;
-  };
-  otherImages: {
-    id: number;
-    imageUrl: string;
-    createdAt: Date;
-    updatedAt: Date;
-    accountId?: number | null;
-  }[];
-}
+import { AccountEntity } from "@/types/account.type";
 
 interface CardModalProps {
-  selectedCard: CardItem|null;
+  selectedCard: AccountEntity | null;
   onClose: () => void;
 }
 
@@ -94,7 +54,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
         <div>
           <Carousel>
             <CarouselContent>
-              {selectedCard.otherImages.map((image, index) => (
+              {selectedCard.otherImages?.map((image, index) => (
                 <CarouselItem key={index}>
                   <div className="h-auto w-full relative">
                     <AspectRatio ratio={16 / 9}>
