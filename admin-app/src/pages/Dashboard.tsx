@@ -120,6 +120,10 @@ export default function Dashboard() {
     fetchAllAccounts();
   }, [fetchAllAccounts]);
 
+  useEffect(() => {
+    document.title = "Dashboard | Valsewa Admin";
+  }, []);
+
   return (
     <Fragment>
       <main className="relative min-h-[100dvh]">
