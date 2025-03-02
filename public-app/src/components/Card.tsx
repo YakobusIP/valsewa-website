@@ -6,53 +6,15 @@ import { availabilityStatuses } from "@/lib/constants";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import CardModal from "./CardModal";
+import { AccountEntity } from "@/types/account.type";
 // Define types for props and data items
-interface CardItem {
-  id: number;
-  username: string;
-  accountCode: string;
-  description: string;
-  accountRank: string;
-  availabilityStatus: string;
-  nextBooking?: Date | null;
-  nextBookingDuration?: Date | null;
-  expireAt?: Date | null;
-  totalRentHour: number;
-  password: string;
-  passwordUpdatedAt: Date | null;
-  skinList: string[];
-  createdAt: Date;
-  updatedAt: Date;
-  priceTierId: number;
-  thumbnailId: number;
-  priceTier: {
-    id: number;
-    code: string;
-    description: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
-  thumbnail: {
-    id: number;
-    imageUrl: string;
-    createdAt: Date;
-    updatedAt: Date;
-    accountId?: number | null;
-  };
-  otherImages: {
-    id: number;
-    imageUrl: string;
-    createdAt: Date;
-    updatedAt: Date;
-    accountId?: number | null;
-  }[];
-}
+
 
 interface CardProps {
-  data?: CardItem[];
+  data?: AccountEntity[];
 }
 const Card: React.FC<CardProps> = ({ data }) => {
-  const [selectedCard, setSelectedCard] = useState<CardItem | null>(null);
+  const [selectedCard, setSelectedCard] = useState<AccountEntity | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const [isAboveLargeDesktop, setIsAboveLargeDesktop] =
     useState<boolean>(false);
@@ -87,10 +49,10 @@ const Card: React.FC<CardProps> = ({ data }) => {
     return "col-span-4"; // Default to 3 columns
   };
 
-  const processCardData = (items: CardItem[] | undefined) => {
+  const processCardData = (items: AccountEntity[] | undefined) => {
     return items?.map((item) => ({
       ...item,
-      otherImages: item.thumbnail
+      otherImages: item.thumbnail && item.otherImages
         ? [{ ...item.thumbnail, isThumbnail: true }, ...item.otherImages]
         : item.otherImages,
     }));
