@@ -33,7 +33,7 @@ export default function Login() {
 
   return (
     <main className="container flex items-center justify-center mx-auto min-h-[100dvh]">
-      <Card className="w-1/4">
+      <Card className="w-4/5 xl:w-1/4">
         <CardHeader>
           <CardTitle className="text-center font-bold text-4xl">
             Valsewa Admin
