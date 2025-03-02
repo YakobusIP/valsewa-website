@@ -126,7 +126,6 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       alt="service logo"
                       fill
                       className="object-cover rounded-t-xl"
-                      unoptimized
                     />
                   </AspectRatio>
                 </figure>
