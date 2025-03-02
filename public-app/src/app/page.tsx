@@ -16,6 +16,7 @@ export const metadata: Metadata = {
     "akun gaming",
   ],
   robots: "index, follow",
+  alternates: { canonical: "/" },
 };
 
 export default async function Page() {
