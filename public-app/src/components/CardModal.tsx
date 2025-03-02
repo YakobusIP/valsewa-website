@@ -149,14 +149,14 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                 {availabilityStatuses.map((status) =>
                   selectedCard.availabilityStatus == status.value ? (
                     <Badge
-                      variant="outline"
+                      variant="secondary"
                       key={status.value}
-                      className={`text-sm max-sm:text-xs text-center font-semibold text-zinc-100 px-3 ${
+                      className={`text-sm max-sm:text-xs text-center font-semibold text-zinc-100 px-3 cursor-default ${
                         status.value === "AVAILABLE"
-                          ? "bg-green-600"
+                          ? "bg-green-600 hover:bg-green-700"
                           : status.value === "IN_USE"
-                          ? "bg-yellow-500"
-                          : "bg-destructive"
+                          ? "bg-yellow-500 hover:bg-yellow-600"
+                          : "bg-destructive hover:bg-red-600"
                       }`}
                     >
                       {status.label}
@@ -165,26 +165,26 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                 )}
 
                 <Badge
-                  variant="outline"
-                  className={`px-3 text-center font-semibold text-primary-foreground max-sm:text-xs text-sm ${
+                  variant="secondary"
+                  className={`px-3 text-center font-semibold text-primary-foreground max-sm:text-xs text-sm cursor-default ${
                     selectedCard.accountRank.startsWith("Iron")
-                      ? "bg-gray-600"
+                      ? "bg-gray-600 hover:bg-gray-700 "
                       : selectedCard.accountRank.startsWith("Bronze")
-                      ? "bg-amber-600"
+                      ? "bg-amber-600 hover:bg-amber-700"
                       : selectedCard.accountRank.startsWith("Silver")
-                      ? "bg-gray-500"
+                      ? "bg-gray-500 hover:bg-gray-600"
                       : selectedCard.accountRank.startsWith("Gold")
-                      ? "bg-yellow-600"
+                      ? "bg-yellow-600 hover:bg-yellow-700"
                       : selectedCard.accountRank.startsWith("Platinum")
-                      ? "bg-cyan-700"
+                      ? "bg-cyan-700 hover:bg-cyan-800"
                       : selectedCard.accountRank.startsWith("Diamond")
-                      ? "bg-purple-600"
+                      ? "bg-purple-600 hover:bg-purple-700"
                       : selectedCard.accountRank.startsWith("Ascendant")
-                      ? "bg-emerald-700"
+                      ? "bg-emerald-700 hover:bg-emerald-800"
                       : selectedCard.accountRank.startsWith("Immortal")
-                      ? "bg-red-800"
+                      ? "bg-red-800 hover:bg-red-900"
                       : selectedCard.accountRank === "Radiant"
-                      ? "bg-yellow-600"
+                      ? "bg-yellow-600 hover:bg-yellow-700"
                       : "bg-black"
                   }`}
                 >
@@ -194,7 +194,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
               <p className="font-semibold text-roseWhite text-sm pt-2">
                 List of skins ({selectedCard.skinList.length})
               </p>
-              <div className="flex flex-wrap gap-2 pt-2 cursor-pointer whitespace-nowrap">
+              <div className="flex flex-wrap gap-2 pt-2 whitespace-nowrap text-sm max-sm:text-xs cursor-default">
                 {selectedCard.skinList?.map((skin: string, index: number) => (
                   <Badge variant="secondary" key={index}>
                     {skin}
@@ -202,7 +202,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                 ))}
               </div>
 
-              {!selectedCard.description && (
+              {selectedCard.description !== null && (
                 <div>
                   <p className="text-sm font-semibold pt-6 text-roseWhite">
                     Description
