@@ -5,7 +5,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { availabilityStatuses } from "@/lib/constants";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import CardDialog from "./CardModal";
+import CardModal from "./CardModal";
 // Define types for props and data items
 interface CardItem {
   id: number;
@@ -125,7 +125,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       src={item.thumbnail.imageUrl}
                       alt="service logo"
                       fill
-                      className="object-cover rounded-t-xl"
+                      className="object-cover rounded-t-xl w-full"
                     />
                   </AspectRatio>
                 </figure>
@@ -217,7 +217,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
           </div>
         ))}
       </div>
-      <CardDialog
+      <CardModal
         selectedCard={selectedCard}
         onClose={() => setSelectedCard(null)}
       />

@@ -4,12 +4,12 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "storage.googleapis.com",
-      },
-      {
-        protocol: "https",
-        hostname: "valsewa-website-bucket.storage.googleapis.com",
+        protocol: process.env.NODE_ENV === "production" ? "https" : "http",
+        hostname:
+          process.env.NODE_ENV === "production"
+            ? process.env.NEXT_PUBLIC_AXIOS_BASE_URL || "" 
+            : "localhost",
+        port: process.env.NODE_ENV === "production" ? undefined : "5000", 
       },
     ],
   },
