@@ -154,14 +154,14 @@ const Card: React.FC<CardProps> = ({ data }) => {
                     {availabilityStatuses.map((status) =>
                       item.availabilityStatus == status.value ? (
                         <Badge
-                          variant="outline"
+                          variant="secondary"
                           key={status.value}
-                          className={`text-sm max-sm:text-xs text-center font-semibold text-zinc-100 px-3 ${
+                          className={`text-sm max-sm:text-xs text-center font-bold text-white px-3  ${
                             status.value === "AVAILABLE"
-                              ? "bg-green-600"
+                              ? "bg-green-600 hover:bg-green-700"
                               : status.value === "IN_USE"
-                              ? "bg-yellow-500"
-                              : "bg-destructive"
+                              ? "bg-yellow-500 hover:bg-yellow-600"
+                              : "bg-destructive hover:bg-red-600"
                           }`}
                         >
                           {status.label}
@@ -170,26 +170,26 @@ const Card: React.FC<CardProps> = ({ data }) => {
                     )}
 
                     <Badge
-                      variant="outline"
+                      variant="secondary"
                       className={`px-3 text-center font-semibold text-primary-foreground max-sm:text-xs text-sm ${
                         item.accountRank.startsWith("Iron")
-                          ? "bg-gray-600"
+                          ? "bg-gray-600 hover:bg-gray-700 "
                           : item.accountRank.startsWith("Bronze")
-                          ? "bg-amber-600"
+                          ? "bg-amber-600 hover:bg-amber-700"
                           : item.accountRank.startsWith("Silver")
-                          ? "bg-gray-500"
+                          ? "bg-gray-500 hover:bg-gray-600"
                           : item.accountRank.startsWith("Gold")
-                          ? "bg-yellow-600"
+                          ? "bg-yellow-600 hover:bg-yellow-700"
                           : item.accountRank.startsWith("Platinum")
-                          ? "bg-cyan-700"
+                          ? "bg-cyan-700 hover:bg-cyan-800"
                           : item.accountRank.startsWith("Diamond")
-                          ? "bg-purple-600"
+                          ? "bg-purple-600 hover:bg-purple-700"
                           : item.accountRank.startsWith("Ascendant")
-                          ? "bg-emerald-700"
+                          ? "bg-emerald-700 hover:bg-emerald-800"
                           : item.accountRank.startsWith("Immortal")
-                          ? "bg-red-800"
+                          ? "bg-red-800 hover:bg-red-900"
                           : item.accountRank === "Radiant"
-                          ? "bg-yellow-600"
+                          ? "bg-yellow-600 hover:bg-yellow-700"
                           : "bg-black"
                       }`}
                     >
@@ -199,18 +199,20 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       <Badge
                         variant="secondary"
                         key={index}
-                        className="bg-red-500 text-roseWhite text-sm max-sm:text-xs"
+                        className="bg-red-600 text-roseWhite text-sm max-sm:text-xs hover:bg-red-700"
                       >
                         {skin}
                       </Badge>
                     ))}
-                    <Badge
-                      variant="secondary"
-                      key={index}
-                      className="bg-red-500 text-roseWhite text-sm max-sm:text-xs"
-                    >
-                      + {item.skinList.length - 3} more
-                    </Badge>
+                    {item.skinList.length > 3 && (
+                      <Badge
+                        variant="secondary"
+                        key={index}
+                        className="bg-red-600 text-roseWhite text-sm max-sm:text-xs hover:bg-red-700"
+                      >
+                        + {item.skinList.length - 3} more
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
