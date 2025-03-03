@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useDebounce } from "use-debounce";
 import { fetchAccounts } from "@/services/accountService";
 import { AccountEntity } from "@/types/account.type";
@@ -11,17 +11,23 @@ export function useAccountController(initialAccount:AccountEntity[]) {
   const [sortDirection, setSortDirection] = useState("asc");
   const [debouncedSearch] = useDebounce(searchAccount, 1000);
 
-  const isFirstRender = useRef(true)
+  useEffect(() => {
+      fetchAccounts("", "asc", "").then(setAccountList);
+    }, []); // Runs only once after hydration
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return 
-    }
-    fetchAccounts(debouncedSearch, sortDirection, sortAccount).then(
-      setAccountList
-    );
+    if (!debouncedSearch && !sortAccount) return; // Avoid redundant fetch
+    fetchAccounts(debouncedSearch, sortDirection, sortAccount).then(setAccountList);
   }, [debouncedSearch, sortDirection, sortAccount]);
+  // useEffect(() => {
+  //   if (isFirstRender.current) {
+  //     isFirstRender.current = false
+  //     return 
+  //   }
+  //   fetchAccounts(debouncedSearch, sortDirection, sortAccount).then(
+  //     setAccountList
+  //   );
+  // }, [debouncedSearch, sortDirection, sortAccount]);
 
   const changeDirection = (key: string) => {
     if (sortAccount === key) {
