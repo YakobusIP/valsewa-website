@@ -17,6 +17,7 @@ interface Props{
 export default function Home({initialAccount}:Props) {
   const {
     accountList,
+    searchAccount,
     setSearchAccount,
     sortAccount,
     sortDirection,
@@ -84,7 +85,7 @@ export default function Home({initialAccount}:Props) {
               <input
                 type="search"
                 className="block w-full p-4 ps-10 text-sm text-roseWhite border border-gray-300 rounded-lg bg-gray-800 animated-bg h-[50px]"
-                placeholder="Search for items.."
+                placeholder=""
                 onChange={(e) => setSearchAccount(e.target.value)}
               />
             </div>
@@ -106,10 +107,36 @@ export default function Home({initialAccount}:Props) {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
+{accountList.length>0? (
           <div className="mt-9 w-full mx-0 pt-10">
+            
             <Card data={accountList} />
+
+            
           </div>
+          ):(
+            <div className=" mt-48">
+              <div className="flex items-center ps-3 pointer-events-none justify-center">
+                <svg
+                  className="w-16 h-16 text-roseWhite font-bold  dark:text-gray-400 p-2"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="3"
+                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                  />
+                </svg>
+              </div>
+              <p className="text-roseWhite text-3xl font-semibold text-center">Mohon maaf Akun tidak ditemukan</p>
+              <p className="text-roseWhite text-xl font-normal text-center max-w-[300px] mx-auto">Coba lakukan pencarian untuk skin / preferensi yang lain</p>
+              </div>
+            )}
         </div>
       </div>
     </section>
