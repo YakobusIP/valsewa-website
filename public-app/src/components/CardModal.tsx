@@ -18,6 +18,7 @@ import Image from "next/image";
 import { Button } from "./ui/button";
 import Whatsapp from "./Whatsapp";
 import { AccountEntity } from "@/types/account.type";
+import { ExternalLink } from "lucide-react";
 
 interface CardModalProps {
   selectedCard: AccountEntity | null;
@@ -95,14 +96,18 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                   {selectedCard.priceTier.code}
                 </Badge>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mt-2">
                 <p className="text-roseWhite pb-2">Rent Count: {rentTime}</p>
-                <p
-                  className="text-sm mb-2 text-roseWhite cursor-pointer underline"
-                  onClick={() => visitTracker(selectedCard.username)}
-                >
-                  {selectedCard.username}
-                </p>
+                <div className="flex mb-5 gap-1">``
+                    <p
+                      className="text-sm text-roseWhite cursor-pointer"
+                      onClick={() => visitTracker(selectedCard.username)}
+                    >
+                      {selectedCard.username}
+                    </p>
+                    <ExternalLink className="w-5 h-5 text-white" onClick={() => visitTracker(selectedCard.username)} />
+
+                  </div>
               </div>
 
               <div className="flex gap-2 mb-3 flex-row">

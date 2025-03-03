@@ -107,7 +107,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       {item.priceTier.code}
                     </Badge>
                   </div>
-                  <div className="flex mb-5 gap-2">
+                  <div className="flex mb-5 gap-1">
                     <p
                       className="text-sm text-roseWhite cursor-pointer"
                       onClick={() => visitTracker(item.username)}
