@@ -773,7 +773,14 @@ export default function AccountDetailModal({
                 )}
               />
 
-              <p className="xl:col-start-2 justify-self-end text-sm">Akun ini sudah pernah disewa selama <b>{convertHoursToDays(data?.totalRentHour)}</b></p>
+              <p className="xl:col-start-2 justify-self-end text-sm">
+                Akun ini sudah pernah disewa selama{" "}
+                <b>
+                  {data?.totalRentHour
+                    ? convertHoursToDays(data?.totalRentHour)
+                    : "0d 0h"}
+                </b>
+              </p>
 
               <Button
                 type="submit"
