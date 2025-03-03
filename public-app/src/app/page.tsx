@@ -23,3 +23,5 @@ export default async function Page() {
   const initialAccount = await fetchAccounts("", "", ""); 
   return <Home initialAccount={initialAccount} />;
 }
+
+export const dynamic = 'force-dynamic';
