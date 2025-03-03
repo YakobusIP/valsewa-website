@@ -42,5 +42,6 @@ jobs:
           gcloud run jobs deploy scheduler-job \
             --image=${{ vars.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/valsewa/scheduler:${{ github.sha }} \
             --region=${{ vars.GCP_CLOUD_RUN_REGION }} \
+            --service-account=${{ secrets.CLOUD_RUN_INVOKER_SA }} \
             --set-env-vars=BACKEND_BASE_URL=${{ vars.BACKEND_BASE_URL }} \
             --set-env-vars=SCHEDULER_API_KEY=${{ secrets.SCHEDULER_API_KEY }}
