@@ -17,7 +17,6 @@ interface Props{
 export default function Home({initialAccount}:Props) {
   const {
     accountList,
-    searchAccount,
     setSearchAccount,
     sortAccount,
     sortDirection,
