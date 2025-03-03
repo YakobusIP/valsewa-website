@@ -85,7 +85,7 @@ export default function Home({initialAccount}:Props) {
               <input
                 type="search"
                 className="block w-full p-4 ps-10 text-sm text-roseWhite border border-gray-300 rounded-lg bg-gray-800 animated-bg h-[50px]"
-                placeholder=""
+                placeholder="Ascendant Reaver vandal ..."
                 onChange={(e) => setSearchAccount(e.target.value)}
               />
             </div>
