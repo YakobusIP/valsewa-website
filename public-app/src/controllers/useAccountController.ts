@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useDebounce } from "use-debounce";
 import { fetchAccounts } from "@/services/accountService";
 import { AccountEntity } from "@/types/account.type";
