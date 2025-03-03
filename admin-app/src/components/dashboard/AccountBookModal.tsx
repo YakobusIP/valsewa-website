@@ -540,7 +540,11 @@ export default function AccountBookModal({
 
               <p className="place-self-end text-sm">
                 Akun ini sudah pernah disewa selama{" "}
-                <b>{convertHoursToDays(data?.totalRentHour)}</b>
+                <b>
+                  {data?.totalRentHour
+                    ? convertHoursToDays(data?.totalRentHour)
+                    : "0d 0h"}
+                </b>
               </p>
 
               <Button type="submit" className="w-full xl:w-fit place-self-end">
