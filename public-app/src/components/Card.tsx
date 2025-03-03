@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import CardModal from "./CardModal";
 import { AccountEntity } from "@/types/account.type";
+import { ExternalLink } from "lucide-react";
 // Define types for props and data items
 
 
@@ -106,12 +107,16 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       {item.priceTier.code}
                     </Badge>
                   </div>
-                  <p
-                    className="text-sm mb-2 text-roseWhite cursor-pointer underline"
-                    onClick={() => visitTracker(item.username)}
-                  >
-                    {item.username}
-                  </p>
+                  <div className="flex mb-5 gap-2">
+                    <p
+                      className="text-sm text-roseWhite cursor-pointer"
+                      onClick={() => visitTracker(item.username)}
+                    >
+                      {item.username}
+                    </p>
+                    <ExternalLink className="w-5 h-5 text-white" onClick={() => visitTracker(item.username)} />
+
+                  </div>
                   <div className="flex flex-wrap gap-y-2 gap-2 pb-5">
                     {availabilityStatuses.map((status) =>
                       item.availabilityStatus == status.value ? (
