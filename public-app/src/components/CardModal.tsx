@@ -96,11 +96,11 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                   {selectedCard.priceTier.code}
                 </Badge>
               </div>
-              <div className="flex justify-between items-center mt-2">
-                <p className="text-roseWhite pb-2">Rent Count: {rentTime}</p>
-                <div className="flex mb-5 gap-1">``
+              <div className="flex md:justify-between md:flex-row mt-2 flex-col justify-start">
+                <p className="text-roseWhite mb-2 text-md">Rent Count: {rentTime}</p>
+                <div className="flex mb-5 gap-1">
                     <p
-                      className="text-sm text-roseWhite cursor-pointer"
+                      className="text-md text-roseWhite cursor-pointer"
                       onClick={() => visitTracker(selectedCard.username)}
                     >
                       {selectedCard.username}

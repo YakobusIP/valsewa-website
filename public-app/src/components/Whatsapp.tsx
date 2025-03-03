@@ -1,7 +1,7 @@
 // import { Logo, TextLogo } from "@/data/data";
 import Image from "next/image";
 import { FC } from "react";
-
+import { Button } from "./ui/button";
 
 
 const Whatsapp: FC = () => {
@@ -9,11 +9,12 @@ const Whatsapp: FC = () => {
     "https://wa.me/6285176983434?text=Halo admin VALFORUM aku mau JUAL BELI akun nih"; 
 
   return (
-    <a
+    <Button className="bg-green-600 hover:bg-green-700">
+<a
       href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="relative z-20 my-auto flex h-[36px] w-[140px] flex-row items-center justify-center overflow-visible rounded-full bg-success-600 p-10 px-4 py-2 pb-3 pt-3 text-white bg-green-600 hover:opacity-80"
+      className=" w-auto flex items-center "
     >
       <figure className="relative h-[24px] w-[24px]">
         <Image
@@ -29,6 +30,8 @@ const Whatsapp: FC = () => {
       </span>
       
     </a>
+    </Button>
+    
   );
 };
 
