@@ -13,7 +13,18 @@ export async function fetchAccounts(
     )}&sortBy=${encodeURIComponent(sortBy)}&direction=${encodeURIComponent(
       direction
     )}`;
-    const response = await axios.get(url);
+
+    const response = await axios.get(url, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
+      params: {
+        _: new Date().getTime(), 
+      },
+    });
+
     return response.data.data;
   } catch (error) {
     console.error("Error fetching data:", error);
