@@ -11,17 +11,13 @@ export class PriceTierController {
     next: NextFunction
   ) => {
     try {
-      const page = req.query.page as string;
-      const limit = req.query.limit as string;
+      const page = req.query.page ?? undefined;
+      const limit = req.query.limit ?? undefined;
       const query = req.query.q as string;
 
-      if (!page || !limit) {
-        throw new UnprocessableEntityError("Pagination query params missing!");
-      }
-
       const [data, metadata] = await this.priceTierService.getAllPriceTiers(
-        parseInt(page),
-        parseInt(limit),
+        page ? parseInt(page as string) : undefined,
+        limit ? parseInt(limit as string) : undefined,
         query
       );
 

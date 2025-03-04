@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { accountService } from "@/services/account.service";
+import { priceTierService } from "@/services/pricetier.service";
 import { uploadService } from "@/services/upload.service";
 
 import { Button } from "@/components/ui/button";
@@ -42,10 +43,10 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 
-import { usePriceTier } from "@/hooks/usePriceTier";
 import { toast } from "@/hooks/useToast";
 
 import { AccountEntity } from "@/types/account.type";
+import { PriceTier } from "@/types/pricetier.type";
 
 import { ranks } from "@/lib/constants";
 import { cn, convertHoursToDays } from "@/lib/utils";
@@ -113,14 +114,33 @@ export default function AccountDetailModal({
   data,
   resetParent
 }: Props) {
-  const { priceTierList } = usePriceTier();
-
   const isFirstRender = useRef(true);
+  const [isLoadingPriceTierList, setIsLoadingPriceTierList] = useState(false);
+  const [priceTierList, setPriceTierList] = useState<PriceTier[]>([]);
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const [isLoadingFetchRank, setIsLoadingFetchRank] = useState(false);
   const [isPasswordUpdated, setIsPasswordUpdated] = useState(
     !data?.stale_password || false
   );
+
+  const fetchPriceTierList = useCallback(async () => {
+    setIsLoadingPriceTierList(true);
+    try {
+      const response = await priceTierService.fetchAll();
+      setPriceTierList(response.data);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occured";
+
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: errorMessage
+      });
+    } finally {
+      setIsLoadingPriceTierList(false);
+    }
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -395,6 +415,10 @@ export default function AccountDetailModal({
     }
   }, [mode, data, form]);
 
+  useEffect(() => {
+    if (open) fetchPriceTierList();
+  }, [fetchPriceTierList, open]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full xl:w-2/5">
@@ -494,6 +518,11 @@ export default function AccountDetailModal({
                         ) : (
                           <SelectItem value="no_price_tier" disabled>
                             No price tier available
+                          </SelectItem>
+                        )}
+                        {isLoadingPriceTierList && (
+                          <SelectItem value="Loading">
+                            Fetching price tier...
                           </SelectItem>
                         )}
                       </SelectContent>
