@@ -10,8 +10,8 @@ import { Metadata } from "../types/metadata.type";
 
 export class PriceTierService {
   getAllPriceTiers = async (
-    page: number,
-    limit: number,
+    page?: number,
+    limit?: number,
     query?: string
   ): Promise<[PriceTier[], Metadata]> => {
     try {
@@ -19,20 +19,40 @@ export class PriceTierService {
         code: { contains: query, mode: "insensitive" }
       };
 
-      const data = await prisma.priceTier.findMany({
-        where: whereCriteria,
-        take: limit,
-        skip: (page - 1) * limit
-      });
-      const itemCount = await prisma.priceTier.count({ where: whereCriteria });
-      const pageCount = Math.ceil(itemCount / limit);
+      let data: PriceTier[];
+      let metadata: Metadata;
 
-      const metadata = {
-        page,
-        limit,
-        pageCount,
-        total: itemCount
-      };
+      if (page !== undefined && limit !== undefined) {
+        const skip = (page - 1) * limit;
+
+        data = await prisma.priceTier.findMany({
+          where: whereCriteria,
+          take: limit,
+          skip: skip
+        });
+
+        const itemCount = await prisma.priceTier.count({
+          where: whereCriteria
+        });
+        const pageCount = Math.ceil(itemCount / limit);
+
+        metadata = {
+          page: page,
+          limit: limit,
+          pageCount,
+          total: itemCount
+        };
+      } else {
+        data = await prisma.priceTier.findMany({
+          where: whereCriteria
+        });
+        metadata = {
+          page: 0,
+          limit: 0,
+          pageCount: 0,
+          total: 0
+        };
+      }
 
       return [data, metadata];
     } catch (error) {

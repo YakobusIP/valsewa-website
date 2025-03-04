@@ -6,7 +6,7 @@ import { handleAxiosError, interceptedAxios } from "@/lib/axios";
 const BASE_PRICETIER_URL = "/api/price-tiers";
 
 const createPriceTierService = () => {
-  const fetchAll = async (page: number, limit: number, query: string) => {
+  const fetchAll = async (page?: number, limit?: number, query?: string) => {
     try {
       const response = await interceptedAxios.get<ApiResponseList<PriceTier>>(
         BASE_PRICETIER_URL,
