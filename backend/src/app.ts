@@ -13,6 +13,9 @@ import UploadRouter from "./routes/upload.route";
 import StatisticRouter from "./routes/statistic.route";
 import { throttleMiddleware } from "./middleware/throttle.middlware";
 
+import swaggerJSDoc, { OAS3Definition, Options } from "swagger-jsdoc";
+import { serve, setup } from "swagger-ui-express";
+
 const app: Express = express();
 
 app.use(
@@ -43,6 +46,33 @@ app.use("/api/accounts", AccountRouter);
 app.use("/api/price-tiers", PriceTierRouter);
 app.use("/api/statistics", StatisticRouter);
 app.use("/api/upload", UploadRouter);
+
+const swaggerDefinition: OAS3Definition = {
+  openapi: "3.0.0",
+  info: {
+    title: "Valsewa Backend API",
+    version: "1.0.0",
+    description: "Entire API available on Valsewa Backend"
+  },
+  servers: [
+    {
+      url: env.BACKEND_BASE_URL,
+      description:
+        env.NODE_ENV === "development"
+          ? "Development server"
+          : "Production server"
+    }
+  ]
+};
+
+const options: Options = {
+  swaggerDefinition,
+  apis: [`${__dirname}/controllers/*.ts`]
+};
+
+const swaggerSpec = swaggerJSDoc(options);
+
+app.use("/docs", serve, setup(swaggerSpec));
 
 app.use(errorMiddleware);
 

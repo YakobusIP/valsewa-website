@@ -66,7 +66,6 @@ export class AccountService {
     try {
       const data = await prisma.account.findMany({
         orderBy: {
-          // priceTier: { code : sortBy === "price_tier" ? direction : undefined},
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
         include: { priceTier: true, thumbnail: true, otherImages: true }
