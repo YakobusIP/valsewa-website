@@ -39,15 +39,29 @@ export default function Home({initialAccount}:Props) {
   );
 
   return (
-    <section className="bg-gray-900 pb-32">
-      <div className="w-full">
-        <figure className="relative w-full before:absolute before:inset-0 before:bg-gradient-to-b before:from-transparent before:to-gray-900 before:z-10">
-          <AspectRatio ratio={16 / 4}>
+    <section className="bg-gray-900 pb-32 relative">
+      <div className="w-full relative">
+        <figure className="absolute z-50 top-0 lg:max-w-[200px] sm:max-w-[150px] max-w-[120px] left-5">
+  <Image src="/logo/Logo Valsewa 2 SVG.svg" width={250} height={100} alt="logo" className="object-contain"/>
+</figure>
+
+        <figure className="relative w-full before:absolute before:inset-0 before:bg-gradient-to-b before:from-transparent before:to-gray-900 before:z-10 max-md:hidden">
+          <AspectRatio ratio={16 / 5}>
             <Image
-              src="/top-picture2.jpg"
+              src="/hero/Hero9.png"
+              fill
+              alt="Hero"
+              className="object-cover object-top"
+            />
+          </AspectRatio>
+        </figure>
+        <figure className="relative w-full before:absolute before:inset-0 before:bg-gradient-to-b before:from-transparent before:to-gray-900 before:z-10 md:hidden">
+          <AspectRatio ratio={16 / 12}>
+            <Image
+              src="/hero/Hero9.png"
               fill
               alt="Main Pict"
-              className="object-cover"
+              className="object-cover object-top"
             />
           </AspectRatio>
         </figure>

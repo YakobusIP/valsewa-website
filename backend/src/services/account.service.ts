@@ -43,18 +43,18 @@ export class AccountService {
     "Radiant"
   ];
   private priceTierOrder = [
-    "C",
-    "B",
-    "A",
-    "S",
-    "V",
+    "LR-SSS",
     "SSS",
-    "LR-C",
-    "LR-B",
-    "LR-A",
-    "LR-S",
     "LR-V",
-    "LR-SSS"
+    "V",
+    "LR-S",
+    "S",
+    "LR-A",
+    "A",
+    "LR-B",
+    "B",
+    "LR-C",
+    "C"
   ];
   getAllAccounts = async (
     page: number,
@@ -66,7 +66,6 @@ export class AccountService {
     try {
       const data = await prisma.account.findMany({
         orderBy: {
-          // priceTier: { code : sortBy === "price_tier" ? direction : undefined},
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
         include: { priceTier: true, thumbnail: true, otherImages: true }
@@ -124,8 +123,8 @@ export class AccountService {
         let stale_password = false;
         if (item.nextBooking && item.nextBookingDuration) {
           if (
-            addHours(item.nextBooking, item.nextBookingDuration) <
-            item.passwordUpdatedAt
+            item.passwordUpdatedAt <
+            addHours(item.nextBooking, item.nextBookingDuration)
           ) {
             stale_password = true;
           }
