@@ -122,6 +122,7 @@ export default function AccountDetailModal({
   const [isPasswordUpdated, setIsPasswordUpdated] = useState(
     !data?.stale_password || false
   );
+  const [thumbnailInputKey, setThumbnailInputKey] = useState(Date.now());
 
   const fetchPriceTierList = useCallback(async () => {
     setIsLoadingPriceTierList(true);
@@ -364,6 +365,9 @@ export default function AccountDetailModal({
     } else if (mode === "add") {
       await handleAddAccount(values, thumbnail_id, otherImageIds);
     }
+
+    form.reset();
+    setThumbnailInputKey(Date.now());
   };
 
   const handleError = (errors: FieldErrors<z.infer<typeof formSchema>>) => {
@@ -645,6 +649,12 @@ export default function AccountDetailModal({
                         <Input
                           placeholder="Enter skin name here"
                           {...field}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              appendSkin({ name: "" });
+                            }
+                          }}
                           endIcon={
                             <TooltipProvider>
                               <Tooltip>
@@ -702,6 +712,7 @@ export default function AccountDetailModal({
                       >
                         <FormControl>
                           <Input
+                            key={thumbnailInputKey}
                             type="file"
                             accept="image/*"
                             onChange={(e) => {
