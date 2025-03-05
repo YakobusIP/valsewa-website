@@ -37,7 +37,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
     };
   }, []);
 
-  const getGridClass = (index: number, total: number): string => {
+  const getGridClass = (): string => {
     let gridClass = "col-span-4"; // Default to 3 columns
 
     if (isAboveLargeDesktop) gridClass = "col-span-3";
@@ -77,7 +77,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
       className={`
         rounded-xl relative h-auto w-full 
         transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300 hover:cursor-pointer
-        ${getGridClass(index, processedData.length)}
+        ${getGridClass()}
       `}
       key={item.id}
       onClick={() => setSelectedCard(item)}
