@@ -23,7 +23,6 @@ const Card: React.FC<CardProps> = ({ data }) => {
     useState<boolean>(false);
   const [isAbovePhone, setIsAbovePhone] = useState<boolean>(false);
 
-  // Function to determine if the screen size is above `small-desktop`
   const updateScreenSize = () => {
     setIsAboveLargeDesktop(window.innerWidth >= 1700);
     setIsAboveSmallDesktop(window.innerWidth >= 1024);
@@ -31,24 +30,24 @@ const Card: React.FC<CardProps> = ({ data }) => {
   };
 
   useEffect(() => {
-    // Set initial screen size
     updateScreenSize();
-    // Add a resize listener
     window.addEventListener("resize", updateScreenSize);
     return () => {
       window.removeEventListener("resize", updateScreenSize);
     };
   }, []);
 
-  // Dynamically assign grid classes only if the screen size is above `small-desktop`
   const getGridClass = (): string => {
-    if (isAboveLargeDesktop) return "col-span-3";
-    if (!isAboveSmallDesktop && isAbovePhone) return "col-span-6";
-    if (!isAboveSmallDesktop && !isAbovePhone) return "col-span-12";
-    // if (total === 5 && index >= 3) return "col-span-6"; // 3x2 grid with full-width bottom row
-    // if (total === 7 && index === 6) return "col-span-12"; // 3x3x1 grid with full-width last item
-    return "col-span-4"; // Default to 3 columns
-  };
+    let gridClass = "col-span-4"; // Default to 3 columns
+
+    if (isAboveLargeDesktop) gridClass = "col-span-3";
+    else if (!isAboveSmallDesktop && isAbovePhone) gridClass = "col-span-6";
+    else if (!isAboveSmallDesktop && !isAbovePhone) gridClass = "col-span-12";
+
+  return gridClass;
+};
+
+
 
   const processCardData = (items: AccountEntity[] | undefined) => {
     return items?.map((item) => ({
@@ -70,51 +69,57 @@ const Card: React.FC<CardProps> = ({ data }) => {
   return (
     <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
       <div
-        className="grid grid-cols-12 xl:gap-0 gap-4 justify-items-center w-full 2xl:gap-y-28 xl:gap-y-10 sm:gap-y-7 gap-y-8 "
-        ref={ref}
-      >
-        {processedData?.map((item, index) => (
-          <div
-            className={`rounded-xl relative h-auto w-full max-w-[420px] sm:max-w-[300px] md:max-w-[350px] lg:max-w-[340px] xl:max-w-[400px] 2xl:max-w-[420px] transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300 hover:cursor-pointer
-  ${getGridClass()}`}
-            key={item.id}
-            onClick={() => setSelectedCard(item)}
-          >
-            <div className="h-full w-full bg-gray-800 rounded-xl ">
-              <div>
-                <figure className="relative mb-2  w-full">
-                  <AspectRatio ratio={16 / 9}>
-                    <Image
-                      src={item.thumbnail.imageUrl}
-                      alt="service logo"
-                      fill
-                      className="object-cover rounded-t-xl w-full"
-                      unoptimized
-                    />
-                  </AspectRatio>
-                </figure>
-              </div>
-              <div className="px-4">
-                <div className="relative mb-3 mx-3 pt-4">
-                  <div className="flex justify-between items-center pb-2">
-                    <p className="mb-1 font-bold text-red-500 text-4xl">
-                      {item.accountCode}
-                    </p>
-                    <Badge
-                      variant="outline"
-                      className="sm:text-2xl text-xl font-bold text-roseWhite"
-                    >
-                      {item.priceTier.code}
-                    </Badge>
-                  </div>
-                  <div className="flex mb-5 gap-1">
-                    <p
-                      className="text-sm text-roseWhite cursor-pointer"
-                      onClick={() => visitTracker(item.username)}
-                    >
-                      {item.username}
-                    </p>
-                    <ExternalLink className="w-5 h-5 text-white" onClick={() => visitTracker(item.username)} />
+  className="grid grid-cols-12 md:gap-x-10 gap-x-6 justify-items-center w-full 2xl:gap-y-14 xl:gap-y-10 sm:gap-y-7 gap-y-8 px-3"
+  ref={ref}
+>
+  {processedData?.map((item, index) => (
+    <div
+      className={`
+        rounded-xl relative h-auto w-full 
+        transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300 hover:cursor-pointer
+        ${getGridClass()}
+      `}
+      key={item.id}
+      onClick={() => setSelectedCard(item)}
+    >
+      <div className="h-full w-full bg-gray-800 rounded-xl ">
+        <div>
+          <figure className="relative mb-2 w-full">
+            <AspectRatio ratio={16 / 9}>
+              <Image
+                src={item.thumbnail.imageUrl}
+                alt="service logo"
+                fill
+                className="object-cover rounded-t-xl w-full"
+                unoptimized
+              />
+            </AspectRatio>
+          </figure>
+        </div>
+        <div className="px-4">
+          <div className="relative mb-3 mx-3 pt-4">
+            <div className="flex justify-between items-center pb-2">
+              <p className="mb-1 font-bold text-red-500 text-4xl">
+                {item.accountCode}
+              </p>
+              <Badge
+                variant="outline"
+                className="sm:text-2xl text-xl font-bold text-roseWhite"
+              >
+                {item.priceTier.code}
+              </Badge>
+            </div>
+            <div className="flex mb-5 gap-1">
+              <p
+                className="text-sm text-roseWhite cursor-pointer"
+                onClick={() => visitTracker(item.username)}
+              >
+                {item.username}
+              </p>
+              <ExternalLink
+                className="w-5 h-5 text-white"
+                onClick={() => visitTracker(item.username)}
+              />
 
                   </div>
                   <div className="flex flex-wrap gap-y-2 gap-2 pb-5">
