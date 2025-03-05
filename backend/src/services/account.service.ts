@@ -43,18 +43,18 @@ export class AccountService {
     "Radiant"
   ];
   private priceTierOrder = [
-    "C",
-    "B",
-    "A",
-    "S",
-    "V",
+    "LR-SSS",
     "SSS",
-    "LR-C",
-    "LR-B",
-    "LR-A",
-    "LR-S",
     "LR-V",
-    "LR-SSS"
+    "V",
+    "LR-S",
+    "S",
+    "LR-A",
+    "A",
+    "LR-B",
+    "B",
+    "LR-C",
+    "C"
   ];
   getAllAccounts = async (
     page: number,
