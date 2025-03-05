@@ -76,7 +76,7 @@ export default function Home({initialAccount}:Props) {
             </p>
           </div>
 
-          <div className="flex sm:justify-between flex-col sm:flex-row sm:items-center items-start max-sm:gap-y-4 mt-12">
+          <div className="flex sm:justify-between flex-col sm:flex-row sm:items-center items-start max-sm:gap-y-4 mt-12 px-3">
             <div className="relative sm:w-[70%] w-full">
               <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
                 <svg
