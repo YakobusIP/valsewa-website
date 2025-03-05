@@ -123,8 +123,8 @@ export class AccountService {
         let stale_password = false;
         if (item.nextBooking && item.nextBookingDuration) {
           if (
-            addHours(item.nextBooking, item.nextBookingDuration) <
-            item.passwordUpdatedAt
+            item.passwordUpdatedAt <
+            addHours(item.nextBooking, item.nextBookingDuration)
           ) {
             stale_password = true;
           }
