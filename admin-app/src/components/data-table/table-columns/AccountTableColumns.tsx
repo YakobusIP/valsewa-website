@@ -49,6 +49,14 @@ export const accountColumns = (
       size: "auto" as unknown as number
     },
     {
+      accessorKey: "priceTier",
+      accessorFn: ({ priceTier }) => {
+        return priceTier.code;
+      },
+      header: "Price Tier",
+      size: "auto" as unknown as number
+    },
+    {
       accessorKey: "accountRank",
       accessorFn: ({ accountRank }) => {
         const rank = ranks.find((rank) => rank.value === accountRank);
