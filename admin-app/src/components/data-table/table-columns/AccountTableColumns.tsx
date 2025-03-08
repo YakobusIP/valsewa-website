@@ -39,16 +39,16 @@ export const accountColumns = (
       enableHiding: false
     },
     {
-      accessorKey: "accountCode",
-      header: "Code",
-      size: "auto" as unknown as number
-    },
-    {
       accessorKey: "priceTier",
       accessorFn: ({ priceTier }) => {
         return priceTier.code;
       },
       header: "Price Tier",
+      size: "auto" as unknown as number
+    },
+    {
+      accessorKey: "accountCode",
+      header: "Code",
       size: "auto" as unknown as number
     },
     {

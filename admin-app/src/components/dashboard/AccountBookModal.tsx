@@ -519,7 +519,7 @@ export default function AccountBookModal({
                       <Button
                         type="button"
                         size="icon"
-                        className="absolute top-1 right-1"
+                        className="absolute top-1 right-1 z-50"
                         onClick={() => copyReminderToClipboard()}
                       >
                         <CopyIcon />

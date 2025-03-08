@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,11 +17,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { loginFormSchema } from "@/types/zod.type";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2Icon } from "lucide-react";
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 export default function Login() {
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const { isLoadingLogin, login } = useAuth();
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
@@ -69,9 +70,24 @@ export default function Login() {
                     <FormLabel>Password</FormLabel>
                     <FormControl>
                       <Input
-                        type="password"
+                        type={passwordVisible ? "text" : "password"}
                         placeholder="Enter password here"
                         {...field}
+                        endIcon={
+                          passwordVisible ? (
+                            <EyeOffIcon
+                              size={16}
+                              className="text-muted-foreground"
+                              onClick={() => setPasswordVisible(false)}
+                            />
+                          ) : (
+                            <EyeIcon
+                              size={16}
+                              className="text-muted-foreground"
+                              onClick={() => setPasswordVisible(true)}
+                            />
+                          )
+                        }
                       />
                     </FormControl>
                     <FormMessage />
