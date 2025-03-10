@@ -150,7 +150,7 @@ export default function AccountDetailModal({
         ? {
             username: data.username,
             accountCode: data.accountCode,
-            description: data.description,
+            description: data.description ?? undefined,
             priceTier: data.priceTier.id,
             accountRank: data.accountRank,
             password: data.password,
@@ -396,7 +396,7 @@ export default function AccountDetailModal({
       form.reset({
         username: data.username,
         accountCode: data.accountCode,
-        description: data.description,
+        description: data.description ?? undefined,
         priceTier: data.priceTier.id,
         accountRank: data.accountRank,
         password: data.password,

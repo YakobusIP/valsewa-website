@@ -2,10 +2,9 @@ import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
 import NotFoundPage from "@/routes/NotFoundPage";
 import ProtectedRoute from "@/routes/ProtectedRoute";
+import RootLayout from "@/routes/RootLayout";
 import UnauthorizedPage from "@/routes/UnauthorizedPage";
 import { createBrowserRouter } from "react-router";
-
-import RootLayout from "./RootLayout";
 
 export const router = createBrowserRouter([
   {

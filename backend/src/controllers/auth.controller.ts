@@ -234,7 +234,7 @@ export class AuthController {
   /**
    * @openapi
    * /api/auth/refresh-token:
-   *   post:
+   *   get:
    *     tags:
    *       - Authentication
    *     summary: Refresh the access token.
