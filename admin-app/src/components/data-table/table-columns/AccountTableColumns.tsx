@@ -6,8 +6,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { AccountEntity } from "@/types/account.type";
 
-import { ranks } from "@/lib/constants";
-
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
 
@@ -58,10 +56,6 @@ export const accountColumns = (
     },
     {
       accessorKey: "accountRank",
-      accessorFn: ({ accountRank }) => {
-        const rank = ranks.find((rank) => rank.value === accountRank);
-        return rank ? rank.label : "-";
-      },
       header: "Rank",
       size: "auto" as unknown as number
     },

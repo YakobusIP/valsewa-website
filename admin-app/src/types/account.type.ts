@@ -5,7 +5,7 @@ type AccountEntity = {
   id: number;
   username: string;
   accountCode: string;
-  description?: string;
+  description?: string | null;
   accountRank: string;
   availabilityStatus: string;
   nextBooking?: Date | null;

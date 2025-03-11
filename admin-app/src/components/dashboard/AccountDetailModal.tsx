@@ -150,7 +150,7 @@ export default function AccountDetailModal({
         ? {
             username: data.username,
             accountCode: data.accountCode,
-            description: data.description,
+            description: data.description ?? undefined,
             priceTier: data.priceTier.id,
             accountRank: data.accountRank,
             password: data.password,
@@ -216,9 +216,9 @@ export default function AccountDetailModal({
   };
 
   const generatePassword = () => {
-    const lowercase = "abcdefghijkmnopqrstuvwxyz";
-    const uppercase = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
-    const numbers = "0123456789";
+    const lowercase = "abcdefghijkmnpqrstuvwxyz";
+    const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const numbers = "123456789";
     const specialChars = "!@#$%^&*()_+{}[]<>?/";
 
     const getRandomChars = (source: string, length: number) =>
@@ -396,7 +396,7 @@ export default function AccountDetailModal({
       form.reset({
         username: data.username,
         accountCode: data.accountCode,
-        description: data.description,
+        description: data.description ?? undefined,
         priceTier: data.priceTier.id,
         accountRank: data.accountRank,
         password: data.password,
