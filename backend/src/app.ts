@@ -11,7 +11,7 @@ import AccountRouter from "./routes/account.route";
 import PriceTierRouter from "./routes/pricetier.route";
 import UploadRouter from "./routes/upload.route";
 import StatisticRouter from "./routes/statistic.route";
-import { throttleMiddleware } from "./middleware/throttle.middlware";
+import { throttleMiddleware } from "./middleware/throttle.middleware";
 
 import swaggerJSDoc, { OAS3Definition, Options } from "swagger-jsdoc";
 import { serve, setup } from "swagger-ui-express";
@@ -67,7 +67,7 @@ const swaggerDefinition: OAS3Definition = {
 
 const options: Options = {
   swaggerDefinition,
-  apis: [`${__dirname}/controllers/*.ts`]
+  apis: [`${__dirname}/controllers/*.{ts,js}`]
 };
 
 const swaggerSpec = swaggerJSDoc(options);
