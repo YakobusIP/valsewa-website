@@ -31,6 +31,11 @@ class AccountRouter {
       authMiddleware,
       this.accountController.getAccountRank
     );
+    this.router.get(
+      "/duplicate/:name/:tag/:code",
+      authMiddleware,
+      this.accountController.getAccountDuplicate
+    );
     this.router.post("/", authMiddleware, this.accountController.createAccount);
     this.router.post(
       "/update-rank",

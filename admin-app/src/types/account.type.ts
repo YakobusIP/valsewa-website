@@ -10,6 +10,7 @@ type AccountEntity = {
   availabilityStatus: string;
   nextBooking?: Date | null;
   nextBookingDuration?: number | string | null;
+  bookingScheduledAt?: Date | null;
   expireAt?: Date | null;
   totalRentHour: number;
   password: string;

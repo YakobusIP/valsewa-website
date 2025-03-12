@@ -24,6 +24,7 @@ model Account {
   nextBooking         DateTime?
   nextBookingDuration Int?
   expireAt            DateTime?
+  bookingScheduledAt  DateTime?
   totalRentHour       Int       @default(0)
   rentHourUpdated     Boolean   @default(false)
   password            String
