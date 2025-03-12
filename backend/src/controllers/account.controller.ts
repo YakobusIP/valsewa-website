@@ -251,11 +251,11 @@ export class AccountController {
 
   /**
    * @openapi
-   * /api/accounts/rank/{name}/{tag}:
+   * /api/accounts/duplicate/{name}/{tag}/{code}:
    *   get:
    *     tags:
    *       - Accounts
-   *     summary: Retrieve an account's rank.
+   *     summary: Retrieve a duplicate check for an account.
    *     security:
    *       - bearerAuth: []
    *     parameters:
