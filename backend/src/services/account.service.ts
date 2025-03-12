@@ -121,13 +121,8 @@ export class AccountService {
 
       const mappedData = paginatedData.map((item) => {
         let stale_password = false;
-        if (item.nextBooking && item.nextBookingDuration) {
-          if (
-            item.passwordUpdatedAt <
-            addHours(item.nextBooking, item.nextBookingDuration)
-          ) {
-            stale_password = true;
-          }
+        if (item.nextBooking && item.bookingScheduledAt) {
+          stale_password = item.passwordUpdatedAt < item.bookingScheduledAt;
         }
 
         return { ...item, stale_password };
@@ -159,6 +154,18 @@ export class AccountService {
         throw error;
       }
 
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  getAccountDuplicate = async (username: string, accountCode: string) => {
+    try {
+      const account = await prisma.account.findFirst({
+        where: { OR: [{ username }, { accountCode }] }
+      });
+
+      return !!account;
+    } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
   };

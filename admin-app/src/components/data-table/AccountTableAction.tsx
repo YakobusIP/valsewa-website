@@ -38,7 +38,7 @@ export default function AccountTableAction({ data, resetParent }: Props) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="absolute right-6 animate-pulse w-2 h-2 bg-destructive rounded-full" />
+                <span className="absolute right-2 animate-pulse w-2 h-2 bg-destructive rounded-full" />
               </TooltipTrigger>
               <TooltipContent>
                 <p>Password needs to be updated</p>

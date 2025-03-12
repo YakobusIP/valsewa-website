@@ -251,6 +251,62 @@ export class AccountController {
 
   /**
    * @openapi
+   * /api/accounts/duplicate/{name}/{tag}/{code}:
+   *   get:
+   *     tags:
+   *       - Accounts
+   *     summary: Retrieve a duplicate check for an account.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The account's name.
+   *       - in: path
+   *         name: tag
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The account's tag.
+   *       - in: path
+   *         name: code
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The account's code.
+   *     responses:
+   *       200:
+   *         description: Returns true if duplicate account is found.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 exists:
+   *                   type: boolean
+   */
+  getAccountDuplicate = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const username = `${req.params.name}#${req.params.tag}`;
+      const exists = await this.accountService.getAccountDuplicate(
+        username,
+        req.params.code
+      );
+      return res.json({ exists });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  /**
+   * @openapi
    * /api/accounts:
    *   post:
    *     tags:

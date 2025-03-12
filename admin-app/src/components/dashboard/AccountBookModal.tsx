@@ -99,9 +99,10 @@ export default function AccountBookModal({
       availabilityStatus:
         (data.availabilityStatus as AVAILABILITY_STATUS) || "AVAILABLE",
       nextBooking: data.nextBooking ? new Date(data.nextBooking) : new Date(),
-      nextBookingDuration: convertHoursToDays(data.nextBookingDuration) || "",
+      nextBookingDuration:
+        convertHoursToDays(data.nextBookingDuration) || undefined,
       expireAt: data.expireAt ? new Date(data.expireAt) : undefined,
-      totalRentHour: convertHoursToDays(data.totalRentHour) || ""
+      totalRentHour: convertHoursToDays(data.totalRentHour) || undefined
     },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -166,6 +167,7 @@ export default function AccountBookModal({
     const totalRentHourNumber = parse(values.totalRentHour);
     const payload = {
       ...values,
+      bookingScheduledAt: values.nextBooking ? new Date() : undefined,
       ...(bookingDurationNumber !== null
         ? { nextBookingDuration: bookingDurationNumber / (1000 * 60 * 60) }
         : {}),
@@ -298,12 +300,12 @@ export default function AccountBookModal({
                 )}
               />
 
-              <div className="flex flex-col xl:flex-row gap-4">
+              <div className="flex flex-col min-[1920px]:flex-row gap-4">
                 <FormField
                   control={form.control}
                   name="availabilityStatus"
                   render={({ field }) => (
-                    <FormItem className="w-full xl:w-1/5">
+                    <FormItem className="w-full min-[1920px]:w-1/5">
                       <FormLabel>Status</FormLabel>
                       <Select
                         onValueChange={field.onChange}
@@ -335,7 +337,7 @@ export default function AccountBookModal({
                   control={form.control}
                   name="nextBooking"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col w-full xl:w-2/5">
+                    <FormItem className="flex flex-col w-full min-[1920px]:w-2/5">
                       <FormLabel className="mt-[0.4rem] mb-[0.275rem]">
                         Next Booking
                       </FormLabel>
@@ -456,7 +458,7 @@ export default function AccountBookModal({
                   control={form.control}
                   name="nextBookingDuration"
                   render={({ field }) => (
-                    <FormItem className="w-full xl:w-2/5">
+                    <FormItem className="w-full min-[1920px]:w-2/5">
                       <FormLabel>Duration</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter duration here" {...field} />

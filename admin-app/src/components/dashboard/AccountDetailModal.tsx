@@ -114,7 +114,8 @@ export default function AccountDetailModal({
   data,
   resetParent
 }: Props) {
-  const isFirstRender = useRef(true);
+  const isFirstRenderRank = useRef(true);
+  const isFirstRenderDuplicate = useRef(true);
   const [isLoadingPriceTierList, setIsLoadingPriceTierList] = useState(false);
   const [priceTierList, setPriceTierList] = useState<PriceTier[]>([]);
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
@@ -123,6 +124,7 @@ export default function AccountDetailModal({
     !data?.stale_password || false
   );
   const [thumbnailInputKey, setThumbnailInputKey] = useState(Date.now());
+  const [accountDuplicate, setAccountDuplicate] = useState(false);
 
   const fetchPriceTierList = useCallback(async () => {
     setIsLoadingPriceTierList(true);
@@ -210,6 +212,30 @@ export default function AccountDetailModal({
     5000
   );
 
+  const handleDuplicateCheck = async (username: string, code: string) => {
+    if (username && code) {
+      try {
+        const [name, tag] = username.split("#");
+        const response = await accountService.fetchDuplicate(name, tag, code);
+        setAccountDuplicate(response.exists);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occured";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong!",
+          description: errorMessage
+        });
+      }
+    }
+  };
+
+  const debouncedDuplicateHandler = useDebouncedCallback(
+    handleDuplicateCheck,
+    2000
+  );
+
   const handlePriceTierChange = (value: string) => {
     form.setValue("priceTier", parseInt(value));
     form.trigger("priceTier");
@@ -294,8 +320,8 @@ export default function AccountDetailModal({
     other_image_ids?: number[]
   ) => {
     const passwordUpdatedAt =
-      mode === "edit" && data && values.password !== data.password
-        ? data.passwordUpdatedAt
+      mode === "edit" && data && values.password === data.password
+        ? undefined
         : new Date();
 
     const payload = {
@@ -329,6 +355,15 @@ export default function AccountDetailModal({
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (accountDuplicate) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: "Username or code already exists!"
+      });
+
+      return;
+    }
     setIsLoadingSubmit(true);
 
     let thumbnail_id: number;
@@ -379,10 +414,11 @@ export default function AccountDetailModal({
   const hasThumbnail = !!form.getValues("thumbnail");
 
   const usernameValue = form.watch("username");
+  const accountCodeValue = form.watch("accountCode");
 
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
+    if (isFirstRenderRank.current) {
+      isFirstRenderRank.current = false;
       return;
     }
 
@@ -390,6 +426,23 @@ export default function AccountDetailModal({
       debouncedUsernameHandler(usernameValue);
     }
   }, [mode, usernameValue, debouncedUsernameHandler]);
+
+  useEffect(() => {
+    if (isFirstRenderDuplicate.current) {
+      isFirstRenderDuplicate.current = false;
+      return;
+    }
+
+    if (
+      mode === "add" &&
+      usernameValue &&
+      usernameValue.trim() !== "" &&
+      accountCodeValue &&
+      accountCodeValue.trim() !== ""
+    ) {
+      debouncedDuplicateHandler(usernameValue, accountCodeValue);
+    }
+  }, [mode, usernameValue, accountCodeValue, debouncedDuplicateHandler]);
 
   useEffect(() => {
     if (mode === "edit" && data) {
@@ -471,6 +524,12 @@ export default function AccountDetailModal({
                   </FormItem>
                 )}
               />
+
+              {accountDuplicate && (
+                <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
+                  Username or code already in use!
+                </p>
+              )}
 
               <FormField
                 control={form.control}

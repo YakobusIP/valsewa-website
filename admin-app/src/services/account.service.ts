@@ -34,6 +34,18 @@ const createAccountService = () => {
     }
   };
 
+  const fetchDuplicate = async (name: string, tag: string, code: string) => {
+    try {
+      const response = await interceptedAxios.get<{ exists: boolean }>(
+        `${BASE_ACCOUNT_URL}/duplicate/${name}/${tag}/${code}`
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
   const create = async (data: Partial<AccountEntityRequest>) => {
     try {
       const response = await interceptedAxios.post<MessageResponse>(
@@ -71,6 +83,7 @@ const createAccountService = () => {
   return {
     fetchAll,
     fetchRank,
+    fetchDuplicate,
     create,
     update,
     deleteMany
