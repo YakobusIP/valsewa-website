@@ -64,12 +64,13 @@ import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
 
 const formSchema = z.object({
-  username: z
+  username: z.string().nonempty("Username is required"),
+  nickname: z
     .string()
-    .nonempty("Username is required")
+    .nonempty("Nickname is required")
     .regex(
       /^(?!.*#.*#)(.*\S)#(\S.*)$/,
-      "Username must be in the format name#tag"
+      "Nickname must be in the format name#tag"
     ),
   accountCode: z.string().nonempty("Code is required"),
   description: z.string().optional(),
@@ -150,6 +151,7 @@ export default function AccountDetailModal({
     defaultValues:
       mode === "edit" && data
         ? {
+            nickname: data.nickname,
             username: data.username,
             accountCode: data.accountCode,
             description: data.description ?? undefined,
@@ -161,6 +163,7 @@ export default function AccountDetailModal({
             otherImages: data.otherImages ? data.otherImages : []
           }
         : {
+            nickname: "",
             username: "",
             accountCode: "",
             description: "",
@@ -184,11 +187,11 @@ export default function AccountDetailModal({
     name: "skinList"
   });
 
-  const handleUsernameInput = useCallback(
-    async (username: string) => {
+  const handleNicknameInput = useCallback(
+    async (nickname: string) => {
       setIsLoadingFetchRank(true);
       try {
-        const [name, tag] = username.split("#");
+        const [name, tag] = nickname.split("#");
         const rankResponse = await accountService.fetchRank(name, tag);
         form.setValue("accountRank", rankResponse.currentRank);
       } catch (error) {
@@ -207,15 +210,15 @@ export default function AccountDetailModal({
     [form]
   );
 
-  const debouncedUsernameHandler = useDebouncedCallback(
-    handleUsernameInput,
+  const debouncedNicknameHandler = useDebouncedCallback(
+    handleNicknameInput,
     5000
   );
 
-  const handleDuplicateCheck = async (username: string, code: string) => {
-    if (username && code) {
+  const handleDuplicateCheck = async (nickname: string, code: string) => {
+    if (nickname && code) {
       try {
-        const [name, tag] = username.split("#");
+        const [name, tag] = nickname.split("#");
         const response = await accountService.fetchDuplicate(name, tag, code);
         setAccountDuplicate(response.exists);
       } catch (error) {
@@ -359,7 +362,7 @@ export default function AccountDetailModal({
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong!",
-        description: "Username or code already exists!"
+        description: "Nickname or code already exists!"
       });
 
       return;
@@ -413,6 +416,7 @@ export default function AccountDetailModal({
   const hasSkinsError = !!form.formState.errors.skinList;
   const hasThumbnail = !!form.getValues("thumbnail");
 
+  const nicknameValue = form.watch("nickname");
   const usernameValue = form.watch("username");
   const accountCodeValue = form.watch("accountCode");
 
@@ -422,10 +426,10 @@ export default function AccountDetailModal({
       return;
     }
 
-    if (mode === "add" && usernameValue && usernameValue.trim() !== "") {
-      debouncedUsernameHandler(usernameValue);
+    if (mode === "add" && nicknameValue && nicknameValue.trim() !== "") {
+      debouncedNicknameHandler(nicknameValue);
     }
-  }, [mode, usernameValue, debouncedUsernameHandler]);
+  }, [mode, nicknameValue, debouncedNicknameHandler]);
 
   useEffect(() => {
     if (isFirstRenderDuplicate.current) {
@@ -447,6 +451,7 @@ export default function AccountDetailModal({
   useEffect(() => {
     if (mode === "edit" && data) {
       form.reset({
+        nickname: data.nickname,
         username: data.username,
         accountCode: data.accountCode,
         description: data.description ?? undefined,
@@ -459,6 +464,7 @@ export default function AccountDetailModal({
       });
     } else if (mode === "add") {
       form.reset({
+        nickname: "",
         username: "",
         accountCode: "",
         description: "",
@@ -494,36 +500,54 @@ export default function AccountDetailModal({
                 <p className="font-semibold">Account Details</p>
                 <hr />
               </div>
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Username <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter username here" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="accountCode"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Code <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter code here" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
+              <div className="flex flex-col xl:flex-row col-span-1 xl:col-span-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem className="w-full xl:w-1/3">
+                      <FormLabel>
+                        Username <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter username here" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="nickname"
+                  render={({ field }) => (
+                    <FormItem className="w-full xl:w-1/3">
+                      <FormLabel>
+                        Nickname <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter username here" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="accountCode"
+                  render={({ field }) => (
+                    <FormItem className="w-full xl:w-1/3">
+                      <FormLabel>
+                        Code <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter code here" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               {accountDuplicate && (
                 <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
