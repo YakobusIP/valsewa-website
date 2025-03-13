@@ -55,6 +55,11 @@ export const accountColumns = (
       size: "auto" as unknown as number
     },
     {
+      accessorKey: "nickname",
+      header: "Nickname",
+      size: "auto" as unknown as number
+    },
+    {
       accessorKey: "accountRank",
       header: "Rank",
       size: "auto" as unknown as number

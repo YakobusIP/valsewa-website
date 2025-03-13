@@ -4,6 +4,7 @@ import { UploadResponse } from "@/types/upload.type";
 type AccountEntity = {
   id: number;
   username: string;
+  nickname: string;
   accountCode: string;
   description?: string | null;
   accountRank: string;

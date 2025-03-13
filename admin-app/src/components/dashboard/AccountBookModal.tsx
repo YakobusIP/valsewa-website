@@ -165,6 +165,10 @@ export default function AccountBookModal({
   ) => {
     const bookingDurationNumber = parse(values.nextBookingDuration);
     const totalRentHourNumber = parse(values.totalRentHour);
+
+    delete values.nextBookingDuration;
+    delete values.totalRentHour;
+
     const payload = {
       ...values,
       bookingScheduledAt: values.nextBooking ? new Date() : undefined,
@@ -216,6 +220,7 @@ export default function AccountBookModal({
   const durationValue = form.watch("nextBookingDuration");
   const nextBookingValue = form.watch("nextBooking");
   const expireAtValue = form.watch("expireAt");
+  const forceUpdateTotalRentHourValue = form.watch("forceUpdateTotalRentHour");
 
   useEffect(() => {
     if (durationValue) {
@@ -236,6 +241,14 @@ export default function AccountBookModal({
                   \nJangan lupa untuk ngisi form kepuasan yaa😼
                   \nhttps://forms.gle/tLtQdX1SFyyFhXE86`);
   }, [expireAtValue, data]);
+
+  useEffect(() => {
+    if (forceUpdateTotalRentHourValue) {
+      form.setValue("availabilityStatus", "AVAILABLE");
+      form.setValue("nextBooking", null);
+      form.setValue("nextBookingDuration", "");
+    }
+  }, [form, forceUpdateTotalRentHourValue]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -309,7 +322,7 @@ export default function AccountBookModal({
                       <FormLabel>Status</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger className={selectedStatusColor}>

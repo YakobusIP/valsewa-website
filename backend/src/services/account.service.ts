@@ -95,7 +95,7 @@ export class AccountService {
       let filteredData: Account[] = data;
       if (query && query.trim().length > 0) {
         const fuseOptions: IFuseOptions<Account> = {
-          keys: ["username", "accountCode", "accountRank", "skinList"],
+          keys: ["nickname", "accountCode", "accountRank", "skinList"],
           threshold: 0.3
         };
 
@@ -224,6 +224,10 @@ export class AccountService {
         updateData.totalRentHour = {
           increment: currentAccount.nextBookingDuration ?? undefined
         };
+        updateData.nextBooking = null;
+        updateData.expireAt = null;
+        updateData.nextBookingDuration = null;
+        currentAccount.expireAt = null;
       }
 
       if (nextBooking !== undefined && nextBookingDuration !== undefined) {
