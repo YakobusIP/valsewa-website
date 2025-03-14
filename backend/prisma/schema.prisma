@@ -17,7 +17,7 @@ enum Status {
 model Account {
   id                  Int       @id @default(autoincrement())
   username            String
-  nickname            String?
+  nickname            String
   accountCode         String    @unique
   description         String?
   accountRank         String

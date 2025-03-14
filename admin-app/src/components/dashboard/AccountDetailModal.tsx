@@ -151,8 +151,8 @@ export default function AccountDetailModal({
     defaultValues:
       mode === "edit" && data
         ? {
-            nickname: data.nickname,
             username: data.username,
+            nickname: data.nickname,
             accountCode: data.accountCode,
             description: data.description ?? undefined,
             priceTier: data.priceTier.id,
@@ -163,8 +163,8 @@ export default function AccountDetailModal({
             otherImages: data.otherImages ? data.otherImages : []
           }
         : {
-            nickname: "",
             username: "",
+            nickname: "",
             accountCode: "",
             description: "",
             priceTier: undefined,
@@ -451,8 +451,8 @@ export default function AccountDetailModal({
   useEffect(() => {
     if (mode === "edit" && data) {
       form.reset({
-        nickname: data.nickname,
         username: data.username,
+        nickname: data.nickname,
         accountCode: data.accountCode,
         description: data.description ?? undefined,
         priceTier: data.priceTier.id,
@@ -464,8 +464,8 @@ export default function AccountDetailModal({
       });
     } else if (mode === "add") {
       form.reset({
-        nickname: "",
         username: "",
+        nickname: "",
         accountCode: "",
         description: "",
         priceTier: undefined,
@@ -526,7 +526,7 @@ export default function AccountDetailModal({
                         Nickname <span className="text-destructive">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter username here" {...field} />
+                        <Input placeholder="Enter nickname here" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -551,7 +551,7 @@ export default function AccountDetailModal({
 
               {accountDuplicate && (
                 <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
-                  Username or code already in use!
+                  Nickname or code already in use!
                 </p>
               )}
 

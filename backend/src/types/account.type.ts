@@ -1,6 +1,7 @@
 import { Status } from "@prisma/client";
 
 type AccountEntityRequest = {
+  nickname: string;
   username: string;
   accountCode: string;
   description?: string;

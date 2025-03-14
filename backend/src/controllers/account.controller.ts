@@ -14,6 +14,7 @@ import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
  *       required:
  *         - id
  *         - username
+ *         - nickname
  *         - accountCode
  *         - accountRank
  *         - availabilityStatus
@@ -21,6 +22,8 @@ import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
  *         id:
  *           type: number
  *         username:
+ *           type: string
+ *         nickname:
  *           type: string
  *         accountCode:
  *           type: string
@@ -294,9 +297,9 @@ export class AccountController {
     next: NextFunction
   ) => {
     try {
-      const username = `${req.params.name}#${req.params.tag}`;
+      const nickname = `${req.params.name}#${req.params.tag}`;
       const exists = await this.accountService.getAccountDuplicate(
-        username,
+        nickname,
         req.params.code
       );
       return res.json({ exists });
@@ -418,7 +421,7 @@ export class AccountController {
       accounts.forEach((account) => {
         updateAllAccountRankQueue.add({
           id: account.id,
-          username: account.username
+          nickname: account.nickname
         });
       });
 

@@ -7,7 +7,7 @@ import { UploadService } from "../../services/upload.service";
 
 type UpdateJobData = {
   id: number;
-  username: string;
+  nickname: string;
 };
 
 export const updateAllAccountRankQueue = new Queue<UpdateJobData>(
@@ -37,11 +37,11 @@ const rankService = new RankService();
 
 const processUpdateAllAccountQueue = async (job: Job<UpdateJobData>) => {
   try {
-    const [name, tag] = job.data.username.split("#");
+    const [name, tag] = job.data.nickname.split("#");
 
     if (!name || !tag) {
       throw new UnprocessableEntityError(
-        "Invalid username format. Expected name#tag"
+        "Invalid nickname format. Expected name#tag"
       );
     }
 
