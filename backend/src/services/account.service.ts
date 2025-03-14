@@ -158,10 +158,10 @@ export class AccountService {
     }
   };
 
-  getAccountDuplicate = async (username: string, accountCode: string) => {
+  getAccountDuplicate = async (nickname: string, accountCode: string) => {
     try {
       const account = await prisma.account.findFirst({
-        where: { OR: [{ username }, { accountCode }] }
+        where: { OR: [{ nickname }, { accountCode }] }
       });
 
       return !!account;

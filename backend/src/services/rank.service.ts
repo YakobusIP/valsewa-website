@@ -41,7 +41,7 @@ export class RankService {
     try {
       if (!name || !tag)
         throw new UnprocessableEntityError(
-          "Username name and tag are missing!"
+          "Nickname name and tag are missing!"
         );
 
       const rankResponse = await this.callAPI(name, tag);
