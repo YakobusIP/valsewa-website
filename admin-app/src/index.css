@@ -95,3 +95,10 @@
     @apply scroll-m-20 text-xl font-semibold tracking-tight;
   }
 }
+
+@layer utilities {
+  .dropdown-content-width-full {
+    width: var(--radix-dropdown-menu-trigger-width);
+    max-height: var(--radix-dropdown-menu-content-available-height);
+  }
+}

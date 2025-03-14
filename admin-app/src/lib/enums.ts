@@ -3,3 +3,8 @@ export enum AVAILABILITY_STATUS {
   IN_USE = "IN_USE",
   NOT_AVAILABLE = "NOT_AVAILABLE"
 }
+
+export enum SORT_ORDER {
+  ASCENDING = "asc",
+  DESCENDING = "desc"
+}
