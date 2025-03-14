@@ -57,10 +57,10 @@ const Card: React.FC<CardProps> = ({ data }) => {
         : item.otherImages,
     }));
   };
-  const visitTracker = (username: string) => {
+  const visitTracker = (nickname: string) => {
     const linkTracker =
       "https://tracker.gg/valorant/profile/riot/" +
-      encodeURIComponent(username) +
+      encodeURIComponent(nickname) +
       "/overview";
     window.open(linkTracker, "_blank");
   };
@@ -112,13 +112,13 @@ const Card: React.FC<CardProps> = ({ data }) => {
             <div className="flex mb-5 gap-1">
               <p
                 className="text-sm text-roseWhite cursor-pointer"
-                onClick={() => visitTracker(item.username)}
+                onClick={() => visitTracker(item.nickname)}
               >
-                {item.username}
+                {item.nickname}
               </p>
               <ExternalLink
                 className="w-5 h-5 text-white"
-                onClick={() => visitTracker(item.username)}
+                onClick={() => visitTracker(item.nickname)}
               />
 
                   </div>
