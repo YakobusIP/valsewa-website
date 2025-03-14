@@ -90,6 +90,7 @@ export default function AccountBookModal({
 }: Props) {
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const [reminderText, setReminderText] = useState("");
+  const [skinListText, setSkinListText] = useState("");
   const [enableTotalRentHourEdit, setEnableTotalRentHourEdit] =
     useState<CheckedState>();
 
@@ -153,6 +154,14 @@ export default function AccountBookModal({
 
   const copyReminderToClipboard = async () => {
     await navigator.clipboard.writeText(reminderText);
+    toast({
+      title: "All set!",
+      description: "Copied to clipboard!"
+    });
+  };
+
+  const copySkinListToClipboard = async () => {
+    await navigator.clipboard.writeText(skinListText);
     toast({
       title: "All set!",
       description: "Copied to clipboard!"
@@ -234,13 +243,18 @@ export default function AccountBookModal({
   }, [durationValue, nextBookingValue, form, parseDurationToHours]);
 
   useEffect(() => {
-    setReminderText(`${data.username}\n${data.password}\n${data.accountCode}\nExpired on ${format(expireAtValue || new Date(), "dd MMMM yyyy 'at' HH:mm")}
-                  \nMOHON DILOGOUT AKUNNYA PADA/SEBELUM WAKTU RENTAL HABIS‼ agar tidak terkena penalty pada akun yang menyebabkan anda terkena DENDA❗
-                  \nJika sudah bisa login tolong bantu comment testimoni anda di postingan akun yang di sewa jika berkenan
-                  \nTHANK YOUU udah rental akun di @valsewa, enjoy and have a nice day! Kalau ada kendala langsung chat mimin yaa👌🏻.
-                  \nJangan lupa untuk ngisi form kepuasan yaa😼
-                  \nhttps://forms.gle/tLtQdX1SFyyFhXE86`);
+    setReminderText(`Username Riot: ${data.username}\nPassword Riot: ${data.password}\nKode Akun: ${data.accountCode}\nExpired: ${format(expireAtValue || new Date(), "dd MMMM yyyy 'at' HH:mm")}
+                    \nMOHON DILOGOUT AKUNNYA PADA/SEBELUM WAKTU RENTAL HABIS‼ agar tidak terkena penalty pada akun yang menyebabkan anda terkena DENDA❗
+                    \nJika sudah bisa login tolong bantu comment testimoni anda di postingan akun yang di sewa jika berkenan
+                    \nTHANK YOUU udah rental akun di @valsewa, enjoy and have a nice day! Kalau ada kendala langsung chat mimin yaa👌🏻.
+                    \nJangan lupa untuk ngisi form kepuasan yaa😼
+                    \nhttps://forms.gle/tLtQdX1SFyyFhXE86`);
   }, [expireAtValue, data]);
+
+  useEffect(() => {
+    const text = `List of skins akun ${data.accountCode}:\n${data.skinList.map((skin, index) => `${index + 1}. ${skin}`).join("\n")}`;
+    setSkinListText(text);
+  }, [data]);
 
   useEffect(() => {
     if (forceUpdateTotalRentHourValue) {
@@ -550,6 +564,32 @@ export default function AccountBookModal({
                   className="whitespace-pre-wrap"
                   value={reminderText}
                   onChange={(e) => setReminderText(e.target.value)}
+                />
+              </div>
+
+              <div className="relative">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        size="icon"
+                        className="absolute top-1 right-1 z-50"
+                        onClick={() => copySkinListToClipboard()}
+                      >
+                        <CopyIcon />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copy to clipboard</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Textarea
+                  rows={16}
+                  className="whitespace-pre-wrap"
+                  value={skinListText}
+                  onChange={(e) => setSkinListText(e.target.value)}
                 />
               </div>
 
