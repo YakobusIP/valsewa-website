@@ -42,10 +42,10 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
     return result.length > 0 ? result.join(" ") : "0 Hours";
   }
   const rentTime = convertHoursToDayHour(selectedCard.totalRentHour);
- const visitTracker = (username: string) => {
+ const visitTracker = (nickname: string) => {
    const linkTracker =
      "https://tracker.gg/valorant/profile/riot/" +
-     encodeURIComponent(username) +
+     encodeURIComponent(nickname) +
      "/overview";
    window.open(linkTracker, "_blank");
  };
@@ -101,11 +101,11 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                 <div className="flex mb-5 gap-1">
                     <p
                       className="text-md text-roseWhite cursor-pointer"
-                      onClick={() => visitTracker(selectedCard.username)}
+                      onClick={() => visitTracker(selectedCard.nickname)}
                     >
-                      {selectedCard.username}
+                      {selectedCard.nickname}
                     </p>
-                    <ExternalLink className="w-5 h-5 text-white" onClick={() => visitTracker(selectedCard.username)} />
+                    <ExternalLink className="w-5 h-5 text-white" onClick={() => visitTracker(selectedCard.nickname)} />
 
                   </div>
               </div>

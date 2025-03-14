@@ -35,6 +35,7 @@ type AccountEntity = {
   thumbnail: UploadResponse;
   otherImages: UploadResponse[] | null;
   priceTier: PriceTier;
+  nickname: string;
 };
 
 type AccountEntityRequest = Omit<

@@ -5,6 +5,7 @@ import { statisticService } from "@/services/statistic.service";
 
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
 import LogoutButton from "@/components/dashboard/LogoutButton";
+import SortComponent from "@/components/dashboard/SortComponent";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
 import DataTable from "@/components/data-table/DataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
@@ -17,6 +18,8 @@ import { toast } from "@/hooks/useToast";
 import { AccountEntity } from "@/types/account.type";
 import { MetadataResponse } from "@/types/api.type";
 import { StatisticResponse } from "@/types/statistic.type";
+
+import { SORT_ORDER } from "@/lib/enums";
 
 import { CirclePlusIcon, SearchIcon } from "lucide-react";
 import { useDebounce } from "use-debounce";
@@ -38,7 +41,20 @@ export default function Dashboard() {
   const [isLoadingDeleteAccount, setIsLoadingDeleteAccount] = useState(false);
 
   const [searchAccount, setSearchAccount] = useState("");
+  const [sortBy, setSortBy] = useState("");
+  const [sortOrder, setSortOrder] = useState(SORT_ORDER.ASCENDING);
   const [debouncedSearch] = useDebounce(searchAccount, 1000);
+
+  const handleSort = (key: string) => {
+    setSortBy(key);
+    setSortOrder((prev) =>
+      sortBy === key
+        ? prev === SORT_ORDER.ASCENDING
+          ? SORT_ORDER.DESCENDING
+          : SORT_ORDER.ASCENDING
+        : SORT_ORDER.ASCENDING
+    );
+  };
 
   const fetchStatistics = async () => {
     setIsLoadingStatistics(true);
@@ -65,7 +81,9 @@ export default function Dashboard() {
       const response = await accountService.fetchAll(
         accountListPage,
         PAGINATION_SIZE,
-        debouncedSearch
+        debouncedSearch,
+        sortBy,
+        sortOrder
       );
       setAccountList(response.data);
       setAccountMetadata(response.metadata);
@@ -81,7 +99,7 @@ export default function Dashboard() {
     } finally {
       setIsLoadingAccount(false);
     }
-  }, [accountListPage, debouncedSearch]);
+  }, [accountListPage, debouncedSearch, sortBy, sortOrder]);
 
   const deleteManyAccounts = async () => {
     setIsLoadingDeleteAccount(true);
@@ -156,6 +174,11 @@ export default function Dashboard() {
             }
             rightSideComponent={
               <Fragment>
+                <SortComponent
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  handleSort={handleSort}
+                />
                 <PriceTierModal />
                 <Button
                   className="w-full xl:w-fit"

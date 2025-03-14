@@ -6,15 +6,24 @@ import {
 import { ApiResponseList, MessageResponse } from "@/types/api.type";
 
 import { handleAxiosError, interceptedAxios } from "@/lib/axios";
+import { SORT_ORDER } from "@/lib/enums";
 
 const BASE_ACCOUNT_URL = "/api/accounts";
 
 const createAccountService = () => {
-  const fetchAll = async (page: number, limit: number, query: string) => {
+  const fetchAll = async (
+    page: number,
+    limit: number,
+    query: string,
+    sortBy: string,
+    direction: SORT_ORDER
+  ) => {
     try {
       const response = await interceptedAxios.get<
         ApiResponseList<AccountEntity>
-      >(BASE_ACCOUNT_URL, { params: { page, limit, q: query } });
+      >(BASE_ACCOUNT_URL, {
+        params: { page, limit, q: query, sortBy, direction }
+      });
 
       return response.data;
     } catch (error) {
