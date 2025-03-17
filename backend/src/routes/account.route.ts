@@ -25,7 +25,11 @@ class AccountRouter {
 
   private initializeRoutes() {
     this.router.get("/", this.accountController.getAllAccounts);
-    this.router.get("/:id", this.accountController.getAccountById);
+    this.router.get(
+      "/failed-jobs",
+      authMiddleware,
+      this.accountController.getFailedAccountJobs
+    );
     this.router.get(
       "/rank/:name/:tag",
       authMiddleware,
@@ -36,6 +40,7 @@ class AccountRouter {
       authMiddleware,
       this.accountController.getAccountDuplicate
     );
+    this.router.get("/:id", this.accountController.getAccountById);
     this.router.post("/", authMiddleware, this.accountController.createAccount);
     this.router.post(
       "/update-rank",
