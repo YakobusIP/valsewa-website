@@ -27,7 +27,6 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -59,7 +58,7 @@ import {
   LockIcon,
   Trash2Icon
 } from "lucide-react";
-import { FieldErrors, useFieldArray, useForm } from "react-hook-form";
+import { FieldErrors, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
 
@@ -119,6 +118,7 @@ export default function AccountDetailModal({
   const isFirstRenderDuplicate = useRef(true);
   const [isLoadingPriceTierList, setIsLoadingPriceTierList] = useState(false);
   const [priceTierList, setPriceTierList] = useState<PriceTier[]>([]);
+  const [skinListText, setSkinListText] = useState("");
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const [isLoadingFetchRank, setIsLoadingFetchRank] = useState(false);
   const [isPasswordUpdated, setIsPasswordUpdated] = useState(
@@ -279,6 +279,14 @@ export default function AccountDetailModal({
         description: "Copied to clipboard!"
       });
     }
+  };
+
+  const copySkinListToClipboard = async () => {
+    await navigator.clipboard.writeText(skinListText);
+    toast({
+      title: "All set!",
+      description: "Copied to clipboard!"
+    });
   };
 
   const handleAddAccount = async (
@@ -448,6 +456,16 @@ export default function AccountDetailModal({
     }
   }, [mode, usernameValue, accountCodeValue, debouncedDuplicateHandler]);
 
+  const skinListValue = useWatch({
+    control: form.control,
+    name: "skinList"
+  });
+
+  useEffect(() => {
+    const text = `List of skins akun ${accountCodeValue}:\n${skinListValue.map((skin, index) => `${index + 1}. ${skin.name}`).join("\n")}`;
+    setSkinListText(text);
+  }, [accountCodeValue, skinListValue]);
+
   useEffect(() => {
     if (mode === "edit" && data) {
       form.reset({
@@ -484,439 +502,464 @@ export default function AccountDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full xl:w-2/5">
+      <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-screen">
         <DialogHeader>
           <DialogTitle>
             {mode === "add" ? "Add New Account" : "Edit Account"}
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-[80dvh]">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit, handleError)}
-              className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-4"
-            >
-              <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
-                <p className="font-semibold">Account Details</p>
-                <hr />
-              </div>
 
-              <div className="flex flex-col xl:flex-row col-span-1 xl:col-span-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem className="w-full xl:w-1/3">
-                      <FormLabel>
-                        Username <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter username here" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="nickname"
-                  render={({ field }) => (
-                    <FormItem className="w-full xl:w-1/3">
-                      <FormLabel>
-                        Nickname <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter nickname here" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="accountCode"
-                  render={({ field }) => (
-                    <FormItem className="w-full xl:w-1/3">
-                      <FormLabel>
-                        Code <span className="text-destructive">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter code here" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit, handleError)}
+            className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-4"
+          >
+            <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
+              <p className="font-semibold">Account Details</p>
+              <hr />
+            </div>
 
-              {accountDuplicate && (
-                <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
-                  Nickname or code already in use!
-                </p>
-              )}
-
+            <div className="flex flex-col xl:flex-row col-span-1 xl:col-span-2 gap-4">
               <FormField
                 control={form.control}
-                name="description"
+                name="username"
                 render={({ field }) => (
-                  <FormItem className="col-span-1 xl:col-span-2">
-                    <FormLabel>Description (Optional)</FormLabel>
+                  <FormItem className="w-full xl:w-1/3">
+                    <FormLabel>
+                      Username <span className="text-destructive">*</span>
+                    </FormLabel>
                     <FormControl>
-                      <Textarea
-                        placeholder="Enter description here"
-                        rows={5}
-                        {...field}
-                      />
+                      <Input placeholder="Enter username here" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="priceTier"
+                name="nickname"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full xl:w-1/3">
                     <FormLabel>
-                      Price Tier <span className="text-destructive">*</span>
+                      Nickname <span className="text-destructive">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={(value) => handlePriceTierChange(value)}
-                      value={field.value?.toString()}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a price tier" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {priceTierList.length > 0 ? (
-                          priceTierList.map((tier) => {
-                            return (
-                              <SelectItem
-                                key={tier.id}
-                                value={tier.id.toString()}
-                              >
-                                {tier.code}
-                              </SelectItem>
-                            );
-                          })
-                        ) : (
-                          <SelectItem value="no_price_tier" disabled>
-                            No price tier available
-                          </SelectItem>
-                        )}
-                        {isLoadingPriceTierList && (
-                          <SelectItem value="Loading">
-                            Fetching price tier...
-                          </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input placeholder="Enter nickname here" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               <FormField
                 control={form.control}
-                name="accountRank"
+                name="accountCode"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="w-full xl:w-1/3">
                     <FormLabel>
-                      Rank <span className="text-destructive">*</span>
+                      Code <span className="text-destructive">*</span>
                     </FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={isLoadingFetchRank ? "Loading" : field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a rank" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {ranks.map((rank) => {
+                    <FormControl>
+                      <Input placeholder="Enter code here" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {accountDuplicate && (
+              <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
+                Nickname or code already in use!
+              </p>
+            )}
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem className="col-span-1 xl:col-span-2">
+                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter description here"
+                      rows={5}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="priceTier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Price Tier <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={(value) => handlePriceTierChange(value)}
+                    value={field.value?.toString()}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a price tier" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {priceTierList.length > 0 ? (
+                        priceTierList.map((tier) => {
                           return (
-                            <SelectItem key={rank.value} value={rank.value}>
-                              {rank.label}
+                            <SelectItem
+                              key={tier.id}
+                              value={tier.id.toString()}
+                            >
+                              {tier.code}
                             </SelectItem>
                           );
-                        })}
-                        {isLoadingFetchRank && (
-                          <SelectItem value="Loading">
-                            Fetching rank...
+                        })
+                      ) : (
+                        <SelectItem value="no_price_tier" disabled>
+                          No price tier available
+                        </SelectItem>
+                      )}
+                      {isLoadingPriceTierList && (
+                        <SelectItem value="Loading">
+                          Fetching price tier...
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="accountRank"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Rank <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={isLoadingFetchRank ? "Loading" : field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a rank" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {ranks.map((rank) => {
+                        return (
+                          <SelectItem key={rank.value} value={rank.value}>
+                            {rank.label}
                           </SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                        );
+                      })}
+                      {isLoadingFetchRank && (
+                        <SelectItem value="Loading">
+                          Fetching rank...
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Password <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter password here"
+                      {...field}
+                      endIcon={
+                        form.watch("password") ? (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <CopyIcon
+                                  size={18}
+                                  className="text-muted-foreground hover:cursor-pointer"
+                                  aria-label="Copy password to clipboard"
+                                  onClick={() => copyPasswordToClipboard()}
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Copy to clipboard</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        ) : undefined
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="button"
+              className={cn("xl:self-end", hasPasswordError && "xl:mb-7")}
+              onClick={generateAndSetPassword}
+            >
+              <LockIcon />
+              Generate New Password
+            </Button>
+
+            {!isPasswordUpdated && (
+              <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
+                Password needs to be updated!
+              </p>
+            )}
+
+            <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
+              <p className="font-semibold">Skins</p>
+              <hr />
+              <p className="text-sm">
+                3 entri pertama akan ditampilkan di halaman utama
+              </p>
+            </div>
+
+            {skinFields.map((field, index) => (
               <FormField
+                key={`skin-${field.id}`}
                 control={form.control}
-                name="password"
+                name={`skinList.${index}.name`}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Password <span className="text-destructive">*</span>
+                      Skin {index + 1}{" "}
+                      {index === 0 && (
+                        <span className="text-destructive">*</span>
+                      )}
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Enter password here"
+                        placeholder="Enter skin name here"
                         {...field}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            appendSkin({ name: "" });
+                          }
+                        }}
                         endIcon={
-                          form.watch("password") ? (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <CopyIcon
-                                    size={18}
-                                    className="text-muted-foreground hover:cursor-pointer"
-                                    aria-label="Copy password to clipboard"
-                                    onClick={() => copyPasswordToClipboard()}
-                                  />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Copy to clipboard</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ) : undefined
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Trash2Icon
+                                  size={18}
+                                  className="text-destructive hover:cursor-pointer"
+                                  aria-label={`Delete skin ${index}`}
+                                  onClick={() => removeSkin(index)}
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Delete skin</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         }
                       />
                     </FormControl>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button
-                type="button"
-                className={cn("xl:self-end", hasPasswordError && "xl:mb-7")}
-                onClick={generateAndSetPassword}
-              >
-                <LockIcon />
-                Generate New Password
-              </Button>
-
-              {!isPasswordUpdated && (
-                <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
-                  Password needs to be updated!
-                </p>
+            ))}
+            <Button
+              type="button"
+              onClick={() => appendSkin({ name: "" })}
+              className={cn(
+                "self-end",
+                hasSkinsError && skinFields.length / 2 === 0 && "mb-7"
               )}
+            >
+              <CirclePlusIcon />
+              Add New Skin
+            </Button>
+            {form.formState.errors.skinList && (
+              <p className="text-sm font-medium text-destructive col-span-1 xl:col-span-2">
+                {form.formState.errors.skinList.root?.message}
+              </p>
+            )}
 
-              <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
-                <p className="font-semibold">Skins</p>
-                <hr />
-                <p className="text-sm">
-                  3 entri pertama akan ditampilkan di halaman utama
-                </p>
-              </div>
+            <div className="relative col-span-1 xl:col-span-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      size="icon"
+                      className="absolute top-1 right-1 z-50"
+                      onClick={() => copySkinListToClipboard()}
+                    >
+                      <CopyIcon />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Copy to clipboard</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Textarea
+                rows={16}
+                className="whitespace-pre-wrap"
+                value={skinListText}
+                onChange={(e) => setSkinListText(e.target.value)}
+              />
+            </div>
 
-              {skinFields.map((field, index) => (
-                <FormField
-                  key={`skin-${field.id}`}
-                  control={form.control}
-                  name={`skinList.${index}.name`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Skin {index + 1}{" "}
-                        {index === 0 && (
-                          <span className="text-destructive">*</span>
-                        )}
-                      </FormLabel>
+            <FormField
+              control={form.control}
+              name="thumbnail"
+              render={({ field }) => (
+                <FormItem className="col-span-1 xl:col-span-2">
+                  <FormLabel>
+                    Thumbnail <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <div className="flex flex-col-reverse xl:flex-row items-center justify-between gap-4">
+                    <div
+                      className={cn(
+                        "flex flex-col w-full xl:w-1/2",
+                        !hasThumbnail && "pr-2"
+                      )}
+                    >
                       <FormControl>
                         <Input
-                          placeholder="Enter skin name here"
-                          {...field}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              appendSkin({ name: "" });
+                          key={thumbnailInputKey}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const files = e.target.files;
+                            if (!files || files.length === 0) {
+                              field.onChange("");
+                              return;
                             }
+                            field.onChange(files[0]);
                           }}
-                          endIcon={
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Trash2Icon
-                                    size={18}
-                                    className="text-destructive hover:cursor-pointer"
-                                    aria-label={`Delete skin ${index}`}
-                                    onClick={() => removeSkin(index)}
-                                  />
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Delete skin</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          }
                         />
                       </FormControl>
-                    </FormItem>
-                  )}
-                />
-              ))}
-              <Button
-                type="button"
-                onClick={() => appendSkin({ name: "" })}
-                className={cn(
-                  "self-end",
-                  hasSkinsError && skinFields.length / 2 === 0 && "mb-7"
-                )}
-              >
-                <CirclePlusIcon />
-                Add New Skin
-              </Button>
-              {form.formState.errors.skinList && (
-                <p className="text-sm font-medium text-destructive col-span-1 xl:col-span-2">
-                  {form.formState.errors.skinList.root?.message}
-                </p>
-              )}
-
-              <FormField
-                control={form.control}
-                name="thumbnail"
-                render={({ field }) => (
-                  <FormItem className="col-span-1 xl:col-span-2">
-                    <FormLabel>
-                      Thumbnail <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <div className="flex flex-col-reverse xl:flex-row items-center justify-between gap-4">
-                      <div
-                        className={cn(
-                          "flex flex-col w-full xl:w-1/2",
-                          !hasThumbnail && "pr-2"
-                        )}
-                      >
-                        <FormControl>
-                          <Input
-                            key={thumbnailInputKey}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const files = e.target.files;
-                              if (!files || files.length === 0) {
-                                field.onChange("");
-                                return;
-                              }
-                              field.onChange(files[0]);
-                            }}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </div>
-                      <div className="mt-2 w-full xl:w-1/2">
-                        {field.value instanceof File ? (
-                          <img
-                            src={URL.createObjectURL(field.value)}
-                            alt="Thumbnail Preview"
-                            className="object-cover rounded-md border"
-                          />
-                        ) : typeof field.value === "object" ? (
-                          <img
-                            src={field.value.imageUrl}
-                            alt="Thumbnail Preview"
-                            className="object-cover rounded-md border"
-                          />
-                        ) : null}
-                      </div>
+                      <FormMessage />
                     </div>
-                  </FormItem>
-                )}
-              />
+                    <div className="mt-2 w-full xl:w-1/2">
+                      {field.value instanceof File ? (
+                        <img
+                          src={URL.createObjectURL(field.value)}
+                          alt="Thumbnail Preview"
+                          className="object-cover rounded-md border"
+                        />
+                      ) : typeof field.value === "object" ? (
+                        <img
+                          src={field.value.imageUrl}
+                          alt="Thumbnail Preview"
+                          className="object-cover rounded-md border"
+                        />
+                      ) : null}
+                    </div>
+                  </div>
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="otherImages"
-                render={({ field }) => (
-                  <FormItem className="col-span-1 xl:col-span-2">
-                    <FormLabel>Other Images</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={(e) => {
-                          const newFiles = e.target.files;
-                          if (!newFiles || newFiles.length === 0) {
-                            return;
-                          }
-                          const existingFiles =
-                            form.getValues("otherImages") || [];
-                          const appended = [
-                            ...existingFiles,
-                            ...Array.from(newFiles)
-                          ];
-                          field.onChange(appended);
-                        }}
-                      />
-                    </FormControl>
+            <FormField
+              control={form.control}
+              name="otherImages"
+              render={({ field }) => (
+                <FormItem className="col-span-1 xl:col-span-2">
+                  <FormLabel>Other Images</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const newFiles = e.target.files;
+                        if (!newFiles || newFiles.length === 0) {
+                          return;
+                        }
+                        const existingFiles =
+                          form.getValues("otherImages") || [];
+                        const appended = [
+                          ...existingFiles,
+                          ...Array.from(newFiles)
+                        ];
+                        field.onChange(appended);
+                      }}
+                    />
+                  </FormControl>
 
-                    {Array.isArray(field.value) && field.value.length > 0 && (
-                      <div className="mt-2 grid grid-cols-1 xl:grid-cols-2 gap-4">
-                        {field.value.map((file, idx) => (
-                          <div key={`image-${idx}`} className="relative">
-                            {file instanceof File ? (
-                              <img
-                                src={URL.createObjectURL(file as File)}
-                                alt={`image-${idx}`}
-                                className="object-cover rounded-md border"
-                              />
-                            ) : typeof file === "object" ? (
-                              <img
-                                src={file.imageUrl}
-                                alt={`image-${idx}`}
-                                className="object-cover rounded-md border"
-                              />
-                            ) : null}
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-1 right-1"
-                              onClick={() => {
-                                const newFiles = [...(field.value as File[])];
-                                newFiles.splice(idx, 1);
-                                field.onChange(newFiles);
-                              }}
-                            >
-                              <Trash2Icon />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  {Array.isArray(field.value) && field.value.length > 0 && (
+                    <div className="mt-2 grid grid-cols-1 xl:grid-cols-2 gap-4">
+                      {field.value.map((file, idx) => (
+                        <div key={`image-${idx}`} className="relative">
+                          {file instanceof File ? (
+                            <img
+                              src={URL.createObjectURL(file as File)}
+                              alt={`image-${idx}`}
+                              className="object-cover rounded-md border"
+                            />
+                          ) : typeof file === "object" ? (
+                            <img
+                              src={file.imageUrl}
+                              alt={`image-${idx}`}
+                              className="object-cover rounded-md border"
+                            />
+                          ) : null}
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-1 right-1"
+                            onClick={() => {
+                              const newFiles = [...(field.value as File[])];
+                              newFiles.splice(idx, 1);
+                              field.onChange(newFiles);
+                            }}
+                          >
+                            <Trash2Icon />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <p className="xl:col-start-2 justify-self-end text-sm">
-                Akun ini sudah pernah disewa selama{" "}
-                <b>
-                  {data?.totalRentHour
-                    ? convertHoursToDays(data?.totalRentHour)
-                    : "0d 0h"}
-                </b>
-              </p>
+            <p className="xl:col-start-2 justify-self-end text-sm">
+              Akun ini sudah pernah disewa selama{" "}
+              <b>
+                {data?.totalRentHour
+                  ? convertHoursToDays(data?.totalRentHour)
+                  : "0d 0h"}
+              </b>
+            </p>
 
-              <Button
-                type="submit"
-                className="xl:col-start-2 w-full xl:w-fit justify-self-end"
-              >
-                {isLoadingSubmit && (
-                  <Loader2Icon className="w-4 h-4 animate-spin" />
-                )}
-                Submit
-              </Button>
-            </form>
-          </Form>
-        </ScrollArea>
+            <Button
+              type="submit"
+              className="xl:col-start-2 w-full xl:w-fit justify-self-end"
+            >
+              {isLoadingSubmit && (
+                <Loader2Icon className="w-4 h-4 animate-spin" />
+              )}
+              Submit
+            </Button>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
