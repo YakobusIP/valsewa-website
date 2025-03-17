@@ -1,6 +1,7 @@
 import {
   AccountEntity,
   AccountEntityRequest,
+  FailedJobs,
   RankResponse
 } from "@/types/account.type";
 import { ApiResponseList, MessageResponse } from "@/types/api.type";
@@ -55,6 +56,18 @@ const createAccountService = () => {
     }
   };
 
+  const fetchFailedJobs = async () => {
+    try {
+      const response = await interceptedAxios.get<FailedJobs[]>(
+        `${BASE_ACCOUNT_URL}/failed-jobs`
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
   const create = async (data: Partial<AccountEntityRequest>) => {
     try {
       const response = await interceptedAxios.post<MessageResponse>(
@@ -93,6 +106,7 @@ const createAccountService = () => {
     fetchAll,
     fetchRank,
     fetchDuplicate,
+    fetchFailedJobs,
     create,
     update,
     deleteMany

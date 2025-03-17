@@ -4,6 +4,7 @@ import { accountService } from "@/services/account.service";
 import { statisticService } from "@/services/statistic.service";
 
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
+import FailedJobsAlertModal from "@/components/dashboard/FailedJobsAlertModal";
 import LogoutButton from "@/components/dashboard/LogoutButton";
 import SortComponent from "@/components/dashboard/SortComponent";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
@@ -15,7 +16,7 @@ import { Input } from "@/components/ui/input";
 
 import { toast } from "@/hooks/useToast";
 
-import { AccountEntity } from "@/types/account.type";
+import { AccountEntity, FailedJobs } from "@/types/account.type";
 import { MetadataResponse } from "@/types/api.type";
 import { StatisticResponse } from "@/types/statistic.type";
 
@@ -39,6 +40,8 @@ export default function Dashboard() {
   const [accountListPage, setAccountListPage] = useState(1);
 
   const [isLoadingDeleteAccount, setIsLoadingDeleteAccount] = useState(false);
+
+  const [failedJobs, setFailedJobs] = useState<FailedJobs[]>([]);
 
   const [searchAccount, setSearchAccount] = useState("");
   const [sortBy, setSortBy] = useState("");
@@ -128,6 +131,25 @@ export default function Dashboard() {
     }
   };
 
+  const fetchFailedJobs = async () => {
+    try {
+      const response = await accountService.fetchFailedJobs();
+      setFailedJobs(response);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occured";
+
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: errorMessage
+      });
+    } finally {
+      setSelectedAccountRows({});
+      setIsLoadingDeleteAccount(false);
+    }
+  };
+
   const resetParent = async () => {
     await fetchAllAccounts();
     await fetchStatistics();
@@ -137,6 +159,10 @@ export default function Dashboard() {
     fetchStatistics();
     fetchAllAccounts();
   }, [fetchAllAccounts]);
+
+  useEffect(() => {
+    fetchFailedJobs();
+  }, []);
 
   useEffect(() => {
     document.title = "Dashboard | Valsewa Admin";
@@ -191,7 +217,10 @@ export default function Dashboard() {
             }
           />
         </div>
-        <LogoutButton />
+        <div className="absolute top-4 right-4 flex items-center justify-center gap-4">
+          <FailedJobsAlertModal failedJobs={failedJobs} />
+          <LogoutButton />
+        </div>
       </main>
       <AccountDetailModal
         open={openAccountDetail}

@@ -42,11 +42,7 @@ export default function LogoutButton() {
   };
 
   return (
-    <Button
-      variant="destructive"
-      className="absolute top-4 right-4"
-      onClick={handleLogout}
-    >
+    <Button variant="destructive" onClick={handleLogout}>
       {isLoadingLogout ? (
         <Loader2Icon className="w-4 h-4 animate-spin" />
       ) : (

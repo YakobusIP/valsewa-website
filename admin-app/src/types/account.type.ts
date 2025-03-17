@@ -43,4 +43,13 @@ type RankResponse = {
   currentRank: string;
 };
 
-export type { AccountEntity, AccountEntityRequest, RankResponse };
+type FailedJobs = {
+  id: string;
+  data: { id: number; nickname: string };
+  failedReason: string;
+  timestamp: Date;
+  accountCode: string;
+  username: string;
+};
+
+export type { AccountEntity, AccountEntityRequest, RankResponse, FailedJobs };

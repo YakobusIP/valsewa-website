@@ -310,6 +310,83 @@ export class AccountController {
 
   /**
    * @openapi
+   * /api/accounts/failed-jobs:
+   *   get:
+   *     tags:
+   *       - Accounts
+   *     summary: Retrieve failed account rank update jobs.
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: A list of failed account rank update jobs.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: array
+   *               items:
+   *                 type: object
+   *                 properties:
+   *                   id:
+   *                     type: string
+   *                     description: The ID of the failed job.
+   *                   data:
+   *                     type: object
+   *                     description: The job data payload.
+   *                   failedReason:
+   *                     type: string
+   *                     description: The reason for the job failure.
+   *                   timestamp:
+   *                     type: integer
+   *                     format: int64
+   *                     description: The timestamp of the failed job.
+   *                   accountCode:
+   *                     type: string
+   *                     nullable: true
+   *                     description: The account code associated with the job, if available.
+   *                   username:
+   *                     type: string
+   *                     nullable: true
+   *                     description: The username associated with the job, if available.
+   */
+  getFailedAccountJobs = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const failedJobs = await updateAllAccountRankQueue.getFailed();
+
+      const failedIds = failedJobs.flatMap((job) => job.data.id);
+
+      const failedAccounts = await this.accountService.getAllDatabaseAccounts({
+        id: { in: failedIds }
+      });
+
+      const accountMap = new Map(
+        failedAccounts.map((account) => [account.id, account])
+      );
+
+      const formattedJobs = failedJobs.map((job) => {
+        const account = accountMap.get(job.data.id);
+        return {
+          id: job.id,
+          data: job.data,
+          failedReason: job.failedReason,
+          timestamp: job.timestamp,
+          accountCode: account ? account.accountCode : null,
+          username: account ? account.username : null
+        };
+      });
+
+      return res.json(formattedJobs);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  /**
+   * @openapi
    * /api/accounts:
    *   post:
    *     tags:
@@ -418,11 +495,19 @@ export class AccountController {
     try {
       const accounts = await this.accountService.getAllDatabaseAccounts();
 
+      await updateAllAccountRankQueue.clean(0, "failed");
+
       accounts.forEach((account) => {
-        updateAllAccountRankQueue.add({
-          id: account.id,
-          nickname: account.nickname
-        });
+        updateAllAccountRankQueue.add(
+          {
+            id: account.id,
+            nickname: account.nickname
+          },
+          {
+            removeOnComplete: true,
+            removeOnFail: false
+          }
+        );
       });
 
       return res.json({
