@@ -80,7 +80,7 @@ export default function PriceTierModal() {
           Price Tiers
         </Button>
       </DialogTrigger>
-      <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-screen">
+      <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
           <DialogTitle>Price Tiers</DialogTitle>
           <DialogDescription>Manage price tiers</DialogDescription>

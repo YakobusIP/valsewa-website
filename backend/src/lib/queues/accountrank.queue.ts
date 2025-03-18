@@ -1,7 +1,11 @@
 import Queue, { Job } from "bull";
 import { env } from "../env";
 import { RankService } from "../../services/rank.service";
-import { InternalServerError, UnprocessableEntityError } from "../error";
+import {
+  InternalServerError,
+  NotFoundError,
+  UnprocessableEntityError
+} from "../error";
 import { AccountService } from "../../services/account.service";
 import { UploadService } from "../../services/upload.service";
 
@@ -50,7 +54,10 @@ const processUpdateAllAccountQueue = async (job: Job<UpdateJobData>) => {
       accountRank: rankResponse.data.current_data.currenttierpatched
     });
   } catch (error) {
-    if (error instanceof UnprocessableEntityError) {
+    if (
+      error instanceof NotFoundError ||
+      error instanceof UnprocessableEntityError
+    ) {
       throw error;
     }
 
