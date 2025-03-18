@@ -470,7 +470,7 @@ export class AccountController {
   /**
    * @openapi
    * /api/accounts/update-rank:
-   *   put:
+   *   post:
    *     tags:
    *       - Accounts
    *     summary: Update the rank for all accounts.
