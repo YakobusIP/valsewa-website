@@ -56,6 +56,9 @@ export class AccountService {
     "LR-C",
     "C"
   ];
+
+  private idTierOrder = ["SSS", "V", "S", "B", "A"];
+
   getAllAccounts = async (
     page: number,
     limit: number,
@@ -89,6 +92,23 @@ export class AccountService {
           if (tierB === -1) return -1;
 
           return direction === "asc" ? tierA - tierB : tierB - tierA;
+        });
+      }
+
+      if (sortBy === "id_tier") {
+        data.sort((a, b) => {
+          const [tierA, numA] = a.accountCode.split("-");
+          const [tierB, numB] = b.accountCode.split("-");
+
+          // Get the index of the tier in the order list
+          const tierIndexA = this.idTierOrder.indexOf(tierA);
+          const tierIndexB = this.idTierOrder.indexOf(tierB);
+
+          // Compare tier order
+          if (tierIndexA !== tierIndexB) return tierIndexA - tierIndexB;
+
+          // Compare numbers within the same tier
+          return Number(numA) - Number(numB);
         });
       }
 

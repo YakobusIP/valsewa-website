@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const initialAccount = await fetchAccounts("", "", ""); 
+  const initialAccount = await fetchAccounts("", "asc", "id_tier"); 
   return <Home initialAccount={initialAccount} />;
 }
 
