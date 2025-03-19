@@ -27,6 +27,12 @@ export class RankService {
       if (error instanceof AxiosError && error.response?.data) {
         const responseData = error.response.data as RankErrorResponse;
 
+        if (error.response.status === 500 || error.response.status === 504) {
+          throw new UnprocessableEntityError(
+            "External API server is unavailable!"
+          );
+        }
+
         const errorData = responseData.errors[0];
 
         if (errorData.status === 404) {
@@ -48,7 +54,10 @@ export class RankService {
 
       if (rankResponse) return rankResponse;
     } catch (error) {
-      if (error instanceof NotFoundError) {
+      if (
+        error instanceof NotFoundError ||
+        error instanceof UnprocessableEntityError
+      ) {
         throw error;
       }
 

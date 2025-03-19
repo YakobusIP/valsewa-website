@@ -6,7 +6,7 @@ import { Button } from "./ui/button";
 
 const Whatsapp: FC = () => {
   const whatsappUrl =
-    "https://wa.me/6285176983434?text=Halo admin VALFORUM aku mau JUAL BELI akun nih"; 
+    "https://wa.me/6285175343447?text=Halo admin VALFORUM aku mau JUAL BELI akun nih"; 
 
   return (
     <Button className="bg-green-600 hover:bg-green-700">

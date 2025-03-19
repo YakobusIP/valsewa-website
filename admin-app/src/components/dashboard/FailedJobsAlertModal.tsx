@@ -34,7 +34,7 @@ export default function FailedJobsAlertModal({ failedJobs }: Props) {
           <BellIcon className="w-6 h-6" />
         </div>
       </DialogTrigger>
-      <DialogContent className="w-full xl:w-4/5 overflow-y-auto max-h-screen">
+      <DialogContent className="w-full xl:w-4/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
           <DialogTitle>Failed Update Rank Jobs List</DialogTitle>
         </DialogHeader>

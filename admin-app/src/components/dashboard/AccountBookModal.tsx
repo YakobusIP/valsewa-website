@@ -252,7 +252,7 @@ export default function AccountBookModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-screen">
+      <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
           <DialogTitle>Edit Booking</DialogTitle>
         </DialogHeader>
