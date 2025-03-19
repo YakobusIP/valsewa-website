@@ -97,8 +97,8 @@ export class AccountService {
 
       if (sortBy === "id_tier") {
         data.sort((a, b) => {
-          const [tierA, numA] = a.accountCode.split("-");
-          const [tierB, numB] = b.accountCode.split("-");
+          const [tierA, rawNumA] = a.accountCode.split("-");
+          const [tierB, rawNumB] = b.accountCode.split("-");
 
           // Get the index of the tier in the order list
           const tierIndexA = this.idTierOrder.indexOf(tierA);
@@ -107,8 +107,22 @@ export class AccountService {
           // Compare tier order
           if (tierIndexA !== tierIndexB) return tierIndexA - tierIndexB;
 
-          // Compare numbers within the same tier
-          return Number(numA) - Number(numB);
+          // Check if rawNumA and rawNumB are numbers
+          const isNumA = /^\d+$/.test(rawNumA);
+          const isNumB = /^\d+$/.test(rawNumB);
+
+          if (isNumA && isNumB) {
+            // If both are numbers, compare numerically
+            return Number(rawNumA) - Number(rawNumB);
+          } else if (isNumA) {
+            // Numbers should come before letters
+            return -1;
+          } else if (isNumB) {
+            return 1;
+          } else {
+            // If both are letters, compare alphabetically
+            return rawNumA.localeCompare(rawNumB);
+          }
         });
       }
 
