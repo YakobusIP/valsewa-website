@@ -8,7 +8,7 @@ import {
   PrismaUniqueError
 } from "../lib/error";
 import { prisma } from "../lib/prisma";
-import { AccountEntityRequest } from "../types/account.type";
+import { AccountEntityRequest, PublicAccount } from "../types/account.type";
 import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
 
@@ -42,6 +42,7 @@ export class AccountService {
     "Immortal 3",
     "Radiant"
   ];
+
   private priceTierOrder = [
     "LR-SSS",
     "SSS",
@@ -57,7 +58,68 @@ export class AccountService {
     "C"
   ];
 
-  private idTierOrder = ["SSS", "V", "S", "B", "A"];
+  private idTierOrder = ["SSS", "V", "S", "A", "B", "C"];
+
+  private sortAccountsByRank = <T extends { accountRank: string }>(
+    data: T[],
+    direction?: Prisma.SortOrder
+  ): T[] => {
+    return data.sort((a, b) => {
+      const rankA = this.valorantRanks.indexOf(a.accountRank);
+      const rankB = this.valorantRanks.indexOf(b.accountRank);
+      return direction === "asc" ? rankA - rankB : rankB - rankA;
+    });
+  };
+
+  private sortAccountsByPriceTier = <
+    T extends { priceTier?: { code?: string } }
+  >(
+    data: T[],
+    direction?: Prisma.SortOrder
+  ): T[] => {
+    return data.sort((a, b) => {
+      const tierA = this.priceTierOrder.indexOf(a.priceTier?.code ?? "");
+      const tierB = this.priceTierOrder.indexOf(b.priceTier?.code ?? "");
+
+      if (tierA === -1) return 1;
+      if (tierB === -1) return -1;
+
+      return direction === "asc" ? tierA - tierB : tierB - tierA;
+    });
+  };
+
+  private sortAccountsByIdTier = <T extends { accountCode: string }>(
+    data: T[]
+  ): T[] => {
+    return data.sort((a, b) => {
+      const [tierA, rawNumA] = a.accountCode.split("-");
+      const [tierB, rawNumB] = b.accountCode.split("-");
+
+      // Get the index of the tier in the order list
+      const tierIndexA = this.idTierOrder.indexOf(tierA);
+      const tierIndexB = this.idTierOrder.indexOf(tierB);
+
+      // Compare tier order
+      if (tierIndexA !== tierIndexB) return tierIndexA - tierIndexB;
+
+      // Check if rawNumA and rawNumB are numbers
+      const isNumA = /^\d+$/.test(rawNumA);
+      const isNumB = /^\d+$/.test(rawNumB);
+
+      if (isNumA && isNumB) {
+        // If both are numbers, compare numerically
+        return Number(rawNumA) - Number(rawNumB);
+      } else if (isNumA) {
+        // Numbers should come before letters
+        return -1;
+      } else if (isNumB) {
+        return 1;
+      } else {
+        // If both are letters, compare alphabetically
+        return rawNumA.localeCompare(rawNumB);
+      }
+    });
+  };
 
   getAllAccounts = async (
     page: number,
@@ -67,7 +129,7 @@ export class AccountService {
     direction?: Prisma.SortOrder
   ): Promise<[Account[], Metadata]> => {
     try {
-      const data = await prisma.account.findMany({
+      let data = await prisma.account.findMany({
         orderBy: {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
@@ -75,55 +137,11 @@ export class AccountService {
       });
 
       if (sortBy === "rank") {
-        data.sort((a, b) => {
-          const rankA = this.valorantRanks.indexOf(a.accountRank);
-          const rankB = this.valorantRanks.indexOf(b.accountRank);
-          return direction === "asc" ? rankA - rankB : rankB - rankA;
-        });
-      }
-
-      if (sortBy === "price_tier") {
-        data.sort((a, b) => {
-          const tierA = this.priceTierOrder.indexOf(a.priceTier?.code);
-          const tierB = this.priceTierOrder.indexOf(b.priceTier?.code);
-
-          // Handle cases where priceTier.code is missing
-          if (tierA === -1) return 1;
-          if (tierB === -1) return -1;
-
-          return direction === "asc" ? tierA - tierB : tierB - tierA;
-        });
-      }
-
-      if (sortBy === "id_tier") {
-        data.sort((a, b) => {
-          const [tierA, rawNumA] = a.accountCode.split("-");
-          const [tierB, rawNumB] = b.accountCode.split("-");
-
-          // Get the index of the tier in the order list
-          const tierIndexA = this.idTierOrder.indexOf(tierA);
-          const tierIndexB = this.idTierOrder.indexOf(tierB);
-
-          // Compare tier order
-          if (tierIndexA !== tierIndexB) return tierIndexA - tierIndexB;
-
-          // Check if rawNumA and rawNumB are numbers
-          const isNumA = /^\d+$/.test(rawNumA);
-          const isNumB = /^\d+$/.test(rawNumB);
-
-          if (isNumA && isNumB) {
-            // If both are numbers, compare numerically
-            return Number(rawNumA) - Number(rawNumB);
-          } else if (isNumA) {
-            // Numbers should come before letters
-            return -1;
-          } else if (isNumB) {
-            return 1;
-          } else {
-            // If both are letters, compare alphabetically
-            return rawNumA.localeCompare(rawNumB);
-          }
-        });
+        data = this.sortAccountsByRank(data, direction);
+      } else if (sortBy === "price_tier") {
+        data = this.sortAccountsByPriceTier(data, direction);
+      } else if (sortBy === "id_tier") {
+        data = this.sortAccountsByIdTier(data);
       }
 
       let filteredData: Account[] = data;
@@ -163,6 +181,73 @@ export class AccountService {
       });
 
       return [mappedData, metadata];
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  getAllPublicAccounts = async (
+    page: number,
+    limit: number,
+    query?: string,
+    sortBy?: string,
+    direction?: Prisma.SortOrder
+  ): Promise<[PublicAccount[], Metadata]> => {
+    try {
+      let data = await prisma.account.findMany({
+        orderBy: {
+          availabilityStatus: sortBy === "availability" ? direction : undefined
+        },
+        select: {
+          nickname: true,
+          accountCode: true,
+          description: true,
+          accountRank: true,
+          availabilityStatus: true,
+          totalRentHour: true,
+          skinList: true,
+          priceTier: true,
+          thumbnail: true,
+          otherImages: true
+        }
+      });
+
+      if (sortBy === "rank") {
+        data = this.sortAccountsByRank(data, direction);
+      } else if (sortBy === "price_tier") {
+        data = this.sortAccountsByPriceTier(data, direction);
+      } else if (sortBy === "id_tier") {
+        data = this.sortAccountsByIdTier(data);
+      }
+
+      let filteredData: PublicAccount[] = data;
+      if (query && query.trim().length > 0) {
+        const fuseOptions: IFuseOptions<PublicAccount> = {
+          keys: ["nickname", "accountCode", "accountRank", "skinList"],
+          threshold: 0.3
+        };
+
+        const fuse = new Fuse(data, fuseOptions);
+        const fuseResults = fuse.search(query);
+        filteredData = fuseResults.map((result) => result.item);
+      }
+
+      const itemCount = filteredData.length;
+      const pageCount = Math.ceil(itemCount / limit);
+
+      const metadata = {
+        page,
+        limit,
+        pageCount,
+        total: itemCount
+      };
+
+      const paginatedData = filteredData.slice(
+        (page - 1) * limit,
+        page * limit
+      );
+
+      return [paginatedData, metadata];
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -269,7 +354,11 @@ export class AccountService {
           updateData.expireAt = expireAt;
         } else {
           if (currentAccount.expireAt) {
-            updateData.expireAt = undefined;
+            if (new Date() > new Date(currentAccount.expireAt)) {
+              updateData.expireAt = expireAt;
+            } else {
+              updateData.expireAt = undefined;
+            }
           } else {
             updateData.expireAt = expireAt;
           }

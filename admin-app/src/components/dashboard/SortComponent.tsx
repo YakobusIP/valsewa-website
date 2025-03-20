@@ -26,19 +26,26 @@ export default function SortComponent({
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="w-full">
           Sort by:{" "}
-          {sortBy === "rank"
-            ? "Rank"
-            : sortBy === "price_tier"
-              ? "Price Tier"
-              : "Availability"}
-          {sortOrder === SORT_ORDER.ASCENDING ? (
-            <ArrowUpIcon className="ml-2 w-4 h-4" />
-          ) : (
-            <ArrowDownIcon className="ml-2 w-4 h-4" />
-          )}
+          {sortBy === "id_tier"
+            ? "Account Code"
+            : sortBy === "rank"
+              ? "Rank"
+              : sortBy === "price_tier"
+                ? "Price Tier"
+                : "Availability"}
+          {sortBy !== "id_tier" ? (
+            sortOrder === SORT_ORDER.ASCENDING ? (
+              <ArrowUpIcon className="ml-2 w-4 h-4" />
+            ) : (
+              <ArrowDownIcon className="ml-2 w-4 h-4" />
+            )
+          ) : null}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="dropdown-content-width-full">
+        <DropdownMenuItem onClick={() => handleSort("id_tier")}>
+          Account Code
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleSort("rank")}>
           Rank
           {sortBy === "rank" && (

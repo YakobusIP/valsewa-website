@@ -58,6 +58,36 @@ import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *     PublicAccount:
+ *       type: object
+ *       required:
+ *         - id
+ *         - username
+ *         - nickname
+ *         - accountCode
+ *         - accountRank
+ *         - availabilityStatus
+ *       properties:
+ *         id:
+ *           type: number
+ *         username:
+ *           type: string
+ *         nickname:
+ *           type: string
+ *         accountCode:
+ *           type: string
+ *         description:
+ *           type: string
+ *         accountRank:
+ *           type: string
+ *         availabilityStatus:
+ *           type: string
+ *         totalRentHour:
+ *           type: number
+ *         skinList:
+ *           type: array
+ *           items:
+ *             type: string
  *     Metadata:
  *       type: object
  *       properties:
@@ -149,6 +179,90 @@ export class AccountController {
       }
 
       const [data, metadata] = await this.accountService.getAllAccounts(
+        parseInt(page),
+        parseInt(limit),
+        query,
+        sortBy,
+        direction
+      );
+
+      return res.json({ data, metadata });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  /**
+   * @openapi
+   * /api/accounts/public:
+   *   get:
+   *     tags:
+   *       - Accounts
+   *     summary: Retrieve a paginated list of public accounts.
+   *     description: Retrieves public accounts with optional filtering and sorting.
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The page number.
+   *       - in: query
+   *         name: limit
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The number of accounts per page.
+   *       - in: query
+   *         name: q
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: Optional search query.
+   *       - in: query
+   *         name: sortBy
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: Field name to sort by.
+   *       - in: query
+   *         name: direction
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: Sort order (asc or desc).
+   *     responses:
+   *       200:
+   *         description: A list of public accounts with pagination metadata.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 data:
+   *                   type: array
+   *                   items:
+   *                     $ref: '#/components/schemas/PublicAccount'
+   *                 metadata:
+   *                   $ref: '#/components/schemas/Metadata'
+   */
+  getAllPublicAccounts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const page = req.query.page as string;
+      const limit = req.query.limit as string;
+      const query = req.query.q as string;
+      const sortBy = req.query.sortBy as string;
+      const direction = req.query.direction as Prisma.SortOrder;
+
+      if (!page || !limit) {
+        throw new UnprocessableEntityError("Pagination query params missing!");
+      }
+
+      const [data, metadata] = await this.accountService.getAllPublicAccounts(
         parseInt(page),
         parseInt(limit),
         query,
