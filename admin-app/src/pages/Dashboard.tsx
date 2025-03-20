@@ -44,7 +44,7 @@ export default function Dashboard() {
   const [failedJobs, setFailedJobs] = useState<FailedJobs[]>([]);
 
   const [searchAccount, setSearchAccount] = useState("");
-  const [sortBy, setSortBy] = useState("");
+  const [sortBy, setSortBy] = useState("id_tier");
   const [sortOrder, setSortOrder] = useState(SORT_ORDER.ASCENDING);
   const [debouncedSearch] = useDebounce(searchAccount, 1000);
 
