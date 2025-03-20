@@ -1,4 +1,4 @@
-import { Status } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 
 type AccountEntityRequest = {
   nickname: string;
@@ -21,4 +21,19 @@ type AccountEntityRequest = {
   priceTier: number;
 };
 
-export type { AccountEntityRequest };
+type PublicAccount = Prisma.AccountGetPayload<{
+  select: {
+    nickname: true;
+    accountCode: true;
+    description: true;
+    accountRank: true;
+    availabilityStatus: true;
+    totalRentHour: true;
+    skinList: true;
+    priceTier: true;
+    thumbnail: true;
+    otherImages: true;
+  };
+}>;
+
+export type { AccountEntityRequest, PublicAccount };
