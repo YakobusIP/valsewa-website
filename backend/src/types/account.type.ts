@@ -7,14 +7,15 @@ type AccountEntityRequest = {
   description?: string;
   accountRank: string;
   availabilityStatus: Status;
-  nextBooking?: Date;
+  currentBookingDate?: Date;
+  currentBookingDuration?: number;
+  currentExpireAt?: Date;
+  nextBookingDate?: Date;
   nextBookingDuration?: number;
-  forceUpdateExpiry?: boolean;
-  forceUpdateTotalRentHour?: boolean;
-  expireAt?: Date;
+  nextExpireAt?: Date;
   totalRentHour: number;
   password: string;
-  passwordUpdatedAt: Date;
+  passwordResetRequired: boolean;
   skins: string[];
   thumbnail: number;
   otherImages: number[] | null;
@@ -36,4 +37,10 @@ type PublicAccount = Prisma.AccountGetPayload<{
   };
 }>;
 
-export type { AccountEntityRequest, PublicAccount };
+type UpdateResetLogRequest = {
+  accountId: number;
+  password: string;
+  passwordResetRequired: boolean;
+};
+
+export type { AccountEntityRequest, PublicAccount, UpdateResetLogRequest };

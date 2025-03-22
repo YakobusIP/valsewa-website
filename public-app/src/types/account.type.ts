@@ -29,7 +29,6 @@ type AccountEntity = {
   expireAt?: Date | null;
   totalRentHour: number;
   password: string;
-  passwordUpdatedAt: Date;
   skinList: string[];
   stale_password: boolean;
   thumbnail: UploadResponse;

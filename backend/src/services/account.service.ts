@@ -1,5 +1,5 @@
-import { Account, Prisma, Status } from "@prisma/client";
-import { addHours } from "date-fns";
+import { Account, AccountResetLog, Prisma, Status } from "@prisma/client";
+import { addHours, subDays } from "date-fns";
 import Fuse, { IFuseOptions } from "fuse.js";
 import {
   BadRequestError,
@@ -8,7 +8,11 @@ import {
   PrismaUniqueError
 } from "../lib/error";
 import { prisma } from "../lib/prisma";
-import { AccountEntityRequest, PublicAccount } from "../types/account.type";
+import {
+  AccountEntityRequest,
+  PublicAccount,
+  UpdateResetLogRequest
+} from "../types/account.type";
 import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
 
@@ -171,16 +175,7 @@ export class AccountService {
         page * limit
       );
 
-      const mappedData = paginatedData.map((item) => {
-        let stale_password = false;
-        if (item.nextBooking && item.bookingScheduledAt) {
-          stale_password = item.passwordUpdatedAt < item.bookingScheduledAt;
-        }
-
-        return { ...item, stale_password };
-      });
-
-      return [mappedData, metadata];
+      return [paginatedData, metadata];
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -289,6 +284,20 @@ export class AccountService {
     }
   };
 
+  getAccountResetLogs = async () => {
+    try {
+      return await prisma.accountResetLog.findMany({
+        include: {
+          account: {
+            select: { username: true, accountCode: true }
+          }
+        }
+      });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   createAccount = async (data: AccountEntityRequest) => {
     try {
       return await prisma.account.create({
@@ -316,7 +325,11 @@ export class AccountService {
     }
   };
 
-  updateAccount = async (id: number, data: Partial<AccountEntityRequest>) => {
+  updateAccount = async (
+    id: number,
+    data: Partial<AccountEntityRequest>,
+    resetLogs = false
+  ) => {
     try {
       const currentAccount = await prisma.account.findUnique({
         where: { id },
@@ -325,48 +338,9 @@ export class AccountService {
 
       if (!currentAccount) throw new NotFoundError("Account not found!");
 
-      const {
-        thumbnail,
-        otherImages,
-        priceTier,
-        nextBooking,
-        nextBookingDuration,
-        expireAt,
-        forceUpdateExpiry,
-        forceUpdateTotalRentHour,
-        ...scalars
-      } = data;
+      const { thumbnail, otherImages, priceTier, ...scalars } = data;
 
       const updateData: Prisma.AccountUpdateInput = { ...scalars };
-
-      if (forceUpdateTotalRentHour) {
-        updateData.totalRentHour = {
-          increment: currentAccount.nextBookingDuration ?? undefined
-        };
-        updateData.nextBooking = null;
-        updateData.expireAt = null;
-        updateData.nextBookingDuration = null;
-        currentAccount.expireAt = null;
-      }
-
-      if (nextBooking !== undefined && nextBookingDuration !== undefined) {
-        if (forceUpdateExpiry) {
-          updateData.expireAt = expireAt;
-        } else {
-          if (currentAccount.expireAt) {
-            if (new Date() > new Date(currentAccount.expireAt)) {
-              updateData.expireAt = expireAt;
-            } else {
-              updateData.expireAt = undefined;
-            }
-          } else {
-            updateData.expireAt = expireAt;
-          }
-        }
-
-        updateData.nextBooking = nextBooking;
-        updateData.nextBookingDuration = nextBookingDuration;
-      }
 
       if (thumbnail !== undefined) {
         if (
@@ -420,6 +394,65 @@ export class AccountService {
         throw new PrismaUniqueError("Account code is already in use!");
       }
 
+      if (error instanceof Prisma.PrismaClientValidationError) {
+        throw new BadRequestError("Invalid request body!");
+      }
+
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  updateExpireAt = async () => {
+    try {
+      const expiredAccounts = await prisma.account.findMany({
+        where: { currentExpireAt: { lt: new Date() } }
+      });
+
+      await prisma.$transaction(async (tx) => {
+        for (const account of expiredAccounts) {
+          await tx.account.update({
+            where: { id: account.id },
+            data: {
+              currentBookingDate: null,
+              currentExpireAt: null,
+              currentBookingDuration: null,
+              passwordResetRequired: true,
+              availabilityStatus: "AVAILABLE",
+              totalRentHour: {
+                increment: account.currentBookingDuration || 0
+              }
+            }
+          });
+
+          await tx.accountResetLog.create({
+            data: {
+              accountId: account.id,
+              previousExpireAt: account.currentExpireAt
+            }
+          });
+        }
+
+        await tx.accountResetLog.deleteMany({
+          where: { resetAt: { lt: subDays(new Date(), 2) } }
+        });
+      });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  updateResetLogs = async (id: number, data: UpdateResetLogRequest) => {
+    try {
+      await prisma.account.update({
+        where: { id: data.accountId },
+        data: {
+          password: data.password,
+          passwordResetRequired: data.passwordResetRequired
+        }
+      });
+
+      return await prisma.accountResetLog.delete({ where: { id } });
+    } catch (error) {
       if (error instanceof Prisma.PrismaClientValidationError) {
         throw new BadRequestError("Invalid request body!");
       }

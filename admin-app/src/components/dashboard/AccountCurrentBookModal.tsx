@@ -10,7 +10,6 @@ import { accountService } from "@/services/account.service";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -58,7 +57,6 @@ import { AVAILABILITY_STATUS } from "@/lib/enums";
 import { cn, convertHoursToDays } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckedState } from "@radix-ui/react-checkbox";
 import { addHours, format } from "date-fns";
 import { CalendarIcon, CopyIcon, Loader2Icon, Trash2Icon } from "lucide-react";
 import parse from "parse-duration";
@@ -67,12 +65,9 @@ import { z } from "zod";
 
 const formSchema = z.object({
   availabilityStatus: z.enum(["AVAILABLE", "IN_USE", "NOT_AVAILABLE"]),
-  nextBooking: z.date().nullish(),
-  nextBookingDuration: z.string().optional(),
-  forceUpdateExpiry: z.boolean().default(false).optional(),
-  forceUpdateTotalRentHour: z.boolean().default(false).optional(),
-  expireAt: z.date().optional(),
-  totalRentHour: z.string().optional()
+  currentBookingDate: z.date().nullish(),
+  currentBookingDuration: z.string().optional(),
+  currentExpireAt: z.date().nullish()
 });
 
 type Props = {
@@ -82,7 +77,7 @@ type Props = {
   resetParent: () => Promise<void>;
 };
 
-export default function AccountBookModal({
+export default function AccountCurrentBookModal({
   open,
   onOpenChange,
   data,
@@ -90,19 +85,20 @@ export default function AccountBookModal({
 }: Props) {
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const [reminderText, setReminderText] = useState("");
-  const [enableTotalRentHourEdit, setEnableTotalRentHourEdit] =
-    useState<CheckedState>();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       availabilityStatus:
         (data.availabilityStatus as AVAILABILITY_STATUS) || "AVAILABLE",
-      nextBooking: data.nextBooking ? new Date(data.nextBooking) : new Date(),
-      nextBookingDuration:
-        convertHoursToDays(data.nextBookingDuration) || undefined,
-      expireAt: data.expireAt ? new Date(data.expireAt) : undefined,
-      totalRentHour: convertHoursToDays(data.totalRentHour) || undefined
+      currentBookingDate: data.currentBookingDate
+        ? new Date(data.currentBookingDate)
+        : new Date(),
+      currentBookingDuration:
+        convertHoursToDays(data.currentBookingDuration) || undefined,
+      currentExpireAt: data.currentExpireAt
+        ? new Date(data.currentExpireAt)
+        : undefined
     },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -110,12 +106,12 @@ export default function AccountBookModal({
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      form.setValue("nextBooking", date);
+      form.setValue("currentBookingDate", date);
     }
   };
 
   const handleTimeChange = (type: "hour" | "minute", value: string) => {
-    const currentDate = form.getValues("nextBooking") || new Date();
+    const currentDate = form.getValues("currentBookingDate") || new Date();
     const newDate = new Date(currentDate);
 
     if (type === "hour") {
@@ -126,19 +122,19 @@ export default function AccountBookModal({
       newDate.setMinutes(minute);
     }
 
-    form.setValue("nextBooking", newDate);
+    form.setValue("currentBookingDate", newDate);
   };
 
   const handleDeleteBookingDate = () => {
-    form.setValue("nextBooking", null);
-    form.setValue("nextBookingDuration", "");
+    form.setValue("currentBookingDate", null);
+    form.setValue("currentBookingDuration", "");
   };
 
   const parseDurationToHours = useCallback(
     (duration: string) => {
       const ms = parse(duration);
       if (ms === null) {
-        form.setError("nextBookingDuration", {
+        form.setError("currentBookingDuration", {
           type: "validate",
           message: "Invalid date format"
         });
@@ -163,20 +159,14 @@ export default function AccountBookModal({
     id: number,
     values: z.infer<typeof formSchema>
   ) => {
-    const bookingDurationNumber = parse(values.nextBookingDuration);
-    const totalRentHourNumber = parse(values.totalRentHour);
+    const bookingDurationNumber = parse(values.currentBookingDuration);
 
-    delete values.nextBookingDuration;
-    delete values.totalRentHour;
+    delete values.currentBookingDuration;
 
     const payload = {
       ...values,
-      bookingScheduledAt: values.nextBooking ? new Date() : undefined,
       ...(bookingDurationNumber !== null
-        ? { nextBookingDuration: bookingDurationNumber / (1000 * 60 * 60) }
-        : {}),
-      ...(totalRentHourNumber !== null && enableTotalRentHourEdit
-        ? { totalRentHour: totalRentHourNumber / (1000 * 60 * 60) }
+        ? { currentBookingDuration: bookingDurationNumber / (1000 * 60 * 60) }
         : {})
     };
     try {
@@ -217,44 +207,35 @@ export default function AccountBookModal({
       (status) => status.value === form.watch("availabilityStatus")
     )?.color || "bg-white";
 
-  const durationValue = form.watch("nextBookingDuration");
-  const nextBookingValue = form.watch("nextBooking");
-  const expireAtValue = form.watch("expireAt");
-  const forceUpdateTotalRentHourValue = form.watch("forceUpdateTotalRentHour");
+  const durationValue = form.watch("currentBookingDuration");
+  const currentBookingValue = form.watch("currentBookingDate");
+  const expireAtValue = form.watch("currentExpireAt");
 
   useEffect(() => {
     if (durationValue) {
       const hours = parseDurationToHours(durationValue) || 0;
-      const nextBooking = nextBookingValue || new Date();
-      const nextBookingDate = new Date(nextBooking);
+      const currentBookingDate = currentBookingValue || new Date();
 
-      const expireDate = addHours(nextBookingDate, hours);
-      form.setValue("expireAt", expireDate);
+      const expireDate = addHours(new Date(currentBookingDate), hours);
+      form.setValue("currentExpireAt", expireDate);
     }
-  }, [durationValue, nextBookingValue, form, parseDurationToHours]);
+  }, [durationValue, currentBookingValue, form, parseDurationToHours]);
 
   useEffect(() => {
-    setReminderText(`Username Riot: ${data.username}\nPassword Riot: ${data.password}\nKode Akun: ${data.accountCode}\nExpired: ${format(expireAtValue || new Date(), "dd MMMM yyyy 'at' HH:mm")}
+    setReminderText(`Username Riot: ${data.username}\nPassword Riot: ${data.password}\nKode Akun: ${data.accountCode}\nExpired: ${format(expireAtValue || new Date(), "dd MMMM yyyy 'at' HH:mm")} WIB
                     \nMOHON DILOGOUT AKUNNYA PADA/SEBELUM WAKTU RENTAL HABIS‼ agar tidak terkena penalty pada akun yang menyebabkan anda terkena DENDA❗
                     \nJika sudah bisa login tolong bantu comment testimoni anda di postingan akun yang di sewa jika berkenan
                     \nTHANK YOUU udah rental akun di @valsewa, enjoy and have a nice day! Kalau ada kendala langsung chat mimin yaa👌🏻.
-                    \nJangan lupa untuk ngisi form kepuasan yaa😼
-                    \nhttps://forms.gle/tLtQdX1SFyyFhXE86`);
+                    \nDiscord Community Valorant
+👇
+https://discord.gg/ywqTZSTwRY `);
   }, [expireAtValue, data]);
-
-  useEffect(() => {
-    if (forceUpdateTotalRentHourValue) {
-      form.setValue("availabilityStatus", "AVAILABLE");
-      form.setValue("nextBooking", null);
-      form.setValue("nextBookingDuration", "");
-    }
-  }, [form, forceUpdateTotalRentHourValue]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
-          <DialogTitle>Edit Booking</DialogTitle>
+          <DialogTitle>Current Booking</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -266,52 +247,6 @@ export default function AccountBookModal({
               <p className="font-semibold">Booking Details</p>
               <hr />
             </div>
-
-            {nextBookingValue && (
-              <FormField
-                control={form.control}
-                name="forceUpdateExpiry"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Override Booking Date</FormLabel>
-                      <FormDescription>
-                        Override apabila terjadi kesalahan pada booking date
-                        atau booking duration
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <FormField
-              control={form.control}
-              name="forceUpdateTotalRentHour"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Finish Previous Booking</FormLabel>
-                    <FormDescription>
-                      Jika dicentang, maka booking sebelumnya selesai dan total
-                      rent hour akan ditambahkan
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
 
             <div className="flex flex-col min-[1920px]:flex-row gap-4">
               <FormField
@@ -342,7 +277,7 @@ export default function AccountBookModal({
               />
               <FormField
                 control={form.control}
-                name="nextBooking"
+                name="currentBookingDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col w-full min-[1920px]:w-2/5">
                     <FormLabel className="mt-[0.4rem] mb-[0.275rem]">
@@ -463,7 +398,7 @@ export default function AccountBookModal({
               />
               <FormField
                 control={form.control}
-                name="nextBookingDuration"
+                name="currentBookingDuration"
                 render={({ field }) => (
                   <FormItem className="w-full min-[1920px]:w-2/5">
                     <FormLabel>Duration</FormLabel>
@@ -486,39 +421,9 @@ export default function AccountBookModal({
               </Label>
             )}
 
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  checked={enableTotalRentHourEdit}
-                  onCheckedChange={(checked) =>
-                    setEnableTotalRentHourEdit(checked)
-                  }
-                />
-                <label
-                  htmlFor="terms"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Override Total Rent Hour
-                </label>
-              </div>
-              {enableTotalRentHourEdit ? (
-                <FormField
-                  control={form.control}
-                  name="totalRentHour"
-                  render={({ field }) => (
-                    <FormItem className="w-full xl:w-2/5">
-                      <FormLabel>Total Rent Hour</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter total rent hour here"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : null}
+            <div className="flex flex-col gap-2">
+              <p className="font-semibold">Transactional Info</p>
+              <hr />
             </div>
 
             <div className="relative">

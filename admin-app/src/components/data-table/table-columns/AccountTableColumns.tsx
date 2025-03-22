@@ -42,27 +42,27 @@ export const accountColumns = (
         return priceTier.code;
       },
       header: "Price Tier",
-      size: "auto" as unknown as number
+      size: 100
     },
     {
       accessorKey: "accountCode",
       header: "Code",
-      size: "auto" as unknown as number
+      size: 100
     },
     {
       accessorKey: "username",
       header: "Username",
-      size: "auto" as unknown as number
+      size: 200
     },
     {
       accessorKey: "nickname",
       header: "Nickname",
-      size: "auto" as unknown as number
+      size: 200
     },
     {
       accessorKey: "accountRank",
       header: "Rank",
-      size: "auto" as unknown as number
+      size: 150
     },
     {
       accessorKey: "progressStatus",
@@ -78,11 +78,11 @@ export const accountColumns = (
           />
         );
       },
-      size: "auto" as unknown as number
+      size: 150
     },
     {
-      accessorKey: "expireAt",
-      header: "Expire At",
+      accessorKey: "currentBookingDate",
+      header: "Current Booking Date",
       cell: ({ getValue }) => {
         const date = getValue<Date>();
         if (date === null) {
@@ -90,11 +90,11 @@ export const accountColumns = (
         }
         return format(date, "dd MMMM yyyy 'at' HH:mm");
       },
-      size: "auto" as unknown as number
+      size: 200
     },
     {
-      accessorKey: "nextBooking",
-      header: "Next Booking",
+      accessorKey: "currentExpireAt",
+      header: "Current Expire At",
       cell: ({ getValue }) => {
         const date = getValue<Date>();
         if (date === null) {
@@ -102,7 +102,31 @@ export const accountColumns = (
         }
         return format(date, "dd MMMM yyyy 'at' HH:mm");
       },
-      size: "auto" as unknown as number
+      size: 200
+    },
+    {
+      accessorKey: "nextBookingDate",
+      header: "Next Booking Date",
+      cell: ({ getValue }) => {
+        const date = getValue<Date>();
+        if (date === null) {
+          return "-";
+        }
+        return format(date, "dd MMMM yyyy 'at' HH:mm");
+      },
+      size: 200
+    },
+    {
+      accessorKey: "nextExpireAt",
+      header: "Next Expire At",
+      cell: ({ getValue }) => {
+        const date = getValue<Date>();
+        if (date === null) {
+          return "-";
+        }
+        return format(date, "dd MMMM yyyy 'at' HH:mm");
+      },
+      size: 200
     },
     {
       id: "actions",

@@ -48,7 +48,7 @@ import { AccountEntity } from "@/types/account.type";
 import { PriceTier } from "@/types/pricetier.type";
 
 import { ranks } from "@/lib/constants";
-import { cn, convertHoursToDays } from "@/lib/utils";
+import { cn, convertHoursToDays, generatePassword } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -76,6 +76,7 @@ const formSchema = z.object({
   priceTier: z.number({ required_error: "Price tier is required" }),
   accountRank: z.string().nonempty("Rank is required"),
   password: z.string().nonempty("Password is required"),
+  passwordResetRequired: z.boolean(),
   skinList: z
     .array(z.object({ name: z.string().optional() }))
     .transform((listOfSkins) =>
@@ -121,9 +122,6 @@ export default function AccountDetailModal({
   const [skinListText, setSkinListText] = useState("");
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const [isLoadingFetchRank, setIsLoadingFetchRank] = useState(false);
-  const [isPasswordUpdated, setIsPasswordUpdated] = useState(
-    !data?.stale_password || false
-  );
   const [thumbnailInputKey, setThumbnailInputKey] = useState(Date.now());
   const [accountDuplicate, setAccountDuplicate] = useState(false);
 
@@ -158,6 +156,7 @@ export default function AccountDetailModal({
             priceTier: data.priceTier.id,
             accountRank: data.accountRank,
             password: data.password,
+            passwordResetRequired: data.passwordResetRequired,
             skinList: data.skinList.map((skinName) => ({ name: skinName })),
             thumbnail: data.thumbnail,
             otherImages: data.otherImages ? data.otherImages : []
@@ -170,6 +169,7 @@ export default function AccountDetailModal({
             priceTier: undefined,
             accountRank: "",
             password: "",
+            passwordResetRequired: false,
             skinList: [{ name: "" }],
             thumbnail: undefined,
             otherImages: []
@@ -244,30 +244,10 @@ export default function AccountDetailModal({
     form.trigger("priceTier");
   };
 
-  const generatePassword = () => {
-    const lowercase = "abcdefghijkmnpqrstuvwxyz";
-    const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";
-    const numbers = "123456789";
-    const specialChars = "!@#$%^&*()_+{}[]<>?/";
-
-    const getRandomChars = (source: string, length: number) =>
-      Array.from(
-        { length },
-        () => source[Math.floor(Math.random() * source.length)]
-      ).join("");
-
-    return (
-      getRandomChars(lowercase, 4) +
-      getRandomChars(uppercase, 2) +
-      getRandomChars(numbers, 4) +
-      getRandomChars(specialChars, 2)
-    );
-  };
-
   const generateAndSetPassword = () => {
     const newPassword = generatePassword();
     form.setValue("password", newPassword, { shouldValidate: true });
-    setIsPasswordUpdated(true);
+    form.setValue("passwordResetRequired", false);
   };
 
   const copyPasswordToClipboard = async () => {
@@ -296,7 +276,6 @@ export default function AccountDetailModal({
   ) => {
     const payload = {
       ...values,
-      passwordUpdatedAt: new Date(),
       thumbnail: thumbnail_id,
       otherImages: other_image_ids,
       skinList: values.skinList.map((skin) => skin.name || "")
@@ -330,14 +309,8 @@ export default function AccountDetailModal({
     thumbnail_id?: number,
     other_image_ids?: number[]
   ) => {
-    const passwordUpdatedAt =
-      mode === "edit" && data && values.password === data.password
-        ? undefined
-        : new Date();
-
     const payload = {
       ...values,
-      passwordUpdatedAt,
       thumbnail: thumbnail_id,
       otherImages: other_image_ids,
       skinList: values.skinList.map((skin) => skin.name || "")
@@ -423,6 +396,7 @@ export default function AccountDetailModal({
   const hasPasswordError = !!form.formState.errors.password;
   const hasSkinsError = !!form.formState.errors.skinList;
   const hasThumbnail = !!form.getValues("thumbnail");
+  const isPasswordUpdated = form.watch("passwordResetRequired");
 
   const nicknameValue = form.watch("nickname");
   const usernameValue = form.watch("username");
@@ -719,7 +693,7 @@ export default function AccountDetailModal({
               Generate New Password
             </Button>
 
-            {!isPasswordUpdated && (
+            {isPasswordUpdated && (
               <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
                 Password needs to be updated!
               </p>
