@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { priceTierService } from "@/services/pricetier.service";
 
-import DataTable from "@/components/data-table/VirtualizedDataTable";
+import DataTable from "@/components/data-table/DataTable";
 import { priceTierColumns } from "@/components/data-table/table-columns/PriceTierTableColumns";
 import PriceTierDetailModal from "@/components/pricetier-management/PriceTierDetailModal";
 import { Button } from "@/components/ui/button";
