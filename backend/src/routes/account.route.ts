@@ -41,12 +41,27 @@ class AccountRouter {
       authMiddleware,
       this.accountController.getAccountDuplicate
     );
+    this.router.get(
+      "/reset-logs",
+      authMiddleware,
+      this.accountController.getAccountResetLogs
+    );
     this.router.get("/:id", this.accountController.getAccountById);
     this.router.post("/", authMiddleware, this.accountController.createAccount);
     this.router.post(
       "/update-rank",
       schedulerMiddleware,
       this.accountController.updateAllAccountsRank
+    );
+    this.router.post(
+      "/update-expire-at",
+      schedulerMiddleware,
+      this.accountController.updateExpireAt
+    );
+    this.router.put(
+      "/reset-logs/:id",
+      authMiddleware,
+      this.accountController.updateResetLogs
     );
     this.router.put(
       "/:id",

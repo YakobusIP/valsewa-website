@@ -45,9 +45,6 @@ import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
  *           type: number
  *         password:
  *           type: string
- *         passwordUpdatedAt:
- *           type: string
- *           format: date-time
  *         skinList:
  *           type: array
  *           items:
@@ -499,6 +496,20 @@ export class AccountController {
     }
   };
 
+  getAccountResetLogs = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const accounts = await this.accountService.getAccountResetLogs();
+
+      return res.json(accounts);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   /**
    * @openapi
    * /api/accounts:
@@ -627,6 +638,82 @@ export class AccountController {
       return res.json({
         message: `${accounts.length} account(s) updated successfully!`
       });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  /**
+   * @openapi
+   * /api/accounts/update-expire-at:
+   *   post:
+   *     tags:
+   *       - Accounts
+   *     summary: Update the expire at for expired accounts.
+   *     security:
+   *       - apiKeyAuth: []
+   *     responses:
+   *       200:
+   *         description: Successfully updated expire at for all expired accounts.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   */
+  updateExpireAt = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await this.accountService.updateExpireAt();
+
+      return res.status(200).end();
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  /**
+   * @openapi
+   * /api/accounts/reset-logs:
+   *   put:
+   *     tags:
+   *       - Accounts
+   *     summary: Update account reset logs.
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The ID of the account to update.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/Account'
+   *     responses:
+   *       201:
+   *         description: Account updated successfully.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   */
+  updateResetLogs = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await this.accountService.updateResetLogs(
+        parseInt(req.params.id),
+        req.body
+      );
+
+      return res.status(201).json({ message: "Operation successful!" });
     } catch (error) {
       return next(error);
     }

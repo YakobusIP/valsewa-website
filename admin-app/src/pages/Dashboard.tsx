@@ -1,14 +1,21 @@
-import { Fragment, useCallback, useEffect, useState } from "react";
+import {
+  ChangeEventHandler,
+  Fragment,
+  memo,
+  useCallback,
+  useEffect,
+  useState
+} from "react";
 
 import { accountService } from "@/services/account.service";
 import { statisticService } from "@/services/statistic.service";
 
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
-import FailedJobsAlertModal from "@/components/dashboard/FailedJobsAlertModal";
 import LogoutButton from "@/components/dashboard/LogoutButton";
+import NotificationsModal from "@/components/dashboard/NotificationsModal";
 import SortComponent from "@/components/dashboard/SortComponent";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
-import DataTable from "@/components/data-table/DataTable";
+import VirtualizedDataTable from "@/components/data-table/VirtualizedDataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
 import PriceTierModal from "@/components/pricetier-management/PriceTierModal";
 import { Button } from "@/components/ui/button";
@@ -16,7 +23,7 @@ import { Input } from "@/components/ui/input";
 
 import { toast } from "@/hooks/useToast";
 
-import { AccountEntity, FailedJobs } from "@/types/account.type";
+import { AccountEntity, FailedJobs, ResetLogs } from "@/types/account.type";
 import { MetadataResponse } from "@/types/api.type";
 import { StatisticResponse } from "@/types/statistic.type";
 
@@ -26,6 +33,24 @@ import { CirclePlusIcon, SearchIcon } from "lucide-react";
 import { useDebounce } from "use-debounce";
 
 const PAGINATION_SIZE = 100;
+
+const SearchInput = memo(
+  ({
+    value,
+    onChange
+  }: {
+    value: string;
+    onChange: ChangeEventHandler<HTMLInputElement>;
+  }) => (
+    <Input
+      startIcon={<SearchIcon size={18} className="text-muted-foreground" />}
+      placeholder="Search account..."
+      parentClassName="w-full xl:w-[32rem]"
+      value={value}
+      onChange={onChange}
+    />
+  )
+);
 
 export default function Dashboard() {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
@@ -42,6 +67,7 @@ export default function Dashboard() {
   const [isLoadingDeleteAccount, setIsLoadingDeleteAccount] = useState(false);
 
   const [failedJobs, setFailedJobs] = useState<FailedJobs[]>([]);
+  const [resetLogs, setResetLogs] = useState<ResetLogs[]>([]);
 
   const [searchAccount, setSearchAccount] = useState("");
   const [sortBy, setSortBy] = useState("id_tier");
@@ -59,7 +85,7 @@ export default function Dashboard() {
     );
   };
 
-  const fetchStatistics = async () => {
+  const fetchStatistics = useCallback(async () => {
     setIsLoadingStatistics(true);
     try {
       const data = await statisticService.fetchAll();
@@ -76,7 +102,7 @@ export default function Dashboard() {
     } finally {
       setIsLoadingStatistics(false);
     }
-  };
+  }, []);
 
   const fetchAllAccounts = useCallback(async () => {
     setIsLoadingAccount(true);
@@ -150,19 +176,47 @@ export default function Dashboard() {
     }
   };
 
-  const resetParent = async () => {
+  const fetchResetLogs = useCallback(async () => {
+    try {
+      const response = await accountService.fetchResetLogs();
+      setResetLogs(response);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occured";
+
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: errorMessage
+      });
+    } finally {
+      setSelectedAccountRows({});
+      setIsLoadingDeleteAccount(false);
+    }
+  }, []);
+
+  const resetParent = useCallback(async () => {
     await fetchAllAccounts();
     await fetchStatistics();
-  };
+  }, [fetchAllAccounts, fetchStatistics]);
+
+  const resetFetchLogsParent = useCallback(async () => {
+    await fetchResetLogs();
+    await fetchAllAccounts();
+  }, [fetchResetLogs, fetchAllAccounts]);
 
   useEffect(() => {
     fetchStatistics();
     fetchAllAccounts();
-  }, [fetchAllAccounts]);
+  }, [fetchStatistics, fetchAllAccounts]);
 
   useEffect(() => {
     fetchFailedJobs();
   }, []);
+
+  useEffect(() => {
+    fetchResetLogs();
+  }, [fetchResetLogs]);
 
   useEffect(() => {
     document.title = "Dashboard | Valsewa Admin";
@@ -177,24 +231,21 @@ export default function Dashboard() {
             statistics={statistics}
             isLoadingStatistics={isLoadingStatistics}
           />
-          <DataTable
+          <VirtualizedDataTable
             columns={accountColumns(resetParent)}
             data={accountList}
             rowSelection={selectedAccountRows}
             setRowSelection={setSelectedAccountRows}
-            isLoadingData={isLoadingAccount}
             deleteData={deleteManyAccounts}
+            isLoadingData={isLoadingAccount}
             isLoadingDeleteData={isLoadingDeleteAccount}
             page={accountListPage}
             setPage={setAccountListPage}
             metadata={accountMetadata}
+            height="550px"
             leftSideComponent={
-              <Input
-                startIcon={
-                  <SearchIcon size={18} className="text-muted-foreground" />
-                }
-                placeholder="Search account..."
-                parentClassName="w-full xl:w-[32rem]"
+              <SearchInput
+                value={searchAccount}
                 onChange={(e) => setSearchAccount(e.target.value)}
               />
             }
@@ -218,7 +269,11 @@ export default function Dashboard() {
           />
         </div>
         <div className="absolute top-4 right-4 flex items-center justify-center gap-4">
-          <FailedJobsAlertModal failedJobs={failedJobs} />
+          <NotificationsModal
+            failedJobs={failedJobs}
+            resetLogs={resetLogs}
+            resetParent={resetFetchLogsParent}
+          />
           <LogoutButton />
         </div>
       </main>

@@ -1,13 +1,17 @@
 import { useState } from "react";
 
-import AccountBookModal from "@/components/dashboard/AccountBookModal";
+import { accountService } from "@/services/account.service";
+
+import AccountCurrentBookModal from "@/components/dashboard/AccountCurrentBookModal";
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
+import AccountNextBookModal from "@/components/dashboard/AccountNextBookModal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import {
@@ -17,7 +21,9 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 
-import { AccountEntity } from "@/types/account.type";
+import { toast } from "@/hooks/useToast";
+
+import { AccountEntity, AccountEntityRequest } from "@/types/account.type";
 
 import { MoreHorizontalIcon } from "lucide-react";
 import { Fragment } from "react/jsx-runtime";
@@ -29,16 +35,87 @@ type Props = {
 
 export default function AccountTableAction({ data, resetParent }: Props) {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
-  const [openBookingModal, setOpenBookingModal] = useState(false);
+  const [openCurrentBookingModal, setOpenCurrentBookingModal] = useState(false);
+  const [openNextBookingModal, setOpenNextBookingModal] = useState(false);
+
+  const currentBookingExist =
+    !!data.currentBookingDate &&
+    !!data.currentBookingDuration &&
+    !!data.currentExpireAt;
+
+  const nextBookingExist =
+    !!data.nextBookingDate && !!data.nextBookingDuration && !!data.nextExpireAt;
+
+  const finishCurrentBooking = async () => {
+    if (currentBookingExist) {
+      const payload: Partial<AccountEntityRequest> = {
+        availabilityStatus: "AVAILABLE",
+        currentBookingDate: null,
+        currentBookingDuration: null,
+        currentExpireAt: null,
+        totalRentHour:
+          data.totalRentHour + (data.currentBookingDuration as number)
+      };
+      try {
+        const response = await accountService.update(data.id, payload);
+        await resetParent();
+
+        toast({
+          title: "All set!",
+          description: response.message
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occured";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong!",
+          description: errorMessage
+        });
+      }
+    }
+  };
+
+  const moveNextBookingToCurrent = async () => {
+    if (nextBookingExist) {
+      const payload: Partial<AccountEntityRequest> = {
+        currentBookingDate: data.nextBookingDate,
+        currentBookingDuration: data.nextBookingDuration,
+        currentExpireAt: data.nextExpireAt,
+        nextBookingDate: null,
+        nextBookingDuration: null,
+        nextExpireAt: null
+      };
+      try {
+        const response = await accountService.update(data.id, payload);
+        await resetParent();
+
+        toast({
+          title: "All set!",
+          description: response.message
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occured";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong!",
+          description: errorMessage
+        });
+      }
+    }
+  };
 
   return (
     <Fragment>
       <div className="relative">
-        {data.stale_password && (
+        {data.passwordResetRequired && (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="absolute right-2 animate-pulse w-2 h-2 bg-destructive rounded-full" />
+                <span className="absolute right-0 animate-pulse w-2 h-2 bg-destructive rounded-full" />
               </TooltipTrigger>
               <TooltipContent>
                 <p>Password needs to be updated</p>
@@ -54,12 +131,30 @@ export default function AccountTableAction({ data, resetParent }: Props) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuLabel>Details</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => setOpenAccountDetail(true)}>
-              View Account Details
+              View account details
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setOpenBookingModal(true)}>
-              Edit Booking
+            <DropdownMenuItem onClick={() => setOpenCurrentBookingModal(true)}>
+              View current booking
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setOpenNextBookingModal(true)}>
+              View next booking
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Booking Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => finishCurrentBooking()}
+              disabled={!currentBookingExist}
+            >
+              Finish current booking
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => moveNextBookingToCurrent()}
+              disabled={!nextBookingExist}
+            >
+              Move next booking to current
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -71,9 +166,15 @@ export default function AccountTableAction({ data, resetParent }: Props) {
         data={data}
         resetParent={resetParent}
       />
-      <AccountBookModal
-        open={openBookingModal}
-        onOpenChange={setOpenBookingModal}
+      <AccountCurrentBookModal
+        open={openCurrentBookingModal}
+        onOpenChange={setOpenCurrentBookingModal}
+        data={data}
+        resetParent={resetParent}
+      />
+      <AccountNextBookModal
+        open={openNextBookingModal}
+        onOpenChange={setOpenNextBookingModal}
         data={data}
         resetParent={resetParent}
       />

@@ -2,7 +2,9 @@ import {
   AccountEntity,
   AccountEntityRequest,
   FailedJobs,
-  RankResponse
+  RankResponse,
+  ResetLogs,
+  UpdateResetLogRequest
 } from "@/types/account.type";
 import { ApiResponseList, MessageResponse } from "@/types/api.type";
 
@@ -68,6 +70,18 @@ const createAccountService = () => {
     }
   };
 
+  const fetchResetLogs = async () => {
+    try {
+      const response = await interceptedAxios.get<ResetLogs[]>(
+        `${BASE_ACCOUNT_URL}/reset-logs`
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
   const create = async (data: Partial<AccountEntityRequest>) => {
     try {
       const response = await interceptedAxios.post<MessageResponse>(
@@ -94,6 +108,19 @@ const createAccountService = () => {
     }
   };
 
+  const updateResetLogs = async (id: number, data: UpdateResetLogRequest) => {
+    try {
+      const response = await interceptedAxios.put<MessageResponse>(
+        `${BASE_ACCOUNT_URL}/reset-logs/${id}`,
+        data
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
   const deleteMany = async (ids: number[]) => {
     try {
       await interceptedAxios.delete(BASE_ACCOUNT_URL, { data: { ids } });
@@ -107,8 +134,10 @@ const createAccountService = () => {
     fetchRank,
     fetchDuplicate,
     fetchFailedJobs,
+    fetchResetLogs,
     create,
     update,
+    updateResetLogs,
     deleteMany
   };
 };

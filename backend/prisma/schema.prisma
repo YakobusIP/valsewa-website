@@ -15,24 +15,28 @@ enum Status {
 }
 
 model Account {
-  id                  Int       @id @default(autoincrement())
-  username            String
-  nickname            String
-  accountCode         String    @unique
-  description         String?
-  accountRank         String
-  availabilityStatus  Status    @default(AVAILABLE)
-  nextBooking         DateTime?
-  nextBookingDuration Int?
-  expireAt            DateTime?
-  bookingScheduledAt  DateTime?
-  totalRentHour       Int       @default(0)
-  rentHourUpdated     Boolean   @default(false)
-  password            String
-  passwordUpdatedAt   DateTime
-  skinList            String[]
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                        Int       @id @default(autoincrement())
+  username                  String
+  nickname                  String
+  accountCode               String    @unique
+  description               String?
+  accountRank               String
+  availabilityStatus        Status    @default(AVAILABLE)
+  currentBookingDate        DateTime?
+  currentBookingDuration    Int?
+  currentExpireAt           DateTime?
+  nextBookingDate           DateTime?
+  nextBookingDuration       Int?
+  nextExpireAt              DateTime?
+  currentBookingScheduledAt DateTime?
+  nextBookingScheduledAt    DateTime?
+  totalRentHour             Int       @default(0)
+  rentHourUpdated           Boolean   @default(false)
+  password                  String
+  passwordResetRequired     Boolean   @default(false)
+  skinList                  String[]
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
   priceTier   PriceTier @relation(fields: [priceTierId], references: [id])
   priceTierId Int
@@ -41,6 +45,17 @@ model Account {
   thumbnailId Int?         @unique
 
   otherImages ImageUpload[] @relation("OtherImages")
+
+  resetLogs AccountResetLog[]
+}
+
+model AccountResetLog {
+  id               Int       @id @default(autoincrement())
+  accountId        Int
+  account          Account   @relation(fields: [accountId], references: [id])
+  previousExpireAt DateTime?
+  resetAt          DateTime  @default(now())
+  checked          Boolean   @default(false)
 }
 
 model PriceTier {

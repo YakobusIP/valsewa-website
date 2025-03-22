@@ -9,15 +9,16 @@ type AccountEntity = {
   description?: string | null;
   accountRank: string;
   availabilityStatus: string;
-  nextBooking?: Date | null;
+  currentBookingDate?: Date | null;
+  currentBookingDuration?: number | string | null;
+  currentExpireAt?: Date | null;
+  nextBookingDate?: Date | null;
   nextBookingDuration?: number | string | null;
-  bookingScheduledAt?: Date | null;
-  expireAt?: Date | null;
+  nextExpireAt?: Date | null;
   totalRentHour: number;
   password: string;
-  passwordUpdatedAt: Date;
+  passwordResetRequired: boolean;
   skinList: string[];
-  stale_password: boolean;
   thumbnail: UploadResponse;
   otherImages: UploadResponse[] | null;
   priceTier: PriceTier;
@@ -25,12 +26,7 @@ type AccountEntity = {
 
 type AccountEntityRequest = Omit<
   AccountEntity,
-  | "id"
-  | "priceTier"
-  | "thumbnail"
-  | "otherImages"
-  | "totalRentHour"
-  | "stale_password"
+  "id" | "priceTier" | "thumbnail" | "otherImages"
 > & {
   priceTier: number;
   thumbnail: number;
@@ -52,4 +48,26 @@ type FailedJobs = {
   username: string;
 };
 
-export type { AccountEntity, AccountEntityRequest, RankResponse, FailedJobs };
+type ResetLogs = {
+  id: number;
+  accountId: number;
+  checked: boolean;
+  resetAt: Date;
+  previousExpireAt: Date;
+  account: { accountCode: string; nickname: string; username: string };
+};
+
+type UpdateResetLogRequest = {
+  accountId: number;
+  password: string;
+  passwordResetRequired: boolean;
+};
+
+export type {
+  AccountEntity,
+  AccountEntityRequest,
+  RankResponse,
+  FailedJobs,
+  ResetLogs,
+  UpdateResetLogRequest
+};
