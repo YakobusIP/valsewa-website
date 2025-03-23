@@ -28,8 +28,6 @@ model Account {
   nextBookingDate           DateTime?
   nextBookingDuration       Int?
   nextExpireAt              DateTime?
-  currentBookingScheduledAt DateTime?
-  nextBookingScheduledAt    DateTime?
   totalRentHour             Int       @default(0)
   rentHourUpdated           Boolean   @default(false)
   password                  String
@@ -55,7 +53,6 @@ model AccountResetLog {
   account          Account   @relation(fields: [accountId], references: [id])
   previousExpireAt DateTime?
   resetAt          DateTime  @default(now())
-  checked          Boolean   @default(false)
 }
 
 model PriceTier {

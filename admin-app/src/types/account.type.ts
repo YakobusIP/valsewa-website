@@ -51,7 +51,6 @@ type FailedJobs = {
 type ResetLogs = {
   id: number;
   accountId: number;
-  checked: boolean;
   resetAt: Date;
   previousExpireAt: Date;
   account: { accountCode: string; nickname: string; username: string };

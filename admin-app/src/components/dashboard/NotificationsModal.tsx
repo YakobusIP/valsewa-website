@@ -111,7 +111,7 @@ export default function NotificationsModal({
         <DialogHeader>
           <DialogTitle>Notifications</DialogTitle>
         </DialogHeader>
-        <DialogDescription>
+        <DialogDescription className="text-center xl:text-left">
           Pusat notifikasi terkait update otomatis
         </DialogDescription>
         <Table>

@@ -48,16 +48,8 @@ export default function AccountTableAction({ data, resetParent }: Props) {
 
   const finishCurrentBooking = async () => {
     if (currentBookingExist) {
-      const payload: Partial<AccountEntityRequest> = {
-        availabilityStatus: "AVAILABLE",
-        currentBookingDate: null,
-        currentBookingDuration: null,
-        currentExpireAt: null,
-        totalRentHour:
-          data.totalRentHour + (data.currentBookingDuration as number)
-      };
       try {
-        const response = await accountService.update(data.id, payload);
+        const response = await accountService.finishBooking(data.id);
         await resetParent();
 
         toast({

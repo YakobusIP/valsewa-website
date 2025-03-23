@@ -59,6 +59,11 @@ class AccountRouter {
       this.accountController.updateExpireAt
     );
     this.router.put(
+      "/finish-booking/:id",
+      authMiddleware,
+      this.accountController.finishBooking
+    );
+    this.router.put(
       "/reset-logs/:id",
       authMiddleware,
       this.accountController.updateResetLogs

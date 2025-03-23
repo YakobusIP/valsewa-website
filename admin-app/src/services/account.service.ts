@@ -95,6 +95,18 @@ const createAccountService = () => {
     }
   };
 
+  const finishBooking = async (id: number) => {
+    try {
+      const response = await interceptedAxios.put<MessageResponse>(
+        `${BASE_ACCOUNT_URL}/finish-booking/${id}`
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
   const update = async (id: number, data: Partial<AccountEntityRequest>) => {
     try {
       const response = await interceptedAxios.put<MessageResponse>(
@@ -136,6 +148,7 @@ const createAccountService = () => {
     fetchFailedJobs,
     fetchResetLogs,
     create,
+    finishBooking,
     update,
     updateResetLogs,
     deleteMany

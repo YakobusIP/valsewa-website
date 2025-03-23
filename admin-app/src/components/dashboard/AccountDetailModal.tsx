@@ -486,63 +486,61 @@ export default function AccountDetailModal({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit, handleError)}
-            className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-4"
+            className="grid grid-cols-1 xl:grid-cols-3 gap-4 p-4"
           >
-            <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
+            <div className="flex flex-col col-span-1 xl:col-span-3 gap-2">
               <p className="font-semibold">Account Details</p>
               <hr />
             </div>
 
-            <div className="flex flex-col xl:flex-row col-span-1 xl:col-span-2 gap-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem className="w-full xl:w-1/3">
-                    <FormLabel>
-                      Username <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter username here" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="nickname"
-                render={({ field }) => (
-                  <FormItem className="w-full xl:w-1/3">
-                    <FormLabel>
-                      Nickname <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter nickname here" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="accountCode"
-                render={({ field }) => (
-                  <FormItem className="w-full xl:w-1/3">
-                    <FormLabel>
-                      Code <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter code here" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Username <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter username here" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="nickname"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Nickname <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter nickname here" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="accountCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Code <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter code here" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {accountDuplicate && (
-              <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
+              <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-3">
                 Nickname or code already in use!
               </p>
             )}
@@ -551,7 +549,7 @@ export default function AccountDetailModal({
               control={form.control}
               name="description"
               render={({ field }) => (
-                <FormItem className="col-span-1 xl:col-span-2">
+                <FormItem className="col-span-1 xl:col-span-3">
                   <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
@@ -614,7 +612,7 @@ export default function AccountDetailModal({
               control={form.control}
               name="accountRank"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="col-span-1 xl:col-span-2">
                   <FormLabel>
                     Rank <span className="text-destructive">*</span>
                   </FormLabel>
@@ -647,11 +645,20 @@ export default function AccountDetailModal({
               )}
             />
 
+            <Button
+              type="button"
+              className={cn("xl:self-end", hasPasswordError && "xl:mb-7")}
+              onClick={generateAndSetPassword}
+            >
+              <LockIcon />
+              Generate New Password
+            </Button>
+
             <FormField
               control={form.control}
               name="password"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="col-span-1 xl:col-span-2">
                   <FormLabel>
                     Password <span className="text-destructive">*</span>
                   </FormLabel>
@@ -684,22 +691,14 @@ export default function AccountDetailModal({
                 </FormItem>
               )}
             />
-            <Button
-              type="button"
-              className={cn("xl:self-end", hasPasswordError && "xl:mb-7")}
-              onClick={generateAndSetPassword}
-            >
-              <LockIcon />
-              Generate New Password
-            </Button>
 
             {isPasswordUpdated && (
-              <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-2">
+              <p className="text-destructive text-sm font-bold col-span-1 xl:col-span-3">
                 Password needs to be updated!
               </p>
             )}
 
-            <div className="flex flex-col col-span-1 xl:col-span-2 gap-2">
+            <div className="flex flex-col col-span-1 xl:col-span-3 gap-2">
               <p className="font-semibold">Skins</p>
               <hr />
               <p className="text-sm">
@@ -765,12 +764,12 @@ export default function AccountDetailModal({
               Add New Skin
             </Button>
             {form.formState.errors.skinList && (
-              <p className="text-sm font-medium text-destructive col-span-1 xl:col-span-2">
+              <p className="text-sm font-medium text-destructive col-span-1 xl:col-span-3">
                 {form.formState.errors.skinList.root?.message}
               </p>
             )}
 
-            <div className="relative col-span-1 xl:col-span-2">
+            <div className="relative col-span-1 xl:col-span-3">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -800,7 +799,7 @@ export default function AccountDetailModal({
               control={form.control}
               name="thumbnail"
               render={({ field }) => (
-                <FormItem className="col-span-1 xl:col-span-2">
+                <FormItem className="col-span-1 xl:col-span-3">
                   <FormLabel>
                     Thumbnail <span className="text-destructive">*</span>
                   </FormLabel>
@@ -852,7 +851,7 @@ export default function AccountDetailModal({
               control={form.control}
               name="otherImages"
               render={({ field }) => (
-                <FormItem className="col-span-1 xl:col-span-2">
+                <FormItem className="col-span-1 xl:col-span-3">
                   <FormLabel>Other Images</FormLabel>
                   <FormControl>
                     <Input
@@ -914,7 +913,7 @@ export default function AccountDetailModal({
               )}
             />
 
-            <p className="xl:col-start-2 justify-self-end text-sm">
+            <p className="xl:col-start-3 justify-self-end text-sm">
               Akun ini sudah pernah disewa selama{" "}
               <b>
                 {data?.totalRentHour
@@ -925,7 +924,7 @@ export default function AccountDetailModal({
 
             <Button
               type="submit"
-              className="xl:col-start-2 w-full xl:w-fit justify-self-end"
+              className="xl:col-start-3 w-full xl:w-fit justify-self-end"
             >
               {isLoadingSubmit && (
                 <Loader2Icon className="w-4 h-4 animate-spin" />
