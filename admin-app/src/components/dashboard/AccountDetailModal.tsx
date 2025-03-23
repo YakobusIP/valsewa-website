@@ -476,7 +476,7 @@ export default function AccountDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
+      <DialogContent className="w-full xl:w-3/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
           <DialogTitle>
             {mode === "add" ? "Add New Account" : "Edit Account"}
