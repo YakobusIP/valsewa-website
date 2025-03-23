@@ -49,7 +49,9 @@ import { z } from "zod";
 
 const formSchema = z.object({
   nextBookingDate: z.date().nullish(),
-  nextBookingDuration: z.string().optional(),
+  nextBookingDuration: z
+    .string({ required_error: "Duration is required" })
+    .nonempty(),
   nextExpireAt: z.date().nullish()
 });
 
@@ -133,9 +135,9 @@ export default function AccountNextBookModal({
 
     const payload = {
       ...values,
-      ...(bookingDurationNumber !== null
-        ? { nextBookingDuration: bookingDurationNumber / (1000 * 60 * 60) }
-        : {})
+      ...{
+        nextBookingDuration: (bookingDurationNumber || 0) / (1000 * 60 * 60)
+      }
     };
     try {
       const response = await accountService.update(id, payload);

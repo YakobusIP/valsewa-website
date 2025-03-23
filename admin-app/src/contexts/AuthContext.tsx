@@ -12,8 +12,6 @@ import { toast } from "@/hooks/useToast";
 
 import { loginFormSchema } from "@/types/zod.type";
 
-import { setAccessToken } from "@/lib/axios";
-
 import { useNavigate } from "react-router";
 import { z } from "zod";
 
@@ -22,7 +20,6 @@ type AuthContextProps = {
   isAuthenticated: boolean;
   username: string;
   login: (values: z.infer<typeof loginFormSchema>) => Promise<void>;
-  validateToken: () => Promise<void>;
 };
 
 type AuthProviderProps = {
@@ -44,7 +41,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoadingLogin(true);
     try {
       const response = await authService.login(values);
-      setAccessToken(response.accessToken);
       setIsAuthenticated(true);
       setUsername(response.username);
       navigate("/dashboard");
@@ -97,8 +93,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isLoadingLogin,
         isAuthenticated,
         username,
-        login,
-        validateToken
+        login
       }}
     >
       {children}

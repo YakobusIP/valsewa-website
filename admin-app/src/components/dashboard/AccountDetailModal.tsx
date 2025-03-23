@@ -76,7 +76,7 @@ const formSchema = z.object({
   priceTier: z.number({ required_error: "Price tier is required" }),
   accountRank: z.string().nonempty("Rank is required"),
   password: z.string().nonempty("Password is required"),
-  passwordResetRequired: z.boolean(),
+  passwordResetRequired: z.boolean().optional(),
   skinList: z
     .array(z.object({ name: z.string().optional() }))
     .transform((listOfSkins) =>

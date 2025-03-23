@@ -9,13 +9,7 @@ export const authMiddleware = (
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers["authorization"];
-
-  if (!authHeader) {
-    return res.status(401).json({ error: "Access denied. No token provided!" });
-  }
-
-  const token = authHeader.split(" ")[1];
+  const token = req.cookies.accessToken;
 
   if (!token) {
     return res
@@ -23,7 +17,7 @@ export const authMiddleware = (
       .json({ error: "Invalid token! Please login to continue!" });
   }
 
-  jwt.verify(token, ACCESS_TOKEN_SECRET, (err) => {
+  jwt.verify(token, ACCESS_TOKEN_SECRET, (err: jwt.VerifyErrors | null) => {
     if (err) {
       return res
         .status(401)

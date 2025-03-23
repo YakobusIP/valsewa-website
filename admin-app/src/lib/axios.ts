@@ -3,10 +3,9 @@ import { ApiResponseError } from "@/types/api.type";
 import axios, { AxiosError, AxiosInstance } from "axios";
 import type { AxiosRequestConfig } from "axios";
 
-let accessToken: string | null = null;
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: (value: string) => void;
+  resolve: () => void;
   reject: (error: unknown) => void;
 }> = [];
 
@@ -19,41 +18,20 @@ const interceptedAxios: AxiosInstance = axios.create({
   withCredentials: true
 });
 
-export const setAccessToken = (token: string | null) => {
-  if (token) {
-    accessToken = token;
-    interceptedAxios.defaults.headers.common["Authorization"] =
-      `Bearer ${token}`;
-  } else {
-    delete interceptedAxios.defaults.headers.common["Authorization"];
-  }
-};
-
 /**
  * Processes the queue of failed requests after token refresh.
  * @param error Any error that occurred during the refresh.
- * @param token The new access token.
  */
-const processQueue = (error: unknown, token: string | null = null) => {
+const processQueue = (error: unknown) => {
   failedQueue.forEach((promise) => {
     if (error) {
       promise.reject(error);
-    } else if (token) {
-      promise.resolve(token);
+    } else {
+      promise.resolve();
     }
   });
   failedQueue = [];
 };
-
-interceptedAxios.interceptors.request.use(
-  (config) => {
-    if (accessToken) {
-      config.headers["Authorization"] = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
 
 interceptedAxios.interceptors.response.use(
   (response) => {
@@ -75,17 +53,14 @@ interceptedAxios.interceptors.response.use(
 
       if (error.response.status === 401) {
         if (isRefreshing) {
-          return new Promise((resolve, reject) => {
+          return new Promise<void>((resolve, reject) => {
             failedQueue.push({ resolve, reject });
           })
-            .then((token) => {
-              if (originalRequest.headers) {
-                originalRequest.headers["Authorization"] = `Bearer ${token}`;
-              }
+            .then(() => {
               return interceptedAxios(originalRequest);
             })
             .catch((err) => {
-              Promise.reject(err);
+              return Promise.reject(err);
             });
         }
       }
@@ -94,24 +69,19 @@ interceptedAxios.interceptors.response.use(
 
       return new Promise((resolve, reject) => {
         axios
-          .get(
+          .post(
             `${import.meta.env.VITE_AXIOS_BASE_URL}/api/auth/refresh-token`,
+            null,
             {
               withCredentials: true
             }
           )
-          .then((response) => {
-            const newAccessToken = response.data.accessToken;
-            setAccessToken(newAccessToken);
-            processQueue(null, newAccessToken);
-            if (originalRequest.headers) {
-              originalRequest.headers["Authorization"] =
-                `Bearer ${newAccessToken}`;
-            }
+          .then(() => {
+            processQueue(null);
             resolve(interceptedAxios(originalRequest));
           })
           .catch((refreshError) => {
-            processQueue(refreshError, null);
+            processQueue(refreshError);
             reject(refreshError);
           })
           .finally(() => {
