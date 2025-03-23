@@ -8,6 +8,7 @@ import {
   InternalServerError,
   UnauthorizedError
 } from "../lib/error";
+import { StringValue } from "ms";
 
 const ACCESS_TOKEN_SECRET = env.ACCESS_TOKEN_SECRET || "access_token_secret";
 const REFRESH_TOKEN_SECRET = env.REFRESH_TOKEN_SECRET || "refresh_token_secret";
@@ -113,11 +114,11 @@ export class AuthController {
 
       if (await this.authService.login(username, password)) {
         const accessToken = jwt.sign({ username }, ACCESS_TOKEN_SECRET, {
-          expiresIn: "15m"
+          expiresIn: env.ACCESS_TOKEN_DURATION as StringValue
         });
 
         const refreshToken = jwt.sign({ username }, REFRESH_TOKEN_SECRET, {
-          expiresIn: "7d"
+          expiresIn: env.REFRESH_TOKEN_DURATION as StringValue
         });
 
         const isProduction = env.NODE_ENV === "production";
@@ -128,7 +129,13 @@ export class AuthController {
           sameSite: isProduction ? "none" : "lax"
         });
 
-        res.status(200).json({ accessToken, username });
+        res.cookie("accessToken", accessToken, {
+          httpOnly: true,
+          secure: isProduction,
+          sameSite: isProduction ? "none" : "lax"
+        });
+
+        res.status(200).json({ username });
       } else {
         throw new UnauthorizedError("Invalid credentials!");
       }
@@ -162,10 +169,18 @@ export class AuthController {
    *               $ref: '#/components/schemas/LogoutResponse'
    */
   logout = async (_: Request, res: Response) => {
+    const isProduction = env.NODE_ENV === "production";
+
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax"
+    });
+
     res.clearCookie("refreshToken", {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict"
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax"
     });
     return res.status(200).json({ message: "Logged out successfully!" });
   };
@@ -204,25 +219,26 @@ export class AuthController {
    */
   validateToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const authHeader = req.headers["authorization"];
-
-      if (!authHeader) {
-        throw new UnauthorizedError("Access denied. No token provided!");
-      }
-
-      const token = authHeader.split(" ")[1];
+      const token = req.cookies.accessToken;
 
       if (!token) throw new UnauthorizedError("Invalid token!");
 
-      jwt.verify(token, ACCESS_TOKEN_SECRET, (err, decoded) => {
-        if (err) {
-          return res.status(401).json({ error: "Invalid token!" });
+      jwt.verify(
+        token,
+        ACCESS_TOKEN_SECRET,
+        (
+          err: jwt.VerifyErrors | null,
+          decoded: string | jwt.JwtPayload | undefined
+        ) => {
+          if (err) {
+            return res.status(401).json({ error: "Invalid token!" });
+          }
+
+          const payload = decoded as TokenPayload;
+
+          return res.json({ username: payload.username });
         }
-
-        const payload = decoded as TokenPayload;
-
-        return res.json({ username: payload.username });
-      });
+      );
     } catch (error) {
       if (error instanceof UnauthorizedError) {
         return next(error);
@@ -234,7 +250,7 @@ export class AuthController {
   /**
    * @openapi
    * /api/auth/refresh-token:
-   *   get:
+   *   post:
    *     tags:
    *       - Authentication
    *     summary: Refresh the access token.
@@ -263,7 +279,12 @@ export class AuthController {
         refreshToken as string,
         REFRESH_TOKEN_SECRET,
         (err, decoded) => {
-          if (err) return next(new ForbiddenError("Invalid token!"));
+          if (err)
+            return next(
+              new ForbiddenError(
+                "Invalid token! Please log back into the website!"
+              )
+            );
 
           const payload = decoded as TokenPayload;
 
@@ -271,11 +292,18 @@ export class AuthController {
             { username: payload.username },
             ACCESS_TOKEN_SECRET,
             {
-              expiresIn: "15m"
+              expiresIn: env.ACCESS_TOKEN_DURATION as StringValue
             }
           );
 
-          return res.status(200).json({ accessToken });
+          const isProduction = process.env.NODE_ENV === "production";
+          res.cookie("accessToken", accessToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? "none" : "lax"
+          });
+
+          return res.status(200).end();
         }
       );
     } catch (error) {

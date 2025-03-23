@@ -66,7 +66,9 @@ import { z } from "zod";
 const formSchema = z.object({
   availabilityStatus: z.enum(["AVAILABLE", "IN_USE", "NOT_AVAILABLE"]),
   currentBookingDate: z.date().nullish(),
-  currentBookingDuration: z.string().optional(),
+  currentBookingDuration: z
+    .string({ required_error: "Duration is required" })
+    .nonempty(),
   currentExpireAt: z.date().nullish()
 });
 
@@ -161,13 +163,11 @@ export default function AccountCurrentBookModal({
   ) => {
     const bookingDurationNumber = parse(values.currentBookingDuration);
 
-    delete values.currentBookingDuration;
-
     const payload = {
       ...values,
-      ...(bookingDurationNumber !== null
-        ? { currentBookingDuration: bookingDurationNumber / (1000 * 60 * 60) }
-        : {})
+      ...{
+        currentBookingDuration: (bookingDurationNumber || 0) / (1000 * 60 * 60)
+      }
     };
     try {
       const response = await accountService.update(id, payload);
