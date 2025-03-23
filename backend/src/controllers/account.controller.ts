@@ -33,12 +33,20 @@ import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
  *           type: string
  *         availabilityStatus:
  *           type: string
- *         nextBooking:
+ *         currentBookingDate:
+ *           type: string
+ *           format: date-time
+ *         currentBookingDuration:
+ *           type: number
+ *         currentExpireAt:
+ *           type: string
+ *           format: date-time
+ *         nextBookingDate:
  *           type: string
  *           format: date-time
  *         nextBookingDuration:
  *           type: number
- *         expireAt:
+ *         nextExpireAt:
  *           type: string
  *           format: date-time
  *         totalRentHour:
@@ -96,6 +104,31 @@ import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
  *           type: number
  *         total:
  *           type: number
+ *     AccountResetLog:
+ *       type: object
+ *       required:
+ *         - id
+ *         - accountId
+ *         - previousExpireAt
+ *         - resetAt
+ *       properties:
+ *         id:
+ *           type: number
+ *         accountId:
+ *           type: number
+ *         account:
+ *           type: object
+ *           properties:
+ *             username:
+ *               type: string
+ *             accountCode:
+ *               type: string
+ *         previousExpireAt:
+ *           type: string
+ *           format: date-time
+ *         resetAt:
+ *           type: string
+ *           format: date-time
  *   securitySchemes:
  *     apiKeyAuth:
  *       type: apiKey
@@ -141,7 +174,7 @@ export class AccountController {
    *         required: false
    *         schema:
    *           type: string
-   *         description: Field name to sort by.
+   *         description: Field name to sort by (e.g., availability, rank, price_tier, id_tier).
    *       - in: query
    *         name: direction
    *         required: false
@@ -496,6 +529,24 @@ export class AccountController {
     }
   };
 
+  /**
+   * @openapi
+   * /api/accounts/reset-logs:
+   * get:
+   *   tags:
+   *     - Accounts
+   *   summary: Retrieve account reset logs.
+   *   responses:
+   *     200:
+   *       description: Account reset logs retrieved successfully.
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               $ref: '#/components/schemas/AccountResetLog'
+   */
+
   getAccountResetLogs = async (
     req: Request,
     res: Response,
@@ -541,6 +592,41 @@ export class AccountController {
       await this.accountService.createAccount(req.body);
 
       return res.status(201).json({ message: "Account created successfully!" });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  /**
+   * @openapi
+   * /api/accounts/{id}/finish-booking:
+   * post:
+   *   tags:
+   *     - Accounts
+   *   summary: Finish booking for an account.
+   *   parameters:
+   *     - in: path
+   *       name: id
+   *       required: true
+   *       schema:
+   *         type: string
+   *       description: The ID of the account.
+   *   responses:
+   *     201:
+   *       description: Booking finished.
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               message:
+   *                 type: string
+   */
+  finishBooking = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await this.accountService.finishBooking(parseInt(req.params.id));
+
+      return res.status(201).json({ message: "Booking finished!" });
     } catch (error) {
       return next(error);
     }
@@ -646,22 +732,15 @@ export class AccountController {
   /**
    * @openapi
    * /api/accounts/update-expire-at:
-   *   post:
-   *     tags:
-   *       - Accounts
-   *     summary: Update the expire at for expired accounts.
-   *     security:
-   *       - apiKeyAuth: []
-   *     responses:
-   *       200:
-   *         description: Successfully updated expire at for all expired accounts.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 message:
-   *                   type: string
+   * post:
+   *   tags:
+   *     - Accounts
+   *   summary: Update the expire at for expired accounts.
+   *   security:
+   *     - apiKeyAuth: []
+   *   responses:
+   *     200:
+   *       description: Successfully updated expire at for all expired accounts.
    */
   updateExpireAt = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -675,36 +754,36 @@ export class AccountController {
 
   /**
    * @openapi
-   * /api/accounts/reset-logs:
-   *   put:
-   *     tags:
-   *       - Accounts
-   *     summary: Update account reset logs.
-   *     security:
-   *       - bearerAuth: []
-   *     parameters:
-   *       - in: path
-   *         name: id
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: The ID of the account to update.
-   *     requestBody:
+   * /api/accounts/reset-logs/{id}:
+   * put:
+   *   tags:
+   *     - Accounts
+   *   summary: Update account reset logs.
+   *   security:
+   *     - bearerAuth: []
+   *   parameters:
+   *     - in: path
+   *       name: id
    *       required: true
+   *       schema:
+   *         type: string
+   *       description: The ID of the account reset log to update.
+   *   requestBody:
+   *     required: true
+   *     content:
+   *       application/json:
+   *         schema:
+   *           $ref: '#/components/schemas/Account'
+   *   responses:
+   *     201:
+   *       description: Account reset logs updated successfully.
    *       content:
    *         application/json:
    *           schema:
-   *             $ref: '#/components/schemas/Account'
-   *     responses:
-   *       201:
-   *         description: Account updated successfully.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 message:
-   *                   type: string
+   *             type: object
+   *             properties:
+   *               message:
+   *                 type: string
    */
   updateResetLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -713,7 +792,7 @@ export class AccountController {
         req.body
       );
 
-      return res.status(201).json({ message: "Operation successful!" });
+      return res.status(201).json({ message: "Reset account successful!" });
     } catch (error) {
       return next(error);
     }

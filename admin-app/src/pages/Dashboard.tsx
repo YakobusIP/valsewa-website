@@ -198,12 +198,8 @@ export default function Dashboard() {
   const resetParent = useCallback(async () => {
     await fetchAllAccounts();
     await fetchStatistics();
-  }, [fetchAllAccounts, fetchStatistics]);
-
-  const resetFetchLogsParent = useCallback(async () => {
     await fetchResetLogs();
-    await fetchAllAccounts();
-  }, [fetchResetLogs, fetchAllAccounts]);
+  }, [fetchAllAccounts, fetchStatistics, fetchResetLogs]);
 
   useEffect(() => {
     fetchStatistics();
@@ -272,7 +268,7 @@ export default function Dashboard() {
           <NotificationsModal
             failedJobs={failedJobs}
             resetLogs={resetLogs}
-            resetParent={resetFetchLogsParent}
+            resetParent={resetParent}
           />
           <LogoutButton />
         </div>

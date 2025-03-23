@@ -190,6 +190,7 @@ export class AccountService {
   ): Promise<[PublicAccount[], Metadata]> => {
     try {
       let data = await prisma.account.findMany({
+        where: { availabilityStatus: { in: ["AVAILABLE", "IN_USE"] } },
         orderBy: {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
@@ -319,6 +320,40 @@ export class AccountService {
 
       if (error instanceof Prisma.PrismaClientValidationError) {
         throw new BadRequestError("Invalid request body!");
+      }
+
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  finishBooking = async (id: number) => {
+    try {
+      const account = await prisma.account.findFirst({ where: { id } });
+
+      if (!account) throw new NotFoundError("Account not found!");
+
+      return await prisma.$transaction(async (tx) => {
+        await tx.account.update({
+          where: { id },
+          data: {
+            availabilityStatus: "AVAILABLE",
+            currentBookingDate: null,
+            currentBookingDuration: null,
+            currentExpireAt: null,
+            passwordResetRequired: true,
+            totalRentHour: {
+              increment: account.currentBookingDuration || 0
+            }
+          }
+        });
+
+        return await tx.accountResetLog.create({
+          data: { accountId: id, previousExpireAt: account.currentExpireAt }
+        });
+      });
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
       }
 
       throw new InternalServerError((error as Error).message);
