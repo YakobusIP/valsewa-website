@@ -126,13 +126,15 @@ export class AuthController {
         res.cookie("refreshToken", refreshToken, {
           httpOnly: true,
           secure: isProduction,
-          sameSite: isProduction ? "none" : "lax"
+          sameSite: isProduction ? "none" : "lax",
+          domain: ".valsewa.com"
         });
 
         res.cookie("accessToken", accessToken, {
           httpOnly: true,
           secure: isProduction,
-          sameSite: isProduction ? "none" : "lax"
+          sameSite: isProduction ? "none" : "lax",
+          domain: ".valsewa.com"
         });
 
         res.status(200).json({ username });
@@ -174,13 +176,15 @@ export class AuthController {
     res.clearCookie("accessToken", {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? "none" : "lax"
+      sameSite: isProduction ? "none" : "lax",
+      domain: ".valsewa.com"
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: isProduction,
-      sameSite: isProduction ? "none" : "lax"
+      sameSite: isProduction ? "none" : "lax",
+      domain: ".valsewa.com"
     });
     return res.status(200).json({ message: "Logged out successfully!" });
   };
@@ -300,7 +304,8 @@ export class AuthController {
           res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: isProduction,
-            sameSite: isProduction ? "none" : "lax"
+            sameSite: isProduction ? "none" : "lax",
+            domain: ".valsewa.com"
           });
 
           return res.status(200).end();
