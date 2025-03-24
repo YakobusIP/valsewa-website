@@ -12,7 +12,7 @@ import { toast } from "@/hooks/useToast";
 
 import { loginFormSchema } from "@/types/zod.type";
 
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { z } from "zod";
 
 type AuthContextProps = {
@@ -32,6 +32,7 @@ export const AuthContext = createContext<AuthContextProps | undefined>(
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [isLoadingLogin, setIsLoadingLogin] = useState(false);
   const [username, setUsername] = useState("");
@@ -84,8 +85,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [navigate]);
 
   useEffect(() => {
+    if (location.pathname === "/") return;
     validateToken();
-  }, [validateToken]);
+  }, [validateToken, location.pathname]);
 
   return (
     <AuthContext.Provider
