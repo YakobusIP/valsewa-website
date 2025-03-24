@@ -87,6 +87,9 @@ import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
  *           type: string
  *         availabilityStatus:
  *           type: string
+ *         currentExpireAt:
+ *           type: string
+ *           format: date-time
  *         totalRentHour:
  *           type: number
  *         skinList:

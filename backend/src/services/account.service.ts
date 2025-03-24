@@ -200,6 +200,7 @@ export class AccountService {
           description: true,
           accountRank: true,
           availabilityStatus: true,
+          currentExpireAt: true,
           totalRentHour: true,
           skinList: true,
           priceTier: true,

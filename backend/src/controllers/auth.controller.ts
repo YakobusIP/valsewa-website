@@ -127,14 +127,14 @@ export class AuthController {
           httpOnly: true,
           secure: isProduction,
           sameSite: isProduction ? "none" : "lax",
-          domain: ".valsewa.com"
+          domain: isProduction ? ".valsewa.com" : undefined
         });
 
         res.cookie("accessToken", accessToken, {
           httpOnly: true,
           secure: isProduction,
           sameSite: isProduction ? "none" : "lax",
-          domain: ".valsewa.com"
+          domain: isProduction ? ".valsewa.com" : undefined
         });
 
         res.status(200).json({ username });
@@ -177,14 +177,14 @@ export class AuthController {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? "none" : "lax",
-      domain: ".valsewa.com"
+      domain: isProduction ? ".valsewa.com" : undefined
     });
 
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? "none" : "lax",
-      domain: ".valsewa.com"
+      domain: isProduction ? ".valsewa.com" : undefined
     });
     return res.status(200).json({ message: "Logged out successfully!" });
   };
@@ -277,7 +277,10 @@ export class AuthController {
     try {
       const refreshToken = req.cookies.refreshToken;
 
-      if (!refreshToken) throw new ForbiddenError("Session timed out!");
+      if (!refreshToken)
+        throw new ForbiddenError(
+          "Session timed out! Please log back into the website!"
+        );
 
       jwt.verify(
         refreshToken as string,
@@ -305,7 +308,7 @@ export class AuthController {
             httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? "none" : "lax",
-            domain: ".valsewa.com"
+            domain: isProduction ? ".valsewa.com" : undefined
           });
 
           return res.status(200).end();
