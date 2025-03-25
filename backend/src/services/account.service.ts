@@ -364,7 +364,7 @@ export class AccountService {
   updateAccount = async (
     id: number,
     data: Partial<AccountEntityRequest>,
-    resetLogs = false
+    deleteResetLogs = false
   ) => {
     try {
       const currentAccount = await prisma.account.findUnique({
@@ -377,6 +377,10 @@ export class AccountService {
       const { thumbnail, otherImages, priceTier, ...scalars } = data;
 
       const updateData: Prisma.AccountUpdateInput = { ...scalars };
+
+      if (deleteResetLogs) {
+        await prisma.accountResetLog.deleteMany({ where: { accountId: id } });
+      }
 
       if (thumbnail !== undefined) {
         if (

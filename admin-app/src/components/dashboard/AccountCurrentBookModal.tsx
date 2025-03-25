@@ -170,7 +170,7 @@ export default function AccountCurrentBookModal({
       }
     };
     try {
-      const response = await accountService.update(id, payload);
+      const response = await accountService.update(id, payload, true);
       onOpenChange(false);
       await resetParent();
 
