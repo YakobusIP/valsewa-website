@@ -670,9 +670,15 @@ export class AccountController {
    */
   updateAccount = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const deleteResetLogs =
+        req.query.deleteResetLogs !== undefined
+          ? req.query.deleteResetLogs === "true"
+          : undefined;
+
       await this.accountService.updateAccount(
         parseInt(req.params.id),
-        req.body
+        req.body,
+        deleteResetLogs
       );
 
       return res.status(201).json({ message: "Account updated successfully!" });

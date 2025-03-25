@@ -107,11 +107,16 @@ const createAccountService = () => {
     }
   };
 
-  const update = async (id: number, data: Partial<AccountEntityRequest>) => {
+  const update = async (
+    id: number,
+    data: Partial<AccountEntityRequest>,
+    deleteResetLogs?: boolean
+  ) => {
     try {
       const response = await interceptedAxios.put<MessageResponse>(
         `${BASE_ACCOUNT_URL}/${id}`,
-        { ...data }
+        { ...data },
+        { params: { deleteResetLogs } }
       );
 
       return response.data;
