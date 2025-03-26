@@ -226,7 +226,7 @@ export default function AccountNextBookModal({
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
-                          <div className="sm:flex">
+                          <div className="sm:flex overflow-auto h-96 xl:h-fit">
                             <Calendar
                               mode="single"
                               selected={field.value ?? undefined}
