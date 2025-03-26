@@ -18,8 +18,8 @@ export function useAccountController(initialAccount:AccountEntity[]) {
       isFirstRender.current = false
       return 
     }
-    fetchAccounts(debouncedSearch, sortDirection, sortAccount).then(
-      setAccountList
+    fetchAccounts(debouncedSearch, sortDirection, sortAccount).then((res) =>
+      setAccountList(res)
     );
   }, [debouncedSearch, sortDirection, sortAccount]);
 
@@ -47,7 +47,6 @@ export function useAccountController(initialAccount:AccountEntity[]) {
         return "Sort By";
     }
   };
-
   return {
     accountList,
     searchAccount,

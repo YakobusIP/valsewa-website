@@ -79,10 +79,10 @@ const Card: React.FC<CardProps> = ({ data }) => {
         transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300 hover:cursor-pointer
         ${getGridClass()}
       `}
-      key={item.id}
+      key={index}
       onClick={() => setSelectedCard(item)}
     >
-      <div className="h-full w-full bg-gray-800 rounded-xl ">
+      <div className="h-full w-full bg-[#333640] rounded-xl ">
         <div>
           <figure className="relative mb-2 w-full">
             <AspectRatio ratio={16 / 9}>
@@ -123,11 +123,11 @@ const Card: React.FC<CardProps> = ({ data }) => {
 
                   </div>
                   <div className="flex flex-wrap gap-y-2 gap-2 pb-5">
-                    {availabilityStatuses.map((status) =>
+                    {availabilityStatuses.map((status, index) =>
                       item.availabilityStatus == status.value ? (
                         <Badge
                           variant="secondary"
-                          key={status.value}
+                          key={index}
                           className={`text-sm max-sm:text-xs text-center font-bold text-white px-3  ${
                             status.value === "AVAILABLE"
                               ? "bg-green-600 hover:bg-green-700"
@@ -171,7 +171,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       <Badge
                         variant="secondary"
                         key={index}
-                        className="bg-red-600 text-roseWhite text-sm max-sm:text-xs hover:bg-red-700"
+                        className="bg-[#4b4f5e] font-normal text-roseWhite text-sm max-sm:text-xs hover:bg-red-700"
                       >
                         {skin}
                       </Badge>
@@ -180,7 +180,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       <Badge
                         variant="secondary"
                         key={index}
-                        className="bg-red-600 text-roseWhite text-sm max-sm:text-xs hover:bg-red-700"
+                        className="bg-[#4b4f5e] font-normal text-roseWhite text-sm max-sm:text-xs hover:bg-red-700"
                       >
                         + {item.skinList.length - 3} more
                       </Badge>

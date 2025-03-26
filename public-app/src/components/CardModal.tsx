@@ -1,3 +1,4 @@
+'use client'
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -50,7 +51,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
    window.open(linkTracker, "_blank");
  };
   return (
-    <DialogContent className="w-full sm:max-w-[600px] max-w-[380px] p-0 bg-gray-800 [&>button]:hidden border-0">
+    <DialogContent className="w-full sm:max-w-[600px] max-w-[380px] p-0 bg-[#333640] [&>button]:hidden border-0">
       <ScrollArea className="sm:max-h-[600px] max-h-[600px] no-scrollbar p-0 overflow-y-auto">
         <div>
           <Carousel>
