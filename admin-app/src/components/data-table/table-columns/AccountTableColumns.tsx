@@ -84,48 +84,60 @@ export const accountColumns = (
       accessorKey: "currentBookingDate",
       header: "Current Booking Date",
       cell: ({ getValue }) => {
-        const date = getValue<Date>();
-        if (date === null) {
-          return "-";
-        }
-        return format(date, "dd MMMM yyyy 'at' HH:mm");
-      },
+  const raw = getValue();
+  const date = raw instanceof Date ? raw : new Date(raw);
+
+  if (!date || isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return format(date, "dd MMMM yyyy 'at' HH:mm");
+}
       size: 200
     },
     {
       accessorKey: "currentExpireAt",
       header: "Current Expire At",
       cell: ({ getValue }) => {
-        const date = getValue<Date>();
-        if (date === null) {
-          return "-";
-        }
-        return format(date, "dd MMMM yyyy 'at' HH:mm");
-      },
+  const raw = getValue();
+  const date = raw instanceof Date ? raw : new Date(raw);
+
+  if (!date || isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return format(date, "dd MMMM yyyy 'at' HH:mm");
+}
       size: 200
     },
     {
       accessorKey: "nextBookingDate",
       header: "Next Booking Date",
       cell: ({ getValue }) => {
-        const date = getValue<Date>();
-        if (date === null) {
-          return "-";
-        }
-        return format(date, "dd MMMM yyyy 'at' HH:mm");
-      },
+  const raw = getValue();
+  const date = raw instanceof Date ? raw : new Date(raw);
+
+  if (!date || isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return format(date, "dd MMMM yyyy 'at' HH:mm");
+}
       size: 200
     },
     {
       accessorKey: "nextExpireAt",
       header: "Next Expire At",
       cell: ({ getValue }) => {
-        const date = getValue<Date>();
-        if (date === null) {
-          return "-";
-        }
-        return format(date, "dd MMMM yyyy 'at' HH:mm");
-      },
+  const raw = getValue();
+  const date = raw instanceof Date ? raw : new Date(raw);
+
+  if (!date || isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return format(date, "dd MMMM yyyy 'at' HH:mm");
+}
       size: 200
     },
     {
