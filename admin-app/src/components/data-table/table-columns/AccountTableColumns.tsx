@@ -92,7 +92,7 @@ export const accountColumns = (
   }
 
   return format(date, "dd MMMM yyyy 'at' HH:mm");
-}
+},
       size: 200
     },
     {
@@ -107,7 +107,7 @@ export const accountColumns = (
   }
 
   return format(date, "dd MMMM yyyy 'at' HH:mm");
-}
+},
       size: 200
     },
     {
@@ -122,7 +122,7 @@ export const accountColumns = (
   }
 
   return format(date, "dd MMMM yyyy 'at' HH:mm");
-}
+},
       size: 200
     },
     {
@@ -137,7 +137,7 @@ export const accountColumns = (
   }
 
   return format(date, "dd MMMM yyyy 'at' HH:mm");
-}
+},
       size: 200
     },
     {
