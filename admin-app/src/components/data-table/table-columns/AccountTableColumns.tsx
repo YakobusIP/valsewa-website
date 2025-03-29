@@ -84,10 +84,20 @@ export const accountColumns = (
       accessorKey: "currentBookingDate",
       header: "Current Booking Date",
       cell: ({ getValue }) => {
-  const raw = getValue();
-  const date = raw instanceof Date ? raw : new Date(raw);
+  const raw = getValue() as unknown;
 
-  if (!date || isNaN(date.getTime())) {
+  let date: Date | null = null;
+
+  if (raw instanceof Date) {
+    date = raw;
+  } else if (typeof raw === "string" || typeof raw === "number") {
+    const parsed = new Date(raw);
+    if (!isNaN(parsed.getTime())) {
+      date = parsed;
+    }
+  }
+
+  if (!date) {
     return "-";
   }
 
@@ -99,10 +109,20 @@ export const accountColumns = (
       accessorKey: "currentExpireAt",
       header: "Current Expire At",
       cell: ({ getValue }) => {
-  const raw = getValue();
-  const date = raw instanceof Date ? raw : new Date(raw);
+  const raw = getValue() as unknown;
 
-  if (!date || isNaN(date.getTime())) {
+  let date: Date | null = null;
+
+  if (raw instanceof Date) {
+    date = raw;
+  } else if (typeof raw === "string" || typeof raw === "number") {
+    const parsed = new Date(raw);
+    if (!isNaN(parsed.getTime())) {
+      date = parsed;
+    }
+  }
+
+  if (!date) {
     return "-";
   }
 
@@ -114,10 +134,20 @@ export const accountColumns = (
       accessorKey: "nextBookingDate",
       header: "Next Booking Date",
       cell: ({ getValue }) => {
-  const raw = getValue();
-  const date = raw instanceof Date ? raw : new Date(raw);
+  const raw = getValue() as unknown;
 
-  if (!date || isNaN(date.getTime())) {
+  let date: Date | null = null;
+
+  if (raw instanceof Date) {
+    date = raw;
+  } else if (typeof raw === "string" || typeof raw === "number") {
+    const parsed = new Date(raw);
+    if (!isNaN(parsed.getTime())) {
+      date = parsed;
+    }
+  }
+
+  if (!date) {
     return "-";
   }
 
@@ -129,10 +159,20 @@ export const accountColumns = (
       accessorKey: "nextExpireAt",
       header: "Next Expire At",
       cell: ({ getValue }) => {
-  const raw = getValue();
-  const date = raw instanceof Date ? raw : new Date(raw);
+  const raw = getValue() as unknown;
 
-  if (!date || isNaN(date.getTime())) {
+  let date: Date | null = null;
+
+  if (raw instanceof Date) {
+    date = raw;
+  } else if (typeof raw === "string" || typeof raw === "number") {
+    const parsed = new Date(raw);
+    if (!isNaN(parsed.getTime())) {
+      date = parsed;
+    }
+  }
+
+  if (!date) {
     return "-";
   }
 
