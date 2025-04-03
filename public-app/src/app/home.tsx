@@ -16,6 +16,7 @@ import { AccountEntity } from "@/types/account.type";
 
 import { useAccountController } from "@/controllers/useAccountController";
 import Image from "next/image";
+import { FaArrowUp } from "react-icons/fa";
 
 interface Props {
   initialAccount: AccountEntity[];
@@ -32,6 +33,10 @@ export default function Home({ initialAccount }: Props) {
 
   const images = ["/hero/Hero1.png", "/hero/Hero2.png", "/hero/Hero3.png"];
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 300, behavior: "smooth" });
+  };
+
   return (
     <section className="bg-[#101822] md:pb-64 pb-32 relative ">
       <div className="relative ">
@@ -47,7 +52,12 @@ export default function Home({ initialAccount }: Props) {
           <Image src="/home/penanda.svg" fill alt="Iconic" />
         </figure>
       </a>
-
+      <div
+        className="fixed bottom-4 left-4 z-50 cursor-pointer text-[#DDDDDD] bg-[#A6A6A6B2] p-3 rounded-full"
+        onClick={scrollToTop}
+      >
+        <FaArrowUp size={30} />
+      </div>
       <div>
         <div className="relative w-full h-screen flex flex-col">
           {/* Hero Background with Breakpoints */}
