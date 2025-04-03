@@ -37,6 +37,17 @@ export default function Home({ initialAccount }: Props) {
       <div className="relative ">
         <Navbar />
       </div>
+      <a
+        href="https://wa.me/6285175343447?text=Halo admin VALSEWA aku mau SEWA akun nih"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-4 right-4 z-50"
+      >
+        <figure className="w-[80px] h-[80px] fixed bottom-4 right-4 z-50">
+          <Image src="/home/penanda.svg" fill alt="Iconic" />
+        </figure>
+      </a>
+
       <div>
         <div className="relative w-full h-screen flex flex-col">
           {/* Hero Background with Breakpoints */}
@@ -162,7 +173,7 @@ export default function Home({ initialAccount }: Props) {
 
         <div className="lg:mx-14 mx-7 pt-10 ">
           {accountList.length > 0 ? (
-            <div className="mt-9 w-full mx-0 pt-10">
+            <div className="mt-9 mx-0 pt-10">
               <Card data={accountList} />
             </div>
           ) : (

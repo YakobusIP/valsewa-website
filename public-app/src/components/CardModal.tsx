@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -17,7 +19,7 @@ import { AccountEntity } from "@/types/account.type";
 import { availabilityStatuses } from "@/lib/constants";
 
 import { DialogDescription } from "@radix-ui/react-dialog";
-import { ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import Image from "next/image";
 
 import Whatsapp from "./Whatsapp";
@@ -80,37 +82,45 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
     }
     return "";
   };
-  return (
-    <DialogContent className="w-full sm:max-w-[600px] max-w-[380px] p-0 bg-[#333640] [&>button]:hidden border-0">
-      <ScrollArea className="sm:max-h-[600px] max-h-[600px] no-scrollbar p-0 overflow-y-auto">
-        <div>
-          <Carousel className="overflow-hidden">
-            <CarouselContent>
-              {selectedCard.otherImages?.map((image, index) => (
-                <CarouselItem key={index}>
-                  <div className="h-auto w-full relative">
-                    <AspectRatio ratio={16 / 9}>
-                      <Image
-                        src={image.imageUrl}
-                        alt="Content Image"
-                        fill
-                        className="object-cover rounded-t-xl"
-                        unoptimized
-                      />
-                    </AspectRatio>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
 
-            <div className="absolute top-1/2 -translate-y-1/2 left-12 z-10">
-              <CarouselPrevious />
-            </div>
-            <div className="absolute top-1/2 -translate-y-1/2 right-12 z-10">
-              <CarouselNext />
-            </div>
-          </Carousel>
-        </div>
+  const [showAll, setShowAll] = useState(false);
+  const skinsPerRow = 3;
+  const visibleSkins = showAll
+    ? selectedCard.skinList
+    : selectedCard.skinList.slice(0, skinsPerRow * 2);
+
+  const dataString = selectedCard.priceTier.description;
+
+  const formattedData = dataString.match(/\d+\s\w+\s=\s\d+k/g) || [];
+  return (
+    <DialogContent className="sm:max-w-[600px] max-w-[380px] p-0 bg-[#333640] [&>button]:hidden border-0">
+      <ScrollArea className="sm:max-h-[600px] max-h-[600px] no-scrollbar p-0 overflow-y-auto ">
+        <Carousel className="overflow-hidden sm:max-w-[600px] max-w-[380px]">
+          <CarouselContent>
+            {selectedCard.otherImages?.map((image, index) => (
+              <CarouselItem key={index}>
+                <div className="h-auto w-full relative">
+                  <AspectRatio ratio={16 / 9}>
+                    <Image
+                      src={image.imageUrl}
+                      alt="Content Image"
+                      fill
+                      className="object-cover rounded-t-xl"
+                      unoptimized
+                    />
+                  </AspectRatio>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+
+          <div className="absolute top-1/2 -translate-y-1/2 left-12 z-10">
+            <CarouselPrevious />
+          </div>
+          <div className="absolute top-1/2 -translate-y-1/2 right-12 z-10">
+            <CarouselNext />
+          </div>
+        </Carousel>
         <div className="w-full">
           <DialogTitle></DialogTitle>
           <DialogDescription />
@@ -153,11 +163,22 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                 </span>
               </div>
 
-              <div className="flex mb-5 gap-[20px] items-center text-roseWhite text-sm font-bold mt-2 max-md:hidden font-sans">
-                <span>
-                  Total Skin <span>{selectedCard.skinList.length}</span>
+              <div className="flex sm:flex-row flex-col mb-5 gap-2 sm:items-center max-sm:justify-center text-roseWhite text-sm  mt-2  font-sans">
+                <span className="flex gap-2 items-center">
+                  <figure className="w-5 h-5 relative">
+                    <Image
+                      src="modal/restart_alt.svg"
+                      alt="Restart_all Icon"
+                      fill
+                      className="object-cover rounded-t-xl w-full"
+                      unoptimized
+                    />
+                  </figure>
+                  <span className="pt-[2px]">Rent Count: {rentTime}</span>
                 </span>
-                <span className="flex gap-1">
+
+                <span className="max-sm:hidden">|</span>
+                <span className="flex gap-1 font-bold">
                   <span
                     className=" cursor-pointer"
                     onClick={() => visitTracker(selectedCard.nickname)}
@@ -169,80 +190,86 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                     onClick={() => visitTracker(selectedCard.nickname)}
                   />
                 </span>
-              </div>
-              <div className="flex flex-col mb-2 gap-[20px] text-roseWhite text-sm font-bold mt-2 text-nowrap md:hidden font-sans">
-                <span className="flex gap-1">
-                  <span
-                    className=" cursor-pointer"
-                    onClick={() => visitTracker(selectedCard.nickname)}
-                  >
-                    {selectedCard.nickname}
-                  </span>
-                  <ExternalLink
-                    className="w-4 h-4 text-white inline"
-                    onClick={() => visitTracker(selectedCard.nickname)}
-                  />
-                </span>
-                <span className="font-sans">
-                  Total Skin <span>{selectedCard.skinList.length}</span>
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-y-2 gap-2 pb-5">
-                {selectedCard.skinList?.slice(0, 2).map((skin, index) => (
-                  <Badge
-                    variant="secondary"
-                    key={index}
-                    className="bg-[#4b4f5e] font-normal font-sans text-roseWhite text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
-                  >
-                    {skin}
-                  </Badge>
-                ))}
-                {selectedCard.skinList.length > 3 && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-[#4b4f5e] font-normal font-sans text-roseWhite text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
-                  >
-                    +{selectedCard.skinList.length - 2} Lainnya
-                  </Badge>
-                )}
               </div>
 
-              {selectedCard.description !== null && (
+              <div className="h-[2px] w-full bg-[#484C57] my-6"></div>
+              <div className="mb-3 font-sans text-white font-bold">
+                Total Skin <span>{selectedCard.skinList.length}</span>
+              </div>
+              <div>
+                <div className="flex flex-wrap gap-2 pb-5">
+                  {visibleSkins.map((skin, index) => (
+                    <Badge
+                      variant="secondary"
+                      key={index}
+                      className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
+                    >
+                      {skin}
+                    </Badge>
+                  ))}
+                </div>
+                {/* Show More / Hide Button */}
+                {selectedCard.skinList.length > skinsPerRow && (
+                  <div className="flex justify-end gap-2 items-center">
+                    <button
+                      onClick={() => setShowAll(!showAll)}
+                      className="text-[#E6E6E6] text-sm mt-2 hover:underline flex items-center gap-2"
+                    >
+                      {showAll ? "Lihat lebih sedikit" : "Lihat Selengkapnya"}
+                      {showAll ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="h-[2px] w-full bg-[#484C57] my-6"></div>
+              {/* {selectedCard.description !== null && (
                 <div>
-                  <p className="text-sm font-semibold pt-6 text-roseWhite">
+                  <p className="text-sm font-semibold text-roseWhite">
                     Description
                   </p>
                   <p className="text-sm pt-2 text-roseWhite">
                     {selectedCard.description}
                   </p>
                 </div>
-              )}
+              )} */}
 
               <div>
-                <p className="text-sm font-semibold pt-6 text-roseWhite">
+                <p className="mb-3 font-sans text-white font-bold">
                   Price List
                 </p>
               </div>
-              <div>
-                {selectedCard.priceTier.description
-                  .split("k")
-                  .filter(Boolean)
-                  .map((part: string, index: number) => (
-                    <span key={index} className="text-sm text-roseWhite">
-                      {part.trim() + "k"}
-                      <br />
-                    </span>
-                  ))}
+
+              <div className="flex gap-4">
+                {formattedData.map((item, index) => {
+                  const [time, unit, , value] = item.split(" ");
+                  return (
+                    <div
+                      key={index}
+                      className="bg-gray-700 text-[#E6E6E6] text-center rounded overflow-hidden w-[70px]"
+                    >
+                      <div className="bg-[#F36164] text-[#E6E6E6] text-xs p-1">
+                        {`${time} ${unit}`.toUpperCase()}
+                      </div>
+                      <div className="text-lg font-bold p-2 text-[#E6E6E6]">
+                        {value.toUpperCase()}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex justify-between pt-6">
+
+              <div className="flex justify-between pt-10">
                 <Button
                   onClick={() => onClose()}
-                  variant="destructive"
-                  className=" text-roseWhite font-semibold "
+                  className=" text-roseWhite font-semibold bg-[#FF0000] rounded-[16px] "
                 >
                   Close
                 </Button>
-                <Whatsapp />
+                <Whatsapp id={selectedCard.accountCode} />
               </div>
             </div>
           </div>

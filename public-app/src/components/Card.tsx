@@ -120,7 +120,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   <AspectRatio ratio={16 / 9}>
                     <Image
                       src={item.thumbnail.imageUrl}
-                      alt="service logo"
+                      alt="Thumbnail"
                       fill
                       className="object-cover rounded-t-xl w-full"
                       unoptimized
@@ -207,7 +207,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                         <Badge
                           variant="secondary"
                           key={index}
-                          className="bg-[#4b4f5e] font-normal font-sans text-roseWhite text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
+                          className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
                         >
                           {skin}
                         </Badge>
@@ -216,7 +216,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                         <Badge
                           variant="secondary"
                           key={index}
-                          className="bg-[#4b4f5e] font-normal font-sans text-roseWhite text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
+                          className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
                         >
                           +{item.skinList.length - 2} Lainnya
                         </Badge>
