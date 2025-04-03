@@ -8,8 +8,6 @@ import { Dialog } from "@/components/ui/dialog";
 
 import { AccountEntity } from "@/types/account.type";
 
-import { availabilityStatuses } from "@/lib/constants";
-
 import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 
@@ -90,11 +88,11 @@ const Card: React.FC<CardProps> = ({ data }) => {
     } else if (tier === "B") {
       return "/cardneed/b.svg";
     } else if (tier === "LR-B") {
-      return "/cardneed/b.svg";
+      return "/cardneed/lrb.svg";
     } else if (tier === "C") {
       return "/cardneed/c.svg";
     } else if (tier === "LR-C") {
-      return "/cardneed/c.svg";
+      return "/cardneed/lrc.svg";
     }
     return "";
   };
@@ -168,8 +166,8 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       </span>
                     </div>
 
-                    <div className="flex mb-5 gap-[20px] items-center text-roseWhite text-sm font-bold mt-2 max-md:hidden font-sans">
-                      <span>
+                    <div className="flex flex-wrap text-nowrap mb-5 gap-[20px] items-center text-roseWhite text-sm font-bold mt-2 max-lg:hidden font-sans">
+                      <span className="">
                         Total Skin <span>{item.skinList.length}</span>
                       </span>
                       <span className="flex gap-1">
@@ -185,7 +183,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                         />
                       </span>
                     </div>
-                    <div className="flex flex-col mb-2 gap-[20px] text-roseWhite text-sm font-bold mt-2 text-nowrap md:hidden font-sans">
+                    <div className="flex flex-col mb-2 gap-[10px] text-roseWhite text-sm font-bold mt-2 text-nowrap lg:hidden font-sans">
                       <span className="flex gap-1">
                         <span
                           className=" cursor-pointer"

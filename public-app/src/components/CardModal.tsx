@@ -16,8 +16,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { AccountEntity } from "@/types/account.type";
 
-import { availabilityStatuses } from "@/lib/constants";
-
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import Image from "next/image";
@@ -31,6 +29,8 @@ interface CardModalProps {
 }
 
 const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
+  const [showAll, setShowAll] = useState(false);
+
   if (!selectedCard) return null;
 
   function convertHoursToDayHour(hours: number): string {
@@ -83,7 +83,6 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
     return "";
   };
 
-  const [showAll, setShowAll] = useState(false);
   const skinsPerRow = 3;
   const visibleSkins = showAll
     ? selectedCard.skinList

@@ -8,7 +8,6 @@ import {
 
 import { AccountEntity } from "@/types/account.type";
 
-import { useAccountController } from "@/controllers/useAccountController";
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import Image from "next/image";
 
