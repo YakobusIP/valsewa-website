@@ -10,7 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Helvetica", "Arial", "sans-serif"]
+        sans: ["Helvetica", "Arial", "sans-serif"],
+        valorant: ["Valorant", "sans-serif"]
       },
       colors: {
         background: "hsl(var(--background))",

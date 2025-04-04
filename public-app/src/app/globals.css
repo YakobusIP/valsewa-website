@@ -95,3 +95,10 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari */
 }
+
+@font-face {
+  font-family: "Valorant";
+  src: url("/fonts/valorant-font.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}

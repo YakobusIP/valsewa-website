@@ -48,8 +48,12 @@ const SearchBar = ({
 
   return (
     <div className="w-full flex flex-col items-center text-roseWhite">
-      <h1 className="font-bold text-5xl text-center">FIND THE BEST</h1>
-      <p className="font-extralight text-xl text-center">VALORANT ACCOUNTS</p>
+      <h1 className=" text-4xl text-center font-valorant mb-5">
+        FIND THE BEST
+      </h1>
+      <p className="font-extralight text-6xl text-center font-valorant">
+        VALORANT ACCOUNTS
+      </p>
       <div className="w-full px-14 pt-6 ">
         <div className="relative min-h-24 flex flex-col md:flex-row w-full items-center bg-[#262A43] border border-gray-500 rounded-[16px] py-3 shadow-md shadow-white/30">
           <div className="flex items-center mb-2 md:mb-0 text-nowrap md:pl-5">

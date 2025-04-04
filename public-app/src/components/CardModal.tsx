@@ -248,12 +248,12 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                   return (
                     <div
                       key={index}
-                      className="bg-gray-700 text-[#E6E6E6] text-center rounded overflow-hidden w-[70px]"
+                      className="bg-gray-700 text-[#E6E6E6] text-center rounded overflow-hidden min-w-[70px]"
                     >
-                      <div className="bg-[#F36164] text-[#E6E6E6] text-xs p-1">
+                      <div className="bg-[#F36164] text-[#E6E6E6] text-sm p-1 font-valorant">
                         {`${time} ${unit}`.toUpperCase()}
                       </div>
-                      <div className="text-lg font-bold p-2 text-[#E6E6E6]">
+                      <div className="text-2xl font-bold p-2 text-[#E6E6E6]">
                         {value.toUpperCase()}
                       </div>
                     </div>
