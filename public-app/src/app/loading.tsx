@@ -9,7 +9,7 @@ export default function LoadingPage() {
       <figure className="w-full h-full absolute z-0 max-xl:hidden">
         <AspectRatio ratio={16 / 12}>
           <Image
-            src="/hero/Hero7.png"
+            src="/hero/Hero6.png"
             fill
             alt="Hero"
             className="object-cover object-top"
@@ -19,7 +19,7 @@ export default function LoadingPage() {
       <figure className="w-full h-full absolute z-0 max-lg:hidden xl:hidden">
         <AspectRatio ratio={16 / 15}>
           <Image
-            src="/hero/Hero7.png"
+            src="/hero/Hero6.png"
             fill
             alt="Hero"
             className="object-cover object-top"
@@ -29,7 +29,7 @@ export default function LoadingPage() {
       <figure className="w-full h-full absolute z-0 max-md:hidden lg:hidden">
         <AspectRatio ratio={16 / 25}>
           <Image
-            src="/hero/Hero7.png"
+            src="/hero/Hero6.png"
             fill
             alt="Hero"
             className="object-cover object-top"
@@ -39,7 +39,7 @@ export default function LoadingPage() {
       <figure className="w-full h-full absolute z-0 md:hidden">
         <AspectRatio ratio={16 / 35}>
           <Image
-            src="/hero/Hero7.png"
+            src="/hero/Hero6.png"
             fill
             alt="Hero"
             className="object-cover object-center"
@@ -50,11 +50,18 @@ export default function LoadingPage() {
       <div className="flex flex-col items-center justify-center gap-2 xl:gap-4 z-50">
         <div className="flex items-center justify-center gap-2">
           <Loader2Icon className="w-8 h-8 xl:w-16 xl:h-16 animate-spin text-white" />
-          <h2 className="text-white font-bold text-4xl">Loading...</h2>
         </div>
-        <h2 className="text-center text-white font-bold text-2xl pt-3">
-          Sedang mempersiapkan pilihan sewa terbaik untukmu
+        <h2 className="text-white font-bold text-4xl font-valorant tracking-widest">
+          Loading...
         </h2>
+        <div>
+          <h2 className="text-center text-white font-bold text-xl pt-3">
+            Preparing the best Valorant
+          </h2>
+          <h2 className="text-center text-white font-bold text-xl">
+            accounts for you!
+          </h2>
+        </div>
       </div>
     </div>
   );
