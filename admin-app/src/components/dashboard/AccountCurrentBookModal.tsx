@@ -223,13 +223,11 @@ export default function AccountCurrentBookModal({
 
   useEffect(() => {
     setReminderText(`Username Riot: ${data.username}\nPassword Riot: ${data.password}\nKode Akun: ${data.accountCode}\nExpired: ${format(expireAtValue || new Date(), "dd MMMM yyyy 'at' HH:mm")} WIB
-                    \n⚠ HARAP LOGOUT AKUN SEBELUM RENTAL BERAKHIR!⚠ 
-                    \n Pastikan akun sudah logout tepat waktu untuk menghindari penalty yang dapat menyebabkan denda❗
-                    \n 📌Setelah berhasil login, jika berkenan, bantu berikan testimoni di postingan akun yang disewa.
-                    \n Terima kasih sudah menyewa akun di @valsewa! Enjoy and have a great time! ✨🙏 Jika ada kendala, langsung hubungi admin ya 👌🏻
-                    \nDiscord Community Valorant
-👇
-https://discord.gg/ywqTZSTwRY `);
+                    \n⚠ HARAP LOGOUT AKUN SEBELUM RENTAL BERAKHIR! ⚠
+                    \n Pastikan akun sudah logout tepat waktu untuk menghindari penalty yang dapat menyebabkan denda ❗
+                    \n 📌 Setelah berhasil login, jika berkenan, bisa bantu berikan testimoni dan rekomendasi ke teman-teman kalian yaa 😱
+                    \n 📢 Join Discord Community Valforum.id & dapatkan role @Juragan Valsewa 👇🏻
+                    \n https://discord.gg/ywqTZSTwRY `);
   }, [expireAtValue, data]);
 
   return (
