@@ -81,5 +81,5 @@ export type {
   ApiResponseList,
   ApiResponseError,
   MessageResponse,
-  MetadataResponse,
+  MetadataResponse
 };
