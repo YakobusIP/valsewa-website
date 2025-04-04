@@ -117,7 +117,7 @@ export default function Home({ initialAccount }: Props) {
           </div>
 
           {/* Content Section */}
-          <div className="relative z-20 flex flex-col items-center justify-center flex-grow">
+          <div className="relative z-20 flex flex-col items-center justify-center flex-grow -translate-y-[50px]">
             {/* Carousel */}
             <div className="w-full md:px-14 px-7">
               <Carousel className="shadow-lg rounded-2xl overflow-hidden">
@@ -167,7 +167,7 @@ export default function Home({ initialAccount }: Props) {
           </div>
 
           {/* Search Bar Fixed at Bottom */}
-          <div className="absolute bottom-[-50px] w-full flex justify-center z-30 pb-4">
+          <div className="absolute bottom-[-70px] w-full flex justify-center z-30 pb-4">
             <div className="w-full">
               <SearchBar
                 accountList={accountList || []}
