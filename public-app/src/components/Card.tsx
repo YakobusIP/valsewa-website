@@ -96,6 +96,12 @@ const Card: React.FC<CardProps> = ({ data }) => {
     }
     return "";
   };
+  const checkStatusInUse = (status: string) => {
+    if (status == "IN_USE") {
+      return true;
+    }
+    return false;
+  };
   return (
     <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
       <div
@@ -106,13 +112,31 @@ const Card: React.FC<CardProps> = ({ data }) => {
           <div
             className={`
         rounded-xl relative h-auto w-full 
-        transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300 hover:cursor-pointer
-        ${getGridClass()}
+        transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300 hover:cursor-pointer 
+        ${getGridClass()} ${checkStatusInUse(item.availabilityStatus) ? "" : ""}
       `}
             key={index}
             onClick={() => setSelectedCard(item)}
           >
-            <div className="h-full w-full bg-[#333640] rounded-xl ">
+            <div className="group relative h-full w-full bg-[#333640] rounded-xl transition-opacity duration-300">
+              {/* Notification: Hidden by default, shown on hover */}
+              {item.availabilityStatus === "IN_USE" && (
+                <div
+                  className={`hidden group-hover:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 bg-black/75 text-white px-4 py-2 rounded-lg w-full h-full z-30`}
+                >
+                  <div className="flex justify-center items-center gap-3">
+                    <figure className="w-[24px] h-[24px] flex items-center">
+                      <Image
+                        src="/cardneed/in_use.svg"
+                        width={28}
+                        height={28}
+                        alt="In Use"
+                      />
+                    </figure>
+                    <span className="font-bold text-2xl">In Use</span>
+                  </div>
+                </div>
+              )}
               <div>
                 <figure className="relative w-full">
                   <AspectRatio ratio={16 / 9}>
