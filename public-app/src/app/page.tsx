@@ -3,7 +3,6 @@ import { fetchAccounts } from "@/services/accountService";
 import type { Metadata } from "next";
 
 import Home from "./home";
-import LoadingPage from "./loading";
 
 export const metadata: Metadata = {
   title: "Valsewa | Sewa akun Valorant terpercaya",
@@ -24,8 +23,7 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const initialAccount = await fetchAccounts("", "asc", "id_tier");
-  // return <Home initialAccount={initialAccount} />;
-  return <LoadingPage />;
+  return <Home initialAccount={initialAccount} />;
 }
 
 export const dynamic = "force-dynamic";
