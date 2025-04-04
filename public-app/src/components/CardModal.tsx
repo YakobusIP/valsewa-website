@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -5,20 +9,19 @@ import {
   CarouselContent,
   CarouselItem,
   CarouselNext,
-  CarouselPrevious,
+  CarouselPrevious
 } from "@/components/ui/carousel";
-import {
-  DialogContent,
-  DialogTitle
-} from "@/components/ui/dialog";
+import { DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { availabilityStatuses } from "@/lib/constants";
-import { DialogDescription } from "@radix-ui/react-dialog";
-import Image from "next/image";
-import { Button } from "./ui/button";
-import Whatsapp from "./Whatsapp";
+
 import { AccountEntity } from "@/types/account.type";
-import { ExternalLink } from "lucide-react";
+
+import { DialogDescription } from "@radix-ui/react-dialog";
+import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import Image from "next/image";
+
+import Whatsapp from "./Whatsapp";
+import { Button } from "./ui/button";
 
 interface CardModalProps {
   selectedCard: AccountEntity | null;
@@ -26,6 +29,8 @@ interface CardModalProps {
 }
 
 const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
+  const [showAll, setShowAll] = useState(false);
+
   if (!selectedCard) return null;
 
   function convertHoursToDayHour(hours: number): string {
@@ -42,167 +47,228 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
     return result.length > 0 ? result.join(" ") : "0 Hours";
   }
   const rentTime = convertHoursToDayHour(selectedCard.totalRentHour);
- const visitTracker = (nickname: string) => {
-   const linkTracker =
-     "https://tracker.gg/valorant/profile/riot/" +
-     encodeURIComponent(nickname) +
-     "/overview";
-   window.open(linkTracker, "_blank");
- };
-  return (
-    <DialogContent className="w-full sm:max-w-[600px] max-w-[380px] p-0 bg-gray-800 [&>button]:hidden border-0">
-      <ScrollArea className="sm:max-h-[600px] max-h-[600px] no-scrollbar p-0 overflow-y-auto">
-        <div>
-          <Carousel>
-            <CarouselContent>
-              {selectedCard.otherImages?.map((image, index) => (
-                <CarouselItem key={index}>
-                  <div className="h-auto w-full relative">
-                    <AspectRatio ratio={16 / 9}>
-                      <Image
-                        src={image.imageUrl}
-                        alt="Content Image"
-                        fill
-                        className="object-cover rounded-t-xl"
-                        unoptimized
-                      />
-                    </AspectRatio>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
+  const visitTracker = (nickname: string) => {
+    const linkTracker =
+      "https://tracker.gg/valorant/profile/riot/" +
+      encodeURIComponent(nickname) +
+      "/overview";
+    window.open(linkTracker, "_blank");
+  };
+  const getTier = (tier: string) => {
+    if (tier === "SSS") {
+      return "/cardneed/sss.svg";
+    } else if (tier === "LR-SSS") {
+      return "/cardneed/lrsss.svg";
+    } else if (tier === "LR-V") {
+      return "/cardneed/lrv.svg";
+    } else if (tier === "V") {
+      return "/cardneed/v.svg";
+    } else if (tier === "S") {
+      return "/cardneed/s.svg";
+    } else if (tier === "LR-S") {
+      return "/cardneed/lrs.svg";
+    } else if (tier === "A") {
+      return "/cardneed/a.svg";
+    } else if (tier === "LR-A") {
+      return "/cardneed/lra.svg";
+    } else if (tier === "B") {
+      return "/cardneed/b.svg";
+    } else if (tier === "LR-B") {
+      return "/cardneed/b.svg";
+    } else if (tier === "C") {
+      return "/cardneed/c.svg";
+    } else if (tier === "LR-C") {
+      return "/cardneed/c.svg";
+    }
+    return "";
+  };
 
-            <div className="absolute top-1/2 -translate-y-1/2 left-12 z-10">
-              <CarouselPrevious />
-            </div>
-            <div className="absolute top-1/2 -translate-y-1/2 right-12 z-10">
-              <CarouselNext />
-            </div>
-          </Carousel>
-        </div>
-        <div className="p-[16px] w-full">
+  const skinsPerRow = 3;
+  const visibleSkins = showAll
+    ? selectedCard.skinList
+    : selectedCard.skinList.slice(0, skinsPerRow * 2);
+
+  const dataString = selectedCard.priceTier.description;
+
+  const formattedData = dataString.match(/\d+\s\w+\s=\s\d+k/g) || [];
+  return (
+    <DialogContent className="sm:max-w-[600px] max-w-[380px] p-0 bg-[#333640] [&>button]:hidden border-0">
+      <ScrollArea className="sm:max-h-[600px] max-h-[600px] no-scrollbar p-0 overflow-y-auto ">
+        <Carousel className="overflow-hidden sm:max-w-[600px] max-w-[380px]">
+          <CarouselContent>
+            {selectedCard.otherImages?.map((image, index) => (
+              <CarouselItem key={index}>
+                <div className="h-auto w-full relative">
+                  <AspectRatio ratio={16 / 9}>
+                    <Image
+                      src={image.imageUrl}
+                      alt="Content Image"
+                      fill
+                      className="object-cover rounded-t-xl"
+                      unoptimized
+                    />
+                  </AspectRatio>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+
+          <div className="absolute top-1/2 -translate-y-1/2 left-12 z-10">
+            <CarouselPrevious />
+          </div>
+          <div className="absolute top-1/2 -translate-y-1/2 right-12 z-10">
+            <CarouselNext />
+          </div>
+        </Carousel>
+        <div className="w-full">
           <DialogTitle></DialogTitle>
           <DialogDescription />
+          <div className="relative">
+            {/* Account Rank */}
+            <div
+              className="relative bg-gradient-to-r from-[#FFB800] to-[#D48002] text-white font-bold px-8 py-2 text-2xl italic inline-block w-[70%]"
+              style={{
+                clipPath: "polygon(0% 0%, 100% 0%, 90% 100%, 0% 100%)"
+              }}
+            >
+              {selectedCard.accountRank}
+            </div>
+            <div className="h-full w-full absolute top-0 left-auto">
+              <figure className="absolute top-0 right-0 h-[120px] w-[120px]">
+                <Image
+                  src={getTier(selectedCard.priceTier.code)}
+                  alt="Price Tier"
+                  fill
+                />
+              </figure>
+            </div>
+          </div>
           <div className="px-4">
             <div className="relative mb-3 mx-3 pt-4">
-              <div className="flex justify-between items-center pb-2">
-                <p className="mb-1 font-bold text-red-500 text-4xl">
-                  {selectedCard.accountCode}
-                </p>
-                <Badge
-                  variant="outline"
-                  className="sm:text-2xl text-xl font-bold text-roseWhite "
-                >
-                  {selectedCard.priceTier.code}
-                </Badge>
-              </div>
-              <div className="flex md:justify-between md:flex-row mt-2 flex-col justify-start">
-                <p className="text-roseWhite mb-2 text-md">Rent Count: {rentTime}</p>
-                <div className="flex mb-5 gap-1">
-                    <p
-                      className="text-md text-roseWhite cursor-pointer"
-                      onClick={() => visitTracker(selectedCard.nickname)}
-                    >
-                      {selectedCard.nickname}
-                    </p>
-                    <ExternalLink className="w-5 h-5 text-white" onClick={() => visitTracker(selectedCard.nickname)} />
-
-                  </div>
-              </div>
-
-              <div className="flex gap-2 mb-3 flex-row">
-                {availabilityStatuses.map((status) =>
-                  selectedCard.availabilityStatus == status.value ? (
-                    <Badge
-                      variant="secondary"
-                      key={status.value}
-                      className={`text-sm max-sm:text-xs text-center font-semibold text-zinc-100 px-3 cursor-default ${
-                        status.value === "AVAILABLE"
-                          ? "bg-green-600 hover:bg-green-700"
-                          : status.value === "IN_USE"
-                          ? "bg-yellow-500 hover:bg-yellow-600"
-                          : "bg-destructive hover:bg-red-600"
-                      }`}
-                    >
-                      {status.label}
-                    </Badge>
-                  ) : null
+              {/* Account Code */}
+              <div className="flex items-center gap-[8px]">
+                {selectedCard.availabilityStatus === "AVAILABLE" && (
+                  <span className="w-4 h-4 bg-[#66FFF8] rounded-full"></span>
+                )}
+                {selectedCard.availabilityStatus === "IN_USE" && (
+                  <figure className="relative w-[28px] h-[28px]">
+                    <Image src="/cardneed/in_use.svg" fill alt="In_Use" />
+                  </figure>
                 )}
 
-                <Badge
-                  variant="secondary"
-                  className={`px-3 text-center font-semibold text-primary-foreground max-sm:text-xs text-sm cursor-default ${
-                    selectedCard.accountRank.startsWith("Iron")
-                      ? "bg-gray-600 hover:bg-gray-700 "
-                      : selectedCard.accountRank.startsWith("Bronze")
-                      ? "bg-amber-600 hover:bg-amber-700"
-                      : selectedCard.accountRank.startsWith("Silver")
-                      ? "bg-gray-500 hover:bg-gray-600"
-                      : selectedCard.accountRank.startsWith("Gold")
-                      ? "bg-yellow-600 hover:bg-yellow-700"
-                      : selectedCard.accountRank.startsWith("Platinum")
-                      ? "bg-cyan-700 hover:bg-cyan-800"
-                      : selectedCard.accountRank.startsWith("Diamond")
-                      ? "bg-purple-600 hover:bg-purple-700"
-                      : selectedCard.accountRank.startsWith("Ascendant")
-                      ? "bg-emerald-700 hover:bg-emerald-800"
-                      : selectedCard.accountRank.startsWith("Immortal")
-                      ? "bg-red-800 hover:bg-red-900"
-                      : selectedCard.accountRank === "Radiant"
-                      ? "bg-yellow-600 hover:bg-yellow-700"
-                      : "bg-black"
-                  }`}
-                >
-                  {selectedCard.accountRank}
-                </Badge>
-              </div>
-              <p className="font-semibold text-roseWhite text-sm pt-2">
-                List of skins ({selectedCard.skinList.length})
-              </p>
-              <div className="flex flex-wrap gap-2 pt-2 whitespace-nowrap text-sm max-sm:text-xs cursor-default">
-                {selectedCard.skinList?.map((skin: string, index: number) => (
-                  <Badge variant="secondary" key={index}>
-                    {skin}
-                  </Badge>
-                ))}
+                {/* Account Code */}
+                <span className="font-bold text-[#f36164] text-4xl">
+                  {selectedCard.accountCode}
+                </span>
               </div>
 
-              {selectedCard.description !== null && (
+              <div className="flex sm:flex-row flex-col mb-5 gap-2 sm:items-center max-sm:justify-center text-roseWhite text-sm  mt-2  font-sans">
+                <span className="flex gap-2 items-center">
+                  <figure className="w-5 h-5 relative">
+                    <Image
+                      src="modal/restart_alt.svg"
+                      alt="Restart_all Icon"
+                      fill
+                      className="object-cover rounded-t-xl w-full"
+                      unoptimized
+                    />
+                  </figure>
+                  <span className="pt-[2px]">Rent Count: {rentTime}</span>
+                </span>
+
+                <span className="max-sm:hidden">|</span>
+                <span className="flex gap-1 font-bold">
+                  <span
+                    className=" cursor-pointer"
+                    onClick={() => visitTracker(selectedCard.nickname)}
+                  >
+                    {selectedCard.nickname}
+                  </span>
+                  <ExternalLink
+                    className="w-4 h-4 text-white inline"
+                    onClick={() => visitTracker(selectedCard.nickname)}
+                  />
+                </span>
+              </div>
+
+              <div className="h-[2px] w-full bg-[#484C57] my-6"></div>
+              <div className="mb-3 font-sans text-white font-bold">
+                Total Skin <span>{selectedCard.skinList.length}</span>
+              </div>
+              <div>
+                <div className="flex flex-wrap gap-2 pb-5">
+                  {visibleSkins.map((skin, index) => (
+                    <Badge
+                      variant="secondary"
+                      key={index}
+                      className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
+                    >
+                      {skin}
+                    </Badge>
+                  ))}
+                </div>
+                {/* Show More / Hide Button */}
+                {selectedCard.skinList.length > skinsPerRow && (
+                  <div className="flex justify-end gap-2 items-center">
+                    <button
+                      onClick={() => setShowAll(!showAll)}
+                      className="text-[#E6E6E6] text-sm mt-2 hover:underline flex items-center gap-2"
+                    >
+                      {showAll ? "Lihat lebih sedikit" : "Lihat Selengkapnya"}
+                      {showAll ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="h-[2px] w-full bg-[#484C57] my-6"></div>
+              {/* {selectedCard.description !== null && (
                 <div>
-                  <p className="text-sm font-semibold pt-6 text-roseWhite">
+                  <p className="text-sm font-semibold text-roseWhite">
                     Description
                   </p>
                   <p className="text-sm pt-2 text-roseWhite">
                     {selectedCard.description}
                   </p>
                 </div>
-              )}
+              )} */}
 
               <div>
-                <p className="text-sm font-semibold pt-6 text-roseWhite">
+                <p className="mb-3 font-sans text-white font-bold">
                   Price List
                 </p>
               </div>
-              <div>
-                {selectedCard.priceTier.description
-                  .split("k")
-                  .filter(Boolean)
-                  .map((part: string, index: number) => (
-                    <span key={index} className="text-sm text-roseWhite">
-                      {part.trim() + "k"}
-                      <br />
-                    </span>
-                  ))}
+
+              <div className="flex gap-4">
+                {formattedData.map((item, index) => {
+                  const [time, unit, , value] = item.split(" ");
+                  return (
+                    <div
+                      key={index}
+                      className="bg-gray-700 text-[#E6E6E6] text-center rounded overflow-hidden min-w-[70px]"
+                    >
+                      <div className="bg-[#F36164] text-[#E6E6E6] text-sm p-1 font-valorant">
+                        {`${time} ${unit}`.toUpperCase()}
+                      </div>
+                      <div className="text-2xl font-bold p-2 text-[#E6E6E6]">
+                        {value.toUpperCase()}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex justify-between pt-6">
+
+              <div className="flex justify-between pt-10">
                 <Button
                   onClick={() => onClose()}
-                  variant="destructive"
-                  className=" text-roseWhite font-semibold "
+                  className=" text-roseWhite font-semibold bg-[#FF0000] rounded-[16px] "
                 >
                   Close
                 </Button>
-                <Whatsapp />
+                <Whatsapp id={selectedCard.accountCode} />
               </div>
             </div>
           </div>

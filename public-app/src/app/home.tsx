@@ -1,133 +1,192 @@
-'use client'
+"use client";
+
 import Card from "@/components/Card";
+import Navbar from "@/components/Navbar";
+import SearchBar from "@/components/SearchBar";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAccountController } from "@/controllers/useAccountController";
-import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
-import Image from "next/image";
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious
+} from "@/components/ui/carousel";
+
 import { AccountEntity } from "@/types/account.type";
 
-interface Props{
-    initialAccount: AccountEntity[]
+import { useAccountController } from "@/controllers/useAccountController";
+import Image from "next/image";
+import { FaArrowUp } from "react-icons/fa";
+
+interface Props {
+  initialAccount: AccountEntity[];
 }
-export default function Home({initialAccount}:Props) {
+export default function Home({ initialAccount }: Props) {
   const {
     accountList,
     setSearchAccount,
     sortAccount,
     sortDirection,
     changeDirection,
-    getSortLabel,
+    getSortLabel
   } = useAccountController(initialAccount);
 
-  const SortMenuItem = ({ label, value }: { label: string; value: string }) => (
-    <DropdownMenuItem
-      onClick={() => changeDirection(value)}
-      className="px-4 py-2 hover:bg-[#8B0000] transition duration-200 cursor-pointer flex justify-between"
-    >
-      {label}
-      {sortAccount === value && (
-        <span className="ml-2 text-lg">
-          {sortDirection === "asc" ? "▲" : "▼"}
-        </span>
-      )}
-    </DropdownMenuItem>
-  );
+  const images = ["/hero/Hero1.png", "/hero/Hero2.png", "/hero/Hero3.png"];
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 300, behavior: "smooth" });
+  };
 
   return (
-    <section className="bg-gray-900 pb-32 relative">
-      <div className="w-full relative">
-        <figure className="absolute z-50 top-0 lg:max-w-[200px] sm:max-w-[150px] max-w-[120px] left-5">
-  <Image src="/logo/Logo Valsewa 2 SVG.svg" width={250} height={100} alt="logo" className="object-contain"/>
-</figure>
-
-        <figure className="relative w-full before:absolute before:inset-0 before:bg-gradient-to-b before:from-transparent before:to-gray-900 before:z-10 max-md:hidden">
-          <AspectRatio ratio={16 / 5}>
-            <Image
-              src="/hero/Hero9.png"
-              fill
-              alt="Hero"
-              className="object-cover object-top"
-            />
-          </AspectRatio>
+    <section className="bg-[#101822] md:pb-64 pb-32 relative ">
+      <div className="relative ">
+        <Navbar />
+      </div>
+      <a
+        href="https://wa.me/6285175343447?text=Halo admin VALSEWA aku mau SEWA akun nih"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-4 right-4 z-50"
+      >
+        <figure className="w-[80px] h-[80px] fixed bottom-4 right-4 z-50">
+          <Image src="/home/penanda.svg" fill alt="Iconic" />
         </figure>
-        <figure className="relative w-full before:absolute before:inset-0 before:bg-gradient-to-b before:from-transparent before:to-gray-900 before:z-10 md:hidden">
-          <AspectRatio ratio={16 / 12}>
-            <Image
-              src="/hero/Hero9.png"
-              fill
-              alt="Main Pict"
-              className="object-cover object-top"
-            />
-          </AspectRatio>
-        </figure>
+      </a>
+      <div
+        className="fixed bottom-4 left-4 z-50 cursor-pointer text-[#DDDDDD] bg-[#A6A6A6B2] p-3 rounded-full"
+        onClick={scrollToTop}
+      >
+        <FaArrowUp size={30} />
+      </div>
+      <div>
+        <div className="relative w-full h-screen flex flex-col">
+          {/* Hero Background with Breakpoints */}
+          <div className="absolute inset-0 w-full h-full">
+            {/* 2XL Screens */}
+            <figure className="absolute w-full h-full max-2xl:hidden">
+              <Image
+                src="/hero/Hero9.png"
+                fill
+                alt="Hero"
+                className="object-cover object-top"
+              />
+            </figure>
 
-        <div className="mx-5 pt-10">
-          <div className="flex flex-col items-center text-roseWhite">
-            <h1 className="font-bold text-5xl text-center">
-              Cari Akun Impianmu Disini
-            </h1>
-            <p className="font-extralight text-xl text-center">
-              Buat yang pengen keliatan jago
-            </p>
+            {/* XL and Large Screens */}
+            <figure className="absolute w-full h-full max-lg:hidden 2xl:hidden">
+              <Image
+                src="/hero/Hero9.png"
+                fill
+                alt="Hero"
+                className="object-cover object-top"
+              />
+            </figure>
+
+            {/* Medium Screens */}
+            <figure className="absolute w-full h-full max-md:hidden lg:hidden">
+              <Image
+                src="/hero/Hero9.png"
+                fill
+                alt="Hero"
+                className="object-cover object-top"
+              />
+            </figure>
+
+            {/* Small Screens */}
+            <figure className="absolute w-full h-full">
+              <Image
+                src="/hero/Hero9.png"
+                fill
+                alt="Hero"
+                className="object-cover object-top"
+              />
+            </figure>
+
+            {/* Extra Small Screens */}
+            <figure className="absolute w-full h-full sm:hidden">
+              <Image
+                src="/hero/Hero9.png"
+                fill
+                alt="Hero"
+                className="object-cover object-top"
+              />
+            </figure>
+
+            {/* Dark Overlay for better readability */}
+            <div className="absolute inset-0 bg-black/50"></div>
           </div>
 
-          <div className="flex sm:justify-between flex-col sm:flex-row sm:items-center items-start max-sm:gap-y-4 mt-12 px-3">
-            <div className="relative sm:w-[70%] w-full">
-              <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                <svg
-                  className="w-4 h-4 text-roseWhite font-bold  dark:text-gray-400"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="3"
-                    d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-                  />
-                </svg>
-              </div>
-              <input
-                type="search"
-                className="block w-full p-4 ps-10 text-sm text-roseWhite border border-gray-300 rounded-lg bg-gray-800 animated-bg h-[50px]"
-                placeholder="Ascendant Reaver vandal ..."
-                onChange={(e) => setSearchAccount(e.target.value)}
+          {/* Content Section */}
+          <div className="relative z-20 flex flex-col items-center justify-center flex-grow">
+            {/* Carousel */}
+            <div className="w-full md:px-14 px-7">
+              <Carousel className="shadow-lg rounded-2xl overflow-hidden">
+                <CarouselContent>
+                  {images?.map((image, index) => (
+                    <CarouselItem key={index}>
+                      <div className="h-full w-full relative max-md:hidden">
+                        <AspectRatio ratio={12 / 3}>
+                          <Image
+                            src={image}
+                            alt="Carousel Image"
+                            fill
+                            className="object-cover rounded-2xl"
+                            unoptimized
+                          />
+                        </AspectRatio>
+                      </div>
+                      <div className="h-full w-full relative max-sm:hidden md:hidden">
+                        <AspectRatio ratio={12 / 6}>
+                          <Image
+                            src={image}
+                            alt="Carousel Image"
+                            fill
+                            className="object-cover rounded-2xl"
+                            unoptimized
+                          />
+                        </AspectRatio>
+                      </div>
+                      <div className="h-full w-full relative sm:hidden">
+                        <AspectRatio ratio={12 / 9}>
+                          <Image
+                            src={image}
+                            alt="Carousel Image"
+                            fill
+                            className="object-cover rounded-2xl"
+                            unoptimized
+                          />
+                        </AspectRatio>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-30" />
+                <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-30" />
+              </Carousel>
+            </div>
+          </div>
+
+          {/* Search Bar Fixed at Bottom */}
+          <div className="absolute bottom-[-50px] w-full flex justify-center z-30 pb-4">
+            <div className="w-full">
+              <SearchBar
+                accountList={accountList || []}
+                setSearchAccount={setSearchAccount}
+                changeDirection={changeDirection}
+                getSortLabel={getSortLabel}
+                sortAccount={sortAccount}
+                sortDirection={sortDirection}
               />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="w-[150px] h-[50px] items-center gap-2 px-4 py-2 rounded-lg bg-[#8B0000] hover:bg-[#A00000] text-roseWhite ">
-                {getSortLabel()}
-                {["rank", "price_tier", "availability"].includes(
-                  sortAccount
-                ) && (
-                  <span className="ml-1 text-lg">
-                    {sortDirection === "asc" ? "▲" : "▼"}
-                  </span>
-                )}
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-black border border-[#8B0000] text-roseWhite rounded-lg">
-                <SortMenuItem label="Rank" value="rank" />
-                <SortMenuItem label="Price Tier" value="price_tier" />
-                <SortMenuItem label="Availability" value="availability" />
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
-{accountList.length>0? (
-          <div className="mt-9 w-full mx-0 pt-10">
-            
-            <Card data={accountList} />
+        </div>
 
-            
-          </div>
-          ):(
+        <div className="lg:mx-14 mx-7 pt-10 ">
+          {accountList.length > 0 ? (
+            <div className="mt-9 mx-0 pt-10">
+              <Card data={accountList} />
+            </div>
+          ) : (
             <div className=" mt-48">
               <div className="flex items-center ps-3 pointer-events-none justify-center">
                 <svg
@@ -146,13 +205,16 @@ export default function Home({initialAccount}:Props) {
                   />
                 </svg>
               </div>
-              <p className="text-roseWhite text-3xl font-semibold text-center">Mohon maaf Akun tidak ditemukan</p>
-              <p className="text-roseWhite text-xl font-normal text-center max-w-[300px] mx-auto">Coba lakukan pencarian untuk skin / preferensi yang lain</p>
-              </div>
-            )}
+              <p className="text-roseWhite text-3xl font-semibold text-center">
+                Mohon maaf Akun tidak ditemukan
+              </p>
+              <p className="text-roseWhite text-xl font-normal text-center max-w-[300px] mx-auto">
+                Coba lakukan pencarian untuk skin / preferensi yang lain
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 }
-

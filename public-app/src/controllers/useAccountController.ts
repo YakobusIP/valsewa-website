@@ -1,25 +1,27 @@
-import { useState, useEffect, useRef } from "react";
-import { useDebounce } from "use-debounce";
+import { useEffect, useRef, useState } from "react";
+
 import { fetchAccounts } from "@/services/accountService";
+
 import { AccountEntity } from "@/types/account.type";
 
+import { useDebounce } from "use-debounce";
 
-export function useAccountController(initialAccount:AccountEntity[]) {
+export function useAccountController(initialAccount: AccountEntity[]) {
   const [accountList, setAccountList] = useState(initialAccount);
   const [searchAccount, setSearchAccount] = useState("");
   const [sortAccount, setSortAccount] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
   const [debouncedSearch] = useDebounce(searchAccount, 1000);
 
-  const isFirstRender = useRef(true)
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
     if (isFirstRender.current) {
-      isFirstRender.current = false
-      return 
+      isFirstRender.current = false;
+      return;
     }
-    fetchAccounts(debouncedSearch, sortDirection, sortAccount).then(
-      setAccountList
+    fetchAccounts(debouncedSearch, sortDirection, sortAccount).then((res) =>
+      setAccountList(res)
     );
   }, [debouncedSearch, sortDirection, sortAccount]);
 
@@ -34,7 +36,6 @@ export function useAccountController(initialAccount:AccountEntity[]) {
     }
   };
 
-
   const getSortLabel = () => {
     switch (sortAccount) {
       case "rank":
@@ -47,7 +48,6 @@ export function useAccountController(initialAccount:AccountEntity[]) {
         return "Sort By";
     }
   };
-
   return {
     accountList,
     searchAccount,
@@ -55,6 +55,6 @@ export function useAccountController(initialAccount:AccountEntity[]) {
     sortAccount,
     sortDirection,
     changeDirection,
-    getSortLabel,
+    getSortLabel
   };
 }
