@@ -43,7 +43,7 @@ export default function Home({ initialAccount }: Props) {
         <Navbar />
       </div>
       <a
-        href="https://wa.me/6285175343447?text=Halo admin VALSEWA aku mau SEWA akun nih"
+        href="https://wa.me/6285175343447?text=Halo admin VALSEWA aku butuh bantuan dong"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-4 right-4 z-50"

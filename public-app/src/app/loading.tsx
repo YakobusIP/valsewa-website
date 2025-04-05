@@ -1,27 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
+// import { useEffect, useState } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
-import { motion } from "framer-motion";
 import Image from "next/image";
 
 export default function LoadingPage() {
-  const [index, setIndex] = useState(0);
-  const images = [
-    "loading/loading1.svg",
-    "loading/loading2.svg",
-    "loading/loading3.svg",
-    "loading/loading4.svg"
-  ];
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % images.length);
-    }, 800);
+  // const [index, setIndex] = useState(0);
+  // const images = [
+  //   "loading/loading1.svg",
+  //   "loading/loading2.svg",
+  //   "loading/loading3.svg",
+  //   "loading/loading4.svg"
+  // ];
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setIndex((prev) => (prev + 1) % images.length);
+  //   }, 800);
 
-    return () => clearInterval(interval);
-  }, [images.length]);
+  //   return () => clearInterval(interval);
+  // }, [images.length]);
 
   return (
     <div className="flex flex-col min-h-[100dvh] items-center justify-center gap-4">
@@ -68,8 +66,14 @@ export default function LoadingPage() {
 
       <div className="flex flex-col items-center justify-center gap-2 xl:gap-4 z-50">
         <div className="flex items-center justify-center gap-2">
-          <div className="relative w-32 h-32">
-            {images.map((src, i) => (
+          <div className="relative w-44 h-44">
+            <Image
+              src="loading/loading.gif"
+              alt="Loading animation"
+              fill
+              unoptimized // <== important for GIFs to work with next/image
+            />
+            {/* {images.map((src, i) => (
               <motion.img
                 key={i}
                 src={src}
@@ -81,10 +85,10 @@ export default function LoadingPage() {
                 }}
                 transition={{ duration: 0.1, ease: "easeInOut" }}
               />
-            ))}
+            ))} */}
           </div>
         </div>
-        <h2 className="text-white font-bold text-4xl font-valorant tracking-widest">
+        <h2 className="text-white font-bold text-4xl font-valorant tracking-widest mt-[-30px]">
           Loading...
         </h2>
         <div>
