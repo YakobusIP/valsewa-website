@@ -27,6 +27,7 @@ type AccountEntity = {
   nextBooking?: Date | null;
   nextBookingDuration?: number | string | null;
   expireAt?: Date | null;
+  currentExpireAt?: Date | null;
   totalRentHour: number;
   password: string;
   skinList: string[];
