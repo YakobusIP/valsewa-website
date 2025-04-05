@@ -11,7 +11,7 @@ type AccountEntity = {
   availabilityStatus: string;
   currentBookingDate?: Date | null;
   currentBookingDuration?: number | string | null;
-  currentExpireAt?: String | null;
+  currentExpireAt?: Date | null;
   nextBookingDate?: Date | null;
   nextBookingDuration?: number | string | null;
   nextExpireAt?: Date | null;
