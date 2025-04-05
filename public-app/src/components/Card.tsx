@@ -12,6 +12,7 @@ import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 
 import CardModal from "./CardModal";
+import CountdownTimer from "./CountdownTimer";
 
 // Define types for props and data items
 
@@ -102,6 +103,10 @@ const Card: React.FC<CardProps> = ({ data }) => {
     }
     return false;
   };
+  const checkConsole = (item: AccountEntity) => {
+    console.log(item);
+    return "";
+  };
   return (
     <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
       <div
@@ -133,7 +138,18 @@ const Card: React.FC<CardProps> = ({ data }) => {
                         alt="In Use"
                       />
                     </figure>
-                    <span className="font-bold text-2xl">In Use</span>
+                    <span className="flex flex-col">
+                      <span className="font-bold text-xl text-[#FBB201]">
+                        In Use
+                      </span>
+                      <CountdownTimer
+                        targetDate={
+                          item.currentExpireAt
+                            ? new Date(item.currentExpireAt).toISOString()
+                            : ""
+                        }
+                      />
+                    </span>
                   </div>
                 </div>
               )}
