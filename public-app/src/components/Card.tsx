@@ -27,6 +27,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
   const [isAboveSmallDesktop, setIsAboveSmallDesktop] =
     useState<boolean>(false);
   const [isAbovePhone, setIsAbovePhone] = useState<boolean>(false);
+  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
 
   const updateScreenSize = () => {
     setIsAboveLargeDesktop(window.innerWidth >= 1700);
@@ -47,7 +48,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
 
     if (isAboveLargeDesktop) gridClass = "col-span-3";
     else if (!isAboveSmallDesktop && isAbovePhone) gridClass = "col-span-6";
-    else if (!isAboveSmallDesktop && !isAbovePhone) gridClass = "col-span-12";
+    else if (!isAboveSmallDesktop && !isAbovePhone) gridClass = "col-span-6";
 
     return gridClass;
   };
@@ -103,27 +104,45 @@ const Card: React.FC<CardProps> = ({ data }) => {
     }
     return false;
   };
+  const handleCardClick = (item: AccountEntity) => {
+    const isMobile = window.innerWidth < 640;
+
+    if (isMobile && item.availabilityStatus === "IN_USE") {
+      if (hoveredCardId !== item.accountCode) {
+        setHoveredCardId(item.accountCode);
+      } else {
+        setSelectedCard(item);
+        setHoveredCardId(null);
+      }
+    } else {
+      setHoveredCardId(null);
+      setSelectedCard(item);
+    }
+  };
+
   return (
     <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
       <div
-        className="grid grid-cols-12 md:gap-x-10 gap-x-6 justify-items-center w-full 2xl:gap-y-14 xl:gap-y-10 sm:gap-y-7 gap-y-8 px-3 font-sans"
+        className="grid grid-cols-12 md:gap-x-10 sm:gap-x-6 gap-x-3 justify-items-center w-full 2xl:gap-y-14 xl:gap-y-10 sm:gap-y-7 gap-y-3 px-3 font-sans"
         ref={ref}
       >
         {processedData?.map((item, index) => (
           <div
             className={`
-        rounded-xl relative h-auto w-full 
-        transform hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] hover:scale-[1.02] transition-all duration-300 hover:cursor-pointer 
-        ${getGridClass()} ${checkStatusInUse(item.availabilityStatus) ? "" : ""}
-      `}
+              rounded-xl relative h-auto w-full 
+              transform sm:hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] sm:hover:scale-[1.02] sm:transition-all sm:duration-300 hover:cursor-pointer 
+              ${getGridClass()} 
+              ${checkStatusInUse(item.availabilityStatus) ? "" : ""}
+              ${hoveredCardId === item.accountCode ? "shadow-[0px_4px_15px_rgba(255,255,255,0.5)]" : ""}
+              `}
             key={index}
-            onClick={() => setSelectedCard(item)}
+            onClick={() => handleCardClick(item)}
           >
             <div className="group relative h-full w-full bg-[#333640] rounded-xl transition-opacity duration-300">
               {/* Notification: Hidden by default, shown on hover */}
               {item.availabilityStatus === "IN_USE" && (
                 <div
-                  className={`hidden group-hover:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 bg-black/75 text-white px-4 py-2 rounded-lg w-full h-full z-30`}
+                  className={`max-sm:hidden hidden group-hover:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 bg-black/75 text-white px-4 py-2 rounded-lg w-full h-full z-30`}
                 >
                   <div className="flex justify-center items-center gap-3">
                     <figure className="w-[24px] h-[24px] flex items-center">
@@ -151,7 +170,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
               )}
               <div>
                 <figure className="relative w-full">
-                  <AspectRatio ratio={16 / 9}>
+                  <AspectRatio ratio={16 / 16}>
                     <Image
                       src={item.thumbnail.imageUrl}
                       alt="Thumbnail"
@@ -166,7 +185,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                 <div className="relative">
                   {/* Account Rank */}
                   <div
-                    className="relative bg-gradient-to-r from-[#FFB800] to-[#D48002] text-white font-bold px-8 py-2 text-2xl italic inline-block w-[70%]"
+                    className="relative flex items-center bg-gradient-to-r from-[#FFB800] to-[#D48002] text-white  font-bold sm:px-8 px-3 sm:py-2 sm:text-2xl text-sm italic  sm:w-[70%] w-[75%] max-md:h-[25px]"
                     style={{
                       clipPath: "polygon(0% 0%, 100% 0%, 90% 100%, 0% 100%)"
                     }}
@@ -174,7 +193,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                     {item.accountRank}
                   </div>
                   <div className="h-full w-full absolute top-0 left-auto">
-                    <figure className="absolute top-0 right-0 h-[120px] w-[120px]">
+                    <figure className="absolute top-0 right-0 h-[60px] w-[60px]">
                       <Image
                         src={getTier(item.priceTier.code)}
                         alt="Price Tier"
@@ -183,26 +202,26 @@ const Card: React.FC<CardProps> = ({ data }) => {
                     </figure>
                   </div>
                 </div>
-                <div className="px-7 mt-5">
-                  <div className="relative mb-3">
+                <div className="sm:px-7 px-3 sm:mt-5 mt-2">
+                  <div className="relative sm:mb-3">
                     {/* Account Code */}
-                    <div className="flex items-center gap-[8px]">
+                    <div className="flex items-center sm:gap-[8px] gap-1">
                       {item.availabilityStatus === "AVAILABLE" && (
                         <span className="w-4 h-4 bg-[#66FFF8] rounded-full"></span>
                       )}
                       {item.availabilityStatus === "IN_USE" && (
-                        <figure className="relative w-[28px] h-[28px]">
+                        <figure className="relative w-[20px] h-[20px]">
                           <Image src="/cardneed/in_use.svg" fill alt="In_Use" />
                         </figure>
                       )}
 
                       {/* Account Code */}
-                      <span className="font-bold text-[#f36164] text-4xl">
+                      <span className="font-bold text-[#f36164] sm:text-4xl text-2xl">
                         {item.accountCode}
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap text-nowrap mb-5 gap-[20px] items-center text-roseWhite text-sm font-bold mt-2 max-lg:hidden font-sans">
+                    <div className="flex flex-wrap text-nowrap mb-5 gap-[20px] items-center text-roseWhite text-xs font-bold mt-2 max-lg:hidden font-sans">
                       <span className="">
                         Total Skin <span>{item.skinList.length}</span>
                       </span>
@@ -219,7 +238,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                         />
                       </span>
                     </div>
-                    <div className="flex flex-col mb-2 gap-[10px] text-roseWhite text-sm font-bold mt-2 text-nowrap lg:hidden font-sans">
+                    <div className="flex flex-col mb-2 gap-[10px] text-roseWhite text-xs font-bold mt-2 text-nowrap lg:hidden font-sans">
                       <span className="flex gap-1">
                         <span
                           className=" cursor-pointer"
@@ -241,7 +260,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                         <Badge
                           variant="secondary"
                           key={index}
-                          className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
+                          className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-[8px] sm:text-xs hover:bg-[#4b4f5e]"
                         >
                           {skin}
                         </Badge>
@@ -250,7 +269,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                         <Badge
                           variant="secondary"
                           key={index}
-                          className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
+                          className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-[8px] sm:text-xs hover:bg-[#4b4f5e]"
                         >
                           +{item.skinList.length - 2} Lainnya
                         </Badge>
