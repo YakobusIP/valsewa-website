@@ -103,10 +103,6 @@ const Card: React.FC<CardProps> = ({ data }) => {
     }
     return false;
   };
-  const checkConsole = (item: AccountEntity) => {
-    console.log(item);
-    return "";
-  };
   return (
     <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
       <div

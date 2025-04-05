@@ -21,7 +21,8 @@ export default function LoadingPage() {
     }, 800);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [images.length]);
+
   return (
     <div className="flex flex-col min-h-[100dvh] items-center justify-center gap-4">
       <figure className="w-full h-full absolute z-0 max-xl:hidden">
