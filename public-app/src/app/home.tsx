@@ -181,7 +181,7 @@ export default function Home({ initialAccount }: Props) {
           </div>
         </div>
 
-        <div className="lg:mx-14 mx-7 pt-10 ">
+        <div className="lg:mx-14 sm:mx-7 mx-2 pt-10 ">
           {accountList.length > 0 ? (
             <div className="mt-9 mx-0 pt-10">
               <Card data={accountList} />
