@@ -45,7 +45,15 @@ const SearchBar = ({
       )}
     </DropdownMenuItem>
   );
-
+  const availableAccount = () => {
+    let res = 0;
+    for (let index = 0; index < accountList.length; index++) {
+      if (accountList[index].availabilityStatus === "AVAILABLE") {
+        res += 1;
+      }
+    }
+    return res;
+  };
   return (
     <div className="w-full flex flex-col items-center text-roseWhite">
       <h1 className=" md:text-4xl text-2xl text-center font-valorant mb-5">
@@ -58,7 +66,7 @@ const SearchBar = ({
         <div className="relative min-h-24 flex flex-col md:flex-row w-full items-center bg-[#262A43] border border-gray-500 rounded-[16px] py-3 shadow-md shadow-white/30">
           <div className="flex items-center mb-2 md:mb-0 text-nowrap md:pl-5">
             <span className="text-yellow-400 font-bold text-lg md:text-xl mr-2">
-              {accountList.length}
+              {availableAccount()}
             </span>
             <span className="text-roseWhite font-bold">Akun Tersedia</span>
           </div>

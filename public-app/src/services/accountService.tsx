@@ -8,7 +8,7 @@ export async function fetchAccounts(
   try {
     const url = `${
       process.env.NEXT_PUBLIC_AXIOS_BASE_URL
-    }/api/accounts/public?page=1&limit=100&q=${encodeURIComponent(
+    }/api/accounts/public?page=1&limit=1000&q=${encodeURIComponent(
       search
     )}&sortBy=${encodeURIComponent(sortBy)}&direction=${encodeURIComponent(
       direction
