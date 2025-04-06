@@ -74,11 +74,11 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
     } else if (tier === "B") {
       return "/cardneed/b.svg";
     } else if (tier === "LR-B") {
-      return "/cardneed/b.svg";
+      return "/cardneed/lrb.svg";
     } else if (tier === "C") {
       return "/cardneed/c.svg";
     } else if (tier === "LR-C") {
-      return "/cardneed/c.svg";
+      return "/cardneed/lrc.svg";
     }
     return "";
   };

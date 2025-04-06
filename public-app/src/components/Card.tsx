@@ -169,8 +169,19 @@ const Card: React.FC<CardProps> = ({ data }) => {
                 </div>
               )}
               <div>
-                <figure className="relative w-full">
+                <figure className="relative w-full sm:hidden">
                   <AspectRatio ratio={16 / 16}>
+                    <Image
+                      src={item.thumbnail.imageUrl}
+                      alt="Thumbnail"
+                      fill
+                      className="object-cover rounded-t-xl w-full"
+                      unoptimized
+                    />
+                  </AspectRatio>
+                </figure>
+                <figure className="relative w-full max-sm:hidden">
+                  <AspectRatio ratio={16 / 9}>
                     <Image
                       src={item.thumbnail.imageUrl}
                       alt="Thumbnail"
@@ -193,7 +204,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                     {item.accountRank}
                   </div>
                   <div className="h-full w-full absolute top-0 left-auto">
-                    <figure className="absolute top-0 right-0 h-[60px] w-[60px]">
+                    <figure className="absolute top-0 right-0 h-[60px] w-[60px] sm:h-[120px] sm:w-[120px] ">
                       <Image
                         src={getTier(item.priceTier.code)}
                         alt="Price Tier"
@@ -210,7 +221,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                         <span className="w-4 h-4 bg-[#66FFF8] rounded-full"></span>
                       )}
                       {item.availabilityStatus === "IN_USE" && (
-                        <figure className="relative w-[20px] h-[20px]">
+                        <figure className="relative w-[20px] h-[20px] sm:w-[28px] sm:h-[28px]">
                           <Image src="/cardneed/in_use.svg" fill alt="In_Use" />
                         </figure>
                       )}
@@ -221,7 +232,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap text-nowrap mb-5 gap-[20px] items-center text-roseWhite text-xs font-bold mt-2 max-lg:hidden font-sans">
+                    <div className="flex flex-wrap text-nowrap mb-5 gap-[20px] items-center text-roseWhite sm:text-sm text-xs font-bold mt-2 max-lg:hidden font-sans">
                       <span className="">
                         Total Skin <span>{item.skinList.length}</span>
                       </span>
@@ -238,7 +249,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                         />
                       </span>
                     </div>
-                    <div className="flex flex-col mb-2 gap-[10px] text-roseWhite text-xs font-bold mt-2 text-nowrap lg:hidden font-sans">
+                    <div className="flex flex-col mb-2 gap-[10px] text-roseWhite sm:text-sm text-xs font-bold mt-2 text-nowrap lg:hidden font-sans">
                       <span className="flex gap-1">
                         <span
                           className=" cursor-pointer"
