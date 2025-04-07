@@ -157,13 +157,17 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       <span className="font-bold text-xl text-[#FBB201]">
                         In Use
                       </span>
-                      <CountdownTimer
-                        targetDate={
-                          item.currentExpireAt
-                            ? new Date(item.currentExpireAt).toISOString()
-                            : ""
-                        }
-                      />
+                      {item.currentExpireAt ? (
+                        <CountdownTimer
+                          targetDate={
+                            item.currentExpireAt
+                              ? new Date(item.currentExpireAt).toISOString()
+                              : ""
+                          }
+                        />
+                      ) : (
+                        ""
+                      )}
                     </span>
                   </div>
                 </div>
