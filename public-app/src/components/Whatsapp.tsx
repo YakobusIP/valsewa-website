@@ -29,7 +29,7 @@ const Whatsapp: FC<Props> = ({ id }) => {
         </figure>
 
         <span className="relative pl-[10px] text-sm font-medium ipad-mini:text-base">
-          Contact Us
+          Order Now
         </span>
       </a>
     </Button>
