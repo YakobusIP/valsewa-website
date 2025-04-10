@@ -29,7 +29,7 @@ export class UploadService {
     const uploadPromises = files.map(async (file) => {
       try {
         const filename = generateFilename(file.originalname);
-        const filePath = `review-images/${filename}`;
+        const filePath = `account-images/${filename}`;
         let url: string;
 
         if (env.NODE_ENV === "production") {
@@ -88,7 +88,7 @@ export class UploadService {
       const urlParts = reviewImage.imageUrl.split("/");
 
       if (env.NODE_ENV === "production") {
-        const filename = `review-images/${urlParts[urlParts.length - 1]}`;
+        const filename = `account-images/${urlParts[urlParts.length - 1]}`;
         const file = bucket.file(filename);
         try {
           await file.delete();
