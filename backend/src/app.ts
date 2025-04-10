@@ -67,7 +67,7 @@ const swaggerDefinition: OAS3Definition = {
 
 const options: Options = {
   swaggerDefinition,
-  apis: [`${__dirname}/controllers/*.{ts,js}`]
+  apis: [`${__dirname}/docs/swagger.yaml`]
 };
 
 const swaggerSpec = swaggerJSDoc(options);

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 
 import { toast } from "@/hooks/useToast";
 
+import { setAccessToken } from "@/lib/axios";
+
 import { Loader2Icon, LogOutIcon } from "lucide-react";
 import { useNavigate } from "react-router";
 
@@ -19,6 +21,10 @@ export default function LogoutButton() {
 
     try {
       const response = await authService.logout();
+
+      setAccessToken(null);
+      localStorage.removeItem("refreshToken");
+
       navigate("/");
       toast({
         title: "All set!",

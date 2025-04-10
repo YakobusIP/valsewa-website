@@ -1,0 +1,941 @@
+components:
+  schemas:
+    Account:
+      type: object
+      required:
+        - id
+        - username
+        - nickname
+        - accountCode
+        - accountRank
+        - availabilityStatus
+      properties:
+        id:
+          type: number
+        username:
+          type: string
+        nickname:
+          type: string
+        accountCode:
+          type: string
+        description:
+          type: string
+        accountRank:
+          type: string
+        availabilityStatus:
+          type: string
+        currentBookingDate:
+          type: string
+          format: date-time
+        currentBookingDuration:
+          type: number
+        currentExpireAt:
+          type: string
+          format: date-time
+        nextBookingDate:
+          type: string
+          format: date-time
+        nextBookingDuration:
+          type: number
+        nextExpireAt:
+          type: string
+          format: date-time
+        totalRentHour:
+          type: number
+        password:
+          type: string
+        skinList:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PublicAccount:
+      type: object
+      required:
+        - id
+        - username
+        - nickname
+        - accountCode
+        - accountRank
+        - availabilityStatus
+      properties:
+        id:
+          type: number
+        username:
+          type: string
+        nickname:
+          type: string
+        accountCode:
+          type: string
+        description:
+          type: string
+        accountRank:
+          type: string
+        availabilityStatus:
+          type: string
+        currentExpireAt:
+          type: string
+          format: date-time
+        totalRentHour:
+          type: number
+        skinList:
+          type: array
+          items:
+            type: string
+
+    AccountResetLog:
+      type: object
+      required:
+        - id
+        - accountId
+        - previousExpireAt
+        - resetAt
+      properties:
+        id:
+          type: number
+        accountId:
+          type: number
+        account:
+          type: object
+          properties:
+            username:
+              type: string
+            accountCode:
+              type: string
+        previousExpireAt:
+          type: string
+          format: date-time
+        resetAt:
+          type: string
+          format: date-time
+
+    TokenPayload:
+      type: object
+      properties:
+        username:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        username:
+          type: string
+        refreshToken:
+          type: string
+
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+
+    RefreshResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    PriceTier:
+      type: object
+      required:
+        - id
+        - code
+        - description
+      properties:
+        id:
+          type: number
+        code:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Statistic:
+      type: object
+      properties:
+        rentedRatio:
+          type: number
+          description: "Percentage ratio of accounts currently in use."
+        availableAccounts:
+          type: number
+          description: "Number of accounts available."
+        inUseAccounts:
+          type: number
+          description: "Number of accounts in use."
+        totalAccounts:
+          type: number
+          description: "Total number of accounts."
+
+    ImageUpload:
+      type: object
+      required:
+        - id
+        - imageUrl
+      properties:
+        id:
+          type: number
+        imageUrl:
+          type: string
+          description: "URL of the uploaded image."
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Metadata:
+      type: object
+      properties:
+        page:
+          type: number
+        limit:
+          type: number
+        pageCount:
+          type: number
+        total:
+          type: number
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: api-key
+
+paths:
+  /api/accounts:
+    get:
+      tags:
+        - Accounts
+      summary: "Retrieve a paginated list of accounts."
+      security:
+        - bearerAuth: []
+      description: "Retrieves accounts with optional filtering and sorting."
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: string
+          description: "The page number."
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: string
+          description: "The number of accounts per page."
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+          description: "Optional search query."
+        - in: query
+          name: sortBy
+          required: false
+          schema:
+            type: string
+          description: "Field name to sort by (e.g., availability, rank, price_tier, id_tier)."
+        - in: query
+          name: direction
+          required: false
+          schema:
+            type: string
+          description: "Sort order (asc or desc)."
+      responses:
+        "200":
+          description: "A list of accounts with pagination metadata."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Account"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+    post:
+      tags:
+        - Accounts
+      summary: "Create a new account."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Account"
+      responses:
+        "201":
+          description: "Account created successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    delete:
+      tags:
+        - Accounts
+      summary: "Delete multiple accounts."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: number
+      responses:
+        "204":
+          description: "Accounts deleted successfully."
+
+  /api/accounts/public:
+    get:
+      tags:
+        - Accounts
+      summary: "Retrieve a paginated list of public accounts."
+      description: "Retrieves public accounts with optional filtering and sorting."
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: string
+          description: "The page number."
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: string
+          description: "The number of accounts per page."
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+          description: "Optional search query."
+        - in: query
+          name: sortBy
+          required: false
+          schema:
+            type: string
+          description: "Field name to sort by."
+        - in: query
+          name: direction
+          required: false
+          schema:
+            type: string
+          description: "Sort order (asc or desc)."
+      responses:
+        "200":
+          description: "A list of public accounts with pagination metadata."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicAccount"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+
+  /api/accounts/{id}:
+    get:
+      tags:
+        - Accounts
+      summary: "Retrieve a single account by ID."
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "The unique identifier of the account."
+      responses:
+        "200":
+          description: "The account details."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+    put:
+      tags:
+        - Accounts
+      summary: "Update an existing account."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "The ID of the account to update."
+        - in: query
+          name: deleteResetLogs
+          required: false
+          schema:
+            type: boolean
+          description: "Optional flag to delete reset logs."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Account"
+      responses:
+        "201":
+          description: "Account updated successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/accounts/{id}/finish-booking:
+    post:
+      tags:
+        - Accounts
+      summary: "Finish booking for an account."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "The ID of the account."
+      responses:
+        "201":
+          description: "Booking finished."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/accounts/rank/{name}/{tag}:
+    get:
+      tags:
+        - Accounts
+      summary: "Retrieve an account's rank."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: "The account's name."
+        - in: path
+          name: tag
+          required: true
+          schema:
+            type: string
+          description: "The account's tag."
+      responses:
+        "200":
+          description: "The account's rank information."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  tag:
+                    type: string
+                  currentRank:
+                    type: string
+
+  /api/accounts/duplicate/{name}/{tag}/{code}:
+    get:
+      tags:
+        - Accounts
+      summary: "Retrieve a duplicate check for an account."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: "The account's name."
+        - in: path
+          name: tag
+          required: true
+          schema:
+            type: string
+          description: "The account's tag."
+        - in: path
+          name: code
+          required: true
+          schema:
+            type: string
+          description: "The account's code."
+      responses:
+        "200":
+          description: "Returns true if duplicate account is found."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exists:
+                    type: boolean
+
+  /api/accounts/failed-jobs:
+    get:
+      tags:
+        - Accounts
+      summary: "Retrieve failed account rank update jobs."
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "A list of failed account rank update jobs."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      description: "The ID of the failed job."
+                    data:
+                      type: object
+                      description: "The job data payload."
+                    failedReason:
+                      type: string
+                      description: "The reason for the job failure."
+                    timestamp:
+                      type: integer
+                      format: int64
+                      description: "The timestamp of the failed job."
+                    accountCode:
+                      type: string
+                      nullable: true
+                      description: "The account code associated with the job, if available."
+                    username:
+                      type: string
+                      nullable: true
+                      description: "The username associated with the job, if available."
+
+  /api/accounts/reset-logs:
+    get:
+      tags:
+        - Accounts
+      summary: "Retrieve account reset logs."
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "Account reset logs retrieved successfully."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AccountResetLog"
+
+  /api/accounts/update-rank:
+    post:
+      tags:
+        - Accounts
+      summary: "Update the rank for all accounts."
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: "Successfully updated ranks for all accounts."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/accounts/update-expire-at:
+    post:
+      tags:
+        - Accounts
+      summary: "Update the expire at for expired accounts."
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: "Successfully updated expire at for all expired accounts."
+
+  /api/accounts/reset-logs/{id}:
+    put:
+      tags:
+        - Accounts
+      summary: "Update account reset logs."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "The ID of the account reset log to update."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Account"
+      responses:
+        "201":
+          description: "Account reset logs updated successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: "Login a user."
+      description: "Authenticates a user using username and password and returns access and refresh tokens."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: "Successful login."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: "Invalid request body."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: "Invalid credentials."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: "Logout a user."
+      description: "Clears the refresh token cookie to log out the user."
+      responses:
+        "200":
+          description: "Logged out successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogoutResponse"
+
+  /api/auth/validate-token:
+    get:
+      tags:
+        - Authentication
+      summary: "Validate an access token."
+      description: "Validates the provided access token from the Authorization header."
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: "Bearer token in the format 'Bearer {token}'."
+      responses:
+        "200":
+          description: "Token is valid."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+        "401":
+          description: "Invalid token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/auth/refresh-token:
+    post:
+      tags:
+        - Authentication
+      summary: "Refresh the access token."
+      description: "Uses the refresh token from cookies to generate a new access token."
+      responses:
+        "200":
+          description: "New access token generated."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshResponse"
+        "403":
+          description: "Session timed out or invalid refresh token."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/price-tiers:
+    get:
+      tags:
+        - Price Tiers
+      summary: "Retrieve a paginated list of price tiers."
+      security:
+        - bearerAuth: []
+      description: "Returns a list of price tiers along with pagination metadata. Optionally filters by a search query."
+      parameters:
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: string
+          description: "The page number for pagination."
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: string
+          description: "The number of items per page."
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+          description: "Optional search query."
+      responses:
+        "200":
+          description: "A list of price tiers with pagination metadata."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PriceTier"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+    post:
+      tags:
+        - Price Tiers
+      summary: "Create a new price tier."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceTier"
+      responses:
+        "201":
+          description: "Price tier created successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/price-tiers/{id}:
+    get:
+      tags:
+        - Price Tiers
+      summary: "Retrieve a price tier by ID."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "The unique identifier of the price tier."
+      responses:
+        "200":
+          description: "The details of the price tier."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/PriceTier"
+    put:
+      tags:
+        - Price Tiers
+      summary: "Update an existing price tier."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "The ID of the price tier to update."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceTier"
+      responses:
+        "201":
+          description: "Price tier updated successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+    delete:
+      tags:
+        - Price Tiers
+      summary: "Delete multiple price tiers."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: number
+      responses:
+        "204":
+          description: "Price tiers deleted successfully."
+
+  /api/statistics:
+    get:
+      tags:
+        - Statistics
+      summary: "Retrieve account statistics."
+      security:
+        - bearerAuth: []
+      description: "Returns statistics on account availability and calculates the rented ratio."
+      responses:
+        "200":
+          description: "Statistics successfully retrieved."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Statistic"
+
+  /api/upload:
+    post:
+      tags:
+        - Uploads
+      summary: "Upload image(s)."
+      security:
+        - bearerAuth: []
+      description: "Accepts one or more image files uploaded via multipart/form-data and returns the uploaded image information."
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "200":
+          description: "Image(s) uploaded successfully."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ImageUpload"
+        "400":
+          description: "No files uploaded or invalid request."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"

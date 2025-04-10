@@ -4,8 +4,9 @@ type LoginRequest = {
 };
 
 type LoginResponse = {
-  accessToken: string;
   username: string;
+  accessToken: string;
+  refreshToken: string;
 };
 
 type ValidateResponse = {

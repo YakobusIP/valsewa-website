@@ -17,93 +17,9 @@ type TokenPayload = {
   username: string;
 };
 
-/**
- * @openapi
- * components:
- *   schemas:
- *     TokenPayload:
- *       type: object
- *       properties:
- *         username:
- *           type: string
- *
- *     AuthResponse:
- *       type: object
- *       properties:
- *         accessToken:
- *           type: string
- *         username:
- *           type: string
- *
- *     LogoutResponse:
- *       type: object
- *       properties:
- *         message:
- *           type: string
- *
- *     RefreshResponse:
- *       type: object
- *       properties:
- *         accessToken:
- *           type: string
- *
- *     ErrorResponse:
- *       type: object
- *       properties:
- *         error:
- *           type: string
- *   securitySchemes:
- *     bearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- */
-
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  /**
-   * @openapi
-   * /api/auth/login:
-   *   post:
-   *     tags:
-   *       - Authentication
-   *     summary: Login a user.
-   *     description: Authenticates a user using username and password and returns access and refresh tokens.
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *             required:
-   *               - username
-   *               - password
-   *             properties:
-   *               username:
-   *                 type: string
-   *               password:
-   *                 type: string
-   *     responses:
-   *       200:
-   *         description: Successful login.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/AuthResponse'
-   *       400:
-   *         description: Invalid request body.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   *       401:
-   *         description: Invalid credentials.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   */
   login = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { username, password } = req.body;
@@ -121,23 +37,7 @@ export class AuthController {
           expiresIn: env.REFRESH_TOKEN_DURATION as StringValue
         });
 
-        const isProduction = env.NODE_ENV === "production";
-
-        res.cookie("refreshToken", refreshToken, {
-          httpOnly: true,
-          secure: isProduction,
-          sameSite: isProduction ? "none" : "lax",
-          domain: isProduction ? ".valsewa.com" : undefined
-        });
-
-        res.cookie("accessToken", accessToken, {
-          httpOnly: true,
-          secure: isProduction,
-          sameSite: isProduction ? "none" : "lax",
-          domain: isProduction ? ".valsewa.com" : undefined
-        });
-
-        res.status(200).json({ username });
+        res.status(200).json({ accessToken, refreshToken, username });
       } else {
         throw new UnauthorizedError("Invalid credentials!");
       }
@@ -154,95 +54,32 @@ export class AuthController {
     }
   };
 
-  /**
-   * @openapi
-   * /api/auth/logout:
-   *   post:
-   *     tags:
-   *       - Authentication
-   *     summary: Logout a user.
-   *     description: Clears the refresh token cookie to log out the user.
-   *     responses:
-   *       200:
-   *         description: Logged out successfully.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/LogoutResponse'
-   */
+  // TODO: add token version in the token so we can track which refresh token is allowed
   logout = async (_: Request, res: Response) => {
-    const isProduction = env.NODE_ENV === "production";
-
-    res.clearCookie("accessToken", {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
-      domain: isProduction ? ".valsewa.com" : undefined
-    });
-
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "none" : "lax",
-      domain: isProduction ? ".valsewa.com" : undefined
-    });
     return res.status(200).json({ message: "Logged out successfully!" });
   };
 
-  /**
-   * @openapi
-   * /api/auth/validate-token:
-   *   get:
-   *     tags:
-   *       - Authentication
-   *     summary: Validate an access token.
-   *     description: Validates the provided access token from the Authorization header.
-   *     parameters:
-   *       - in: header
-   *         name: Authorization
-   *         required: true
-   *         schema:
-   *           type: string
-   *         description: Bearer token in the format "Bearer {token}".
-   *     responses:
-   *       200:
-   *         description: Token is valid.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               type: object
-   *               properties:
-   *                 username:
-   *                   type: string
-   *       401:
-   *         description: Invalid token.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   */
   validateToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const token = req.cookies.accessToken;
+      const authHeader = req.headers["authorization"];
+
+      if (!authHeader) {
+        throw new UnauthorizedError("Access denied. No token provided!");
+      }
+
+      const token = authHeader.split(" ")[1];
 
       if (!token) throw new UnauthorizedError("Invalid token!");
 
-      jwt.verify(
-        token,
-        ACCESS_TOKEN_SECRET,
-        (
-          err: jwt.VerifyErrors | null,
-          decoded: string | jwt.JwtPayload | undefined
-        ) => {
-          if (err) {
-            return res.status(401).json({ error: "Invalid token!" });
-          }
-
-          const payload = decoded as TokenPayload;
-
-          return res.json({ username: payload.username });
+      jwt.verify(token, ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).json({ error: "Invalid token!" });
         }
-      );
+
+        const payload = decoded as TokenPayload;
+
+        return res.json({ username: payload.username });
+      });
     } catch (error) {
       if (error instanceof UnauthorizedError) {
         return next(error);
@@ -251,69 +88,44 @@ export class AuthController {
     }
   };
 
-  /**
-   * @openapi
-   * /api/auth/refresh-token:
-   *   post:
-   *     tags:
-   *       - Authentication
-   *     summary: Refresh the access token.
-   *     description: Uses the refresh token from cookies to generate a new access token.
-   *     responses:
-   *       200:
-   *         description: New access token generated.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/RefreshResponse'
-   *       403:
-   *         description: Session timed out or invalid refresh token.
-   *         content:
-   *           application/json:
-   *             schema:
-   *               $ref: '#/components/schemas/ErrorResponse'
-   */
   refreshToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      const authHeader = req.headers["authorization"];
 
-      if (!refreshToken)
-        throw new ForbiddenError(
-          "Session timed out! Please log back into the website!"
-        );
+      if (!authHeader) {
+        throw new UnauthorizedError("Access denied. No token provided!");
+      }
 
-      jwt.verify(
-        refreshToken as string,
-        REFRESH_TOKEN_SECRET,
-        (err, decoded) => {
-          if (err)
-            return next(
-              new ForbiddenError(
-                "Invalid token! Please log back into the website!"
-              )
-            );
+      const token = authHeader.split(" ")[1];
 
-          const payload = decoded as TokenPayload;
-
-          const accessToken = jwt.sign(
-            { username: payload.username },
-            ACCESS_TOKEN_SECRET,
-            {
-              expiresIn: env.ACCESS_TOKEN_DURATION as StringValue
-            }
+      jwt.verify(token, REFRESH_TOKEN_SECRET, (err, decoded) => {
+        if (err)
+          return next(
+            new ForbiddenError(
+              "Invalid token! Please log back into the website!"
+            )
           );
 
-          const isProduction = process.env.NODE_ENV === "production";
-          res.cookie("accessToken", accessToken, {
-            httpOnly: true,
-            secure: isProduction,
-            sameSite: isProduction ? "none" : "lax",
-            domain: isProduction ? ".valsewa.com" : undefined
-          });
+        const payload = decoded as TokenPayload;
 
-          return res.status(200).end();
-        }
-      );
+        const accessToken = jwt.sign(
+          { username: payload.username },
+          ACCESS_TOKEN_SECRET,
+          {
+            expiresIn: env.ACCESS_TOKEN_DURATION as StringValue
+          }
+        );
+
+        const refreshToken = jwt.sign(
+          { username: payload.username },
+          REFRESH_TOKEN_SECRET,
+          {
+            expiresIn: env.REFRESH_TOKEN_DURATION as StringValue
+          }
+        );
+
+        return res.status(200).json({ accessToken, refreshToken });
+      });
     } catch (error) {
       if (error instanceof ForbiddenError) {
         return next(error);
