@@ -3,9 +3,10 @@ import { ApiResponseError } from "@/types/api.type";
 import axios, { AxiosError, AxiosInstance } from "axios";
 import type { AxiosRequestConfig } from "axios";
 
+let accessToken: string | null = null;
 let isRefreshing = false;
 let failedQueue: Array<{
-  resolve: () => void;
+  resolve: (value: string) => void;
   reject: (error: unknown) => void;
 }> = [];
 
@@ -14,24 +15,43 @@ interface CustomAxiosRequestConfig extends AxiosRequestConfig {
 }
 
 const interceptedAxios: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_AXIOS_BASE_URL,
-  withCredentials: true
+  baseURL: import.meta.env.VITE_AXIOS_BASE_URL
 });
+
+export const setAccessToken = (token: string | null) => {
+  if (token) {
+    accessToken = token;
+    interceptedAxios.defaults.headers.common["Authorization"] =
+      `Bearer ${token}`;
+  } else {
+    delete interceptedAxios.defaults.headers.common["Authorization"];
+  }
+};
 
 /**
  * Processes the queue of failed requests after token refresh.
  * @param error Any error that occurred during the refresh.
  */
-const processQueue = (error: unknown) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach((promise) => {
     if (error) {
       promise.reject(error);
-    } else {
-      promise.resolve();
+    } else if (token) {
+      promise.resolve(token);
     }
   });
   failedQueue = [];
 };
+
+interceptedAxios.interceptors.request.use(
+  (config) => {
+    if (accessToken) {
+      config.headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 interceptedAxios.interceptors.response.use(
   (response) => {
@@ -53,10 +73,13 @@ interceptedAxios.interceptors.response.use(
 
       if (error.response.status === 401) {
         if (isRefreshing) {
-          return new Promise<void>((resolve, reject) => {
+          return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
           })
-            .then(() => {
+            .then((token) => {
+              if (originalRequest.headers) {
+                originalRequest.headers["Authorization"] = `Bearer ${token}`;
+              }
               return interceptedAxios(originalRequest);
             })
             .catch((err) => {
@@ -68,20 +91,36 @@ interceptedAxios.interceptors.response.use(
       isRefreshing = true;
 
       return new Promise((resolve, reject) => {
+        const refreshToken = localStorage.getItem("refreshToken");
+
+        if (!refreshToken) reject(new Error("No refresh token available"));
         axios
           .post(
             `${import.meta.env.VITE_AXIOS_BASE_URL}/api/auth/refresh-token`,
             null,
             {
-              withCredentials: true
+              headers: {
+                Authorization: `Bearer ${refreshToken}`
+              }
             }
           )
-          .then(() => {
-            processQueue(null);
+          .then((response) => {
+            const newAccessToken = response.data.accessToken;
+            setAccessToken(newAccessToken);
+
+            const newRefreshToken = response.data.refreshToken;
+            localStorage.setItem("refreshToken", newRefreshToken);
+
+            processQueue(null, newAccessToken);
+            if (originalRequest.headers) {
+              originalRequest.headers["Authorization"] =
+                `Bearer ${newAccessToken}`;
+            }
             resolve(interceptedAxios(originalRequest));
           })
           .catch((refreshError) => {
-            processQueue(refreshError);
+            localStorage.removeItem("refreshToken");
+            processQueue(refreshError, null);
             reject(refreshError);
           })
           .finally(() => {

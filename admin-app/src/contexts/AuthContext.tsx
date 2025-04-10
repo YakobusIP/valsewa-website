@@ -12,6 +12,8 @@ import { toast } from "@/hooks/useToast";
 
 import { loginFormSchema } from "@/types/zod.type";
 
+import { setAccessToken } from "@/lib/axios";
+
 import { useLocation, useNavigate } from "react-router";
 import { z } from "zod";
 
@@ -42,6 +44,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsLoadingLogin(true);
     try {
       const response = await authService.login(values);
+
+      setAccessToken(response.accessToken);
+      localStorage.setItem("refreshToken", response.refreshToken);
+
       setIsAuthenticated(true);
       setUsername(response.username);
       navigate("/dashboard");
