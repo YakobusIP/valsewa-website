@@ -84,100 +84,100 @@ export const accountColumns = (
       accessorKey: "currentBookingDate",
       header: "Current Booking Date",
       cell: ({ getValue }) => {
-  const raw = getValue() as unknown;
+        const raw = getValue() as unknown;
 
-  let date: Date | null = null;
+        let date: Date | null = null;
 
-  if (raw instanceof Date) {
-    date = raw;
-  } else if (typeof raw === "string" || typeof raw === "number") {
-    const parsed = new Date(raw);
-    if (!isNaN(parsed.getTime())) {
-      date = parsed;
-    }
-  }
+        if (raw instanceof Date) {
+          date = raw;
+        } else if (typeof raw === "string" || typeof raw === "number") {
+          const parsed = new Date(raw);
+          if (!isNaN(parsed.getTime())) {
+            date = parsed;
+          }
+        }
 
-  if (!date) {
-    return "-";
-  }
+        if (!date) {
+          return "-";
+        }
 
-  return format(date, "dd MMMM yyyy 'at' HH:mm");
-},
+        return format(date, "dd MMMM yyyy 'at' HH:mm");
+      },
       size: 200
     },
     {
       accessorKey: "currentExpireAt",
       header: "Current Expire At",
       cell: ({ getValue }) => {
-  const raw = getValue() as unknown;
+        const raw = getValue() as unknown;
 
-  let date: Date | null = null;
+        let date: Date | null = null;
 
-  if (raw instanceof Date) {
-    date = raw;
-  } else if (typeof raw === "string" || typeof raw === "number") {
-    const parsed = new Date(raw);
-    if (!isNaN(parsed.getTime())) {
-      date = parsed;
-    }
-  }
+        if (raw instanceof Date) {
+          date = raw;
+        } else if (typeof raw === "string" || typeof raw === "number") {
+          const parsed = new Date(raw);
+          if (!isNaN(parsed.getTime())) {
+            date = parsed;
+          }
+        }
 
-  if (!date) {
-    return "-";
-  }
+        if (!date) {
+          return "-";
+        }
 
-  return format(date, "dd MMMM yyyy 'at' HH:mm");
-},
+        return format(date, "dd MMMM yyyy 'at' HH:mm");
+      },
       size: 200
     },
     {
       accessorKey: "nextBookingDate",
       header: "Next Booking Date",
       cell: ({ getValue }) => {
-  const raw = getValue() as unknown;
+        const raw = getValue() as unknown;
 
-  let date: Date | null = null;
+        let date: Date | null = null;
 
-  if (raw instanceof Date) {
-    date = raw;
-  } else if (typeof raw === "string" || typeof raw === "number") {
-    const parsed = new Date(raw);
-    if (!isNaN(parsed.getTime())) {
-      date = parsed;
-    }
-  }
+        if (raw instanceof Date) {
+          date = raw;
+        } else if (typeof raw === "string" || typeof raw === "number") {
+          const parsed = new Date(raw);
+          if (!isNaN(parsed.getTime())) {
+            date = parsed;
+          }
+        }
 
-  if (!date) {
-    return "-";
-  }
+        if (!date) {
+          return "-";
+        }
 
-  return format(date, "dd MMMM yyyy 'at' HH:mm");
-},
+        return format(date, "dd MMMM yyyy 'at' HH:mm");
+      },
       size: 200
     },
     {
       accessorKey: "nextExpireAt",
       header: "Next Expire At",
       cell: ({ getValue }) => {
-  const raw = getValue() as unknown;
+        const raw = getValue() as unknown;
 
-  let date: Date | null = null;
+        let date: Date | null = null;
 
-  if (raw instanceof Date) {
-    date = raw;
-  } else if (typeof raw === "string" || typeof raw === "number") {
-    const parsed = new Date(raw);
-    if (!isNaN(parsed.getTime())) {
-      date = parsed;
-    }
-  }
+        if (raw instanceof Date) {
+          date = raw;
+        } else if (typeof raw === "string" || typeof raw === "number") {
+          const parsed = new Date(raw);
+          if (!isNaN(parsed.getTime())) {
+            date = parsed;
+          }
+        }
 
-  if (!date) {
-    return "-";
-  }
+        if (!date) {
+          return "-";
+        }
 
-  return format(date, "dd MMMM yyyy 'at' HH:mm");
-},
+        return format(date, "dd MMMM yyyy 'at' HH:mm");
+      },
       size: 200
     },
     {

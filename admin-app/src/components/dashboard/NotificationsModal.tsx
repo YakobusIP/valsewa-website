@@ -97,6 +97,25 @@ export default function NotificationsModal({
     }
   };
 
+  const displayResetLogsDate = (raw: unknown) => {
+    let date: Date | null = null;
+
+    if (raw instanceof Date) {
+      date = raw;
+    } else if (typeof raw === "string" || typeof raw === "number") {
+      const parsed = new Date(raw);
+      if (!isNaN(parsed.getTime())) {
+        date = parsed;
+      }
+    }
+
+    if (!date) {
+      return "-";
+    }
+
+    return format(date, "dd MMMM yyyy 'at' HH:mm");
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -188,7 +207,7 @@ export default function NotificationsModal({
                     </Button>
                   </TableCell>
                   <TableCell>
-                    {format(log.previousExpireAt, "dd MMMM yyyy 'at' HH:mm")}
+                    {displayResetLogsDate(log.previousExpireAt)}
                   </TableCell>
                   <TableCell>
                     <Button
