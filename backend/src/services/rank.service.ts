@@ -33,6 +33,12 @@ export class RankService {
           );
         }
 
+        if (error.response.status === 429) {
+          throw new UnprocessableEntityError(
+            "External API rate limit reached!"
+          );
+        }
+
         const errorData = responseData.errors[0];
 
         if (errorData.status === 404) {

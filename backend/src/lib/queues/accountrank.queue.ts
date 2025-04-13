@@ -24,7 +24,7 @@ export const updateAllAccountRankQueue = new Queue<UpdateJobData>(
     },
     limiter: {
       max: 1,
-      duration: 3000
+      duration: 5000
     },
     defaultJobOptions: {
       attempts: 5,
