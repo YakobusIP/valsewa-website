@@ -64,24 +64,97 @@ export class AccountService {
 
   private idTierOrder = ["SSS", "V", "S", "A", "B", "C"];
 
-  private sortAccountsByRank = <T extends { accountRank: string }>(
+  // private sortAccountsByRank = <T extends { accountRank: string }>(
+  //   data: T[],
+  //   direction?: Prisma.SortOrder
+  // ): T[] => {
+  //   return data.sort((a, b) => {
+  //     const rankA = this.valorantRanks.indexOf(a.accountRank);
+  //     const rankB = this.valorantRanks.indexOf(b.accountRank);
+  //     return direction === "asc" ? rankA - rankB : rankB - rankA;
+  //   });
+  // };
+  private sortAccountsByRank = <
+    T extends { accountRank: string; availabilityStatus: string }
+  >(
     data: T[],
     direction?: Prisma.SortOrder
   ): T[] => {
     return data.sort((a, b) => {
+      // Group by availabilityStatus first
+      if (
+        a.availabilityStatus === "AVAILABLE" &&
+        b.availabilityStatus !== "AVAILABLE"
+      )
+        return -1;
+      if (
+        a.availabilityStatus !== "AVAILABLE" &&
+        b.availabilityStatus === "AVAILABLE"
+      )
+        return 1;
+      if (
+        a.availabilityStatus === "IN_USE" &&
+        b.availabilityStatus !== "IN_USE"
+      )
+        return 1;
+      if (
+        a.availabilityStatus !== "IN_USE" &&
+        b.availabilityStatus === "IN_USE"
+      )
+        return -1;
+
+      // Then sort by rank
       const rankA = this.valorantRanks.indexOf(a.accountRank);
       const rankB = this.valorantRanks.indexOf(b.accountRank);
       return direction === "asc" ? rankA - rankB : rankB - rankA;
     });
   };
 
+  // private sortAccountsByPriceTier = <
+  //   T extends { priceTier?: { code?: string } }
+  // >(
+  //   data: T[],
+  //   direction?: Prisma.SortOrder
+  // ): T[] => {
+  //   return data.sort((a, b) => {
+  //     const tierA = this.priceTierOrder.indexOf(a.priceTier?.code ?? "");
+  //     const tierB = this.priceTierOrder.indexOf(b.priceTier?.code ?? "");
+
+  //     if (tierA === -1) return 1;
+  //     if (tierB === -1) return -1;
+
+  //     return direction === "asc" ? tierA - tierB : tierB - tierA;
+  //   });
+  // };
   private sortAccountsByPriceTier = <
-    T extends { priceTier?: { code?: string } }
+    T extends { priceTier?: { code?: string }; availabilityStatus: string }
   >(
     data: T[],
     direction?: Prisma.SortOrder
   ): T[] => {
     return data.sort((a, b) => {
+      // Group by availabilityStatus first
+      if (
+        a.availabilityStatus === "AVAILABLE" &&
+        b.availabilityStatus !== "AVAILABLE"
+      )
+        return -1;
+      if (
+        a.availabilityStatus !== "AVAILABLE" &&
+        b.availabilityStatus === "AVAILABLE"
+      )
+        return 1;
+      if (
+        a.availabilityStatus === "IN_USE" &&
+        b.availabilityStatus !== "IN_USE"
+      )
+        return 1;
+      if (
+        a.availabilityStatus !== "IN_USE" &&
+        b.availabilityStatus === "IN_USE"
+      )
+        return -1;
+
       const tierA = this.priceTierOrder.indexOf(a.priceTier?.code ?? "");
       const tierB = this.priceTierOrder.indexOf(b.priceTier?.code ?? "");
 
@@ -92,36 +165,81 @@ export class AccountService {
     });
   };
 
-  private sortAccountsByIdTier = <T extends { accountCode: string }>(
+  // private sortAccountsByIdTier = <T extends { accountCode: string }>(
+  //   data: T[]
+  // ): T[] => {
+  //   return data.sort((a, b) => {
+  //     const [tierA, rawNumA] = a.accountCode.split("-");
+  //     const [tierB, rawNumB] = b.accountCode.split("-");
+
+  //     // Get the index of the tier in the order list
+  //     const tierIndexA = this.idTierOrder.indexOf(tierA);
+  //     const tierIndexB = this.idTierOrder.indexOf(tierB);
+
+  //     // Compare tier order
+  //     if (tierIndexA !== tierIndexB) return tierIndexA - tierIndexB;
+
+  //     // Check if rawNumA and rawNumB are numbers
+  //     const isNumA = /^\d+$/.test(rawNumA);
+  //     const isNumB = /^\d+$/.test(rawNumB);
+
+  //     if (isNumA && isNumB) {
+  //       // If both are numbers, compare numerically
+  //       return Number(rawNumA) - Number(rawNumB);
+  //     } else if (isNumA) {
+  //       // Numbers should come before letters
+  //       return -1;
+  //     } else if (isNumB) {
+  //       return 1;
+  //     } else {
+  //       // If both are letters, compare alphabetically
+  //       return rawNumA.localeCompare(rawNumB);
+  //     }
+  //   });
+  // };
+  private sortAccountsByIdTier = <
+    T extends { accountCode: string; availabilityStatus: string }
+  >(
     data: T[]
   ): T[] => {
     return data.sort((a, b) => {
+      // Group by availabilityStatus first
+      if (
+        a.availabilityStatus === "AVAILABLE" &&
+        b.availabilityStatus !== "AVAILABLE"
+      )
+        return -1;
+      if (
+        a.availabilityStatus !== "AVAILABLE" &&
+        b.availabilityStatus === "AVAILABLE"
+      )
+        return 1;
+      if (
+        a.availabilityStatus === "IN_USE" &&
+        b.availabilityStatus !== "IN_USE"
+      )
+        return 1;
+      if (
+        a.availabilityStatus !== "IN_USE" &&
+        b.availabilityStatus === "IN_USE"
+      )
+        return -1;
+
       const [tierA, rawNumA] = a.accountCode.split("-");
       const [tierB, rawNumB] = b.accountCode.split("-");
 
-      // Get the index of the tier in the order list
       const tierIndexA = this.idTierOrder.indexOf(tierA);
       const tierIndexB = this.idTierOrder.indexOf(tierB);
 
-      // Compare tier order
       if (tierIndexA !== tierIndexB) return tierIndexA - tierIndexB;
 
-      // Check if rawNumA and rawNumB are numbers
       const isNumA = /^\d+$/.test(rawNumA);
       const isNumB = /^\d+$/.test(rawNumB);
 
-      if (isNumA && isNumB) {
-        // If both are numbers, compare numerically
-        return Number(rawNumA) - Number(rawNumB);
-      } else if (isNumA) {
-        // Numbers should come before letters
-        return -1;
-      } else if (isNumB) {
-        return 1;
-      } else {
-        // If both are letters, compare alphabetically
-        return rawNumA.localeCompare(rawNumB);
-      }
+      if (isNumA && isNumB) return Number(rawNumA) - Number(rawNumB);
+      if (isNumA) return -1;
+      if (isNumB) return 1;
+      return rawNumA.localeCompare(rawNumB);
     });
   };
 
