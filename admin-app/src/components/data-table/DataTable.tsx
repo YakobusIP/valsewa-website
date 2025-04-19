@@ -1,4 +1,4 @@
-import { Dispatch, ReactNode, SetStateAction } from "react";
+import { Dispatch, ReactNode, SetStateAction, memo } from "react";
 
 import DataDeleteButton from "@/components/data-table/DataDeleteButton";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ interface DataTableProps<TData extends Identifiable, TValue> {
   metadata?: MetadataResponse;
 }
 
-export default function DataTable<TData extends Identifiable, TValue>({
+function DataTable<TData extends Identifiable, TValue>({
   leftSideComponent,
   rightSideComponent,
   columns,
@@ -197,3 +197,7 @@ export default function DataTable<TData extends Identifiable, TValue>({
     </div>
   );
 }
+
+const MemoDataTable = memo(DataTable) as typeof DataTable;
+
+export default MemoDataTable;

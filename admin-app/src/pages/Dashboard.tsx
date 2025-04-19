@@ -1,25 +1,16 @@
-import {
-  ChangeEventHandler,
-  Fragment,
-  memo,
-  useCallback,
-  useEffect,
-  useState
-} from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 
 import { accountService } from "@/services/account.service";
 import { statisticService } from "@/services/statistic.service";
 
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
-import LogoutButton from "@/components/dashboard/LogoutButton";
-import NotificationsModal from "@/components/dashboard/NotificationsModal";
+import Navbar from "@/components/dashboard/Navbar";
 import SortComponent from "@/components/dashboard/SortComponent";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
-import VirtualizedDataTable from "@/components/data-table/VirtualizedDataTable";
+import DataTable from "@/components/data-table/DataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
 import PriceTierModal from "@/components/pricetier-management/PriceTierModal";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 import { toast } from "@/hooks/useToast";
 
@@ -29,28 +20,9 @@ import { StatisticResponse } from "@/types/statistic.type";
 
 import { SORT_ORDER } from "@/lib/enums";
 
-import { CirclePlusIcon, SearchIcon } from "lucide-react";
-import { useDebounce } from "use-debounce";
+import { CirclePlusIcon } from "lucide-react";
 
 const PAGINATION_SIZE = 100;
-
-const SearchInput = memo(
-  ({
-    value,
-    onChange
-  }: {
-    value: string;
-    onChange: ChangeEventHandler<HTMLInputElement>;
-  }) => (
-    <Input
-      startIcon={<SearchIcon size={18} className="text-muted-foreground" />}
-      placeholder="Search account..."
-      parentClassName="w-full xl:w-[32rem]"
-      value={value}
-      onChange={onChange}
-    />
-  )
-);
 
 export default function Dashboard() {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
@@ -72,7 +44,6 @@ export default function Dashboard() {
   const [searchAccount, setSearchAccount] = useState("");
   const [sortBy, setSortBy] = useState("id_tier");
   const [sortOrder, setSortOrder] = useState(SORT_ORDER.ASCENDING);
-  const [debouncedSearch] = useDebounce(searchAccount, 1000);
 
   const handleSort = (key: string) => {
     setSortBy(key);
@@ -110,7 +81,7 @@ export default function Dashboard() {
       const response = await accountService.fetchAll(
         accountListPage,
         PAGINATION_SIZE,
-        debouncedSearch,
+        searchAccount,
         sortBy,
         sortOrder
       );
@@ -128,7 +99,7 @@ export default function Dashboard() {
     } finally {
       setIsLoadingAccount(false);
     }
-  }, [accountListPage, debouncedSearch, sortBy, sortOrder]);
+  }, [accountListPage, searchAccount, sortBy, sortOrder]);
 
   const deleteManyAccounts = async () => {
     setIsLoadingDeleteAccount(true);
@@ -218,17 +189,25 @@ export default function Dashboard() {
     document.title = "Dashboard | Valsewa Admin";
   }, []);
 
+  const columns = useMemo(() => accountColumns(resetParent), [resetParent]);
+
   return (
     <Fragment>
-      <main className="relative min-h-[100dvh]">
+      <main className="min-h-[100dvh]">
+        <Navbar
+          onDebounced={(q) => setSearchAccount(q)}
+          failedJobs={failedJobs}
+          resetLogs={resetLogs}
+          resetParent={resetParent}
+        />
         <div className="container flex flex-col mx-auto p-4 xl:p-8 gap-4">
           <h1>Dashboard</h1>
           <StatisticsGrid
             statistics={statistics}
             isLoadingStatistics={isLoadingStatistics}
           />
-          <VirtualizedDataTable
-            columns={accountColumns(resetParent)}
+          <DataTable
+            columns={columns}
             data={accountList}
             rowSelection={selectedAccountRows}
             setRowSelection={setSelectedAccountRows}
@@ -238,13 +217,6 @@ export default function Dashboard() {
             page={accountListPage}
             setPage={setAccountListPage}
             metadata={accountMetadata}
-            height="550px"
-            leftSideComponent={
-              <SearchInput
-                value={searchAccount}
-                onChange={(e) => setSearchAccount(e.target.value)}
-              />
-            }
             rightSideComponent={
               <Fragment>
                 <SortComponent
@@ -263,14 +235,6 @@ export default function Dashboard() {
               </Fragment>
             }
           />
-        </div>
-        <div className="absolute top-4 right-4 flex items-center justify-center gap-4">
-          <NotificationsModal
-            failedJobs={failedJobs}
-            resetLogs={resetLogs}
-            resetParent={resetParent}
-          />
-          <LogoutButton />
         </div>
       </main>
       <AccountDetailModal

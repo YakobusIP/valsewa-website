@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 
 import { accountService } from "@/services/account.service";
 
@@ -33,7 +33,7 @@ type Props = {
   resetParent: () => Promise<void>;
 };
 
-export default function AccountTableAction({ data, resetParent }: Props) {
+export default memo(function AccountTableAction({ data, resetParent }: Props) {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
   const [openCurrentBookingModal, setOpenCurrentBookingModal] = useState(false);
   const [openNextBookingModal, setOpenNextBookingModal] = useState(false);
@@ -46,7 +46,7 @@ export default function AccountTableAction({ data, resetParent }: Props) {
   const nextBookingExist =
     !!data.nextBookingDate && !!data.nextBookingDuration && !!data.nextExpireAt;
 
-  const finishCurrentBooking = async () => {
+  const finishCurrentBooking = useCallback(async () => {
     if (currentBookingExist) {
       try {
         const response = await accountService.finishBooking(data.id);
@@ -67,9 +67,9 @@ export default function AccountTableAction({ data, resetParent }: Props) {
         });
       }
     }
-  };
+  }, [currentBookingExist, data.id, resetParent]);
 
-  const moveNextBookingToCurrent = async () => {
+  const moveNextBookingToCurrent = useCallback(async () => {
     if (nextBookingExist) {
       const payload: Partial<AccountEntityRequest> = {
         currentBookingDate: data.nextBookingDate,
@@ -98,7 +98,14 @@ export default function AccountTableAction({ data, resetParent }: Props) {
         });
       }
     }
-  };
+  }, [
+    data.id,
+    data.nextBookingDate,
+    data.nextBookingDuration,
+    data.nextExpireAt,
+    nextBookingExist,
+    resetParent
+  ]);
 
   return (
     <Fragment>
@@ -137,13 +144,13 @@ export default function AccountTableAction({ data, resetParent }: Props) {
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Booking Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => finishCurrentBooking()}
+              onClick={finishCurrentBooking}
               disabled={!currentBookingExist}
             >
               Finish current booking
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => moveNextBookingToCurrent()}
+              onClick={moveNextBookingToCurrent}
               disabled={!nextBookingExist}
             >
               Move next booking to current
@@ -151,25 +158,31 @@ export default function AccountTableAction({ data, resetParent }: Props) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <AccountDetailModal
-        open={openAccountDetail}
-        onOpenChange={setOpenAccountDetail}
-        mode="edit"
-        data={data}
-        resetParent={resetParent}
-      />
-      <AccountCurrentBookModal
-        open={openCurrentBookingModal}
-        onOpenChange={setOpenCurrentBookingModal}
-        data={data}
-        resetParent={resetParent}
-      />
-      <AccountNextBookModal
-        open={openNextBookingModal}
-        onOpenChange={setOpenNextBookingModal}
-        data={data}
-        resetParent={resetParent}
-      />
+      {openAccountDetail && (
+        <AccountDetailModal
+          open={openAccountDetail}
+          onOpenChange={setOpenAccountDetail}
+          mode="edit"
+          data={data}
+          resetParent={resetParent}
+        />
+      )}
+      {openCurrentBookingModal && (
+        <AccountCurrentBookModal
+          open={openCurrentBookingModal}
+          onOpenChange={setOpenCurrentBookingModal}
+          data={data}
+          resetParent={resetParent}
+        />
+      )}
+      {openNextBookingModal && (
+        <AccountNextBookModal
+          open={openNextBookingModal}
+          onOpenChange={setOpenNextBookingModal}
+          data={data}
+          resetParent={resetParent}
+        />
+      )}
     </Fragment>
   );
-}
+});

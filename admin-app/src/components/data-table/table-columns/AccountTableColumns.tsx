@@ -42,27 +42,27 @@ export const accountColumns = (
         return priceTier.code;
       },
       header: "Price Tier",
-      size: 100
+      size: "auto" as unknown as number
     },
     {
       accessorKey: "accountCode",
       header: "Code",
-      size: 100
+      size: "auto" as unknown as number
     },
     {
       accessorKey: "username",
       header: "Username",
-      size: 200
+      size: "auto" as unknown as number
     },
     {
       accessorKey: "nickname",
       header: "Nickname",
-      size: 200
+      size: "auto" as unknown as number
     },
     {
       accessorKey: "accountRank",
       header: "Rank",
-      size: 150
+      size: "auto" as unknown as number
     },
     {
       accessorKey: "progressStatus",
@@ -78,7 +78,7 @@ export const accountColumns = (
           />
         );
       },
-      size: 150
+      size: "auto" as unknown as number
     },
     {
       accessorKey: "currentBookingDate",
@@ -103,7 +103,7 @@ export const accountColumns = (
 
         return format(date, "dd MMMM yyyy 'at' HH:mm");
       },
-      size: 200
+      size: "auto" as unknown as number
     },
     {
       accessorKey: "currentExpireAt",
@@ -128,7 +128,7 @@ export const accountColumns = (
 
         return format(date, "dd MMMM yyyy 'at' HH:mm");
       },
-      size: 200
+      size: "auto" as unknown as number
     },
     {
       accessorKey: "nextBookingDate",
@@ -153,7 +153,7 @@ export const accountColumns = (
 
         return format(date, "dd MMMM yyyy 'at' HH:mm");
       },
-      size: 200
+      size: "auto" as unknown as number
     },
     {
       accessorKey: "nextExpireAt",
@@ -178,7 +178,7 @@ export const accountColumns = (
 
         return format(date, "dd MMMM yyyy 'at' HH:mm");
       },
-      size: 200
+      size: "auto" as unknown as number
     },
     {
       id: "actions",
