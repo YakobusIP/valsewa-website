@@ -50,7 +50,7 @@ model Account {
 model AccountResetLog {
   id               Int       @id @default(autoincrement())
   accountId        Int
-  account          Account   @relation(fields: [accountId], references: [id])
+  account          Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   previousExpireAt DateTime?
   resetAt          DateTime  @default(now())
 }
