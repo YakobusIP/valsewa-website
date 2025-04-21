@@ -2,7 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { generateFilename } from "../lib/utils";
 import { bucket } from "../lib/storage";
-import { existsSync, unlinkSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "fs";
 import { env } from "../lib/env";
 import path from "path";
 import {
@@ -47,9 +47,10 @@ export class UploadService {
             blobStream.end(file.buffer);
           });
 
-          url = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+          url = `${blob.name}`;
         } else {
-          const localPath = path.join(__dirname, "../uploads", filename);
+          const localPath = path.join(__dirname, "../uploads/", filePath);
+          mkdirSync(path.dirname(localPath), { recursive: true });
 
           try {
             writeFileSync(localPath, file.buffer);
@@ -57,7 +58,7 @@ export class UploadService {
             throw new FileStorageError((error as Error).message);
           }
 
-          url = `http://localhost:${env.PORT}/uploads/${filename}`;
+          url = `${filePath}`;
         }
         return await this.saveImageToDatabase(url);
       } catch (error) {
@@ -85,10 +86,9 @@ export class UploadService {
         throw new NotFoundError("Image not found!");
       }
 
-      const urlParts = reviewImage.imageUrl.split("/");
+      const filename = reviewImage.imageUrl;
 
       if (env.NODE_ENV === "production") {
-        const filename = `account-images/${urlParts[urlParts.length - 1]}`;
         const file = bucket.file(filename);
         try {
           await file.delete();
@@ -96,7 +96,6 @@ export class UploadService {
           throw new FileStorageError((error as Error).message);
         }
       } else {
-        const filename = urlParts[urlParts.length - 1];
         const localPath = path.join(__dirname, "../uploads", filename);
         try {
           if (existsSync(localPath)) {

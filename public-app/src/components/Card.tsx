@@ -176,22 +176,24 @@ const Card: React.FC<CardProps> = ({ data }) => {
                 <figure className="relative w-full sm:hidden">
                   <AspectRatio ratio={16 / 16}>
                     <Image
-                      src={item.thumbnail.imageUrl}
+                      src={`/${item.thumbnail.imageUrl}`}
                       alt="Thumbnail"
                       fill
                       className="object-cover rounded-t-xl w-full"
-                      unoptimized
+                      loading="lazy"
+                      sizes="80vw"
                     />
                   </AspectRatio>
                 </figure>
                 <figure className="relative w-full max-sm:hidden">
                   <AspectRatio ratio={16 / 9}>
                     <Image
-                      src={item.thumbnail.imageUrl}
+                      src={`/${item.thumbnail.imageUrl}`}
                       alt="Thumbnail"
                       fill
                       className="object-cover rounded-t-xl w-full"
-                      unoptimized
+                      loading="lazy"
+                      sizes="80vw"
                     />
                   </AspectRatio>
                 </figure>
