@@ -12,7 +12,7 @@ import {
   CarouselPrevious
 } from "@/components/ui/carousel";
 
-import { AccountEntity } from "@/types/account.type";
+import { AccountEntity, CarouselSlide } from "@/types/account.type";
 
 import { useAccountController } from "@/controllers/useAccountController";
 import Image from "next/image";
@@ -20,8 +20,9 @@ import { FaArrowUp } from "react-icons/fa";
 
 interface Props {
   initialAccount: AccountEntity[];
+  initialCarousel: CarouselSlide[];
 }
-export default function Home({ initialAccount }: Props) {
+export default function Home({ initialAccount, initialCarousel }: Props) {
   const {
     accountList,
     setSearchAccount,
@@ -31,7 +32,7 @@ export default function Home({ initialAccount }: Props) {
     getSortLabel
   } = useAccountController(initialAccount);
 
-  const images = ["/hero/Hero1.png", "/hero/Hero2.png", "/hero/Hero3.png"];
+  console.log(initialCarousel);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 300, behavior: "smooth" });
@@ -122,12 +123,13 @@ export default function Home({ initialAccount }: Props) {
             <div className="w-full md:px-14 px-7">
               <Carousel className="shadow-lg rounded-2xl overflow-hidden">
                 <CarouselContent>
-                  {images?.map((image, index) => (
+                  {initialCarousel?.map((image, index) => (
                     <CarouselItem key={index}>
-                      <div className="h-full w-full relative max-md:hidden">
+                      <div className="h-full w-full relative max-lg:hidden">
                         <AspectRatio ratio={12 / 3}>
                           <Image
-                            src={image}
+                            loading="lazy"
+                            src={image.image123.imageUrl}
                             alt="Carousel Image"
                             fill
                             className="object-cover rounded-2xl"
@@ -135,10 +137,11 @@ export default function Home({ initialAccount }: Props) {
                           />
                         </AspectRatio>
                       </div>
-                      <div className="h-full w-full relative max-sm:hidden md:hidden">
+                      <div className="h-full w-full relative max-sm:hidden lg:hidden">
                         <AspectRatio ratio={12 / 6}>
                           <Image
-                            src={image}
+                            loading="lazy"
+                            src={image.image126.imageUrl}
                             alt="Carousel Image"
                             fill
                             className="object-cover rounded-2xl"
@@ -149,7 +152,8 @@ export default function Home({ initialAccount }: Props) {
                       <div className="h-full w-full relative sm:hidden">
                         <AspectRatio ratio={12 / 9}>
                           <Image
-                            src={image}
+                            loading="lazy"
+                            src={image.image129.imageUrl}
                             alt="Carousel Image"
                             fill
                             className="object-cover rounded-2xl"

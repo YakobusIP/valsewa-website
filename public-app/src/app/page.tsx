@@ -1,4 +1,4 @@
-import { fetchAccounts } from "@/services/accountService";
+import { fetchAccounts, fetchCarousel } from "@/services/accountService";
 
 import type { Metadata } from "next";
 
@@ -23,7 +23,10 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const initialAccount = await fetchAccounts("", "asc", "id_tier");
-  return <Home initialAccount={initialAccount} />;
+  const initialCarousel = await fetchCarousel();
+  return (
+    <Home initialAccount={initialAccount} initialCarousel={initialCarousel} />
+  );
 }
 
 export const dynamic = "force-dynamic";
