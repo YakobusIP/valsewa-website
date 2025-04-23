@@ -47,7 +47,7 @@ export class UploadService {
             blobStream.end(file.buffer);
           });
 
-          url = `${blob.name}`;
+          url = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
         } else {
           const localPath = path.join(__dirname, "../uploads/", filePath);
           mkdirSync(path.dirname(localPath), { recursive: true });
@@ -58,7 +58,7 @@ export class UploadService {
             throw new FileStorageError((error as Error).message);
           }
 
-          url = `${filePath}`;
+          url = `http://localhost:${env.PORT}/uploads/${filePath}`;
         }
         return await this.saveImageToDatabase(url);
       } catch (error) {
@@ -76,7 +76,7 @@ export class UploadService {
     return await Promise.all(uploadPromises);
   }
 
-  async deleteImage(id: number) {
+  async deleteImage(id: number, folder: string) {
     try {
       const reviewImage = await prisma.imageUpload.findUnique({
         where: { id }
@@ -86,7 +86,8 @@ export class UploadService {
         throw new NotFoundError("Image not found!");
       }
 
-      const filename = reviewImage.imageUrl;
+      const urlParts = reviewImage.imageUrl.split("/");
+      const filename = `${folder}/${urlParts[urlParts.length - 1]}`;
 
       if (env.NODE_ENV === "production") {
         const file = bucket.file(filename);

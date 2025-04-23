@@ -88,13 +88,13 @@ const formSchema = z.object({
     ),
   thumbnail: z.union([
     z.instanceof(File, { message: "Thumbnail is required" }),
-    z.object({ id: z.number(), imageUrl: z.string() })
+    z.object({ id: z.number(), imageUrl: z.string().url() })
   ]),
   otherImages: z
     .array(
       z.union([
         z.instanceof(File),
-        z.object({ id: z.number(), imageUrl: z.string() })
+        z.object({ id: z.number(), imageUrl: z.string().url() })
       ])
     )
     .optional()
@@ -839,7 +839,7 @@ export default function AccountDetailModal({
                       ) : typeof field.value === "object" ? (
                         <img
                           loading="lazy"
-                          src={`https://storage.googleapis.com/${import.meta.env.VITE_GCS_BUCKET}/${field.value.imageUrl}`}
+                          src={field.value.imageUrl}
                           alt="Thumbnail Preview"
                           className="object-cover rounded-md border"
                         />
@@ -891,7 +891,7 @@ export default function AccountDetailModal({
                           ) : typeof file === "object" ? (
                             <img
                               loading="lazy"
-                              src={`https://storage.googleapis.com/${import.meta.env.VITE_GCS_BUCKET}/${file.imageUrl}`}
+                              src={file.imageUrl}
                               alt={`image-${idx}`}
                               className="object-cover rounded-md border"
                             />

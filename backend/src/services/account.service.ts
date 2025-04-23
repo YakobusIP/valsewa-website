@@ -505,7 +505,10 @@ export class AccountService {
           currentAccount.thumbnail &&
           currentAccount.thumbnail.id !== thumbnail
         ) {
-          await this.uploadService.deleteImage(currentAccount.thumbnail.id);
+          await this.uploadService.deleteImage(
+            currentAccount.thumbnail.id,
+            "account-images"
+          );
         }
 
         updateData.thumbnail = { connect: { id: thumbnail } };
@@ -522,7 +525,7 @@ export class AccountService {
         );
 
         const deletePromises = imagesToDelete.map((id) =>
-          this.uploadService.deleteImage(id)
+          this.uploadService.deleteImage(id, "account-images")
         );
 
         await Promise.all(deletePromises);
@@ -640,14 +643,14 @@ export class AccountService {
 
       if (thumbnailIds.length > 0) {
         const thumbnailDeletionPromises = thumbnailIds.map((id) =>
-          this.uploadService.deleteImage(id)
+          this.uploadService.deleteImage(id, "account-images")
         );
         await Promise.all(thumbnailDeletionPromises);
       }
 
       if (otherImageIds.length > 0) {
         const otherImageDeletionPromises = otherImageIds.map((id) =>
-          this.uploadService.deleteImage(id)
+          this.uploadService.deleteImage(id, "account-images")
         );
         await Promise.all(otherImageDeletionPromises);
       }

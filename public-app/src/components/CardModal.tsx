@@ -102,11 +102,11 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                   <AspectRatio ratio={16 / 9}>
                     <Image
                       loading="lazy"
-                      src={`/${image.imageUrl}`}
+                      src={image.imageUrl}
                       alt="Content Image"
                       fill
                       className="object-cover rounded-t-xl"
-                      sizes="(max-width: 768px) 100vw, 80vw"
+                      unoptimized
                     />
                   </AspectRatio>
                 </div>

@@ -87,11 +87,7 @@ export default function CarouselManagementModal() {
                   <Card>
                     <CardContent className="flex aspect-video items-center justify-center p-6 relative">
                       <img
-                        src={
-                          slide.image126.imageUrl
-                            ? `http://localhost:5000/uploads/${slide.image126.imageUrl}`
-                            : "/1200x600.svg"
-                        }
+                        src={slide.image126.imageUrl || "/1200x600.svg"}
                         alt={`Slide ${slide.id}`}
                         className="rounded-md object-cover w-full h-full"
                       />

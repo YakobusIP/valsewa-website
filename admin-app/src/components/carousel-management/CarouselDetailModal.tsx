@@ -53,9 +53,9 @@ export default function CarouselDetailModal({
   useEffect(() => {
     if (slide) {
       setPreviews({
-        "123": `http://localhost:5000/uploads/${slide.image123.imageUrl}`,
-        "126": `http://localhost:5000/uploads/${slide.image126.imageUrl}`,
-        "129": `http://localhost:5000/uploads/${slide.image129.imageUrl}`
+        "123": slide.image123.imageUrl,
+        "126": slide.image126.imageUrl,
+        "129": slide.image129.imageUrl
       });
     } else {
       setPreviews({});

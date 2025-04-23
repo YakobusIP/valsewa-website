@@ -76,7 +76,9 @@ export class CarouselSlideService {
 
       if (toDelete.length) {
         await Promise.all(
-          toDelete.map((oldId) => this.uploadService.deleteImage(oldId))
+          toDelete.map((oldId) =>
+            this.uploadService.deleteImage(oldId, "carousel-images")
+          )
         );
       }
 
@@ -109,9 +111,18 @@ export class CarouselSlideService {
       const result = await prisma.carouselSlide.deleteMany({ where: { id } });
 
       await Promise.all([
-        this.uploadService.deleteImage(currentSlide.image123Id),
-        this.uploadService.deleteImage(currentSlide.image126Id),
-        this.uploadService.deleteImage(currentSlide.image129Id)
+        this.uploadService.deleteImage(
+          currentSlide.image123Id,
+          "carousel-images"
+        ),
+        this.uploadService.deleteImage(
+          currentSlide.image126Id,
+          "carousel-images"
+        ),
+        this.uploadService.deleteImage(
+          currentSlide.image129Id,
+          "carousel-images"
+        )
       ]);
 
       return result;
