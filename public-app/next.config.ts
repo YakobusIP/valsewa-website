@@ -4,10 +4,16 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "storage.googleapis.com",
-        port: "",
-        pathname: `/${process.env.NEXT_PUBLIC_GCS_BUCKET}/account-images/**`
+        protocol: process.env.NODE_ENV === "production" ? "https" : "http",
+        hostname:
+          process.env.NODE_ENV === "production"
+            ? "storage.googleapis.com"
+            : "localhost",
+        port: process.env.NODE_ENV === "production" ? "" : "5000",
+        pathname:
+          process.env.NODE_ENV === "production"
+            ? `/${process.env.NEXT_PUBLIC_GCS_BUCKET}/account-images/**`
+            : undefined
       }
     ],
     minimumCacheTTL: 60 * 60 * 24 * 90
@@ -16,7 +22,17 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/account-images/:path*",
-        destination: `https://storage.googleapis.com/${process.env.NEXT_PUBLIC_GCS_BUCKET}/account-images/:path*`
+        destination:
+          process.env.NODE_ENV === "production"
+            ? `https://storage.googleapis.com/${process.env.NEXT_PUBLIC_GCS_BUCKET}/account-images/:path*`
+            : `http://localhost:5000/uploads/account-images/:path*`
+      },
+      {
+        source: "/carousel-images/:path*",
+        destination:
+          process.env.NODE_ENV === "production"
+            ? `https://storage.googleapis.com/${process.env.NEXT_PUBLIC_GCS_BUCKET}/carousel-images/:path*`
+            : `http://localhost:5000/uploads/carousel-images/:path*`
       }
     ];
   },
