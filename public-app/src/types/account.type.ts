@@ -38,6 +38,13 @@ type AccountEntity = {
   nickname: string;
 };
 
+export type CarouselSlide = {
+  id: number;
+  image123: UploadResponse;
+  image126: UploadResponse;
+  image129: UploadResponse;
+};
+
 type AccountEntityRequest = Omit<
   AccountEntity,
   | "id"
