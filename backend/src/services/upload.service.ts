@@ -25,11 +25,11 @@ export class UploadService {
     }
   }
 
-  async uploadImage(files: Express.Multer.File[]) {
+  async uploadImage(files: Express.Multer.File[], folder: string) {
     const uploadPromises = files.map(async (file) => {
       try {
         const filename = generateFilename(file.originalname);
-        const filePath = `account-images/${filename}`;
+        const filePath = `${folder}/${filename}`;
         let url: string;
 
         if (env.NODE_ENV === "production") {

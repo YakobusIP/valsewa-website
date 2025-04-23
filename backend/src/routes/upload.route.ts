@@ -18,10 +18,10 @@ class UploadRouter {
 
   private initializeRoutes() {
     this.router.post(
-      "/",
+      "/:folder",
       authMiddleware,
       uploadMiddleware.array("images"),
-      this.uploadController.uploadImage
+      this.uploadController.uploadAccountImages
     );
   }
 }

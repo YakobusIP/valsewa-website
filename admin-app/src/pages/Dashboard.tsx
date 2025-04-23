@@ -3,6 +3,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { accountService } from "@/services/account.service";
 import { statisticService } from "@/services/statistic.service";
 
+import CarouselManagementModal from "@/components/carousel-management/CarouselManagementModal";
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
 import Navbar from "@/components/dashboard/Navbar";
 import SortComponent from "@/components/dashboard/SortComponent";
@@ -225,6 +226,7 @@ export default function Dashboard() {
                   handleSort={handleSort}
                 />
                 <PriceTierModal />
+                <CarouselManagementModal />
                 <Button
                   className="w-full xl:w-fit"
                   onClick={() => setOpenAccountDetail(true)}
