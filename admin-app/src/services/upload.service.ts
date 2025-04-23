@@ -5,7 +5,7 @@ import { handleAxiosError, interceptedAxios } from "@/lib/axios";
 const BASE_UPLOAD_URL = "/api/upload";
 
 const createUploadService = () => {
-  const uploadImages = async (images: File[]) => {
+  const uploadAccountImages = async (images: File[]) => {
     try {
       const formData = new FormData();
       images.forEach((image) => {
@@ -13,7 +13,7 @@ const createUploadService = () => {
       });
 
       const response = await interceptedAxios.post<UploadResponse[]>(
-        `${BASE_UPLOAD_URL}`,
+        `${BASE_UPLOAD_URL}/account-images`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" }
@@ -26,7 +26,28 @@ const createUploadService = () => {
     }
   };
 
-  return { uploadImages };
+  const uploadCarouselImages = async (images: File[]) => {
+    try {
+      const formData = new FormData();
+      images.forEach((image) => {
+        formData.append("images", image);
+      });
+
+      const response = await interceptedAxios.post<UploadResponse[]>(
+        `${BASE_UPLOAD_URL}/carousel-images`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" }
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
+  return { uploadAccountImages, uploadCarouselImages };
 };
 
 const uploadService = createUploadService();

@@ -75,12 +75,32 @@ model ImageUpload {
 
   account   Account? @relation("OtherImages", fields: [accountId], references: [id])
   accountId Int?
+
+  slide123Of    CarouselSlide?   @relation("Slide123")
+  slide126Of    CarouselSlide?   @relation("Slide126")
+  slide129Of  CarouselSlide?   @relation("Slide129")
 }
 
 model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CarouselSlide {
+  id        Int      @id @default(autoincrement())
+
+  image123 ImageUpload @relation("Slide123", fields: [image123Id], references: [id])
+  image123Id Int @unique
+
+  image126 ImageUpload @relation("Slide126", fields: [image126Id], references: [id])
+  image126Id Int@unique
+
+  image129 ImageUpload @relation("Slide129", fields: [image129Id], references: [id])
+  image129Id Int@unique
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

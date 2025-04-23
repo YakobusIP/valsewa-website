@@ -88,13 +88,13 @@ const formSchema = z.object({
     ),
   thumbnail: z.union([
     z.instanceof(File, { message: "Thumbnail is required" }),
-    z.object({ id: z.number(), imageUrl: z.string() })
+    z.object({ id: z.number(), imageUrl: z.string().url() })
   ]),
   otherImages: z
     .array(
       z.union([
         z.instanceof(File),
-        z.object({ id: z.number(), imageUrl: z.string() })
+        z.object({ id: z.number(), imageUrl: z.string().url() })
       ])
     )
     .optional()
@@ -352,8 +352,9 @@ export default function AccountDetailModal({
 
     let thumbnail_id: number;
     if (values.thumbnail instanceof File) {
-      thumbnail_id = (await uploadService.uploadImages([values.thumbnail]))[0]
-        .id;
+      thumbnail_id = (
+        await uploadService.uploadAccountImages([values.thumbnail])
+      )[0].id;
     } else {
       thumbnail_id = values.thumbnail.id;
     }
@@ -372,7 +373,7 @@ export default function AccountDetailModal({
 
     if (imagesToUpload.length > 0) {
       const uploadedIds = (
-        await uploadService.uploadImages(imagesToUpload)
+        await uploadService.uploadAccountImages(imagesToUpload)
       ).map((response) => response.id);
       otherImageIds.push(...unchangedImageIds, ...uploadedIds);
     } else {
@@ -830,13 +831,15 @@ export default function AccountDetailModal({
                     <div className="mt-2 w-full xl:w-1/2">
                       {field.value instanceof File ? (
                         <img
+                          loading="lazy"
                           src={URL.createObjectURL(field.value)}
                           alt="Thumbnail Preview"
                           className="object-cover rounded-md border"
                         />
                       ) : typeof field.value === "object" ? (
                         <img
-                          src={`https://storage.googleapis.com/${import.meta.env.VITE_GCS_BUCKET}/${field.value.imageUrl}`}
+                          loading="lazy"
+                          src={field.value.imageUrl}
                           alt="Thumbnail Preview"
                           className="object-cover rounded-md border"
                         />
@@ -880,13 +883,15 @@ export default function AccountDetailModal({
                         <div key={`image-${idx}`} className="relative">
                           {file instanceof File ? (
                             <img
+                              loading="lazy"
                               src={URL.createObjectURL(file as File)}
                               alt={`image-${idx}`}
                               className="object-cover rounded-md border"
                             />
                           ) : typeof file === "object" ? (
                             <img
-                              src={`https://storage.googleapis.com/${import.meta.env.VITE_GCS_BUCKET}/${file.imageUrl}`}
+                              loading="lazy"
+                              src={file.imageUrl}
                               alt={`image-${idx}`}
                               className="object-cover rounded-md border"
                             />
