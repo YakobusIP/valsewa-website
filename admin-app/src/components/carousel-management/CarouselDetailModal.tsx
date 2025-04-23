@@ -141,6 +141,11 @@ export default function CarouselDetailModal({
       }
 
       resetParent();
+
+      setFiles({});
+      setPreviews({});
+      setSelectedTab("123");
+
       onOpenChange(false);
     } catch (error) {
       const errorMessage =
