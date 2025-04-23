@@ -10,8 +10,7 @@ const nextConfig: NextConfig = {
         pathname: `/${process.env.NEXT_PUBLIC_GCS_BUCKET}/account-images/**`
       }
     ],
-    minimumCacheTTL: 60 * 60 * 24 * 90,
-    formats: ["image/webp"]
+    minimumCacheTTL: 60 * 60 * 24 * 90
   },
   rewrites: async () => {
     return [
