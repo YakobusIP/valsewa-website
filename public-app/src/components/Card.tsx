@@ -172,7 +172,9 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   </div>
                 </div>
               )}
-              <div className="opacity-50">
+              <div
+                className={`${checkStatusInUse(item.availabilityStatus) ? "opacity-50" : "opacity-100"}`}
+              >
                 <figure className="relative w-full sm:hidden">
                   <AspectRatio ratio={16 / 16}>
                     <Image
@@ -198,7 +200,9 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   </AspectRatio>
                 </figure>
               </div>
-              <div className="relative w-full h-full opacity-50">
+              <div
+                className={`${checkStatusInUse(item.availabilityStatus) ? "opacity-50" : "opacity-100"} relative w-full h-full `}
+              >
                 <div className="relative">
                   {/* Account Rank */}
                   <div
