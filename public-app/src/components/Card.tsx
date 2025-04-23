@@ -130,7 +130,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
           <div
             className={`
               rounded-xl relative h-auto w-full 
-              transform sm:hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] sm:hover:scale-[1.02] sm:transition-all sm:duration-300 hover:cursor-pointer 
+              transform sm:hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] sm:hover:scale-[1.02] sm:transition-all sm:duration-300 hover:cursor-pointer
               ${getGridClass()} 
               ${checkStatusInUse(item.availabilityStatus) ? "" : ""}
               ${hoveredCardId === item.accountCode ? "shadow-[0px_4px_15px_rgba(255,255,255,0.5)]" : ""}
@@ -142,7 +142,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
               {/* Notification: Hidden by default, shown on hover */}
               {item.availabilityStatus === "IN_USE" && (
                 <div
-                  className={`max-sm:hidden hidden group-hover:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 bg-black/75 text-white px-4 py-2 rounded-lg w-full h-full z-30`}
+                  className={`opacity-100 max-sm:hidden hidden group-hover:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 bg-black/75 text-white px-4 py-2 rounded-lg w-full h-full z-30`}
                 >
                   <div className="flex justify-center items-center gap-3">
                     <figure className="w-[24px] h-[24px] flex items-center">
@@ -172,7 +172,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   </div>
                 </div>
               )}
-              <div>
+              <div className="opacity-50">
                 <figure className="relative w-full sm:hidden">
                   <AspectRatio ratio={16 / 16}>
                     <Image
@@ -198,7 +198,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   </AspectRatio>
                 </figure>
               </div>
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full opacity-50">
                 <div className="relative">
                   {/* Account Rank */}
                   <div
