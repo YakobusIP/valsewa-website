@@ -66,7 +66,7 @@ export default function CarouselManagementModal() {
     <Fragment>
       <Dialog>
         <DialogTrigger asChild>
-          <Button className="flex items-center gap-2">
+          <Button className="w-full xl:w-fit">
             <ImageIcon className="h-4 w-4" />
             Carousel Management
           </Button>

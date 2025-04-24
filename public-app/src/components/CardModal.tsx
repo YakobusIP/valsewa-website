@@ -137,6 +137,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
             <div className="h-full w-full absolute top-0 left-auto">
               <figure className="absolute top-0 right-0 h-[120px] w-[120px]">
                 <Image
+                  loading="lazy"
                   src={getTier(selectedCard.priceTier.code)}
                   alt="Price Tier"
                   fill
@@ -167,6 +168,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                 <span className="flex gap-2 items-center">
                   <figure className="w-5 h-5 relative">
                     <Image
+                      loading="lazy"
                       src="modal/restart_alt.svg"
                       alt="Restart_all Icon"
                       fill
