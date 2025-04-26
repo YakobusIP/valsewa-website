@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
   const [timeLeft, setTimeLeft] = useState("");
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     const countDownDate = new Date(targetDate).getTime();
@@ -12,7 +13,7 @@ const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
 
       if (distance <= 0) {
         clearInterval(interval);
-        setTimeLeft("00:00:00:00");
+        setIsExpired(true);
         return;
       }
 
@@ -30,6 +31,8 @@ const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
 
     return () => clearInterval(interval);
   }, [targetDate]);
+
+  if (isExpired) return null;
 
   return <div className="text-xl font-bold text-[#FBB201]">{timeLeft}</div>;
 };
