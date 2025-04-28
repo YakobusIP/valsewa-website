@@ -43,6 +43,7 @@ jobs:
                   --image=${{ vars.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/valsewa/valsewa-be:${{ github.sha }} \
                   --platform=managed \
                   --region=${{ vars.GCP_CLOUD_RUN_REGION }} \
+                  --add-cloudsql-instances=${{ secrets.GCP_PROJECT_ID }}:${{ vars.GCP_CLOUD_SQL_REGION }}:${{ secrets.CLOUD_SQL_INSTANCE_NAME }} \
                   --allow-unauthenticated \
                   --service-account=${{ secrets.GCS_CLOUD_RUN_SA }} \
                   --network=default \
