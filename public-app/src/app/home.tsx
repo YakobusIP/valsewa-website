@@ -66,50 +66,50 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
             {/* 2XL Screens */}
             <figure className="absolute w-full h-full max-2xl:hidden">
               <Image
-                src="/hero/Hero9.png"
+                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x560px.svg"
                 fill
                 alt="Hero"
-                className="object-cover object-top"
+                className="object-cover object-center"
               />
             </figure>
 
             {/* XL and Large Screens */}
             <figure className="absolute w-full h-full max-lg:hidden 2xl:hidden">
               <Image
-                src="/hero/Hero9.png"
+                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x720px.svg"
                 fill
                 alt="Hero"
-                className="object-cover object-top"
+                className="object-cover object-center"
               />
             </figure>
 
             {/* Medium Screens */}
             <figure className="absolute w-full h-full max-md:hidden lg:hidden">
               <Image
-                src="/hero/Hero9.png"
+                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x800px.svg"
                 fill
                 alt="Hero"
-                className="object-cover object-top"
+                className="object-cover object-center"
               />
             </figure>
 
             {/* Small Screens */}
             <figure className="absolute w-full h-full">
               <Image
-                src="/hero/Hero9.png"
+                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x1200px.svg"
                 fill
                 alt="Hero"
-                className="object-cover object-top"
+                className="object-cover object-center"
               />
             </figure>
 
             {/* Extra Small Screens */}
             <figure className="absolute w-full h-full sm:hidden">
               <Image
-                src="/hero/Hero9.png"
+                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x1760px.svg"
                 fill
                 alt="Hero"
-                className="object-cover object-top"
+                className="object-cover object-center"
               />
             </figure>
 

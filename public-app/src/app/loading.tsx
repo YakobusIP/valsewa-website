@@ -22,44 +22,44 @@ export default function LoadingPage() {
   // }, [images.length]);
 
   return (
-    <div className="flex flex-col min-h-[100dvh] items-center justify-center gap-4">
+    <div className="flex flex-col h-screen overflow-hidden items-center justify-center gap-4 relative">
       <figure className="w-full h-full absolute z-0 max-xl:hidden">
         <AspectRatio ratio={16 / 12}>
           <Image
-            src="/hero/Hero6.png"
+            src="/LS/SVG/Loading Screen_VS_Loading_1280x2800px.svg"
             fill
             alt="Hero"
-            className="object-cover object-top"
+            className="object-cover object-bottom"
           />
         </AspectRatio>
       </figure>
       <figure className="w-full h-full absolute z-0 max-lg:hidden xl:hidden">
         <AspectRatio ratio={16 / 15}>
           <Image
-            src="/hero/Hero6.png"
+            src="/LS/SVG/Loading Screen_VS_Loading_1280x2000px.svg"
             fill
             alt="Hero"
-            className="object-cover object-top"
+            className="object-cover object-bottom"
           />
         </AspectRatio>
       </figure>
       <figure className="w-full h-full absolute z-0 max-md:hidden lg:hidden">
         <AspectRatio ratio={16 / 25}>
           <Image
-            src="/hero/Hero6.png"
+            src="/LS/SVG/Loading Screen_VS_Loading_1280x1200px.svg"
             fill
             alt="Hero"
-            className="object-cover object-top"
+            className="object-cover object-bottom"
           />
         </AspectRatio>
       </figure>
       <figure className="w-full h-full absolute z-0 md:hidden">
         <AspectRatio ratio={16 / 35}>
           <Image
-            src="/hero/Hero6.png"
+            src="/LS/SVG/Loading Screen_VS_Loading_1280x460px.svg"
             fill
             alt="Hero"
-            className="object-cover object-center"
+            className="object-cover object-bottom "
           />
         </AspectRatio>
       </figure>
@@ -77,7 +77,7 @@ export default function LoadingPage() {
               <motion.img
                 key={i}
                 src={src}
-                className="absolute inset-0 w-full h-full object-contain"
+                className="absolute inset-0 w-full h-full object-cover"
                 style={{ opacity: i === index ? 1 : 0 }}
                 animate={{
                   opacity: i === index ? 1 : 0,
