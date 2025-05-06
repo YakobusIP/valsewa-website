@@ -22,6 +22,9 @@ RUN npm install
 # Transpile TypeScript to JavaScript.
 RUN npm run build
 
+# Copy swagger YAML schema
+COPY src/docs ./dist/docs
+
 # Generate prisma client
 RUN npx prisma generate
 
