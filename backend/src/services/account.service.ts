@@ -165,39 +165,40 @@ export class AccountService {
     });
   };
 
-  // private sortAccountsByIdTier = <T extends { accountCode: string }>(
-  //   data: T[]
-  // ): T[] => {
-  //   return data.sort((a, b) => {
-  //     const [tierA, rawNumA] = a.accountCode.split("-");
-  //     const [tierB, rawNumB] = b.accountCode.split("-");
+  private sortAccountsByIdTier = <T extends { accountCode: string }>(
+    data: T[]
+  ): T[] => {
+    return data.sort((a, b) => {
+      const [tierA, rawNumA] = a.accountCode.split("-");
+      const [tierB, rawNumB] = b.accountCode.split("-");
 
-  //     // Get the index of the tier in the order list
-  //     const tierIndexA = this.idTierOrder.indexOf(tierA);
-  //     const tierIndexB = this.idTierOrder.indexOf(tierB);
+      // Get the index of the tier in the order list
+      const tierIndexA = this.idTierOrder.indexOf(tierA);
+      const tierIndexB = this.idTierOrder.indexOf(tierB);
 
-  //     // Compare tier order
-  //     if (tierIndexA !== tierIndexB) return tierIndexA - tierIndexB;
+      // Compare tier order
+      if (tierIndexA !== tierIndexB) return tierIndexA - tierIndexB;
 
-  //     // Check if rawNumA and rawNumB are numbers
-  //     const isNumA = /^\d+$/.test(rawNumA);
-  //     const isNumB = /^\d+$/.test(rawNumB);
+      // Check if rawNumA and rawNumB are numbers
+      const isNumA = /^\d+$/.test(rawNumA);
+      const isNumB = /^\d+$/.test(rawNumB);
 
-  //     if (isNumA && isNumB) {
-  //       // If both are numbers, compare numerically
-  //       return Number(rawNumA) - Number(rawNumB);
-  //     } else if (isNumA) {
-  //       // Numbers should come before letters
-  //       return -1;
-  //     } else if (isNumB) {
-  //       return 1;
-  //     } else {
-  //       // If both are letters, compare alphabetically
-  //       return rawNumA.localeCompare(rawNumB);
-  //     }
-  //   });
-  // };
-  private sortAccountsByIdTier = <
+      if (isNumA && isNumB) {
+        // If both are numbers, compare numerically
+        return Number(rawNumA) - Number(rawNumB);
+      } else if (isNumA) {
+        // Numbers should come before letters
+        return -1;
+      } else if (isNumB) {
+        return 1;
+      } else {
+        // If both are letters, compare alphabetically
+        return rawNumA.localeCompare(rawNumB);
+      }
+    });
+  };
+
+  private sortAccountsByIdTierPublic = <
     T extends { accountCode: string; availabilityStatus: string }
   >(
     data: T[]
@@ -332,7 +333,7 @@ export class AccountService {
       } else if (sortBy === "price_tier") {
         data = this.sortAccountsByPriceTier(data, direction);
       } else if (sortBy === "id_tier") {
-        data = this.sortAccountsByIdTier(data);
+        data = this.sortAccountsByIdTierPublic(data);
       }
 
       let filteredData: PublicAccount[] = data;
