@@ -15,6 +15,7 @@ import {
 import { AccountEntity, CarouselSlide } from "@/types/account.type";
 
 import { useAccountController } from "@/controllers/useAccountController";
+import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
 import { FaArrowUp } from "react-icons/fa";
 
@@ -37,7 +38,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
   const scrollToTop = () => {
     window.scrollTo({ top: 300, behavior: "smooth" });
   };
-
+  const autoplay = Autoplay({ delay: 5000, stopOnInteraction: false });
   return (
     <section className="bg-[#101822] md:pb-64 pb-32 relative ">
       <div className="relative ">
@@ -121,7 +122,11 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
           <div className="relative z-20 flex flex-col items-center justify-center flex-grow -translate-y-[50px]">
             {/* Carousel */}
             <div className="w-full md:px-14 px-7">
-              <Carousel className="shadow-lg rounded-2xl overflow-hidden">
+              <Carousel
+                className="shadow-lg rounded-2xl overflow-hidden"
+                plugins={[autoplay]}
+                opts={{ loop: true }}
+              >
                 <CarouselContent>
                   {initialCarousel?.map((image, index) => (
                     <CarouselItem key={index}>
