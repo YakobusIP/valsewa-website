@@ -54,7 +54,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           port:     ${{ secrets.SSH_PORT }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "backend/dist/,backend/.env.production"
+          source: "backend/dist/,backend/.env.production,backend/package.json,backend/package-lock.json"
           target: /tmp/deploy/backend
           strip_components: 1
 
