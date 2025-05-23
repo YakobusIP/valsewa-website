@@ -35,6 +35,8 @@ jobs:
           HENRIKDEV_API_KEY=${{ secrets.HENRIKDEV_API_KEY }}
           SCHEDULER_API_KEY=${{ secrets.SCHEDULER_API_KEY }}
           BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}
+          NODE_ENV=${{ secrets.BACKEND_NODE_ENV }}
+          PORT=${{ secrets.BACKEND_PORT }}
           EOF
 
       - name: Build backend

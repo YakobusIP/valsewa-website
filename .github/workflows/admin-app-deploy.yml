@@ -33,7 +33,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           port:     ${{ secrets.SSH_PORT }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "admin-app/dist/,admin-app/public/,admin-app/package.json,admin-app/package-lock.json"
+          source: admin-app/dist/
           target: /tmp/deploy/admin-app
           strip_components: 1
 
@@ -45,8 +45,5 @@ jobs:
           port:     ${{ secrets.SSH_PORT }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            sudo systemctl stop admin.valsewa.service
-            sudo rsync -rt --delete /tmp/deploy/admin-app/ /srv/admin/
-            cd /srv/admin
-            npm ci --production
-            sudo systemctl start admin.valsewa.service
+            sudo rsync -rt --delete /tmp/deploy/admin-app/dist/ /srv/admin/
+            sudo nginx -t && sudo systemctl reload nginx
