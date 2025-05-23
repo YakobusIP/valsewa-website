@@ -16,18 +16,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create admin .env
-        working-directory: admin-app
-        run: |
-          cat > .env.production <<EOF
-          VITE_AXIOS_BASE_URL=${{ secrets.BACKEND_BASE_URL }}
-          EOF
-
       - name: Build admin app
         working-directory: admin-app
         run: |
           npm ci
           npm run build
+
+      - name: Inspect build output
+        run: |
+          ls -R admin-app
 
       - name: Upload admin via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -36,8 +33,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           port:     ${{ secrets.SSH_PORT }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          source: admin-app/build
+          source: "admin-app/dist/,admin-app/public/,admin-app/package.json,admin-app/package-lock.json"
           target: /tmp/deploy/admin-app
+          strip_components: 1
 
       - name: Remote admin deploy
         uses: appleboy/ssh-action@v1
@@ -47,5 +45,8 @@ jobs:
           port:     ${{ secrets.SSH_PORT }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            sudo rsync -rt --delete /tmp/deploy/admin-app/build/ /srv/admin/
-            sudo nginx -t && sudo systemctl reload nginx
+            sudo systemctl stop admin.valsewa.service
+            sudo rsync -rt --delete /tmp/deploy/admin-app/ /srv/admin/
+            cd /srv/admin
+            npm ci --production
+            sudo systemctl start admin.valsewa.service

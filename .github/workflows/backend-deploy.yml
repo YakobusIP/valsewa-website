@@ -43,6 +43,10 @@ jobs:
           npm ci
           npm run build
 
+      - name: Inspect build output
+        run: |
+          ls -R backend
+
       - name: Upload backend via SCP
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -50,10 +54,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           port:     ${{ secrets.SSH_PORT }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          source: |
-            backend/dist
-            backend/.env.production
+          source: "backend/dist/,backend/.env.production"
           target: /tmp/deploy/backend
+          strip_components: 1
 
       - name: Remote backend deploy & restart
         uses: appleboy/ssh-action@v1
@@ -64,7 +67,7 @@ jobs:
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             sudo systemctl stop backend.service
-            sudo rsync -rt --delete /tmp/deploy/backend/dist/   /srv/backend/
+            sudo rsync -rt --delete /tmp/deploy/backend/ /srv/backend/
             cd /srv/backend
             npm ci --production
             npx prisma migrate deploy

@@ -16,18 +16,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create public .env
-        working-directory: public-app
-        run: |
-          cat > .env.production <<EOF
-          NEXT_PUBLIC_AXIOS_BASE_URL=${{ secrets.BACKEND_BASE_URL }}
-          EOF
-
       - name: Build public app (static export)
         working-directory: public-app
         run: |
           npm ci
-          npm run build && npm run export
+          npm run build
+
+      - name: Inspect build output
+        run: |
+          ls -R public-app
 
       - name: Upload public via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -36,8 +33,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           port:     ${{ secrets.SSH_PORT }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          source: public-app/out
+          source: "public-app/.next/,public-app/public/,public-app/package.json,public-app/package-lock.json,public-app/next.config.ts"
           target: /tmp/deploy/public-app
+          strip_components: 1
 
       - name: Remote public deploy
         uses: appleboy/ssh-action@v1
@@ -47,5 +45,8 @@ jobs:
           port:     ${{ secrets.SSH_PORT }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            sudo rsync -rt --delete /tmp/deploy/public-app/out/ /srv/public/
-            sudo nginx -t && sudo systemctl reload nginx
+            sudo systemctl stop valsewa.service
+            sudo rsync -rt --delete /tmp/deploy/public-app/ /srv/public/
+            cd /srv/public
+            npm ci --production
+            sudo systemctl start valsewa.service
