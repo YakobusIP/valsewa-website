@@ -1,0 +1,51 @@
+name: Build & Deploy Public App
+
+on:
+  pull_request:
+    branches:
+      - production
+    paths:
+      - 'public-app/**'
+      - '.github/workflows/public-app-deploy.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create public .env
+        working-directory: public-app
+        run: |
+          cat > .env.production <<EOF
+          NEXT_PUBLIC_AXIOS_BASE_URL=${{ secrets.BACKEND_BASE_URL }}
+          EOF
+
+      - name: Build public app (static export)
+        working-directory: public-app
+        run: |
+          npm ci
+          npm run build && npm run export
+
+      - name: Upload public via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port:     ${{ secrets.SSH_PORT }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          source: public-app/out
+          target: /tmp/deploy/public-app
+
+      - name: Remote public deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port:     ${{ secrets.SSH_PORT }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo rsync -rt --delete /tmp/deploy/public-app/out/ /srv/public/
+            sudo nginx -t && sudo systemctl reload nginx
