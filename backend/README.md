@@ -43,7 +43,6 @@ If you'd like to run this website on your own computer, here are the steps:
    REFRESH_TOKEN_DURATION=15s
 
    HENRIKDEV_API_KEY=secret_api_key
-   GCS_BUCKET_NAME=none
 
    ADMIN_APP_URL=http://localhost:5173
    CANONICAL_PUBLIC_APP_URL=http://localhost:3000

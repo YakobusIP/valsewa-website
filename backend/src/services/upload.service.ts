@@ -1,7 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { generateFilename } from "../lib/utils";
-import { bucket } from "../lib/storage";
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "fs";
 import { env } from "../lib/env";
 import path from "path";
@@ -13,6 +12,9 @@ import {
 } from "../lib/error";
 
 export class UploadService {
+  private static readonly IMAGES_ROOT = "/srv/images";
+  private static readonly IMAGES_CDN = "https://images.valsewa.com";
+
   private async saveImageToDatabase(imageUrl: string) {
     try {
       return await prisma.imageUpload.create({ data: { imageUrl } });
@@ -33,21 +35,16 @@ export class UploadService {
         let url: string;
 
         if (env.NODE_ENV === "production") {
-          const blob = bucket.file(filePath);
-          const blobStream = blob.createWriteStream({
-            resumable: false,
-            contentType: file.mimetype
-          });
+          const diskPath = path.join(UploadService.IMAGES_ROOT, filePath);
+          mkdirSync(path.dirname(diskPath), { recursive: true });
 
-          await new Promise<void>((resolve, reject) => {
-            blobStream.on("error", (error) => {
-              reject(new FileStorageError(error.message));
-            });
-            blobStream.on("finish", () => resolve());
-            blobStream.end(file.buffer);
-          });
+          try {
+            writeFileSync(diskPath, file.buffer);
+          } catch (error) {
+            throw new FileStorageError((error as Error).message);
+          }
 
-          url = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
+          url = `${UploadService.IMAGES_CDN}/${filePath}`;
         } else {
           const localPath = path.join(__dirname, "../uploads/", filePath);
           mkdirSync(path.dirname(localPath), { recursive: true });
@@ -78,30 +75,26 @@ export class UploadService {
 
   async deleteImage(id: number, folder: string) {
     try {
-      const reviewImage = await prisma.imageUpload.findUnique({
+      const record = await prisma.imageUpload.findUnique({
         where: { id }
       });
 
-      if (!reviewImage) {
-        throw new NotFoundError("Image not found!");
-      }
+      if (!record) throw new NotFoundError("Image not found!");
 
-      const urlParts = reviewImage.imageUrl.split("/");
+      const urlParts = record.imageUrl.split("/");
       const filename = `${folder}/${urlParts[urlParts.length - 1]}`;
 
       if (env.NODE_ENV === "production") {
-        const file = bucket.file(filename);
+        const diskPath = path.join(UploadService.IMAGES_ROOT, filename);
         try {
-          await file.delete();
+          if (existsSync(diskPath)) unlinkSync(diskPath);
         } catch (error) {
           throw new FileStorageError((error as Error).message);
         }
       } else {
         const localPath = path.join(__dirname, "../uploads", filename);
         try {
-          if (existsSync(localPath)) {
-            unlinkSync(localPath);
-          }
+          if (existsSync(localPath)) unlinkSync(localPath);
         } catch (error) {
           throw new FileStorageError((error as Error).message);
         }
