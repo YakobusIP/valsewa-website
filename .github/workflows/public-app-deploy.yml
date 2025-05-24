@@ -1,0 +1,54 @@
+name: Build & Deploy Public App
+
+on:
+  pull_request:
+    branches:
+      - production
+    paths:
+      - 'public-app/**'
+      - '.github/workflows/public-app-deploy.yml'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build public app (static export)
+        working-directory: public-app
+        env:
+          NEXT_PUBLIC_AXIOS_BASE_URL: ${{ secrets.BACKEND_BASE_URL }}
+        run: |
+          npm ci
+          npm run build
+
+      - name: Inspect build output
+        run: |
+          ls -R public-app
+
+      - name: Upload public via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port:     ${{ secrets.SSH_PORT }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "public-app/.next/,public-app/public/,public-app/package.json,public-app/package-lock.json,public-app/next.config.ts"
+          target: /tmp/deploy/public-app
+          strip_components: 1
+
+      - name: Remote public deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port:     ${{ secrets.SSH_PORT }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo systemctl stop valsewa.service
+            sudo rsync -rt --delete /tmp/deploy/public-app/ /srv/public/
+            cd /srv/public
+            npm ci --production
+            sudo systemctl start valsewa.service
