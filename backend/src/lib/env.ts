@@ -19,11 +19,6 @@ const envSchema = z.object({
   ACCESS_TOKEN_DURATION: z.string(),
   REFRESH_TOKEN_DURATION: z.string(),
 
-  GCS_BUCKET_NAME: z.string(),
-
-  GCP_PROJECT_ID: z.string().optional(),
-  GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
-
   ADMIN_APP_URL: z.string().url(),
   CANONICAL_PUBLIC_APP_URL: z.string().url(),
   PUBLIC_APP_URL: z.string().url(),
