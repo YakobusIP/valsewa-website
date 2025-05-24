@@ -18,6 +18,8 @@ jobs:
 
       - name: Build admin app
         working-directory: admin-app
+        env:
+          VITE_AXIOS_BASE_URL: ${{ secrets.BACKEND_BASE_URL }}
         run: |
           npm ci
           npm run build
