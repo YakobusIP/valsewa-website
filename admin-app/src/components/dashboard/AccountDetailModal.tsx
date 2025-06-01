@@ -918,24 +918,23 @@ export default function AccountDetailModal({
               )}
             />
 
-            <p className="xl:col-start-3 justify-self-end text-sm">
-              Akun ini sudah pernah disewa selama{" "}
-              <b>
-                {data?.totalRentHour
-                  ? convertHoursToDays(data?.totalRentHour)
-                  : "0d 0h"}
-              </b>
-            </p>
+            <div className="sticky bottom-0 bg-background p-4 border rounded-md flex justify-between items-center gap-4 xl:col-span-3">
+              <p className="text-sm">
+                Akun ini sudah pernah disewa selama{" "}
+                <b>
+                  {data?.totalRentHour
+                    ? convertHoursToDays(data?.totalRentHour)
+                    : "0d 0h"}
+                </b>
+              </p>
 
-            <Button
-              type="submit"
-              className="xl:col-start-3 w-full xl:w-fit justify-self-end"
-            >
-              {isLoadingSubmit && (
-                <Loader2Icon className="w-4 h-4 animate-spin" />
-              )}
-              Submit
-            </Button>
+              <Button type="submit" className="w-fit">
+                {isLoadingSubmit && (
+                  <Loader2Icon className="w-4 h-4 animate-spin" />
+                )}
+                Submit
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>
