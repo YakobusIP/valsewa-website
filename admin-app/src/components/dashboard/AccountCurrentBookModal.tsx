@@ -451,21 +451,23 @@ export default function AccountCurrentBookModal({
               />
             </div>
 
-            <p className="place-self-end text-sm">
-              Akun ini sudah pernah disewa selama{" "}
-              <b>
-                {data?.totalRentHour
-                  ? convertHoursToDays(data?.totalRentHour)
-                  : "0d 0h"}
-              </b>
-            </p>
+            <div className="sticky bottom-0 bg-background p-4 border rounded-md flex justify-between gap-4 items-center">
+              <p className="text-sm">
+                Akun ini sudah pernah disewa selama{" "}
+                <b>
+                  {data?.totalRentHour
+                    ? convertHoursToDays(data?.totalRentHour)
+                    : "0d 0h"}
+                </b>
+              </p>
 
-            <Button type="submit" className="w-full xl:w-fit place-self-end">
-              {isLoadingSubmit && (
-                <Loader2Icon className="w-4 h-4 animate-spin" />
-              )}
-              Submit
-            </Button>
+              <Button type="submit" className="w-fit">
+                {isLoadingSubmit && (
+                  <Loader2Icon className="w-4 h-4 animate-spin" />
+                )}
+                Submit
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>
