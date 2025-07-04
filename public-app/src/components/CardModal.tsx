@@ -56,29 +56,33 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
   };
   const getTier = (tier: string) => {
     if (tier === "SSS") {
-      return "/cardneed/sss.svg";
+      return "/cardneed/update/sss.svg";
     } else if (tier === "LR-SSS") {
-      return "/cardneed/lrsss.svg";
+      return "/cardneed/update/lrsss.svg";
     } else if (tier === "LR-V") {
-      return "/cardneed/lrv.svg";
+      return "/cardneed/update/lrv.svg";
     } else if (tier === "V") {
-      return "/cardneed/v.svg";
+      return "/cardneed/update/v.svg";
     } else if (tier === "S") {
-      return "/cardneed/s.svg";
+      return "/cardneed/update/s.svg";
     } else if (tier === "LR-S") {
-      return "/cardneed/lrs.svg";
+      return "/cardneed/update/lrs.svg";
     } else if (tier === "A") {
-      return "/cardneed/a.svg";
+      return "/cardneed/update/a.svg";
     } else if (tier === "LR-A") {
-      return "/cardneed/lra.svg";
+      return "/cardneed/update/lra.svg";
     } else if (tier === "B") {
-      return "/cardneed/b.svg";
+      return "/cardneed/update/b.svg";
     } else if (tier === "LR-B") {
-      return "/cardneed/lrb.svg";
+      return "/cardneed/update/lrb.svg";
     } else if (tier === "C") {
-      return "/cardneed/c.svg";
+      return "/cardneed/update/c.svg";
     } else if (tier === "LR-C") {
-      return "/cardneed/lrc.svg";
+      return "/cardneed/update/lrc.svg";
+    } else if (tier === "SSS⁺") {
+      return "/cardneed/update/sss+.svg";
+    } else if (tier === "LR-SSS⁺") {
+      return "/cardneed/update/lrsss+.svg";
     }
     return "";
   };
