@@ -100,6 +100,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
     } else if (tier === "LR-SSS⁺") {
       return "/cardneed/update/lrsss+.svg";
     }
+
     return "";
   };
   const checkStatusInUse = (status: string) => {
