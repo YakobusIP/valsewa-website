@@ -48,6 +48,8 @@ export class AccountService {
   ];
 
   private priceTierOrder = [
+    "LR-SSS⁺",
+    "SSS⁺",
     "LR-SSS",
     "SSS",
     "LR-V",
