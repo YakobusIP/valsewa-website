@@ -2,6 +2,7 @@
 
 import Card from "@/components/Card";
 import Navbar from "@/components/Navbar";
+import Navbar1 from "@/components/Navbar1";
 import SearchBar from "@/components/SearchBar";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
@@ -41,8 +42,11 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
   const autoplay = Autoplay({ delay: 5000, stopOnInteraction: false });
   return (
     <section className="bg-[#101822] md:pb-64 pb-32 relative ">
-      <div className="relative ">
+      <div className="relative max-lg:hidden">
         <Navbar />
+      </div>
+      <div className="lg:hidden">
+        <Navbar1 />
       </div>
       <a
         href="https://wa.me/6285175343447?text=Halo admin VALSEWA aku butuh bantuan dong"

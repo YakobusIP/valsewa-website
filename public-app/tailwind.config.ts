@@ -11,7 +11,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Helvetica", "Arial", "sans-serif"],
-        valorant: ["Valorant", "sans-serif"]
+        valorant: ["Valorant", "sans-serif"],
+        pressure: ["fpdPressure", "sans-serif"]
       },
       colors: {
         background: "hsl(var(--background))",
