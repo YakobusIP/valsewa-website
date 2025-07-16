@@ -5,11 +5,9 @@ import React, { useEffect, useState } from "react";
 import { Goldman } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { CiSearch } from "react-icons/ci";
+import { usePathname } from "next/navigation";
 import { FaX } from "react-icons/fa6";
 import { HiOutlineMenuAlt3 } from "react-icons/hi";
-import { IoMdArrowDropdown } from "react-icons/io";
 
 export interface NavbarItem {
   name: string;
