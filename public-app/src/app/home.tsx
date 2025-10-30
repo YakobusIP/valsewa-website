@@ -54,8 +54,8 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
         rel="noopener noreferrer"
         className="fixed bottom-4 right-4 z-50"
       >
-        <figure className="w-[80px] h-[80px] fixed bottom-4 right-4 z-50">
-          <Image src="/home/penanda.svg" fill alt="Iconic" />
+        <figure className="w-[120px] h-[120px] fixed bottom-4 right-4 z-50">
+          <Image src="/home/kananbawah.png" fill alt="Iconic" />
         </figure>
       </a>
       <div
