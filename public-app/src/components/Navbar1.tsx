@@ -95,11 +95,26 @@ const Navbar1 = () => {
         <div className="flex items-center w-full justify-between p-4">
           <Link href="/">
             <Image
-              src="/logo/Logo Valsewa 6 SVG.svg"
+              src="/logo/Logo Valsewa mobile.png"
               alt="logo"
-              width={150}
+              width={60}
               height={50}
             />
+          </Link>
+          <Link href="https://valforum.com/top-up">
+            <button
+              className={`group border border-[#FFC200] w-fit px-4 py-1 rounded-xl cursor-pointer text-[#8C421D] ${goldman.className} flex items-center space-x-1 bg-[#FFC200] hover:bg-transparent font-bold hover:text-white`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 15"
+                fill="currentColor"
+                className="w-[30px] h-[30px] fill-current transition-colors"
+              >
+                <path d="M12.4849 0.435913H8.05996L10.8756 3.97616L12.4849 0.435913ZM3.09991 0.435913L4.70922 3.97616L7.52486 0.435913H3.09991ZM7.79241 1.78156L5.65201 4.47254H9.93281L7.79241 1.78156ZM13.3759 1.03699L11.8144 4.47254H15.5514L13.3759 1.03699ZM2.20896 1.03699L0 4.47254H3.77046L2.20896 1.03699ZM4.13633 5.4817H0.0334438L7.48473 14.5641H7.50245L4.13633 5.4817ZM11.4485 5.4817L8.08237 14.5641H8.10009L15.5514 5.4817H11.4485ZM10.2469 5.4817H5.33797L7.79241 12.0412L10.2469 5.4817Z" />
+              </svg>
+              <span>TOP UP</span>
+            </button>
           </Link>
           <button onClick={() => setIsNavMobileOpen((prev) => !prev)}>
             <HiOutlineMenuAlt3 className="text-white" size={24} />
@@ -121,21 +136,7 @@ const Navbar1 = () => {
               </Link>
               <FaX onClick={() => setIsNavMobileOpen(false)} color="white" />
             </div>
-            <Link href="https://valforum.com/top-up">
-              <button
-                className={`group border border-[#FFC200] w-fit px-4 py-1 rounded-xl cursor-pointer text-[#8C421D] ${goldman.className} flex items-center space-x-1 bg-[#FFC200] hover:bg-transparent font-bold hover:text-white`}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 16 15"
-                  fill="currentColor"
-                  className="w-[30px] h-[30px] fill-current transition-colors"
-                >
-                  <path d="M12.4849 0.435913H8.05996L10.8756 3.97616L12.4849 0.435913ZM3.09991 0.435913L4.70922 3.97616L7.52486 0.435913H3.09991ZM7.79241 1.78156L5.65201 4.47254H9.93281L7.79241 1.78156ZM13.3759 1.03699L11.8144 4.47254H15.5514L13.3759 1.03699ZM2.20896 1.03699L0 4.47254H3.77046L2.20896 1.03699ZM4.13633 5.4817H0.0334438L7.48473 14.5641H7.50245L4.13633 5.4817ZM11.4485 5.4817L8.08237 14.5641H8.10009L15.5514 5.4817H11.4485ZM10.2469 5.4817H5.33797L7.79241 12.0412L10.2469 5.4817Z" />
-                </svg>
-                <span>TOP UP</span>
-              </button>
-            </Link>
+
             {navbarItem.map((item, index) => (
               <div key={index} className="flex flex-col">
                 {item.href ? (
