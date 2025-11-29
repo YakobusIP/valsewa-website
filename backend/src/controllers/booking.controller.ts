@@ -10,7 +10,7 @@ export class BookingController {
     private readonly paymentService: PaymentService
   ) {}
 
-  getBooking = async (req: Request, res: Response, next: NextFunction) => {
+  getBookingById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const bookingId = req.params.id;
       const booking = await this.bookingService.getBookingById(bookingId);
@@ -71,7 +71,7 @@ export class BookingController {
 
       const holdMinutes = 15;
 
-      const booking = await this.bookingService.createBooking({
+      const result = await this.bookingService.createBooking({
         userId,
         accountId,
         baseDurationUnit,
@@ -83,12 +83,12 @@ export class BookingController {
       });
 
       return res.status(201).json({
-        id: booking.id,
-        status: booking.status,
-        startAt: booking.startAt,
-        endAt: booking.endAt,
-        expiresAt: booking.expiresAt,
-        totalValue: booking.totalValue,
+        id: result.id,
+        status: result.status,
+        startAt: result.startAt,
+        endAt: result.endAt,
+        expiresAt: result.expiresAt,
+        totalValue: result.totalValue,
         holdMinutes
       });
     } catch (error) {
@@ -113,7 +113,6 @@ export class BookingController {
       );
 
       return res.status(200).json({
-        message: "Payment session created.",
         paymentId: result.paymentId,
         redirectUrl: result.redirectUrl
       });

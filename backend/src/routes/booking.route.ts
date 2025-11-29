@@ -22,14 +22,22 @@ class BookingRouter {
   }
 
   private initializeRoutes() {
-    this.router.get("/:id", authMiddleware, this.bookingController.getBooking);
-    this.router.post(
+    this.router.get(
+      "/:id",
+      authMiddleware,
+      this.bookingController.getBookingById
+    );
+    this.router.get(
       "/user/:userId",
       authMiddleware,
       this.bookingController.getBookingsByUserId
     );
     this.router.post("/", authMiddleware, this.bookingController.createBooking);
-    this.router.post("/:id/pay", this.bookingController.initiatePayment);
+    this.router.post(
+      "/:id/pay",
+      authMiddleware,
+      this.bookingController.initiatePayment
+    );
     this.router.post(
       "/webhooks/payment",
       this.bookingController.handlePaymentWebhook

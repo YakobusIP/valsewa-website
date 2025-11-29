@@ -1,4 +1,3 @@
-
 import {
   Booking,
   BookingStatus,
@@ -130,7 +129,15 @@ export class BookingService {
 
         // TODO: Handle expiration job and Redis lock
 
-        return booking;
+        return {
+          id: booking.id,
+          status: booking.status,
+          startAt: booking.startAt,
+          endAt: booking.endAt,
+          expiresAt: booking.expiresAt,
+          totalValue: booking.totalValue,
+          holdMinutes
+        };
       });
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
