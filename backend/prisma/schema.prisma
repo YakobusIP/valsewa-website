@@ -15,26 +15,26 @@ enum Status {
 }
 
 model Account {
-  id                        Int       @id @default(autoincrement())
-  username                  String
-  nickname                  String
-  accountCode               String    @unique
-  description               String?
-  accountRank               String
-  availabilityStatus        Status    @default(AVAILABLE)
-  currentBookingDate        DateTime?
-  currentBookingDuration    Int?
-  currentExpireAt           DateTime?
-  nextBookingDate           DateTime?
-  nextBookingDuration       Int?
-  nextExpireAt              DateTime?
-  totalRentHour             Int       @default(0)
-  rentHourUpdated           Boolean   @default(false)
-  password                  String
-  passwordResetRequired     Boolean   @default(false)
-  skinList                  String[]
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
+  id                     Int       @id @default(autoincrement())
+  username               String
+  nickname               String
+  accountCode            String    @unique
+  description            String?
+  accountRank            String
+  availabilityStatus     Status    @default(AVAILABLE)
+  currentBookingDate     DateTime?
+  currentBookingDuration Int?
+  currentExpireAt        DateTime?
+  nextBookingDate        DateTime?
+  nextBookingDuration    Int?
+  nextExpireAt           DateTime?
+  totalRentHour          Int       @default(0)
+  rentHourUpdated        Boolean   @default(false)
+  password               String
+  passwordResetRequired  Boolean   @default(false)
+  skinList               String[]
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   priceTier   PriceTier @relation(fields: [priceTierId], references: [id])
   priceTierId Int
@@ -45,6 +45,7 @@ model Account {
   otherImages ImageUpload[] @relation("OtherImages")
 
   resetLogs AccountResetLog[]
+  Booking   Booking[]
 }
 
 model AccountResetLog {
@@ -76,9 +77,9 @@ model ImageUpload {
   account   Account? @relation("OtherImages", fields: [accountId], references: [id])
   accountId Int?
 
-  slide123Of    CarouselSlide?   @relation("Slide123")
-  slide126Of    CarouselSlide?   @relation("Slide126")
-  slide129Of  CarouselSlide?   @relation("Slide129")
+  slide123Of CarouselSlide? @relation("Slide123")
+  slide126Of CarouselSlide? @relation("Slide126")
+  slide129Of CarouselSlide? @relation("Slide129")
 }
 
 model User {
@@ -87,20 +88,125 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  Booking Booking[]
 }
 
 model CarouselSlide {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  image123 ImageUpload @relation("Slide123", fields: [image123Id], references: [id])
-  image123Id Int @unique
+  image123   ImageUpload @relation("Slide123", fields: [image123Id], references: [id])
+  image123Id Int         @unique
 
-  image126 ImageUpload @relation("Slide126", fields: [image126Id], references: [id])
-  image126Id Int@unique
+  image126   ImageUpload @relation("Slide126", fields: [image126Id], references: [id])
+  image126Id Int         @unique
 
-  image129 ImageUpload @relation("Slide129", fields: [image129Id], references: [id])
-  image129Id Int@unique
+  image129   ImageUpload @relation("Slide129", fields: [image129Id], references: [id])
+  image129Id Int         @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ----------------------------------------------------------------------
+// BOOKING-RELATED ENUMS & MODELS
+// ----------------------------------------------------------------------
+
+enum BookingStatus {
+  HOLD
+  RESERVED
+  EXPIRED
+  FAILED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum DurationType {
+  HOURLY
+  DAILY
+}
+
+enum PaymentChannelType {
+  VIRTUAL_ACCOUNT // BCA, Permata, Maybank, BSI, BRI, BNI, Mandiri, Sinarmas, CIMB, BTN VAs
+  E_WALLET // LinkAja, ShopeePay, OVO, DANA
+  RETAIL_OUTLET // Indomaret, Alfagroup
+  ONLINE_BANKING // BRI e-Pay, KlikBCA, BCA KlikPay, OctoClicks, Danamon, Maybank2U
+  CREDIT_FINANCE // Kredivo, Akulaku, Indodana
+  OTHER // General purpose (e.g., B-Secure, UNIcount, Mocash)
+}
+
+model Booking {
+  // --- Core ---
+  id        String @id @default(uuid())
+  userId    Int? // optional when booking is made by an admin
+  accountId Int
+
+  // --- Denormalized Price Tier Data ---
+  baseDurationUnit Int
+  baseDurationType DurationType
+  pricePerUnit     Int
+  quantity         Int
+
+  // --- Booking Data ---
+  totalValue  Int
+  startAt     DateTime
+  endAt       DateTime
+  expiresAt   DateTime
+  cancelledAt DateTime?
+  status      BookingStatus @default(HOLD)
+
+  // --- Concurrency ---
+  version Int @default(1)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // --- Relationships ---
+  successfulPaymentId String?   @unique
+  successfulPayment   Payment?  @relation("SuccessfulPayment", fields: [successfulPaymentId], references: [id])
+  paymentAttempts     Payment[] @relation("BookingPaymentAttempts")
+
+  user    User?   @relation(fields: [userId], references: [id])
+  account Account @relation(fields: [accountId], references: [id])
+
+  @@index([userId, accountId, startAt, endAt, status])
+  @@index([userId, status])
+}
+
+model Payment {
+  // --- Core ---
+  id        String @id @default(uuid())
+  bookingId String
+
+  // --- Data ---
+  value         Int
+  currency      String        @default("IDR")
+  status        PaymentStatus
+  failureReason String?
+
+  // --- Payment Gateway ---
+  gateway    String
+  providerId String @unique
+  channelType PaymentChannelType?
+  channelCode String?
+  metadata    Json?
+
+  // --- Refund Tracking ---
+  refundedValue Int       @default(0)
+  refundedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // --- Relationships ---
+  successfulFor Booking? @relation("SuccessfulPayment")
+  booking       Booking? @relation("BookingPaymentAttempts", fields: [bookingId], references: [id])
+
+  @@index([bookingId])
 }
