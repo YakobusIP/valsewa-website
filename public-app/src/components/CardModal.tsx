@@ -84,7 +84,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
     } else if (tier === "LR-SSS⁺") {
       return "/cardneed/update/lrsss+.svg";
     }
-    return "";
+    return null;
   };
 
   const skinsPerRow = 3;
@@ -106,7 +106,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                   <AspectRatio ratio={16 / 9}>
                     <Image
                       loading="lazy"
-                      src={image.imageUrl}
+                      src={image.imageUrl ?? "/defaultPicture/default.jpg"}
                       alt="Content Image"
                       fill
                       className="object-cover rounded-t-xl"
@@ -142,7 +142,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
               <figure className="absolute top-0 right-0 h-[120px] w-[120px]">
                 <Image
                   loading="lazy"
-                  src={getTier(selectedCard.priceTier.code)}
+                  src={getTier(selectedCard.priceTier.code) ?? "/defaultPicture/default.jpg"}
                   alt="Price Tier"
                   fill
                 />

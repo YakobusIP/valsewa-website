@@ -22,11 +22,16 @@ import { StatisticResponse } from "@/types/statistic.type";
 import { SORT_ORDER } from "@/lib/enums";
 
 import { CirclePlusIcon } from "lucide-react";
+import CreateUserPage from "../components/dashboard/CreateUserModal";
+import UserListModal from "@/components/dashboard/UserListModal";
 
 const PAGINATION_SIZE = 100;
 
 export default function Dashboard() {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
+  const [openCreateUserAccount, setOpenCreateUserAccount] = useState(false);
+  const [openUserList, setOpenUserList] = useState(false);
+
 
   const [isLoadingStatistics, setIsLoadingStatistics] = useState(false);
   const [statistics, setStatistics] = useState<StatisticResponse>();
@@ -234,6 +239,12 @@ export default function Dashboard() {
                   <CirclePlusIcon />
                   Add New Account
                 </Button>
+                <Button
+                className="w-full xl:w-fit"
+                  onClick={() => setOpenUserList(true)}
+                >
+                  User Account List
+                </Button>
               </Fragment>
             }
           />
@@ -245,6 +256,19 @@ export default function Dashboard() {
         mode="add"
         resetParent={resetParent}
       />
+      <CreateUserPage
+        open={openCreateUserAccount}
+        onOpenChange={setOpenCreateUserAccount}
+      />
+      <UserListModal
+        open={openUserList}
+        onOpenChange={setOpenUserList}
+        onOpenCreateUser={() => {
+          setOpenUserList(false);
+          setOpenCreateUserAccount(true);
+        }}
+      />
+
     </Fragment>
   );
 }
