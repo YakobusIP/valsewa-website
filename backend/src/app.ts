@@ -12,6 +12,7 @@ import PriceTierRouter from "./routes/pricetier.route";
 import UploadRouter from "./routes/upload.route";
 import StatisticRouter from "./routes/statistic.route";
 import CarouselSlideRouter from "./routes/carousel.route";
+import VoucherRouter from "./routes/voucher.route";
 import { throttleMiddleware } from "./middleware/throttle.middleware";
 
 import swaggerJSDoc, { OAS3Definition, Options } from "swagger-jsdoc";
@@ -50,6 +51,7 @@ app.use("/api/statistics", StatisticRouter);
 app.use("/api/carousels", CarouselSlideRouter);
 app.use("/api/upload", UploadRouter);
 app.use("/api/public-users", publicUserRoute);
+app.use("/api/vouchers", VoucherRouter);
 
 const swaggerDefinition: OAS3Definition = {
   openapi: "3.0.0",

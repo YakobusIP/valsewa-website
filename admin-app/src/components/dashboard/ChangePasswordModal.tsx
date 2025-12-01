@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { publicUserService, PublicUserEntity } from "@/services/publicUser.service";
+import { toast } from "@/hooks/useToast";
 
 type Props = {
   open: boolean;
@@ -35,6 +36,10 @@ export default function ChangePasswordModal({
       setPassword("");
       onClose();
       onSuccess?.();
+      toast({
+        title: "Password Updated!",
+        description: "Password " + user.username + " successfully updated"
+      });
     } catch (err) {
       console.error(err);
       alert("Failed to change password");
@@ -45,7 +50,7 @@ export default function ChangePasswordModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-zinc-900 text-white max-w-md">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>
             Change Password — {user?.username}
@@ -54,11 +59,11 @@ export default function ChangePasswordModal({
 
         <div className="space-y-4">
           <input
-            type="password"
+            type="text"
             placeholder="New password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 bg-zinc-800 border border-zinc-700 rounded text-white focus:outline-none"
+            className="w-full p-3  border border-zinc-700 rounded focus:outline-none"
           />
 
           <div className="flex justify-end gap-2">

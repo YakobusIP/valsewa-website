@@ -35,6 +35,21 @@ export class AuthService {
         throw new UnauthorizedError("Wrong username or password");
       }
 
+      if (!user.is_active) {
+        throw new UnauthorizedError(
+          "Password already Expired, Please contact our team"
+        );
+      }
+
+      const passwordExpiredAt = new Date(user.passwordChangedAt);
+      passwordExpiredAt.setDate(passwordExpiredAt.getDate() + 30);
+      console.log(new Date());
+      if (new Date() > passwordExpiredAt) {
+        throw new UnauthorizedError(
+          "Password already expired, Please contact our team"
+        );
+      }
+
       const isPasswordValid = await bcrypt.compare(password, user.password);
 
       return isPasswordValid;

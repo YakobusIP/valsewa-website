@@ -76,7 +76,8 @@ export class PublicUserService {
       const user = await prisma.publicUser.update({
         where: { id },
         data: {
-          password: hashedPassword
+          password: hashedPassword,
+          passwordChangedAt: new Date()
         }
       });
 
@@ -98,11 +99,14 @@ export class PublicUserService {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
+      const now = new Date();
+
       const user = await prisma.publicUser.create({
         data: {
           username,
           password: hashedPassword,
-          is_active: true
+          is_active: true,
+          password_expire_at: addDays(now, 30)
         }
       });
 
@@ -112,3 +116,8 @@ export class PublicUserService {
     }
   };
 }
+const addDays = (date: Date, days: number) => {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+};

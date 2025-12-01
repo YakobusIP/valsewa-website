@@ -61,24 +61,23 @@ export default function UserListModal({
     };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-zinc-900 text-white w-full xl:w-3/5 overflow-y-auto max-h-[100dvh]">
+      <DialogContent className="w-full xl:w-3/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
           <DialogTitle>User List</DialogTitle>
         </DialogHeader>
 
         {/* Table */}
-        <div className="overflow-x-auto rounded-lg border border-zinc-700">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-zinc-800 text-zinc-300">
-  <tr>
-    <th className="p-3 text-left w-[50px]">#</th>
-    <th className="p-3 text-left">Username</th>
-    <th className="p-3 text-left">Status</th>
-    <th className="p-3 text-left">Created At</th>
-    <th className="p-3 text-left">Actions</th>
-  </tr>
-</thead>
-
+            <thead className=" ">
+              <tr>
+                <th className="p-3 text-left w-[50px]">#</th>
+                <th className="p-3 text-left">Username</th>
+                <th className="p-3 text-left">Status</th>
+                <th className="p-3 text-left">Created At</th>
+                <th className="p-3 text-left">Actions</th>
+              </tr>
+            </thead>
             <tbody>
               {loading && (
                 <tr>
@@ -98,7 +97,7 @@ export default function UserListModal({
 
               {!loading && !error && users.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="p-4 text-center text-zinc-400">
+                  <td colSpan={3} className="p-4 text-center">
                     No users found
                   </td>
                 </tr>
@@ -109,11 +108,11 @@ export default function UserListModal({
                 users.map((user, index) => (
                   <tr
                     key={user.id}
-                    className={`border-t border-zinc-800 hover:bg-zinc-700/40 ${
-                      index % 2 === 0 ? "bg-zinc-900" : "bg-zinc-800/60"
+                    className={`border-t border-zinc-800 hover:bg-zinc-300 ${
+                      index % 2 === 0 ? "bg-zinc-100" : "bg-zinc-100"
                     }`}
                   >
-                  <td className="p-3 text-zinc-400">{index + 1}</td>
+                  <td className="p-3">{index + 1}</td>
                     <td className="p-3">{user.username}</td>
                     <td className="p-3">
                       {user.is_active ? (
@@ -126,14 +125,14 @@ export default function UserListModal({
                         </span>
                       )}
                     </td>
-                    <td className="p-3 text-zinc-400">
+                    <td className="p-3">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="p-3">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-zinc-600 hover:bg-zinc-700 bg-black"
+                        className="border-zinc-600 hover:bg-zinc-800 bg-black text-white hover:text-white"
                         onClick={() => openChangePassword(user)}
                       >
                         Change Password

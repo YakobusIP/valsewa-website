@@ -97,7 +97,7 @@ model PublicUser {
   updatedAt DateTime @updatedAt
   passwordChangedAt DateTime @default(now())
   is_active Boolean @default(true)
-  
+  password_expire_at    DateTime?
 }
 
 model CarouselSlide {
@@ -133,4 +133,5 @@ model Voucher {
   max_discount Float?
   date_start   DateTime
   date_end     DateTime
+  
 }

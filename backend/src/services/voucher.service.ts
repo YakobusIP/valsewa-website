@@ -1,0 +1,125 @@
+import { Prisma, Type } from "@prisma/client";
+import { BadRequestError, InternalServerError } from "../lib/error";
+import { prisma } from "../lib/prisma";
+import { Metadata } from "../types/metadata.type";
+
+export class VoucherService {
+  getAll = async (
+    page?: number,
+    limit?: number,
+    query?: string
+  ): Promise<[any[], Metadata]> => {
+    try {
+      const whereCriteria: Prisma.VoucherWhereInput = query
+        ? {
+            voucher_name: {
+              contains: query,
+              mode: "insensitive"
+            }
+          }
+        : {};
+
+      let data;
+      let metadata: Metadata;
+
+      if (page && limit) {
+        const skip = (page - 1) * limit;
+
+        data = await prisma.voucher.findMany({
+          where: whereCriteria,
+          take: limit,
+          skip,
+          orderBy: { created_at: "desc" }
+        });
+
+        const itemCount = await prisma.voucher.count({
+          where: whereCriteria
+        });
+
+        metadata = {
+          page,
+          limit,
+          pageCount: Math.ceil(itemCount / limit),
+          total: itemCount
+        };
+      } else {
+        data = await prisma.voucher.findMany({
+          where: whereCriteria,
+          orderBy: { created_at: "desc" }
+        });
+
+        metadata = { page: 0, limit: 0, pageCount: 0, total: 0 };
+      }
+
+      return [data, metadata];
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  create = async (data: {
+    voucher_name: string;
+    type: Type;
+    percentage?: number;
+    nominal?: number;
+    max_discount?: number;
+    date_start: Date;
+    date_end: Date;
+  }) => {
+    try {
+      const exists = await prisma.voucher.findUnique({
+        where: { voucher_name: data.voucher_name }
+      });
+
+      if (exists) throw new BadRequestError("Voucher already exists");
+
+      if (data.type === "PERSENTASE" && !data.percentage) {
+        throw new BadRequestError("Percentage is required");
+      }
+
+      if (data.type === "NOMINAL" && !data.nominal) {
+        throw new BadRequestError("Nominal is required");
+      }
+
+      return await prisma.voucher.create({
+        data: {
+          voucher_name: data.voucher_name,
+          type: data.type,
+          percentage: data.type === "PERSENTASE" ? data.percentage : null,
+          nominal: data.type === "NOMINAL" ? data.nominal : null,
+          max_discount: data.type === "PERSENTASE" ? data.max_discount : null,
+          date_start: data.date_start,
+          date_end: data.date_end,
+          is_valid: true
+        }
+      });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  toggleStatus = async (id: number) => {
+    try {
+      const voucher = await prisma.voucher.findUnique({
+        where: { id }
+      });
+
+      if (!voucher) throw new BadRequestError("Voucher not found");
+
+      return await prisma.voucher.update({
+        where: { id },
+        data: { is_valid: !voucher.is_valid }
+      });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  remove = async (id: number) => {
+    try {
+      await prisma.voucher.delete({ where: { id } });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+}

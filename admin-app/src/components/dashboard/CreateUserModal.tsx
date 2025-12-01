@@ -60,7 +60,7 @@ export default function CreateUserModal({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-zinc-900 border-zinc-700 text-white max-w-md">
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Create User</DialogTitle>
         </DialogHeader>
@@ -70,7 +70,7 @@ export default function CreateUserModal({ open, onOpenChange }: Props) {
             <input
               {...register("username")}
               placeholder="Username"
-              className="w-full px-4 py-2 rounded bg-zinc-800 border border-zinc-700"
+              className="w-full px-4 py-2 rounded border border-zinc-700"
             />
             {errors.username && (
               <p className="text-red-400 text-sm mt-1">
@@ -83,7 +83,7 @@ export default function CreateUserModal({ open, onOpenChange }: Props) {
               type="password"
               {...register("password")}
               placeholder="Password"
-              className="w-full px-4 py-2 rounded bg-zinc-800 border border-zinc-700"
+              className="w-full px-4 py-2 rounded border border-zinc-700"
             />
             {errors.password && (
               <p className="text-red-400 text-sm mt-1">
@@ -95,7 +95,7 @@ export default function CreateUserModal({ open, onOpenChange }: Props) {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-red-600 hover:bg-red-700"
+            className="w-full bg-black hover:bg-zinc-800"
           >
             {isSubmitting ? "Creating..." : "Create User"}
           </Button>
