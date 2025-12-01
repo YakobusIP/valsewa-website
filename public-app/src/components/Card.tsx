@@ -101,7 +101,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
       return "/cardneed/update/lrsss+.svg";
     }
 
-    return "";
+    return null;
   };
   const checkStatusInUse = (status: string) => {
     if (status == "IN_USE") {
@@ -184,7 +184,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   <AspectRatio ratio={16 / 16}>
                     <Image
                       loading="lazy"
-                      src={item.thumbnail.imageUrl}
+                      src={item.thumbnail.imageUrl ?? "/defaultPicture/default.jpg"}
                       alt="Thumbnail"
                       fill
                       className="object-cover rounded-t-xl w-full"
@@ -196,7 +196,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   <AspectRatio ratio={16 / 9}>
                     <Image
                       loading="lazy"
-                      src={item.thumbnail.imageUrl}
+                      src={item.thumbnail.imageUrl ?? "/defaultPicture/default.jpg"}
                       alt="Thumbnail"
                       fill
                       className="object-cover rounded-t-xl w-full"
@@ -221,7 +221,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   <div className="h-full w-full absolute top-0 left-auto">
                     <figure className="absolute top-0 right-0 h-[60px] w-[60px] sm:h-[120px] sm:w-[120px] ">
                       <Image
-                        src={getTier(item.priceTier.code)}
+                        src={getTier(item.priceTier.code) ?? "/defaultPicture/default.jpg"}
                         alt="Price Tier"
                         fill
                       />

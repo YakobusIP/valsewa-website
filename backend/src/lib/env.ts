@@ -19,6 +19,11 @@ const envSchema = z.object({
   ACCESS_TOKEN_DURATION: z.string(),
   REFRESH_TOKEN_DURATION: z.string(),
 
+  PUB_ACCESS_TOKEN_SECRET: z.string(),
+  PUB_REFRESH_TOKEN_SECRET: z.string(),
+  PUB_ACCESS_TOKEN_DURATION: z.string(),
+  PUB_REFRESH_TOKEN_DURATION: z.string(),
+
   ADMIN_APP_URL: z.string().url(),
   CANONICAL_PUBLIC_APP_URL: z.string().url(),
   PUBLIC_APP_URL: z.string().url(),
