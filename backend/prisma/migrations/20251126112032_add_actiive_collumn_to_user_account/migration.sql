@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "PublicUser" ADD COLUMN     "is_active" BOOLEAN NOT NULL DEFAULT true,
-ADD COLUMN     "passwordChangedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
