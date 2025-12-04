@@ -6,12 +6,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { publicUserService, PublicUserEntity } from "@/services/publicUser.service";
+import { customerService, CustomerEntity } from "@/services/customer.service";
 import { toast } from "@/hooks/useToast";
 
 type Props = {
   open: boolean;
-  user: PublicUserEntity | null;
+  user: CustomerEntity | null;
   onClose: () => void;
   onSuccess?: () => void;
 };
@@ -31,7 +31,7 @@ export default function ChangePasswordModal({
     try {
       setLoading(true);
 
-      await publicUserService.updatePassword(user.id, password);
+      await customerService.updatePassword(user.id, password);
 
       setPassword("");
       onClose();

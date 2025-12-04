@@ -124,7 +124,9 @@ const Card: React.FC<CardProps> = ({ data }) => {
       setSelectedCard(item);
     }
   };
-
+  // function debug (item){
+  //   console.log(item);
+  // }
   return (
     <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
       <div

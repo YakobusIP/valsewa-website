@@ -29,13 +29,13 @@ export class AuthService {
 
   async publogin(username: string, password: string) {
     try {
-      const user = await prisma.publicUser.findUnique({ where: { username } });
+      const user = await prisma.customer.findUnique({ where: { username } });
 
       if (!user) {
         throw new UnauthorizedError("Wrong username or password");
       }
 
-      if (!user.is_active) {
+      if (!user.isActive) {
         throw new UnauthorizedError(
           "Password already Expired, Please contact our team"
         );
@@ -65,7 +65,7 @@ export class AuthService {
   async register(username: string, password: string) {
     try {
       // Check if user already exists
-      const existingUser = await prisma.publicUser.findUnique({
+      const existingUser = await prisma.customer.findUnique({
         where: { username }
       });
 
@@ -75,12 +75,12 @@ export class AuthService {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const user = await prisma.publicUser.create({
+      const user = await prisma.customer.create({
         data: {
           username,
           password: hashedPassword,
           passwordChangedAt: new Date(),
-          is_active: true
+          isActive: true
         }
       });
 

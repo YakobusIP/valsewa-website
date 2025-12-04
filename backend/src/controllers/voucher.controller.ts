@@ -29,23 +29,23 @@ export class VoucherController {
   createVoucher = async (req: Request, res: Response) => {
     try {
       const {
-        voucher_name,
+        voucherName,
         type,
         percentage,
         nominal,
-        max_discount,
-        date_start,
-        date_end
+        maxDiscount,
+        dateStart,
+        dateEnd
       } = req.body;
 
       await this.voucherService.create({
-        voucher_name,
+        voucherName,
         type,
         percentage,
         nominal,
-        max_discount,
-        date_start: new Date(date_start),
-        date_end: new Date(date_end)
+        maxDiscount,
+        dateStart: new Date(dateStart),
+        dateEnd: new Date(dateEnd)
       });
 
       res.status(201).json({

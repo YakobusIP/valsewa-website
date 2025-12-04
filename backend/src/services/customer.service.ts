@@ -4,14 +4,14 @@ import { prisma } from "../lib/prisma";
 import { Metadata } from "../types/metadata.type";
 import bcrypt from "bcrypt";
 
-export class PublicUserService {
-  getAllPublicUsers = async (
+export class CustomerService {
+  getAllCustomers = async (
     page?: number,
     limit?: number,
     query?: string
   ): Promise<[any[], Metadata]> => {
     try {
-      const whereCriteria: Prisma.PublicUserWhereInput = query
+      const whereCriteria: Prisma.CustomerWhereInput = query
         ? { username: { contains: query, mode: "insensitive" } }
         : {};
 
@@ -21,19 +21,19 @@ export class PublicUserService {
       if (page !== undefined && limit !== undefined) {
         const skip = (page - 1) * limit;
 
-        data = await prisma.publicUser.findMany({
+        data = await prisma.customer.findMany({
           where: whereCriteria,
           take: limit,
           skip,
           select: {
             id: true,
             username: true,
-            is_active: true,
+            isActive: true,
             createdAt: true
           }
         });
 
-        const itemCount = await prisma.publicUser.count({
+        const itemCount = await prisma.customer.count({
           where: whereCriteria
         });
 
@@ -46,12 +46,12 @@ export class PublicUserService {
           total: itemCount
         };
       } else {
-        data = await prisma.publicUser.findMany({
+        data = await prisma.customer.findMany({
           where: whereCriteria,
           select: {
             id: true,
             username: true,
-            is_active: true,
+            isActive: true,
             createdAt: true
           }
         });
@@ -73,7 +73,7 @@ export class PublicUserService {
     try {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      const user = await prisma.publicUser.update({
+      const user = await prisma.customer.update({
         where: { id },
         data: {
           password: hashedPassword,
@@ -87,9 +87,9 @@ export class PublicUserService {
     }
   };
 
-  createPublicUser = async (username: string, password: string) => {
+  createCustomer = async (username: string, password: string) => {
     try {
-      const existing = await prisma.publicUser.findUnique({
+      const existing = await prisma.customer.findUnique({
         where: { username }
       });
 
@@ -101,12 +101,12 @@ export class PublicUserService {
 
       const now = new Date();
 
-      const user = await prisma.publicUser.create({
+      const user = await prisma.customer.create({
         data: {
           username,
           password: hashedPassword,
-          is_active: true,
-          password_expire_at: addDays(now, 30)
+          isActive: true,
+          passwordExpireAt: addDays(now, 30)
         }
       });
 

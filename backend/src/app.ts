@@ -17,7 +17,7 @@ import { throttleMiddleware } from "./middleware/throttle.middleware";
 
 import swaggerJSDoc, { OAS3Definition, Options } from "swagger-jsdoc";
 import { serve, setup } from "swagger-ui-express";
-import publicUserRoute from "./routes/publicUser.route";
+import customerRoute from "./routes/customer.route";
 
 const app: Express = express();
 
@@ -50,7 +50,7 @@ app.use("/api/price-tiers", PriceTierRouter);
 app.use("/api/statistics", StatisticRouter);
 app.use("/api/carousels", CarouselSlideRouter);
 app.use("/api/upload", UploadRouter);
-app.use("/api/public-users", publicUserRoute);
+app.use("/api/public-users", customerRoute);
 app.use("/api/vouchers", VoucherRouter);
 
 const swaggerDefinition: OAS3Definition = {

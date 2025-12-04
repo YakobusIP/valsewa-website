@@ -5,14 +5,14 @@ import { handleAxiosError, interceptedAxios } from "@/lib/axios";
 
 export type VoucherEntity = {
   id: number;
-  voucher_name: string;
-  is_valid: boolean;
+  voucherName: string;
+  isValid: boolean;
   type: VoucherType;
   percentage?: number | null;
   nominal?: number | null;
-  max_discount?: number | null;
-  date_start: Date;
-  date_end: Date;
+  maxDiscount?: number | null;
+  dateStart: Date;
+  dateEnd: Date;
   createdAt: Date;
 };
 
@@ -79,16 +79,16 @@ const createVoucherService = () => {
     }
   };
   const toggleStatus = async (id: number) => {
-  try {
-    const res = await interceptedAxios.patch<MessageResponse>(
-      `${BASE_VOUCHER_URL}/${id}/toggle`
-    );
+    try {
+      const res = await interceptedAxios.patch<MessageResponse>(
+        `${BASE_VOUCHER_URL}/${id}/toggle`
+      );
 
-    return res.data;
-  } catch (error) {
-    throw new Error(handleAxiosError(error));
-  }
-};
+      return res.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
 
   return {
     fetchAll,

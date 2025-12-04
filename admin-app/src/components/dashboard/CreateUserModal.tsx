@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-import { publicUserService } from "@/services/publicUser.service";
+import { customerService } from "@/services/customer.service";
 import {
   Dialog,
   DialogContent,
@@ -38,7 +38,7 @@ export default function CreateUserModal({ open, onOpenChange }: Props) {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await publicUserService.create(data);
+      await customerService.create(data);
 
       toast({
         title: "Success",

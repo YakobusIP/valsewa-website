@@ -14,14 +14,14 @@ import {
 import { Button } from "@/components/ui/button";
 
 type VoucherForm = {
-  voucher_name: string;
-  is_valid: boolean;
+  voucherName: string;
+  isValid: boolean;
   type: VoucherType;
   percentage: string;
   nominal: string;
-  max_discount: string;
-  date_start: string;
-  date_end: string;
+  maxDiscount: string;
+  dateStart: string;
+  dateEnd: string;
 };
 
 type VoucherCreateModalProps = {
@@ -38,14 +38,14 @@ export default function VoucherCreateModal({
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState<VoucherForm>({
-    voucher_name: "",
-    is_valid: true,
+    voucherName: "",
+    isValid: true,
     type: "PERSENTASE",
     percentage: "",
     nominal: "",
-    max_discount: "",
-    date_start: "",
-    date_end: ""
+    maxDiscount: "",
+    dateStart: "",
+    dateEnd: ""
   });
 
   useEffect(() => {
@@ -83,15 +83,15 @@ export default function VoucherCreateModal({
     e.preventDefault();
     setLoading(true);
 
-    if (!form.voucher_name) {
+    if (!form.voucherName) {
       alert("Voucher name is required");
       setLoading(false);
       return;
     }
 
     const payload: CreateVoucherPayload = {
-      voucher_name: form.voucher_name,
-      is_valid: form.is_valid,
+      voucherName: form.voucherName,
+      isValid: form.isValid,
       type: form.type,
 
       percentage:
@@ -104,13 +104,13 @@ export default function VoucherCreateModal({
           ? Number(form.nominal)
           : null,
 
-      max_discount:
+      maxDiscount:
         form.type === "PERSENTASE"
-          ? Number(form.max_discount)
+          ? Number(form.maxDiscount)
           : null,
 
-      date_start: new Date(form.date_start),
-      date_end: new Date(form.date_end)
+      dateStart: new Date(form.dateStart),
+      dateEnd: new Date(form.dateEnd)
     };
 
     try {
@@ -119,14 +119,14 @@ export default function VoucherCreateModal({
       onOpenChange(false);
 
       setForm({
-        voucher_name: "",
-        is_valid: true,
+        voucherName: "",
+        isValid: true,
         type: "PERSENTASE",
         percentage: "",
         nominal: "",
-        max_discount: "",
-        date_start: "",
-        date_end: ""
+        maxDiscount: "",
+        dateStart: "",
+        dateEnd: ""
       });
     } catch (error) {
       alert((error as Error).message);
@@ -150,8 +150,8 @@ export default function VoucherCreateModal({
               Voucher Name
             </label>
             <input
-              name="voucher_name"
-              value={form.voucher_name}
+              name="voucherName"
+              value={form.voucherName}
               onChange={handleChange}
               placeholder="Enter voucher name"
               className="border w-full p-2 rounded-md"
@@ -197,8 +197,8 @@ export default function VoucherCreateModal({
                 </label>
                 <input
                   type="number"
-                  name="max_discount"
-                  value={form.max_discount}
+                  name="maxDiscount"
+                  value={form.maxDiscount}
                   onChange={handleChange}
                   placeholder="e.g 50000"
                   className="border w-full p-2 rounded-md"
@@ -231,8 +231,8 @@ export default function VoucherCreateModal({
               </label>
               <input
                 type="datetime-local"
-                name="date_start"
-                value={form.date_start}
+                name="dateStart"
+                value={form.dateStart}
                 onChange={handleChange}
                 className="border w-full p-2 rounded-md"
               />
@@ -244,8 +244,8 @@ export default function VoucherCreateModal({
               </label>
               <input
                 type="datetime-local"
-                name="date_end"
-                value={form.date_end}
+                name="dateEnd"
+                value={form.dateEnd}
                 onChange={handleChange}
                 className="border w-full p-2 rounded-md"
               />
@@ -256,8 +256,8 @@ export default function VoucherCreateModal({
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
-              name="is_valid"
-              checked={form.is_valid}
+              name="isValid"
+              checked={form.isValid}
               onChange={handleChange}
             />
             Active

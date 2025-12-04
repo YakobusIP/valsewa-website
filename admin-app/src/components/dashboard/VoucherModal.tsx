@@ -14,7 +14,7 @@ import { Loader2, Trash2, Plus } from "lucide-react";
 import { voucherService, VoucherEntity } from "@/services/voucher.service";
 import VoucherCreateModal from "./VoucherCreateModal";
 import { toast } from "@/hooks/useToast";
-import { formatNumeric, formatRupiah } from "@/utils/formatCurrency";
+import { formatNumeric } from "@/utils/formatCurrency";
 
 
 type VoucherModalProps = {
@@ -80,7 +80,7 @@ export default function VoucherModal({
     // Update UI instantly (no need refetch)
     setVouchers((prev) =>
       prev.map((v) =>
-        v.id === id ? { ...v, is_valid: !v.is_valid } : v
+        v.id === id ? { ...v, isValid: !v.isValid } : v
       )
     );
 
@@ -134,14 +134,14 @@ export default function VoucherModal({
                   >
                     <div className="space-y-1">
                       <h3 className="font-semibold text-lg">
-                        {voucher.voucher_name}
+                        {voucher.voucherName}
                       </h3>
                       <p
                         className={`text-xs font-semibold ${
-                          voucher.is_valid ? "text-green-600" : "text-red-600"
+                          voucher.isValid ? "text-green-600" : "text-red-600"
                         }`}
                       >
-                        Status: {voucher.is_valid ? "ACTIVE" : "INACTIVE"}
+                        Status: {voucher.isValid ? "ACTIVE" : "INACTIVE"}
                       </p>
 
                       <p className="text-sm text-muted-foreground">
@@ -152,28 +152,28 @@ export default function VoucherModal({
                           ` • Rp ${formatNumeric(voucher.nominal ?? 0)}`}
                       </p>
 
-                      {voucher.max_discount && (
+                      {voucher.maxDiscount && (
                         <p className="text-sm text-muted-foreground">
-                          Max: Rp {formatNumeric(voucher.max_discount) ?? 0}
+                          Max: Rp {formatNumeric(voucher.maxDiscount) ?? 0}
                         </p>
                       )}
 
                       <p className="text-xs text-muted-foreground">
                         {new Date(
-                          voucher.date_start
+                          voucher.dateStart
                         ).toLocaleDateString()}{" "}
                         –{" "}
-                        {new Date(voucher.date_end).toLocaleDateString()}
+                        {new Date(voucher.dateEnd).toLocaleDateString()}
                       </p>
                     </div>
 
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        variant={voucher.is_valid ? "secondary" : "default"}
+                        variant={voucher.isValid ? "secondary" : "default"}
                         onClick={() => handleToggle(voucher.id)}
                       >
-                        {voucher.is_valid ? "Deactivate" : "Activate"}
+                        {voucher.isValid ? "Deactivate" : "Activate"}
                       </Button>
 
                       <Button

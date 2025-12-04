@@ -89,15 +89,15 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
-model PublicUser {
+model Customer {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   passwordChangedAt DateTime @default(now())
-  is_active Boolean @default(true)
-  password_expire_at    DateTime?
+  isActive Boolean @default(true)
+  passwordExpireAt    DateTime?
 }
 
 model CarouselSlide {
@@ -123,15 +123,15 @@ enum Type {
 
 model Voucher {
   id           Int       @id @default(autoincrement())
-  created_at   DateTime  @default(now())
-  updated_at   DateTime @updatedAt
-  voucher_name String  @unique
-  is_valid     Boolean @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime @updatedAt
+  voucherName String  @unique
+  isValid     Boolean @default(true)
   type         Type        
   percentage   Float?
   nominal      Float?
-  max_discount Float?
-  date_start   DateTime
-  date_end     DateTime
+  maxDiscount Float?
+  dateStart   DateTime
+  dateEnd     DateTime
   
 }

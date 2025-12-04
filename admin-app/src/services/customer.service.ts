@@ -2,20 +2,20 @@ import { ApiResponseList, MessageResponse } from "@/types/api.type";
 
 import { handleAxiosError, interceptedAxios } from "@/lib/axios";
 
-export type PublicUserEntity = {
+export type CustomerEntity = {
   id: number;
   username: string;
-  is_active: boolean;
+  isActive: boolean;
   createdAt: string;
 };
 
 const BASE_PUBLIC_USER_URL = "/api/public-users";
 
-const createPublicUserService = () => {
+const createCustomerService = () => {
   const fetchAll = async (page?: number, limit?: number, query?: string) => {
     try {
       const response = await interceptedAxios.get<
-        ApiResponseList<PublicUserEntity>
+        ApiResponseList<CustomerEntity>
       >(BASE_PUBLIC_USER_URL, {
         params: { page, limit, q: query }
       });
@@ -68,6 +68,6 @@ const createPublicUserService = () => {
   };
 };
 
-const publicUserService = createPublicUserService();
+const customerService = createCustomerService();
 
-export { publicUserService };
+export { customerService };

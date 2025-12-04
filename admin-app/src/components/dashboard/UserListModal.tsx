@@ -6,11 +6,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { publicUserService } from "@/services/publicUser.service";
-import { PublicUser } from "@/types/publicUser.type";
+import { customerService } from "@/services/customer.service";
+import { Customer } from "@/types/customer.type";
 import ChangePasswordModal from "@/components/dashboard/ChangePasswordModal";
 
-type User = PublicUser;
+type User = Customer;
 
 type Props = {
   open: boolean;
@@ -37,7 +37,7 @@ export default function UserListModal({
         setLoading(true);
         setError(null);
 
-        const res = await publicUserService.fetchAll();
+        const res = await customerService.fetchAll();
 
         setUsers(res.data || []);
       } catch (err) {
@@ -115,7 +115,7 @@ export default function UserListModal({
                   <td className="p-3">{index + 1}</td>
                     <td className="p-3">{user.username}</td>
                     <td className="p-3">
-                      {user.is_active ? (
+                      {user.isActive ? (
                         <span className="text-green-400 font-medium">
                           Active
                         </span>

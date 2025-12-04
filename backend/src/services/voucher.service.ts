@@ -12,7 +12,7 @@ export class VoucherService {
     try {
       const whereCriteria: Prisma.VoucherWhereInput = query
         ? {
-            voucher_name: {
+            voucherName: {
               contains: query,
               mode: "insensitive"
             }
@@ -29,7 +29,7 @@ export class VoucherService {
           where: whereCriteria,
           take: limit,
           skip,
-          orderBy: { created_at: "desc" }
+          orderBy: { createdAt: "desc" }
         });
 
         const itemCount = await prisma.voucher.count({
@@ -45,7 +45,7 @@ export class VoucherService {
       } else {
         data = await prisma.voucher.findMany({
           where: whereCriteria,
-          orderBy: { created_at: "desc" }
+          orderBy: { createdAt: "desc" }
         });
 
         metadata = { page: 0, limit: 0, pageCount: 0, total: 0 };
@@ -58,17 +58,17 @@ export class VoucherService {
   };
 
   create = async (data: {
-    voucher_name: string;
+    voucherName: string;
     type: Type;
     percentage?: number;
     nominal?: number;
-    max_discount?: number;
-    date_start: Date;
-    date_end: Date;
+    maxDiscount?: number;
+    dateStart: Date;
+    dateEnd: Date;
   }) => {
     try {
       const exists = await prisma.voucher.findUnique({
-        where: { voucher_name: data.voucher_name }
+        where: { voucherName: data.voucherName }
       });
 
       if (exists) throw new BadRequestError("Voucher already exists");
@@ -83,14 +83,14 @@ export class VoucherService {
 
       return await prisma.voucher.create({
         data: {
-          voucher_name: data.voucher_name,
+          voucherName: data.voucherName,
           type: data.type,
           percentage: data.type === "PERSENTASE" ? data.percentage : null,
           nominal: data.type === "NOMINAL" ? data.nominal : null,
-          max_discount: data.type === "PERSENTASE" ? data.max_discount : null,
-          date_start: data.date_start,
-          date_end: data.date_end,
-          is_valid: true
+          maxDiscount: data.type === "PERSENTASE" ? data.maxDiscount : null,
+          dateStart: data.dateStart,
+          dateEnd: data.dateEnd,
+          isValid: true
         }
       });
     } catch (error) {
@@ -108,7 +108,7 @@ export class VoucherService {
 
       return await prisma.voucher.update({
         where: { id },
-        data: { is_valid: !voucher.is_valid }
+        data: { isValid: !voucher.isValid }
       });
     } catch (error) {
       throw new InternalServerError((error as Error).message);
