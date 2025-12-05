@@ -1,5 +1,4 @@
 import { fetchAccounts, fetchCarousel } from "@/services/accountService";
-
 import type { Metadata } from "next";
 
 import Home from "./home";

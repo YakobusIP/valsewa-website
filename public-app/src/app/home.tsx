@@ -34,8 +34,6 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
     getSortLabel
   } = useAccountController(initialAccount);
 
-  console.log(initialCarousel);
-
   const scrollToTop = () => {
     window.scrollTo({ top: 300, behavior: "smooth" });
   };

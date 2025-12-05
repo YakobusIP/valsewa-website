@@ -8,6 +8,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaX } from "react-icons/fa6";
 import { HiOutlineMenuAlt3 } from "react-icons/hi";
+import { Button } from "./ui/button";
+import LoginPage from "./LoginPage";
 
 export interface NavbarItem {
   name: string;
@@ -62,7 +64,7 @@ export const navbarItem: NavbarItem[] = [
       />
     ),
     href: "https://valforum.com/jokiakun"
-  }
+  },
 ];
 
 const Navbar1 = () => {
@@ -70,6 +72,11 @@ const Navbar1 = () => {
   const pathname = usePathname();
 
   const [isNavMobileOpen, setIsNavMobileOpen] = useState(false);
+  const [isComponentOpen, setIsComponentOpen] = useState(false);
+
+  const handleOnClick = () =>{
+    setIsComponentOpen(!isComponentOpen);
+  };
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
     null
   );
@@ -183,9 +190,21 @@ const Navbar1 = () => {
                 ) : null}
               </div>
             ))}
+            <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={() => {
+                        handleOnClick();
+                        setIsNavMobileOpen(false);
+                      }}
+        >
+          Sign In
+        </Button>
           </div>
         )}
       </div>
+      {isComponentOpen && <LoginPage />}
     </div>
   );
 };
