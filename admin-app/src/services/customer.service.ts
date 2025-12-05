@@ -9,7 +9,7 @@ export type CustomerEntity = {
   createdAt: string;
 };
 
-const BASE_PUBLIC_USER_URL = "/api/public-users";
+const BASE_PUBLIC_USER_URL = "/api/customer";
 
 const createCustomerService = () => {
   const fetchAll = async (page?: number, limit?: number, query?: string) => {
