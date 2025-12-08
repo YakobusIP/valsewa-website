@@ -16,10 +16,10 @@ type AccountEntityRequest = {
   totalRentHour: number;
   password: string;
   passwordResetRequired: boolean;
-  skins: string[];
   thumbnail: number;
   otherImages: number[] | null;
   priceTier: number;
+  skinList: number[]
 };
 
 type PublicAccount = Prisma.AccountGetPayload<{
