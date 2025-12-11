@@ -110,14 +110,14 @@ export class SkinService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2025"
       ) {
-        throw new NotFoundError("Price tier not found!");
+        throw new NotFoundError("Skin not found!");
       }
 
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
       ) {
-        throw new PrismaUniqueError("Price tier code is already in use!");
+        throw new PrismaUniqueError("Skin is already added!");
       }
 
       if (error instanceof Prisma.PrismaClientValidationError) {
@@ -130,7 +130,7 @@ export class SkinService {
 
   deleteManySkins = async (ids: number[]) => {
     try {
-      return await prisma.priceTier.deleteMany({ where: { id: { in: ids } } });
+      return await prisma.skin.deleteMany({ where: { id: { in: ids } } });
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }

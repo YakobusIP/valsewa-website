@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { SkinService } from "../services/skin.service";
+import { ImageService } from "../services/image.service";
 
 export class SkinController {
-  constructor(private readonly skinService: SkinService) {}
+  constructor(private readonly skinService: SkinService, private readonly imageService: ImageService) {}
 
   getAllSkins = async (
     req: Request,
@@ -82,4 +83,15 @@ export class SkinController {
       return next(error);
     }
   };
+
+  getSkinImage = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const name = (req.query.name as string) ?? '';
+      const result = await this.imageService.getSkinImage(name);
+      return res.status(200).json({ data: result });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
 }

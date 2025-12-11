@@ -1,4 +1,5 @@
 import { PriceTier } from "@/types/pricetier.type";
+import { Skin } from "@/types/skin.type";
 import { UploadResponse } from "@/types/upload.type";
 
 type AccountEntity = {
@@ -18,19 +19,20 @@ type AccountEntity = {
   totalRentHour: number;
   password: string;
   passwordResetRequired: boolean;
-  skinList: string[];
   thumbnail: UploadResponse;
   otherImages: UploadResponse[] | null;
   priceTier: PriceTier;
+  skinList: Skin[]
 };
 
 type AccountEntityRequest = Omit<
   AccountEntity,
-  "id" | "priceTier" | "thumbnail" | "otherImages"
+  "id" | "priceTier" | "thumbnail" | "otherImages" | "skinList"
 > & {
   priceTier: number;
   thumbnail: number;
   otherImages: number[];
+  skinList: number[];
 };
 
 type RankResponse = {

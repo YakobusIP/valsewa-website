@@ -1413,6 +1413,60 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  
+  /api/skins/image:
+    get:
+      tags:
+        - Skins
+      summary: Get a skin's image URL by name (query parameter).
+      description: >
+        Resolves the image URL for a given skin name (case-insensitive).  
+        Prefers `levels.displayIcon`; falls back to `chromas.fullRender`.  
+        Returns 404 if the skin (or image) could not be found.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+          description: Skin name to look up, e.g. "Prime Vandal".
+      responses:
+        "200":
+          description: Skin image URL resolved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: Prime Vandal
+                      imageUrl:
+                        type: string
+                        example: https://media.valorant-api.com/.../displayicon.png
+        "404":
+          description: Skin or image not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation or upstream unavailability/rate-limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/statistics:
     get:

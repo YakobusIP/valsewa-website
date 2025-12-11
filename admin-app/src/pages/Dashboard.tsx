@@ -22,6 +22,8 @@ import { StatisticResponse } from "@/types/statistic.type";
 import { SORT_ORDER } from "@/lib/enums";
 
 import { CirclePlusIcon } from "lucide-react";
+import SkinManagementModal from "@/components/skin-management/SkinManagementModal";
+import { SkinProvider } from "@/contexts/SkinContext";
 
 const PAGINATION_SIZE = 100;
 
@@ -225,6 +227,9 @@ export default function Dashboard() {
                   sortOrder={sortOrder}
                   handleSort={handleSort}
                 />
+                <SkinProvider>
+                  <SkinManagementModal />
+                </SkinProvider>
                 <PriceTierModal />
                 <CarouselManagementModal />
                 <Button

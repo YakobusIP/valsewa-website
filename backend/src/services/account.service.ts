@@ -10,6 +10,7 @@ import {
 import { prisma } from "../lib/prisma";
 import {
   AccountEntityRequest,
+  AccountWithSkins,
   PublicAccount,
   UpdateResetLogRequest
 } from "../types/account.type";
@@ -266,13 +267,13 @@ export class AccountService {
     query?: string,
     sortBy?: string,
     direction?: Prisma.SortOrder
-  ): Promise<[Account[], Metadata]> => {
+  ): Promise<[AccountWithSkins[], Metadata]> => {
     try {
       let data = await prisma.account.findMany({
         orderBy: {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
-        include: { priceTier: true, thumbnail: true, otherImages: true }
+        include: { priceTier: true, thumbnail: true, otherImages: true, skinList: true }
       });
 
       if (sortBy === "rank") {
@@ -283,10 +284,10 @@ export class AccountService {
         data = this.sortAccountsByIdTier(data);
       }
 
-      let filteredData: Account[] = data;
+      let filteredData: AccountWithSkins[] = data;
       if (query && query.trim().length > 0) {
-        const fuseOptions: IFuseOptions<Account> = {
-          keys: ["nickname", "accountCode", "accountRank", "skinList"],
+        const fuseOptions: IFuseOptions<AccountWithSkins> = {
+          keys: ["nickname", "accountCode", "accountRank", "skinList.name", "skinList.keyword"],
           threshold: 0.3
         };
 
