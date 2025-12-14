@@ -196,8 +196,8 @@ export default function SkinDetailModal({ mode, data }: Props) {
         <DialogHeader>
           <DialogTitle>
             {mode === "edit"
-              ? `Edit Price Tier (${data && data.name})`
-              : "Add New Price Tier"}
+              ? `Edit Skin (${data && data.name})`
+              : "Add New Skin"}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
