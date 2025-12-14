@@ -5,7 +5,8 @@ import { Skin } from "@/types/skin.type";
 
 import { ColumnDef } from "@tanstack/react-table";
 
-export const skinColumns: ColumnDef<Skin>[] = [{
+export const skinColumns: ColumnDef<Skin>[] = [
+  {
     id: "select",
     header: ({ table }) => (
       <Checkbox
@@ -32,20 +33,20 @@ export const skinColumns: ColumnDef<Skin>[] = [{
     accessorKey: "image",
     header: "Image",
     cell: ({ row }) => {
-        const { image, name } = row.original;
-        return (
-            <div className="p-1">
-                <img
-                src={image || ""}
-                alt={name || "Skin image"}
-                className="h-24 w-24 rounded-md object-contain"
-                loading="lazy"
-            />
-            </div>
-        );
+      const { image, name } = row.original;
+      return (
+        <div className="p-1">
+          <img
+            src={image || ""}
+            alt={name || "Skin image"}
+            className="h-24 w-24 rounded-md object-contain"
+            loading="lazy"
+          />
+        </div>
+      );
     },
     size: "auto" as unknown as number,
-    enableSorting: false,
+    enableSorting: false
   },
   {
     accessorKey: "name",
@@ -53,9 +54,7 @@ export const skinColumns: ColumnDef<Skin>[] = [{
     cell: ({ row }) => {
       const data = row.original;
       return (
-        <span className="whitespace-pre-wrap line-clamp-5">
-          {data.name}
-        </span>
+        <span className="whitespace-pre-wrap line-clamp-5">{data.name}</span>
       );
     },
     size: "auto" as unknown as number
@@ -66,9 +65,7 @@ export const skinColumns: ColumnDef<Skin>[] = [{
     cell: ({ row }) => {
       const data = row.original;
       return (
-        <span className="whitespace-pre-wrap line-clamp-5">
-          {data.keyword}
-        </span>
+        <span className="whitespace-pre-wrap line-clamp-5">{data.keyword}</span>
       );
     },
     size: "auto" as unknown as number

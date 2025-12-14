@@ -8,8 +8,8 @@ type Skin = {
 type SkinRequest = Omit<Skin, "id">;
 
 type SkinImage = {
-    name: string;
-    imageUrl: string;
-}
+  name: string;
+  imageUrl: string;
+};
 
 export type { Skin, SkinRequest, SkinImage };

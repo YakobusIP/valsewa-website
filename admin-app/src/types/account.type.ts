@@ -22,7 +22,7 @@ type AccountEntity = {
   thumbnail: UploadResponse;
   otherImages: UploadResponse[] | null;
   priceTier: PriceTier;
-  skinList: Skin[]
+  skinList: Skin[];
 };
 
 type AccountEntityRequest = Omit<

@@ -3,13 +3,12 @@ import { SkinService } from "../services/skin.service";
 import { ImageService } from "../services/skin-image.service";
 
 export class SkinController {
-  constructor(private readonly skinService: SkinService, private readonly imageService: ImageService) {}
+  constructor(
+    private readonly skinService: SkinService,
+    private readonly imageService: ImageService
+  ) {}
 
-  getAllSkins = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  getAllSkins = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const page = req.query.page ?? undefined;
       const limit = req.query.limit ?? undefined;
@@ -27,11 +26,7 @@ export class SkinController {
     }
   };
 
-  getSkinById = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  getSkinById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const priceTier = await this.skinService.getSkinById(
         parseInt(req.params.id)
@@ -47,9 +42,7 @@ export class SkinController {
     try {
       await this.skinService.createSkin(req.body);
 
-      return res
-        .status(201)
-        .json({ message: "Skin created successfully!" });
+      return res.status(201).json({ message: "Skin created successfully!" });
     } catch (error) {
       return next(error);
     }
@@ -57,24 +50,15 @@ export class SkinController {
 
   updateSkin = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await this.skinService.updateSkin(
-        parseInt(req.params.id),
-        req.body
-      );
+      await this.skinService.updateSkin(parseInt(req.params.id), req.body);
 
-      return res
-        .status(201)
-        .json({ message: "Skin updated successfully!" });
+      return res.status(201).json({ message: "Skin updated successfully!" });
     } catch (error) {
       return next(error);
     }
   };
 
-  deleteManySkin = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  deleteManySkin = async (req: Request, res: Response, next: NextFunction) => {
     try {
       await this.skinService.deleteManySkins(req.body.ids);
 
@@ -86,12 +70,11 @@ export class SkinController {
 
   getSkinImage = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const name = (req.query.name as string) ?? '';
+      const name = (req.query.name as string) ?? "";
       const result = await this.imageService.getSkinImage(name);
       return res.status(200).json({ data: result });
     } catch (error) {
       return next(error);
     }
   };
-
 }

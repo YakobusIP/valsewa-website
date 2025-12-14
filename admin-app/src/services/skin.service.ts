@@ -1,7 +1,11 @@
-import { ApiResponseList, MessageResponse, ApiResponse } from "@/types/api.type";
+import {
+  ApiResponse,
+  ApiResponseList,
+  MessageResponse
+} from "@/types/api.type";
+import { Skin, SkinImage, SkinRequest } from "@/types/skin.type";
 
 import { handleAxiosError, interceptedAxios } from "@/lib/axios";
-import { Skin, SkinImage, SkinRequest } from "@/types/skin.type";
 
 const BASE_SKIN_URL = "/api/skins";
 
@@ -52,12 +56,11 @@ const createSkinService = () => {
     }
   };
 
-  
-const fetchImage = async (name: string) => {
+  const fetchImage = async (name: string) => {
     try {
       const response = await interceptedAxios.get<ApiResponse<SkinImage>>(
         `${BASE_SKIN_URL}/image`,
-        { params: {name}}
+        { params: { name } }
       );
 
       return response.data.data;

@@ -32,17 +32,16 @@ type SkinProviderProps = {
 
 const PAGINATION_SIZE = 5;
 
-export const SkinContext = createContext<
-  SkinContextProps | undefined
->(undefined);
+export const SkinContext = createContext<SkinContextProps | undefined>(
+  undefined
+);
 
 export const SkinProvider = ({ children }: SkinProviderProps) => {
   const { isLoadingLogin, isAuthenticated } = useAuth();
 
   const [isLoadingSkin, setIsLoadingSkin] = useState(false);
   const [skinList, setSkinList] = useState<Skin[]>([]);
-  const [skinMetadata, setSkinMetadata] =
-    useState<MetadataResponse>();
+  const [skinMetadata, setSkinMetadata] = useState<MetadataResponse>();
   const [skinListPage, setSkinListPage] = useState(1);
 
   const [skinSearch, setSkinSearch] = useState("");

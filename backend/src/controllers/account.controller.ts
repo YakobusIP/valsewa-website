@@ -279,17 +279,16 @@ export class AccountController {
   ) => {
     try {
       const updated = await this.accountService.addSkinsToAccount(
-        parseInt(req.params.id), 
+        parseInt(req.params.id),
         req.body.skinList as number[]
-      )
+      );
 
-      return res.status(200).json({data: updated})
+      return res.status(200).json({ data: updated });
     } catch (error) {
-      return next(error)
+      return next(error);
     }
-  }
+  };
 
-  
   removeSkinsFromAccount = async (
     req: Request,
     res: Response,
@@ -297,13 +296,13 @@ export class AccountController {
   ) => {
     try {
       const updated = await this.accountService.removeSkinsFromAccount(
-        parseInt(req.params.id), 
+        parseInt(req.params.id),
         req.body.skinList as number[]
-      )
+      );
 
-      return res.status(200).json({data: updated})
+      return res.status(200).json({ data: updated });
     } catch (error) {
-      return next(error)
+      return next(error);
     }
-  }
-};
+  };
+}

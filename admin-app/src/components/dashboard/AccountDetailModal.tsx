@@ -14,7 +14,6 @@ import { skinService } from "@/services/skin.service";
 import { uploadService } from "@/services/upload.service";
 
 import { Button } from "@/components/ui/button";
-import { MultiSelect } from "@/components/ui/multi-select";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +29,7 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { MultiSelect } from "@/components/ui/multi-select";
 import {
   Select,
   SelectContent,
@@ -81,9 +81,7 @@ const formSchema = z.object({
   accountRank: z.string().nonempty("Rank is required"),
   password: z.string().nonempty("Password is required"),
   passwordResetRequired: z.boolean().optional(),
-  skinList: z
-    .array(z.number())
-    .min(1, "At least 1 skin is required"),
+  skinList: z.array(z.number()).min(1, "At least 1 skin is required"),
   thumbnail: z.union([
     z.instanceof(File, { message: "Thumbnail is required" }),
     z.object({ id: z.number(), imageUrl: z.string().url() })
@@ -176,7 +174,7 @@ export default function AccountDetailModal({
             accountRank: data.accountRank,
             password: data.password,
             passwordResetRequired: data.passwordResetRequired,
-            skinList: data.skinList.map((skin) => (skin.id)),
+            skinList: data.skinList.map((skin) => skin.id),
             thumbnail: data.thumbnail,
             otherImages: data.otherImages ? data.otherImages : []
           }
@@ -450,38 +448,36 @@ export default function AccountDetailModal({
     if (open) fetchSkinList();
   }, [fetchSkinList, open]);
 
-  
-const skinOptions = useMemo(
-  () =>
-    skinList.map((s) => ({
-      label: s.name,
-      value: s.id.toString(),
-    })),
-  [skinList]
-);
+  const skinOptions = useMemo(
+    () =>
+      skinList.map((s) => ({
+        label: s.name,
+        value: s.id.toString()
+      })),
+    [skinList]
+  );
 
-const skinLabelById = useMemo(
-  () =>
-    new Map<number, string>(
-      skinOptions.map((opt) => [Number(opt.value), opt.label])
-    ),
-  [skinOptions]
-);
+  const skinLabelById = useMemo(
+    () =>
+      new Map<number, string>(
+        skinOptions.map((opt) => [Number(opt.value), opt.label])
+      ),
+    [skinOptions]
+  );
 
-useEffect(() => {
-  const names: string[] = (skinListValue ?? [])
-    .map((id) => skinLabelById.get(id))
-    .filter(Boolean) as string[];
+  useEffect(() => {
+    const names: string[] = (skinListValue ?? [])
+      .map((id) => skinLabelById.get(id))
+      .filter(Boolean) as string[];
 
-  const header = `List of skins akun ${accountCodeValue}:`;
-  const body =
-    names.length > 0
-      ? names.map((label, i) => `${i + 1}. ${label}`).join("\n")
-      : "(belum ada skin dipilih)";
+    const header = `List of skins akun ${accountCodeValue}:`;
+    const body =
+      names.length > 0
+        ? names.map((label, i) => `${i + 1}. ${label}`).join("\n")
+        : "(belum ada skin dipilih)";
 
-  setSkinListText(`${header}\n${body}`);
-}, [accountCodeValue, skinListValue, skinLabelById]);
-
+    setSkinListText(`${header}\n${body}`);
+  }, [accountCodeValue, skinListValue, skinLabelById]);
 
   useEffect(() => {
     if (mode === "edit" && data) {
@@ -493,7 +489,7 @@ useEffect(() => {
         priceTier: data.priceTier.id,
         accountRank: data.accountRank,
         password: data.password,
-        skinList: data.skinList.map((skin) => (skin.id)),
+        skinList: data.skinList.map((skin) => skin.id),
         thumbnail: data.thumbnail,
         otherImages: data.otherImages || []
       });
@@ -516,10 +512,6 @@ useEffect(() => {
   useEffect(() => {
     if (open) fetchPriceTierList();
   }, [fetchPriceTierList, open]);
-
-  
-
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -755,46 +747,47 @@ useEffect(() => {
 
             <div className="relative col-span-1 xl:col-span-3 gap-2">
               <FormField
-              control={form.control}
-              name="skinList"
-              render={({ field }) => {
-              const selectedValue = (field.value ?? []).map(String);
+                control={form.control}
+                name="skinList"
+                render={({ field }) => {
+                  const selectedValue = (field.value ?? []).map(String);
 
-              return (
-                <FormItem>
-                  <FormLabel>
-                    Skins<span className="text-destructive">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <MultiSelect
-                    options={skinOptions}
-                    value={selectedValue}
-                    onValueChange={(value: string[]) => {
-                      const ids = value.map((v) => Number(v));
-                      field.onChange(ids);
-                    }}
-
-                    defaultValue={selectedValue}
-                    placeholder={
-                      isLoadingSkinList
-                        ? "Fetching skins..."
-                        : skinOptions.length === 0
-                        ? "No skins available"
-                        : "Select one or more skins"
-                    }
-                    searchable={true}
-                    maxCount={100}
-                    className="w-full"
-                    animationConfig={{
-                      badgeAnimation: "slide",
-                      popoverAnimation: "fade",
-                    }}
-                    disabled={isLoadingSkinList || skinOptions.length === 0}
-                    />
-                  </FormControl>
-                </FormItem>
-              );
-              }}
+                  return (
+                    <FormItem>
+                      <FormLabel>
+                        Skins<span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <MultiSelect
+                          options={skinOptions}
+                          value={selectedValue}
+                          onValueChange={(value: string[]) => {
+                            const ids = value.map((v) => Number(v));
+                            field.onChange(ids);
+                          }}
+                          defaultValue={selectedValue}
+                          placeholder={
+                            isLoadingSkinList
+                              ? "Fetching skins..."
+                              : skinOptions.length === 0
+                                ? "No skins available"
+                                : "Select one or more skins"
+                          }
+                          searchable={true}
+                          maxCount={100}
+                          className="w-full"
+                          animationConfig={{
+                            badgeAnimation: "slide",
+                            popoverAnimation: "fade"
+                          }}
+                          disabled={
+                            isLoadingSkinList || skinOptions.length === 0
+                          }
+                        />
+                      </FormControl>
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 

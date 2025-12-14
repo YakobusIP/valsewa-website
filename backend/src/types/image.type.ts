@@ -13,4 +13,4 @@ type SkinPayload = {
   chromas?: { fullRender?: string | null }[];
 };
 
-export type {WeaponsResponse, Weapon, SkinPayload}
+export type { WeaponsResponse, Weapon, SkinPayload };

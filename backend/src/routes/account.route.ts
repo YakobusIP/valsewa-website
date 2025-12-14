@@ -79,12 +79,12 @@ class AccountRouter {
       this.accountController.deleteManyAccounts
     );
     this.router.post(
-      '/:id/skins',
+      "/:id/skins",
       authMiddleware,
       this.accountController.addSkinsToAccount
     );
     this.router.delete(
-      '/:id/skins',
+      "/:id/skins",
       authMiddleware,
       this.accountController.removeSkinsFromAccount
     );

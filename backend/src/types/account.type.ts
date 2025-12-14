@@ -19,14 +19,12 @@ type AccountEntityRequest = {
   thumbnail: number;
   otherImages: number[] | null;
   priceTier: number;
-  skinList: number[]
+  skinList: number[];
 };
 
-
 type AccountWithSkins = Prisma.AccountGetPayload<{
-  include: { skinList: true }
+  include: { skinList: true };
 }>;
-
 
 type PublicAccount = Prisma.AccountGetPayload<{
   select: {
@@ -50,4 +48,9 @@ type UpdateResetLogRequest = {
   passwordResetRequired: boolean;
 };
 
-export type { AccountEntityRequest, AccountWithSkins, PublicAccount, UpdateResetLogRequest };
+export type {
+  AccountEntityRequest,
+  AccountWithSkins,
+  PublicAccount,
+  UpdateResetLogRequest
+};

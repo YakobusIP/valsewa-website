@@ -15,13 +15,15 @@ export class SkinService {
     query?: string
   ): Promise<[Skin[], Metadata]> => {
     try {
-      const trimmed = (query ?? '').trim();
-      const whereCriteria: Prisma.SkinWhereInput | undefined = trimmed ? {
-        OR: [
-            {name: { contains: query, mode: "insensitive" },},
-            {keyword: { contains: query, mode: "insensitive" },}
-        ]
-      } : undefined;
+      const trimmed = (query ?? "").trim();
+      const whereCriteria: Prisma.SkinWhereInput | undefined = trimmed
+        ? {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { keyword: { contains: query, mode: "insensitive" } }
+            ]
+          }
+        : undefined;
 
       let data: Skin[];
       let metadata: Metadata;
@@ -84,8 +86,7 @@ export class SkinService {
     try {
       return await prisma.skin.create({
         data
-      })
-
+      });
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
