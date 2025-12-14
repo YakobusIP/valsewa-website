@@ -26,7 +26,7 @@ jobs:
               id: auth
               uses: google-github-actions/auth@v2
               with:
-                credentials_json: ${{ secrets.GCP_DEPLOYER_SA_KEY }}
+                credentials_json: ${{ secrets.GCP_DEPLOYER_SA }}
 
             - name: Set Up Google Cloud SDK
               uses: google-github-actions/setup-gcloud@v2.0.0
@@ -50,7 +50,7 @@ jobs:
                   --platform=managed \
                   --region=${{ vars.GCP_CLOUD_RUN_REGION }} \
                   --allow-unauthenticated \
-                  --service-account=${{ secrets.GCS_CLOUD_RUN_SA }} \
+                  --service-account=${{ secrets.CLOUD_RUN_RUNTIME_SA }} \
                   --network=default \
                   --subnet=default \
                   --vpc-egress=private-ranges-only \
