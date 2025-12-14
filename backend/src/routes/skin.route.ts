@@ -2,7 +2,7 @@ import { Router } from "express";
 import { SkinService } from "../services/skin.service";
 import { SkinController } from "../controllers/skin.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
-import { ImageService } from "../services/image.service";
+import { ImageService } from "../services/skin-image.service";
 
 class SkinRouter {
   public router: Router;

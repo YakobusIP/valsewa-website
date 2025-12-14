@@ -16,11 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
+import { useSkin } from "@/hooks/useSkin";
 import { toast } from "@/hooks/useToast";
 
 import { Paintbrush, SearchIcon } from "lucide-react";
 import { useDebounce } from "use-debounce";
-import { useSkin } from "@/hooks/useSkin";
 
 export default function SkinManagementModal() {
   const {
@@ -33,8 +33,7 @@ export default function SkinManagementModal() {
     refetchSkin
   } = useSkin();
 
-  const [isLoadingDeleteSkin, setIsLoadingDeleteSkin] =
-    useState(false);
+  const [isLoadingDeleteSkin, setIsLoadingDeleteSkin] = useState(false);
   const [selectedSkinRows, setSelectedSkinRows] = useState({});
 
   const [localSearch, setLocalSearch] = useState("");
@@ -42,9 +41,7 @@ export default function SkinManagementModal() {
 
   const deleteManySkins = async () => {
     setIsLoadingDeleteSkin(true);
-    const deletedIds = Object.keys(selectedSkinRows).map((id) =>
-      parseInt(id)
-    );
+    const deletedIds = Object.keys(selectedSkinRows).map((id) => parseInt(id));
     try {
       await skinService.deleteMany(deletedIds);
       refetchSkin();
@@ -101,7 +98,7 @@ export default function SkinManagementModal() {
               startIcon={
                 <SearchIcon size={18} className="text-muted-foreground" />
               }
-              placeholder="Search price tier..."
+              placeholder="Search skin..."
               parentClassName="w-full xl:w-64"
               onChange={(e) => setLocalSearch(e.target.value)}
             />

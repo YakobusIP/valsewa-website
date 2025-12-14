@@ -11,7 +11,8 @@ ALTER TABLE "Account" DROP COLUMN "skinList";
 CREATE TABLE "Skin" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "keyword" TEXT NOT NULL,
+    "image" TEXT NOT NULL,
+    "keyword" TEXT,
 
     CONSTRAINT "Skin_pkey" PRIMARY KEY ("id")
 );

@@ -70,7 +70,7 @@ model Skin {
   id          Int      @id @default(autoincrement())
   name        String   @unique
   image       String
-  keyword     String
+  keyword     String?
 
   accounts Account[]
 }

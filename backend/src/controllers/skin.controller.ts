@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { SkinService } from "../services/skin.service";
-import { ImageService } from "../services/image.service";
+import { ImageService } from "../services/skin-image.service";
 
 export class SkinController {
   constructor(private readonly skinService: SkinService, private readonly imageService: ImageService) {}

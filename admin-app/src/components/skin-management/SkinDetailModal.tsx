@@ -7,8 +7,8 @@ import {
   useState
 } from "react";
 
+import { skinService } from "@/services/skin.service";
 
-import { useDebouncedCallback } from "use-debounce";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,18 +31,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { useSkin } from "@/hooks/useSkin";
 import { toast } from "@/hooks/useToast";
 
+import { Skin } from "@/types/skin.type";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CirclePlusIcon, Loader2Icon } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
-import { Skin } from "@/types/skin.type";
-import { skinService } from "@/services/skin.service";
 
 const formSchema = z.object({
   name: z.string().nonempty("Name is required"),
   image: z.string(),
-  keyword: z.string().nonempty("Keyword is required")
+  keyword: z.string()
 });
 
 type Props = {
@@ -55,6 +55,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
   const isFirstRenderRank = useRef(true);
 
   const [open, onOpenChange] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const [isLoadingFetchImage, setIsLoadingFetchImage] = useState(false);
 
@@ -76,47 +77,43 @@ export default function SkinDetailModal({ mode, data }: Props) {
     reValidateMode: "onChange"
   });
 
-  
-    const handleNameInput = useCallback(
-      async (name: string) => {
-        setIsLoadingFetchImage(true);
-        try {
-          const imageResponse = (await skinService.fetchImage(name.toLowerCase()));
-          form.setValue("image", imageResponse.imageUrl);
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : "An unknown error occured";
-  
-          toast({
-            variant: "destructive",
-            title: "Uh oh! Something went wrong!",
-            description: errorMessage
-          });
-        } finally {
-          setIsLoadingFetchImage(false);
-        }
-      },
-      [form]
-    );
-  
-    const debouncedNameHandler = useDebouncedCallback(
-      handleNameInput,
-      5000
-    );
+  const handleNameInput = useCallback(
+    async (name: string) => {
+      setIsLoadingFetchImage(true);
+      try {
+        const imageResponse = await skinService.fetchImage(name.toLowerCase());
+        setImageUrl(imageResponse.imageUrl);
+        form.setValue("image", imageResponse.imageUrl);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occured";
 
-    
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong!",
+          description: errorMessage
+        });
+      } finally {
+        setIsLoadingFetchImage(false);
+      }
+    },
+    [form]
+  );
+
+  const debouncedNameHandler = useDebouncedCallback(handleNameInput, 1000);
+
   const nameValue = form.watch("name");
 
-    useEffect(() => {
-        if (isFirstRenderRank.current) {
-          isFirstRenderRank.current = false;
-          return;
-        }
-    
-        if (mode === "add" && nameValue && nameValue.trim() !== "") {
-          debouncedNameHandler(nameValue);
-        }
-      }, [mode, nameValue, debouncedNameHandler]);
+  useEffect(() => {
+    if (isFirstRenderRank.current) {
+      isFirstRenderRank.current = false;
+      return;
+    }
+
+    if (nameValue && nameValue.trim() !== "") {
+      debouncedNameHandler(nameValue);
+    }
+  }, [mode, nameValue, debouncedNameHandler]);
 
   const handleAddSkin = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -142,6 +139,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
       form.setValue("name", "");
       form.setValue("image", "");
       form.setValue("keyword", "");
+      setImageUrl("");
     }
   };
 
@@ -169,14 +167,17 @@ export default function SkinDetailModal({ mode, data }: Props) {
       });
     } finally {
       setIsLoadingSubmit(false);
+      form.setValue("name", "");
+      form.setValue("image", "");
+      form.setValue("keyword", "");
+      setImageUrl("");
     }
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoadingSubmit(true);
     if (mode === "add") await handleAddSkin(values);
-    else if (mode === "edit" && data)
-      await handleEditSkin(data.id, values);
+    else if (mode === "edit" && data) await handleEditSkin(data.id, values);
   };
 
   return (
@@ -202,53 +203,87 @@ export default function SkinDetailModal({ mode, data }: Props) {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col gap-2"
+            className="grid grid-cols-1 xl:grid-cols-2 gap-4"
           >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter skin name here" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex flex-col gap-2">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter skin name here" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="image"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Image</FormLabel>
-                  <FormControl>
-                    <Input placeholder= {isLoadingFetchImage ? "Fetching skin image link..." : "Enter skin image link here"} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="image"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Image</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={
+                          isLoadingFetchImage
+                            ? "Fetching skin image link..."
+                            : "Enter skin image link here"
+                        }
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="keyword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Keyword</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter skin keyword here"
-                      {...field}
-                      rows={5}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="keyword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Keyword</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter skin keyword here"
+                        {...field}
+                        rows={5}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex flex-col">
+              <div className="text-sm font-medium text-muted-foreground">
+                Preview
+              </div>
+
+              <div className="relative mt-2 border rounded-md overflow-hidden bg-muted aspect-video">
+                {isLoadingFetchImage && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-xs text-muted-foreground">
+                      Loading image…
+                    </div>
+                  </div>
+                )}
+
+                {!isLoadingFetchImage && (
+                  <img
+                    src={imageUrl || ""}
+                    alt={form.getValues("name") || "Image preview"}
+                    className="absolute inset-0 h-full w-full object-contain"
+                    loading="lazy"
+                  />
+                )}
+              </div>
+            </div>
 
             <Button type="submit" className="w-full xl:w-fit self-end">
               {isLoadingSubmit && (
