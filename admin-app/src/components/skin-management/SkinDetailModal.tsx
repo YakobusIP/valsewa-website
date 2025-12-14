@@ -41,7 +41,7 @@ import { z } from "zod";
 
 const formSchema = z.object({
   name: z.string().nonempty("Name is required"),
-  image: z.string(),
+  imageUrl: z.string(),
   keyword: z.string()
 });
 
@@ -66,12 +66,12 @@ export default function SkinDetailModal({ mode, data }: Props) {
         ? {
             name: data.name,
             keyword: data.keyword,
-            image: data.image ?? ""
+            imageUrl: data.imageUrl ?? ""
           }
         : {
             name: "",
             keyword: "",
-            image: ""
+            imageUrl: ""
           },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -83,7 +83,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
       try {
         const imageResponse = await skinService.fetchImage(name.toLowerCase());
         setImageUrl(imageResponse.imageUrl);
-        form.setValue("image", imageResponse.imageUrl);
+        form.setValue("imageUrl", imageResponse.imageUrl);
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "An unknown error occured";
@@ -105,6 +105,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
   const nameValue = form.watch("name");
 
   useEffect(() => {
+    if (!open) return;
     if (isFirstRenderRank.current) {
       isFirstRenderRank.current = false;
       return;
@@ -113,7 +114,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
     if (nameValue && nameValue.trim() !== "") {
       debouncedNameHandler(nameValue);
     }
-  }, [mode, nameValue, debouncedNameHandler]);
+  }, [ nameValue, debouncedNameHandler, open]);
 
   const handleAddSkin = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -137,7 +138,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
     } finally {
       setIsLoadingSubmit(false);
       form.setValue("name", "");
-      form.setValue("image", "");
+      form.setValue("imageUrl", "");
       form.setValue("keyword", "");
       setImageUrl("");
     }
@@ -168,7 +169,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
     } finally {
       setIsLoadingSubmit(false);
       form.setValue("name", "");
-      form.setValue("image", "");
+      form.setValue("imageUrl", "");
       form.setValue("keyword", "");
       setImageUrl("");
     }
@@ -222,7 +223,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
 
               <FormField
                 control={form.control}
-                name="image"
+                name="imageUrl"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Image</FormLabel>
@@ -260,7 +261,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
               />
             </div>
 
-            <div className="flex flex-col">
+            <div className='flex flex-col'>
               <div className="text-sm font-medium text-muted-foreground">
                 Preview
               </div>
@@ -274,7 +275,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
                   </div>
                 )}
 
-                {!isLoadingFetchImage && (
+                {!isLoadingFetchImage && imageUrl != "" && (
                   <img
                     src={imageUrl || ""}
                     alt={form.getValues("name") || "Image preview"}

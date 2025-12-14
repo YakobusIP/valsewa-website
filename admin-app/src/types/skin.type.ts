@@ -1,7 +1,7 @@
 type Skin = {
   id: number;
   name: string;
-  image: string;
+  imageUrl: string;
   keyword: string;
 };
 

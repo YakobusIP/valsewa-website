@@ -33,11 +33,11 @@ export const skinColumns: ColumnDef<Skin>[] = [
     accessorKey: "image",
     header: "Image",
     cell: ({ row }) => {
-      const { image, name } = row.original;
+      const { imageUrl, name } = row.original;
       return (
         <div className="p-1">
           <img
-            src={image || ""}
+            src={imageUrl || ""}
             alt={name || "Skin image"}
             className="h-24 w-24 rounded-md object-contain"
             loading="lazy"
