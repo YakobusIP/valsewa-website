@@ -15,26 +15,26 @@ enum Status {
 }
 
 model Account {
-  id                     Int       @id @default(autoincrement())
-  username               String
-  nickname               String
-  accountCode            String    @unique
-  description            String?
-  accountRank            String
-  availabilityStatus     Status    @default(AVAILABLE)
-  currentBookingDate     DateTime?
-  currentBookingDuration Int?
-  currentExpireAt        DateTime?
-  nextBookingDate        DateTime?
-  nextBookingDuration    Int?
-  nextExpireAt           DateTime?
-  totalRentHour          Int       @default(0)
-  rentHourUpdated        Boolean   @default(false)
-  password               String
-  passwordResetRequired  Boolean   @default(false)
-  skinList               String[]
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  id                        Int       @id @default(autoincrement())
+  username                  String
+  nickname                  String
+  accountCode               String    @unique
+  description               String?
+  accountRank               String
+  availabilityStatus        Status    @default(AVAILABLE)
+  currentBookingDate        DateTime?
+  currentBookingDuration    Int?
+  currentExpireAt           DateTime?
+  nextBookingDate           DateTime?
+  nextBookingDuration       Int?
+  nextExpireAt              DateTime?
+  totalRentHour             Int       @default(0)
+  rentHourUpdated           Boolean   @default(false)
+  password                  String
+  passwordResetRequired     Boolean   @default(false)
+  skinList                  Skin[]
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
   priceTier   PriceTier @relation(fields: [priceTierId], references: [id])
   priceTierId Int
@@ -62,6 +62,15 @@ model PriceTier {
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  accounts Account[]
+}
+
+model Skin {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  imageUrl    String   
+  keyword     String?
 
   accounts Account[]
 }

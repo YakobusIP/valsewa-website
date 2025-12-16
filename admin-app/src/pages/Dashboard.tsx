@@ -11,6 +11,7 @@ import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
 import DataTable from "@/components/data-table/DataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
 import PriceTierModal from "@/components/pricetier-management/PriceTierModal";
+import SkinManagementModal from "@/components/skin-management/SkinManagementModal";
 import { Button } from "@/components/ui/button";
 
 import { toast } from "@/hooks/useToast";
@@ -21,6 +22,7 @@ import { StatisticResponse } from "@/types/statistic.type";
 
 import { SORT_ORDER } from "@/lib/enums";
 
+import { SkinProvider } from "@/contexts/SkinContext";
 import { CirclePlusIcon } from "lucide-react";
 
 const PAGINATION_SIZE = 100;
@@ -225,6 +227,9 @@ export default function Dashboard() {
                   sortOrder={sortOrder}
                   handleSort={handleSort}
                 />
+                <SkinProvider>
+                  <SkinManagementModal />
+                </SkinProvider>
                 <PriceTierModal />
                 <CarouselManagementModal />
                 <Button

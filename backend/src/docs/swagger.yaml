@@ -47,7 +47,7 @@ components:
         skinList:
           type: array
           items:
-            type: string
+            type: Skin
         createdAt:
           type: string
           format: date-time
@@ -164,6 +164,52 @@ components:
         updatedAt:
           type: string
           format: date-time
+    
+    Skin:
+      type: object
+      properties:
+      id:
+        type: number
+      name:
+        type: string
+      image:
+        type: string
+      keyword:
+        type: string
+        description: "Comma-separated keywords. Example: 'ion, vandal, zedd phantom'"
+
+    SkinCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Prime Vandal"
+        keyword:
+          type: string
+          example: "prime, vandal"
+        image:
+          type: string
+          example: "https://media.valorant-api.com/weaponskinlevels/c9678d8c-4327-f397-b0ec-dca3c3d6fb15/displayicon.png"
+      required:
+        - name
+        - keyword
+        - image
+
+    SkinUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Prime Vandal (Updated)"
+        image:
+          type: string
+          example: "https://cdn.example/prime-vandal-new.png"
+        keyword:
+          type: string
+          example: "prime"
+      description: All fields are optional; only provided properties will be updated.
+
+
 
     Statistic:
       type: object
@@ -552,6 +598,77 @@ paths:
                 properties:
                   message:
                     type: string
+
+  /api/accounts/{id}/skins:
+    post:
+      tags: [Accounts]
+      summary: Add skins to an account (IDs only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+          description: Account ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                skinList:
+                  type: array
+                  items: { type: integer }
+              required: [skinList]
+            examples:
+              example:
+                value:
+                  skinList: [1, 2, 3]
+      responses:
+        "200":
+          description: Account with updated skin list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      skinList:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Skin"
+        "400": { description: Invalid payload }
+        "401": { description: Unauthorized }
+        "404": { description: Account not found }
+  
+    delete:
+      tags: [Accounts]
+      summary: Remove skins from an account (IDs only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                skinList:
+                  type: array
+                  items: { type: integer }
+              required: [skinList]
+      responses:
+        "200": { description: Account with updated skin list }
 
   /api/accounts/{id}/finish-booking:
     post:
@@ -1008,6 +1125,348 @@ paths:
       responses:
         "204":
           description: "Price tiers deleted successfully."
+
+  /api/skins:
+    get:
+      tags:
+        - Skins
+      summary: Retrieve a paginated list of Skins
+      description: Returns a list of skins with pagination metadata. Optionally filters by search query `q`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: string
+          description: The page number for pagination.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: string
+          description: The number of items per page.
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+          description: Optional search query.
+      responses:
+        "200":
+          description: A list of skins with pagination metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Skin"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+              examples:
+                example:
+                  value:
+                    data:
+                      - id: 1
+                        name: "Prime Vandal"
+                        image: "https://media.valorant-api.com/weaponskins/prime-vandal.png"
+                        keyword: "prime"
+                      - id: 2
+                        name: "Nebula Phantom"
+                        image: "https://media.valorant-api.com/weaponskins/nebula-phantom.png"
+                        keyword: "nebula"
+                    metadata:
+                      page: 1
+                      limit: 10
+                      totalItems: 2
+                      totalPages: 1
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      tags:
+        - Skins
+      summary: Create a new skin (name & keyword). Image is enriched server-side.
+      description: >
+        Creates a skin using `name` and `keyword`.  
+        The server will call the Valorant weapons endpoint to find a matching skin and store the image URL.  
+        If the image is not found, the record is **still created** and a **warning** is returned with `201`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkinCreate"
+            examples:
+              example:
+                value:
+                  name: "Prime Vandal"
+                  keyword: "prime"
+                  image: "https://media.valorant-api.com/weaponskinlevels/c9678d8c-4327-f397-b0ec-dca3c3d6fb15/displayicon.png"
+      responses:
+        "201":
+          description: Skin created.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  # Your controller returns a message in the normal success path
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Skin created successfully!"
+                  # Partial success (image not found): controller returns data + warning
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 10
+                          name:
+                            type: string
+                            example: "MadeUp Skin"
+                          keyword:
+                            type: string
+                            example: "kw"
+                          image:
+                            type: string
+                            description: Empty string when image not found.
+                            example: ""
+                      warning:
+                        type: string
+                        example: "Image for skin MadeUp Skin not found. Record saved."
+        "400":
+          description: Bad Request (validation error)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict (duplicate name)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags:
+        - Skins
+      summary: Delete multiple skins.
+      description: Accepts a list of skin IDs to delete in one request.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: number
+              required:
+                - ids
+            examples:
+              example:
+                value:
+                  ids: [1, 2, 3]
+      responses:
+        "204":
+          description: Skins deleted successfully (no response body).
+        "400":
+          description: Bad Request (missing or invalid ids)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/skins/{id}:
+    get:
+      tags:
+        - Skins
+      summary: Retrieve a skin by ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the skin.
+      responses:
+        "200":
+          description: The details of the skin.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Skin"
+              examples:
+                example:
+                  value:
+                    data:
+                      id: 1
+                      name: "Prime Vandal"
+                      image: "https://media.valorant-api.com/weaponskins/prime-vandal.png"
+                      keyword: "prime"
+        "404":
+          description: Skin not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags:
+        - Skins
+      summary: Update an existing skin.
+      description: Updates a skin’s fields. Your controller responds with a message.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the skin to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkinUpdate"
+            examples:
+              example:
+                value:
+                  name: "Prime Vandal (Updated)"
+                  keyword: "prime"
+                  image: "https://cdn.example/prime-vandal-new.png"
+      responses:
+        "201":
+          description: Skin updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Skin updated successfully!"
+        "400":
+          description: Bad Request (validation error)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Skin not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict (duplicate name)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  
+  /api/skins/image:
+    get:
+      tags:
+        - Skins
+      summary: Get a skin's image URL by name (query parameter).
+      description: >
+        Resolves the image URL for a given skin name (case-insensitive).  
+        Prefers `levels.displayIcon`; falls back to `chromas.fullRender`.  
+        Returns 404 if the skin (or image) could not be found.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+          description: Skin name to look up, e.g. "Prime Vandal".
+      responses:
+        "200":
+          description: Skin image URL resolved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: Prime Vandal
+                      imageUrl:
+                        type: string
+                        example: https://media.valorant-api.com/.../displayicon.png
+        "404":
+          description: Skin or image not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation or upstream unavailability/rate-limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/statistics:
     get:

@@ -78,6 +78,16 @@ class AccountRouter {
       authMiddleware,
       this.accountController.deleteManyAccounts
     );
+    this.router.post(
+      "/:id/skins",
+      authMiddleware,
+      this.accountController.addSkinsToAccount
+    );
+    this.router.delete(
+      "/:id/skins",
+      authMiddleware,
+      this.accountController.removeSkinsFromAccount
+    );
   }
 }
 
