@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 type VoucherForm = {
   voucherName: string;
   isValid: boolean;
+  isVisible: boolean;
   type: VoucherType;
   percentage: string;
   nominal: string;
@@ -40,6 +41,7 @@ export default function VoucherCreateModal({
   const [form, setForm] = useState<VoucherForm>({
     voucherName: "",
     isValid: true,
+    isVisible: true,
     type: "PERSENTASE",
     percentage: "",
     nominal: "",
@@ -92,6 +94,7 @@ export default function VoucherCreateModal({
     const payload: CreateVoucherPayload = {
       voucherName: form.voucherName,
       isValid: form.isValid,
+      isVisble: form.isVisible,
       type: form.type,
 
       percentage:
@@ -121,6 +124,7 @@ export default function VoucherCreateModal({
       setForm({
         voucherName: "",
         isValid: true,
+        isVisible: true,
         type: "PERSENTASE",
         percentage: "",
         nominal: "",

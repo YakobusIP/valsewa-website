@@ -4,6 +4,7 @@ export type Voucher = {
   id: number;
   voucherName: string;
   isValid: boolean;
+  isVisble: boolean;
   type: VoucherType;
   percentage?: number | null;
   nominal?: number | null;

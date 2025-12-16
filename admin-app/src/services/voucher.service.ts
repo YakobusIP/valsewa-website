@@ -7,6 +7,7 @@ export type VoucherEntity = {
   id: number;
   voucherName: string;
   isValid: boolean;
+  isVisible: boolean;
   type: VoucherType;
   percentage?: number | null;
   nominal?: number | null;
@@ -89,6 +90,17 @@ const createVoucherService = () => {
       throw new Error(handleAxiosError(error));
     }
   };
+  const toggleStatusVisibility = async (id: number) => {
+    try {
+      const res = await interceptedAxios.patch<MessageResponse>(
+        `${BASE_VOUCHER_URL}/${id}/toggleVisibility`
+      );
+
+      return res.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
 
   return {
     fetchAll,
@@ -96,7 +108,8 @@ const createVoucherService = () => {
     remove,
     update,
     findById,
-    toggleStatus
+    toggleStatus,
+    toggleStatusVisibility
   };
 };
 

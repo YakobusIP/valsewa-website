@@ -115,6 +115,23 @@ export class VoucherService {
     }
   };
 
+  toggleVisibility = async (id: number) => {
+    try {
+      const voucher = await prisma.voucher.findUnique({
+        where: { id }
+      });
+
+      if (!voucher) throw new BadRequestError("Voucher not found");
+
+      return await prisma.voucher.update({
+        where: { id },
+        data: { isVisible: !voucher.isVisible }
+      });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   remove = async (id: number) => {
     try {
       await prisma.voucher.delete({ where: { id } });

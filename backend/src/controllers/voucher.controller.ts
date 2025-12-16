@@ -4,11 +4,7 @@ import { VoucherService } from "../services/voucher.service";
 export class VoucherController {
   constructor(private readonly voucherService: VoucherService) {}
 
-  getAllVouchers = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  getAllVouchers = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const page = req.query.page ?? undefined;
       const limit = req.query.limit ?? undefined;
@@ -65,6 +61,20 @@ export class VoucherController {
       await this.voucherService.toggleStatus(Number(id));
 
       res.json({ message: "Voucher status updated" });
+    } catch (error) {
+      res.status(400).json({
+        message: (error as Error).message
+      });
+    }
+  };
+
+  toggleVoucherVisible = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+
+      await this.voucherService.toggleVisibility(Number(id));
+
+      res.json({ message: "Voucher visibility updated" });
     } catch (error) {
       res.status(400).json({
         message: (error as Error).message

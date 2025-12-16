@@ -43,7 +43,6 @@ export class AuthService {
 
       const passwordExpiredAt = new Date(user.passwordChangedAt);
       passwordExpiredAt.setDate(passwordExpiredAt.getDate() + 30);
-      console.log(new Date());
       if (new Date() > passwordExpiredAt) {
         throw new UnauthorizedError(
           "Password already expired, Please contact our team"
