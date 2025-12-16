@@ -1,6 +1,4 @@
 import {
-  Dispatch,
-  SetStateAction,
   useCallback,
   useEffect,
   useRef,
@@ -115,6 +113,33 @@ export default function SkinDetailModal({ mode, data }: Props) {
       debouncedNameHandler(nameValue);
     }
   }, [ nameValue, debouncedNameHandler, open]);
+
+  
+  useEffect(() => {
+    if (!open) return;
+  
+    isFirstRenderRank.current = true;
+  
+    if (mode === "edit" && data) {
+      const initialImageUrl = data.imageUrl ?? "";
+    
+      form.reset({
+        name: data.name ?? "",
+        keyword: data.keyword ?? "",
+        imageUrl: initialImageUrl
+      });
+    
+      setImageUrl(initialImageUrl);
+    } else {
+      form.reset({
+        name: "",
+        keyword: "",
+        imageUrl: ""
+      });
+    
+      setImageUrl("");
+    }
+  }, [open, mode, data, form]);
 
   const handleAddSkin = async (values: z.infer<typeof formSchema>) => {
     try {
@@ -275,9 +300,9 @@ export default function SkinDetailModal({ mode, data }: Props) {
                   </div>
                 )}
 
-                {!isLoadingFetchImage && imageUrl != "" && (
+                {!isLoadingFetchImage && imageUrl != "" &&(
                   <img
-                    src={imageUrl || ""}
+                    src={imageUrl}
                     alt={form.getValues("name") || "Image preview"}
                     className="absolute inset-0 h-full w-full object-contain"
                     loading="lazy"
