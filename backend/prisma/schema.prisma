@@ -232,6 +232,7 @@ model Voucher {
   updatedAt   DateTime @updatedAt
   voucherName String  @unique
   isValid     Boolean @default(true)
+  isVisible   Boolean @default(true)
   type         Type        
   percentage   Float?
   nominal      Float?

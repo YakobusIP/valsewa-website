@@ -35,12 +35,14 @@ export default function VoucherModal({
       setLoading(true);
       const res = await voucherService.fetchAll(1, 100);
       setVouchers(res.data);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
+
+    } catch (error) {
+      const errorMessage =
+            error instanceof Error ? error.message : "Failed to load vouchers";
       toast({
         variant: "destructive",
         title: "Failed to load vouchers",
-        description: err?.message || "Unknown error"
+        description: errorMessage || "Unknown error"
       });
     } finally {
       setLoading(false);
@@ -63,12 +65,14 @@ export default function VoucherModal({
         title: "Deleted",
         description: "Voucher removed successfully"
       });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    
+    } catch (error) {
+      const errorMessage =
+            error instanceof Error ? error.message : "Failed to remove voucher";
       toast({
         variant: "destructive",
         title: "Delete failed",
-        description: error?.message || "Unknown error"
+        description: errorMessage || "Unknown error"
       });
     }
   };
@@ -88,13 +92,42 @@ export default function VoucherModal({
       title: "Updated",
       description: "Voucher status changed"
     });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
+    
+  } catch (error) {
+    const errorMessage =
+            error instanceof Error ? error.message : "Failed to update voucher";
+      toast({
+        variant: "destructive",
+        title: "Failed",
+        description: errorMessage || "Unknown error"
+      });
+  }
+};
+
+const handleToggleVisibility = async (id: number) => {
+  try {
+    await voucherService.toggleStatusVisibility(id);
+
+    // Update UI instantly (no need refetch)
+    setVouchers((prev) =>
+      prev.map((v) =>
+        v.id === id ? { ...v, isVisible: !v.isVisible } : v
+      )
+    );
+
     toast({
-      variant: "destructive",
-      title: "Failed",
-      description: error?.message || "Unknown error"
+      title: "Updated",
+      description: "Voucher visibility changed"
     });
+    
+  } catch (error) {
+    const errorMessage =
+            error instanceof Error ? error.message : "Failed to update voucher";
+      toast({
+        variant: "destructive",
+        title: "Failed",
+        description: errorMessage || "Unknown error"
+      });
   }
 };
 
@@ -143,6 +176,13 @@ export default function VoucherModal({
                       >
                         Status: {voucher.isValid ? "ACTIVE" : "INACTIVE"}
                       </p>
+                      <p
+                        className={`text-xs font-semibold ${
+                          voucher.isVisible ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
+                        Visibility: {voucher.isVisible ? "VISIBLE" : "INVINCIBLE"}
+                      </p>
 
                       <p className="text-sm text-muted-foreground">
                         Type: {voucher.type}
@@ -170,10 +210,20 @@ export default function VoucherModal({
                     <div className="flex gap-2">
                       <Button
                         size="sm"
+                        className="hover:bg-slate-400"
                         variant={voucher.isValid ? "secondary" : "default"}
                         onClick={() => handleToggle(voucher.id)}
                       >
                         {voucher.isValid ? "Deactivate" : "Activate"}
+                      </Button>
+
+                      <Button
+                        size="sm"
+                        className="hover:bg-slate-400"
+                        variant={voucher.isVisible ? "secondary" : "default"}
+                        onClick={() => handleToggleVisibility(voucher.id)}
+                      >
+                        {voucher.isVisible ? "Invisible" : "Visible"}
                       </Button>
 
                       <Button
