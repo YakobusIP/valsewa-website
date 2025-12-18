@@ -36,9 +36,7 @@ export default function UserListModal({
       try {
         setLoading(true);
         setError(null);
-
         const res = await customerService.fetchAll();
-
         setUsers(res.data || []);
       } catch (err) {
         console.error(err);
@@ -50,46 +48,52 @@ export default function UserListModal({
 
     fetchUsers();
   }, [open]);
-    const openChangePassword = (user: User) => {
-      setSelectedUser(user);
-      setShowChangePassword(true);
-    };
 
-    const closeChangePassword = () => {
-      setSelectedUser(null);
-      setShowChangePassword(false);
-    };
+  const openChangePassword = (user: User) => {
+    setSelectedUser(user);
+    setShowChangePassword(true);
+  };
+
+  const closeChangePassword = () => {
+    setSelectedUser(null);
+    setShowChangePassword(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full xl:w-3/5 overflow-y-auto max-h-[100dvh]">
-        <DialogHeader>
+      <DialogContent className="w-full xl:w-3/5 max-h-[100dvh] overflow-y-auto">
+        <DialogHeader className="space-y-1">
           <DialogTitle>User List</DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            Manage registered users
+          </p>
         </DialogHeader>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* TABLE CONTAINER */}
+        <div className="mt-4 border rounded-lg overflow-hidden bg-background">
           <table className="w-full text-sm">
-            <thead className=" ">
+            <thead className="bg-muted/50 border-b">
               <tr>
-                <th className="p-3 text-left w-[50px]">#</th>
-                <th className="p-3 text-left">Username</th>
-                <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left">Created At</th>
-                <th className="p-3 text-left">Actions</th>
+                <th className="px-4 py-3 text-left w-[60px]">#</th>
+                <th className="px-4 py-3 text-left">Username</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">Created At</th>
+                <th className="px-4 py-3 text-left">Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={3} className="p-4 text-center">
-                    Loading...
+                  <td colSpan={5} className="py-6 text-center text-muted-foreground">
+                    Loading users...
                   </td>
                 </tr>
               )}
 
               {error && (
                 <tr>
-                  <td colSpan={3} className="p-4 text-center text-red-400">
+                  <td colSpan={5} className="py-6 text-center text-destructive">
                     {error}
                   </td>
                 </tr>
@@ -97,7 +101,7 @@ export default function UserListModal({
 
               {!loading && !error && users.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="p-4 text-center">
+                  <td colSpan={5} className="py-6 text-center text-muted-foreground">
                     No users found
                   </td>
                 </tr>
@@ -108,31 +112,34 @@ export default function UserListModal({
                 users.map((user, index) => (
                   <tr
                     key={user.id}
-                    className={`border-t border-zinc-800 hover:bg-zinc-300 ${
-                      index % 2 === 0 ? "bg-zinc-100" : "bg-zinc-100"
-                    }`}
+                    className="border-b last:border-b-0 hover:bg-muted transition-colors"
                   >
-                  <td className="p-3">{index + 1}</td>
-                    <td className="p-3">{user.username}</td>
-                    <td className="p-3">
-                      {user.isActive ? (
-                        <span className="text-green-400 font-medium">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="text-red-400 font-medium">
-                          Inactive
-                        </span>
-                      )}
+                    <td className="px-4 py-3">{index + 1}</td>
+
+                    <td className="px-4 py-3 font-medium">
+                      {user.username}
                     </td>
-                    <td className="p-3">
+
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          user.isActive
+                            ? "bg-green-500/10 text-green-600"
+                            : "bg-red-500/10 text-red-500"
+                        }`}
+                      >
+                        {user.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3 text-muted-foreground">
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="p-3">
+
+                    <td className="px-4 py-3">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-zinc-600 hover:bg-zinc-800 bg-black text-white hover:text-white"
                         onClick={() => openChangePassword(user)}
                       >
                         Change Password
@@ -144,17 +151,19 @@ export default function UserListModal({
           </table>
         </div>
 
-        {/* Footer */}
+        {/* FOOTER */}
         <div className="flex justify-end mt-4">
-          <Button onClick={onOpenCreateUser}>+ Create User</Button>
+          <Button onClick={onOpenCreateUser}>
+            + Create User
+          </Button>
         </div>
       </DialogContent>
+
       <ChangePasswordModal
         open={showChangePassword}
         user={selectedUser}
         onClose={closeChangePassword}
       />
     </Dialog>
-    
   );
 }

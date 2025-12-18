@@ -181,7 +181,7 @@ const handleToggleVisibility = async (id: number) => {
                           voucher.isVisible ? "text-green-600" : "text-red-600"
                         }`}
                       >
-                        Visibility: {voucher.isVisible ? "VISIBLE" : "INVINCIBLE"}
+                        Visibility: {voucher.isVisible ? "VISIBLE" : "INVISIBLE"}
                       </p>
 
                       <p className="text-sm text-muted-foreground">
