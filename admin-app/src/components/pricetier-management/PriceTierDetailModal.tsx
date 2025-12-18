@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { priceTierService } from "@/services/pricetier.service";
 
@@ -19,7 +19,6 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 
 import { usePriceTier } from "@/hooks/usePriceTier";
 import { toast } from "@/hooks/useToast";
@@ -27,13 +26,21 @@ import { toast } from "@/hooks/useToast";
 import { PriceTier } from "@/types/pricetier.type";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CirclePlusIcon, Loader2Icon } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { CirclePlusIcon, Loader2Icon, Trash2Icon } from "lucide-react";
+import { useFieldArray, useForm } from "react-hook-form";
 import { z } from "zod";
+
+const DURATION_RE = /^(?:(\d+)d(?:\s+([01]?\d|2[0-3])h)?|([01]?\d|2[0-3])h)$/;
+
+const priceListSchema = z.object({
+  duration: z.string().regex(DURATION_RE, "Duration must be like '1d 5h or 1d or 5h' (hours 0–23)"),
+  normalPrice: z.coerce.number().min(0, "Normal price must be 0 or more"),
+  lowPrice: z.coerce.number().min(0, "Low price must be 0 or more"),
+})
 
 const formSchema = z.object({
   code: z.string().nonempty("Code is required"),
-  description: z.string().nonempty("Description is required")
+  priceList: z.array(priceListSchema).min(1, "At least one price item is required")
 });
 
 type Props = {
@@ -53,76 +60,76 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
       mode === "edit" && data
         ? {
             code: data.code,
-            description: data.description
+            priceList: data.priceList
           }
         : {
             code: "",
-            description: ""
+            priceList: []
           },
     mode: "onSubmit",
     reValidateMode: "onChange"
   });
 
-  const handleAddPriceTier = async (values: z.infer<typeof formSchema>) => {
-    try {
-      const response = await priceTierService.create(values);
-      await refetchPriceTier();
-      onOpenChange(false);
 
-      toast({
-        title: "All set!",
-        description: response.message
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occured";
+  const { fields, append, remove, replace } = useFieldArray({
+    control: form.control,
+    name: "priceList"
+  });
 
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong!",
-        description: errorMessage
-      });
-    } finally {
-      setIsLoadingSubmit(false);
-    }
-  };
+  const handleDialogChange = (nextOpen: boolean) => {
+  onOpenChange(nextOpen);
 
-  const handleEditPriceTier = async (
-    id: number,
-    values: z.infer<typeof formSchema>
-  ) => {
-    try {
-      const response = await priceTierService.update(id, values);
-      await refetchPriceTier();
-      onOpenChange(false);
+  if (!nextOpen) {
+    form.reset({ code: "", priceList: [] });
+    replace([]);
+  }
+};
 
-      toast({
-        title: "All set!",
-        description: response.message
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occured";
 
-      toast({
-        variant: "destructive",
-        title: "Uh oh! Something went wrong!",
-        description: errorMessage
-      });
-    } finally {
-      setIsLoadingSubmit(false);
-    }
-  };
+  useEffect(() => {
+    if (!open) return;
+    if (mode === "edit" && data) {
+    const mapped = data.priceList;
+
+    form.reset({ code: data.code, priceList: mapped });
+    replace(mapped);
+  } else {
+    form.reset({ code: "", priceList: [] });
+    replace([]);
+  }
+}, [open, mode, data, form, replace]);
+
+  const addRow = () => {
+    append({ duration: "", normalPrice: 0, lowPrice: 0})
+  }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoadingSubmit(true);
-    if (mode === "add") await handleAddPriceTier(values);
-    else if (mode === "edit" && data)
-      await handleEditPriceTier(data.id, values);
+
+    try {
+      const response =
+        mode === "add"
+          ? await priceTierService.create(values)
+          : await priceTierService.update(data!.id, values);
+
+      await refetchPriceTier();
+      onOpenChange(false);
+
+      toast({ title: "All set!", description: response.message });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: error instanceof Error ? error.message : "An unknown error occured",
+      });
+    } finally {
+      setIsLoadingSubmit(false);
+    }
+
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogChange}>
       <DialogTrigger asChild>
         {mode === "edit" ? (
           <Button className="justify-self-end">Edit</Button>
@@ -160,33 +167,135 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter description here"
-                      {...field}
-                      rows={5}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <FormLabel className="text-base">Price List</FormLabel>
 
-            <Button type="submit" className="w-full xl:w-fit self-end">
-              {isLoadingSubmit && (
-                <Loader2Icon className="w-4 h-4 animate-spin" />
+                <Button type="button" variant="secondary" onClick={addRow}>
+                  <CirclePlusIcon className="mr-2 h-4 w-4" />
+                  Add row
+                </Button>
+              </div>
+
+              {form.formState.errors.priceList?.message && (
+                <p className="text-sm text-destructive">
+                  {form.formState.errors.priceList.message}
+                </p>
               )}
+              
+              <div className="rounded-md border">
+              <div className="grid grid-cols-[1.2fr_1fr_1fr_auto] gap-2 border-b bg-muted/40 p-2 text-sm font-medium">
+                  <div>Duration</div>
+                  <div>Normal Price</div>
+                  <div>Low Price</div>
+                  <div className="w-10" />
+                </div>
+
+
+                  {fields.length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground">
+                      No rows yet. Click <span className="font-medium">Add row</span>.
+                    </div>
+                  ) : (
+                    fields.map((row, index) => (
+                      <div
+                        key={row.id}
+                        className="grid grid-cols-[1.2fr_1fr_1fr_auto] gap-2 p-2"
+                      >
+                        <FormField
+                        control={form.control}
+                        name={`priceList.${index}.duration`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input
+                                type="string"
+                                min={0}
+                                step="1"
+                                placeholder="0"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                        <FormField
+                          control={form.control}
+                          name={`priceList.${index}.normalPrice`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  step="1"
+                                  placeholder="0"
+                                  onFocus={() => {
+                                    if (field.value === 0) field.onChange("");
+                                  }}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name={`priceList.${index}.lowPrice`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  step="1"
+                                  placeholder="0"
+                                  onFocus={() => {
+                                    if (field.value === 0) field.onChange("");
+                                  }}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <div className="flex items-start justify-end pt-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={fields.length === 1}
+                            onClick={() => remove(index)}
+                            aria-label="Remove row"
+                          >
+                            <Trash2Icon className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Duration format: <span className="font-medium">Nd Hh</span> (e.g.{" "}
+                <span className="font-medium">1d 5h</span>), hours 0–23.
+              </p>
+            </div>
+
+            <Button type="submit" className="w-full xl:w-fit self-end" disabled={isLoadingSubmit}>
+              {isLoadingSubmit && <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />}
               Submit
             </Button>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
+
   );
 }

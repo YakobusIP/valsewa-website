@@ -17,6 +17,26 @@ class PriceTierRouter {
 
   private initializeRoutes() {
     this.router.get(
+      "/:tierId/price-list",
+      authMiddleware,
+      this.priceTierController.getPriceListByTierId
+    );
+    this.router.post(
+      "/:tierId/price-list",
+      authMiddleware,
+      this.priceTierController.addPriceListItems
+    );
+    this.router.put(
+      "/price-list/:itemId",
+      authMiddleware,
+      this.priceTierController.updatePriceListItem
+    );
+    this.router.delete(
+      "/price-list",
+      authMiddleware,
+      this.priceTierController.deletePriceListItems
+    );
+    this.router.get(
       "/",
       authMiddleware,
       this.priceTierController.getAllPriceTiers

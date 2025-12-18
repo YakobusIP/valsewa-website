@@ -156,14 +156,165 @@ components:
           type: number
         code:
           type: string
-        description:
-          type: string
+        priceList:
+          type: array
+          items: 
+            $ref: "#/components/schemas/PriceList"
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+
+    PriceList:
+      type: object
+      properties:
+      id:
+        type: number
+      duration:
+        type: string
+        pattern: '^(\d+d)?\s?(\d+h)?$'
+        example: "1d 2h"
+      normalPrice:
+        type: number
+      lowPrice:
+        type: number
+      tierId:
+        type: number
+
+    PriceTierCreateRequest:
+      type: object
+      description: "Create a price tier and optionally its price list items."
+      properties:
+        code:
+          type: string
+          example: "C"
+        priceList:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceListCreateWithoutTier"
+      required:
+        - code
+
+    PriceTierUpdateRequest:
+      type: object
+      description: "Update price tier. If replacePriceList is provided, replaces all existing items."
+      properties:
+        code:
+          type: string
+          example: "C"
+        replacePriceList:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceListCreateWithoutTier"
+      additionalProperties: false
+
+    PriceListCreateWithoutTier:
+      type: object
+      description: "Create a price list item when tierId is supplied via the path."
+      properties:
+        duration:
+          type: string
+          pattern: "^(\\d+d)?\\s?(\\d+h)?$"
+          example: "1d 0h"
+        normalPrice:
+          type: number
+          example: 99900
+        lowPrice:
+          type: number
+          example: 79900
+      required:
+        - duration
+        - normalPrice
+        - lowPrice
+
+    PriceListBulkCreateRequest:
+      type: object
+      description: "Bulk create price list items for a tier."
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceListCreateWithoutTier"
+      required:
+        - items
+      example:
+        items:
+          - { duration: "1d 2h", normalPrice: 99000, lowPrice: 79000 }
+          - { duration: "0d 12h", normalPrice: 54900, lowPrice: 44900 }
+
+    PriceListUpdate:
+      type: object
+      description: "Partial or full update for a price list item."
+      properties:
+        duration:
+          type: string
+          pattern: "^(\\d+d)?\\s?(\\d+h)?$"
+          example: "2d 0h"
+        normalPrice:
+          type: number
+          example: 102000
+        lowPrice:
+          type: number
+          example: 82000
+      additionalProperties: false
+
+    IdsDeleteRequest:
+      type: object
+      description: "IDs payload for delete-many operations."
+      properties:
+        ids:
+          type: array
+          items:
+            type: number
+          example: [1, 2, 3]
+      required:
+        - ids
+
+    PriceListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceList"
+        metadata:
+          type: object
+          description: "Extra metadata when listing items by tier."
+          properties:
+            tierId:
+              type: number
+              example: 10
+      required:
+        - data
+
+    PriceListBulkCreateResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceList"
+        message:
+          type: string
+          example: "Price list items created."
+      required:
+        - data
+        - message
+
+    PriceListUpdateResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/PriceList"
+        message:
+          type: string
+          example: "Price list item updated."
+      required:
+        - data
+        - message
+
     
     Skin:
       type: object
@@ -1050,6 +1201,28 @@ paths:
                 properties:
                   message:
                     type: string
+    delete:
+      tags:
+        - Price Tiers
+      summary: "Delete multiple price tiers."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdsDeleteRequest"
+      responses:
+        "204":
+          description: "Price tiers deleted successfully."
+        "500":
+          description: "Server error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 
   /api/price-tiers/{id}:
     get:
@@ -1093,7 +1266,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PriceTier"
+              $ref: "#/components/schemas/PriceTierUpdateRequest"
       responses:
         "201":
           description: "Price tier updated successfully."
@@ -1125,6 +1298,148 @@ paths:
       responses:
         "204":
           description: "Price tiers deleted successfully."
+  
+  /api/price-tiers/{tierId}/price-list:
+    get:
+      tags:
+        - Price List
+      summary: "List price list items for a tier."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: tierId
+          required: true
+          schema:
+            type: string
+          description: "The ID of the price tier."
+      responses:
+        "200":
+          description: "Price list items for the tier."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceListResponse"
+        "404":
+          description: "Tier not found."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Server error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - Price List
+      summary: "Bulk create price list items for a tier."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: tierId
+          required: true
+          schema:
+            type: string
+          description: "The ID of the price tier."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceListBulkCreateRequest"
+      responses:
+        "201":
+          description: "Price list items created."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceListBulkCreateResponse"
+        "400":
+          description: "Validation error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Tier not found."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Server error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/price-list/{id}:
+    put:
+      tags:
+        - Price List
+      summary: "Update a single price list item."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "The ID of the price list item."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceListUpdate"
+      responses:
+        "200":
+          description: "Price list item updated."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceListUpdateResponse"
+        "404":
+          description: "Item not found."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Server error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/price-list:
+    delete:
+      tags:
+        - Price List
+      summary: "Delete multiple price list items."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdsDeleteRequest"
+      responses:
+        "204":
+          description: "Price list items deleted successfully."
+        "500":
+          description: "Server error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 
   /api/skins:
     get:

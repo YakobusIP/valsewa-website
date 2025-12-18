@@ -33,12 +33,33 @@ export default function PriceTierModal() {
     refetchPriceTier
   } = usePriceTier();
 
+  const [open, setOpen] = useState(false)
+
   const [isLoadingDeletePriceTier, setIsLoadingDeletePriceTier] =
     useState(false);
   const [selectedPriceTierRows, setSelectedPriceTierRows] = useState({});
 
   const [localSearch, setLocalSearch] = useState("");
   const [debouncedSearch] = useDebounce(localSearch, 1000);
+
+  useEffect(() => {
+    if (!open) return;
+    setPriceTierSearch(debouncedSearch);
+    setPriceTierListPage(1);
+  }, [debouncedSearch, setPriceTierSearch, setPriceTierListPage, open]);
+
+  
+  const handleOpenChange = (nextOpen: boolean) => {
+      setOpen(nextOpen);
+  
+      if (!nextOpen) {
+        setLocalSearch("");
+        setPriceTierSearch("");
+        setPriceTierListPage(1);
+        setSelectedPriceTierRows({});
+      }
+    };
+
 
   const deleteManyPriceTiers = async () => {
     setIsLoadingDeletePriceTier(true);
@@ -67,13 +88,8 @@ export default function PriceTierModal() {
     }
   };
 
-  useEffect(() => {
-    setPriceTierSearch(debouncedSearch);
-    setPriceTierListPage(1);
-  }, [debouncedSearch, setPriceTierSearch, setPriceTierListPage]);
-
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="w-full xl:w-fit">
           <CircleDollarSignIcon className="w-4 h-4" />
