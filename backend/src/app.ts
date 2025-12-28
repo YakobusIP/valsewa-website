@@ -19,7 +19,7 @@ import { throttleMiddleware } from "./middleware/throttle.middleware";
 import swaggerJSDoc, { OAS3Definition, Options } from "swagger-jsdoc";
 import { serve, setup } from "swagger-ui-express";
 import SkinRouter from "./routes/skin.route";
-import customerRoute from "./routes/customer.route";
+import CustomerRouter from "./routes/customer.route";
 
 const app: Express = express();
 
@@ -53,7 +53,7 @@ app.use("/api/skins", SkinRouter);
 app.use("/api/statistics", StatisticRouter);
 app.use("/api/carousels", CarouselSlideRouter);
 app.use("/api/upload", UploadRouter);
-app.use("/api/customer", customerRoute);
+app.use("/api/customer", CustomerRouter);
 app.use("/api/vouchers", VoucherRouter);
 app.use("/api/bookings", BookingRouter);
 
