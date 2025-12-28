@@ -3,12 +3,14 @@ import {
   SetStateAction,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState
 } from "react";
 
 import { accountService } from "@/services/account.service";
 import { priceTierService } from "@/services/pricetier.service";
+import { skinService } from "@/services/skin.service";
 import { uploadService } from "@/services/upload.service";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,7 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { MultiSelect } from "@/components/ui/multi-select";
 import {
   Select,
   SelectContent,
@@ -46,6 +49,7 @@ import { toast } from "@/hooks/useToast";
 
 import { AccountEntity } from "@/types/account.type";
 import { PriceTier } from "@/types/pricetier.type";
+import { Skin } from "@/types/skin.type";
 
 import { ranks } from "@/lib/constants";
 import { cn, convertHoursToDays, generatePassword } from "@/lib/utils";
@@ -77,15 +81,7 @@ const formSchema = z.object({
   accountRank: z.string().nonempty("Rank is required"),
   password: z.string().nonempty("Password is required"),
   passwordResetRequired: z.boolean().optional(),
-  skinList: z
-    .array(z.object({ name: z.string().optional() }))
-    .transform((listOfSkins) =>
-      listOfSkins.filter((skin) => skin.name && skin.name.trim() !== "")
-    )
-    .refine(
-      (filteredSkins) => filteredSkins.length > 0,
-      "At least 1 skin is required"
-    ),
+  skinList: z.array(z.number()).min(1, "At least 1 skin is required"),
   thumbnail: z.union([
     z.instanceof(File, { message: "Thumbnail is required" }),
     z.object({ id: z.number(), imageUrl: z.string().url() })
@@ -118,6 +114,8 @@ export default function AccountDetailModal({
   const isFirstRenderRank = useRef(true);
   const isFirstRenderDuplicate = useRef(true);
   const [isLoadingPriceTierList, setIsLoadingPriceTierList] = useState(false);
+  const [isLoadingSkinList, setIsLoadingSkinList] = useState(false);
+  const [skinList, setSkinList] = useState<Skin[]>([]);
   const [priceTierList, setPriceTierList] = useState<PriceTier[]>([]);
   const [skinListText, setSkinListText] = useState("");
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
@@ -144,6 +142,25 @@ export default function AccountDetailModal({
     }
   }, []);
 
+  const fetchSkinList = useCallback(async () => {
+    setIsLoadingSkinList(true);
+    try {
+      const response = await skinService.fetchAll();
+      setSkinList(response.data);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occured";
+
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: errorMessage
+      });
+    } finally {
+      setIsLoadingSkinList(false);
+    }
+  }, []);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues:
@@ -157,7 +174,7 @@ export default function AccountDetailModal({
             accountRank: data.accountRank,
             password: data.password,
             passwordResetRequired: data.passwordResetRequired,
-            skinList: data.skinList.map((skinName) => ({ name: skinName })),
+            skinList: data.skinList.map((skin) => skin.id),
             thumbnail: data.thumbnail,
             otherImages: data.otherImages ? data.otherImages : []
           }
@@ -170,21 +187,12 @@ export default function AccountDetailModal({
             accountRank: "",
             password: "",
             passwordResetRequired: false,
-            skinList: [{ name: "" }],
+            skinList: [],
             thumbnail: undefined,
             otherImages: []
           },
     mode: "onSubmit",
     reValidateMode: "onChange"
-  });
-
-  const {
-    fields: skinFields,
-    append: appendSkin,
-    remove: removeSkin
-  } = useFieldArray({
-    control: form.control,
-    name: "skinList"
   });
 
   const handleNicknameInput = useCallback(
@@ -278,7 +286,7 @@ export default function AccountDetailModal({
       ...values,
       thumbnail: thumbnail_id,
       otherImages: other_image_ids,
-      skinList: values.skinList.map((skin) => skin.name || "")
+      skinList: values.skinList
     };
     try {
       const response = await accountService.create(payload);
@@ -313,7 +321,7 @@ export default function AccountDetailModal({
       ...values,
       thumbnail: thumbnail_id,
       otherImages: other_image_ids,
-      skinList: values.skinList.map((skin) => skin.name || "")
+      skinList: values.skinList
     };
     try {
       const response = await accountService.update(id, payload);
@@ -437,9 +445,39 @@ export default function AccountDetailModal({
   });
 
   useEffect(() => {
-    const text = `List of skins akun ${accountCodeValue}:\n${skinListValue.map((skin, index) => `${index + 1}. ${skin.name}`).join("\n")}`;
-    setSkinListText(text);
-  }, [accountCodeValue, skinListValue]);
+    if (open) fetchSkinList();
+  }, [fetchSkinList, open]);
+
+  const skinOptions = useMemo(
+    () =>
+      skinList.map((s) => ({
+        label: s.name,
+        value: s.id.toString()
+      })),
+    [skinList]
+  );
+
+  const skinLabelById = useMemo(
+    () =>
+      new Map<number, string>(
+        skinOptions.map((opt) => [Number(opt.value), opt.label])
+      ),
+    [skinOptions]
+  );
+
+  useEffect(() => {
+    const names: string[] = (skinListValue ?? [])
+      .map((id) => skinLabelById.get(id))
+      .filter(Boolean) as string[];
+
+    const header = `List of skins akun ${accountCodeValue}:`;
+    const body =
+      names.length > 0
+        ? names.map((label, i) => `${i + 1}. ${label}`).join("\n")
+        : "(belum ada skin dipilih)";
+
+    setSkinListText(`${header}\n${body}`);
+  }, [accountCodeValue, skinListValue, skinLabelById]);
 
   useEffect(() => {
     if (mode === "edit" && data) {
@@ -451,7 +489,7 @@ export default function AccountDetailModal({
         priceTier: data.priceTier.id,
         accountRank: data.accountRank,
         password: data.password,
-        skinList: data.skinList.map((skinName) => ({ name: skinName })),
+        skinList: data.skinList.map((skin) => skin.id),
         thumbnail: data.thumbnail,
         otherImages: data.otherImages || []
       });
@@ -464,7 +502,7 @@ export default function AccountDetailModal({
         priceTier: undefined,
         accountRank: "",
         password: "",
-        skinList: [{ name: "" }],
+        skinList: [],
         thumbnail: undefined,
         otherImages: []
       });
@@ -707,68 +745,51 @@ export default function AccountDetailModal({
               </p>
             </div>
 
-            {skinFields.map((field, index) => (
+            <div className="relative col-span-1 xl:col-span-3 gap-2">
               <FormField
-                key={`skin-${field.id}`}
                 control={form.control}
-                name={`skinList.${index}.name`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Skin {index + 1}{" "}
-                      {index === 0 && (
-                        <span className="text-destructive">*</span>
-                      )}
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Enter skin name here"
-                        {...field}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            appendSkin({ name: "" });
+                name="skinList"
+                render={({ field }) => {
+                  const selectedValue = (field.value ?? []).map(String);
+
+                  return (
+                    <FormItem>
+                      <FormLabel>
+                        Skins<span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <MultiSelect
+                          options={skinOptions}
+                          value={selectedValue}
+                          onValueChange={(value: string[]) => {
+                            const ids = value.map((v) => Number(v));
+                            field.onChange(ids);
+                          }}
+                          defaultValue={selectedValue}
+                          placeholder={
+                            isLoadingSkinList
+                              ? "Fetching skins..."
+                              : skinOptions.length === 0
+                                ? "No skins available"
+                                : "Select one or more skins"
                           }
-                        }}
-                        endIcon={
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Trash2Icon
-                                  size={18}
-                                  className="text-destructive hover:cursor-pointer"
-                                  aria-label={`Delete skin ${index}`}
-                                  onClick={() => removeSkin(index)}
-                                />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Delete skin</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        }
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
+                          searchable={true}
+                          maxCount={100}
+                          className="w-full"
+                          animationConfig={{
+                            badgeAnimation: "slide",
+                            popoverAnimation: "fade"
+                          }}
+                          disabled={
+                            isLoadingSkinList || skinOptions.length === 0
+                          }
+                        />
+                      </FormControl>
+                    </FormItem>
+                  );
+                }}
               />
-            ))}
-            <Button
-              type="button"
-              onClick={() => appendSkin({ name: "" })}
-              className={cn(
-                "self-end",
-                hasSkinsError && skinFields.length / 2 === 0 && "mb-7"
-              )}
-            >
-              <CirclePlusIcon />
-              Add New Skin
-            </Button>
-            {form.formState.errors.skinList && (
-              <p className="text-sm font-medium text-destructive col-span-1 xl:col-span-3">
-                {form.formState.errors.skinList.root?.message}
-              </p>
-            )}
+            </div>
 
             <div className="relative col-span-1 xl:col-span-3">
               <TooltipProvider>
