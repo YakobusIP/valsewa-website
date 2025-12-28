@@ -101,6 +101,17 @@ model User {
   Booking Booking[]
 }
 
+model Customer {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  passwordChangedAt DateTime @default(now())
+  isActive Boolean @default(true)
+  passwordExpireAt    DateTime?
+}
+
 model CarouselSlide {
   id Int @id @default(autoincrement())
 
@@ -218,4 +229,24 @@ model Payment {
   booking       Booking? @relation("BookingPaymentAttempts", fields: [bookingId], references: [id])
 
   @@index([bookingId])
+}
+enum Type {
+  PERSENTASE
+  NOMINAL
+}
+
+model Voucher {
+  id           Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime @updatedAt
+  voucherName String  @unique
+  isValid     Boolean @default(true)
+  isVisible   Boolean @default(true)
+  type         Type        
+  percentage   Float?
+  nominal      Float?
+  maxDiscount Float?
+  dateStart   DateTime
+  dateEnd     DateTime
+  
 }

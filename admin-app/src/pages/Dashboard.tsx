@@ -24,11 +24,18 @@ import { SORT_ORDER } from "@/lib/enums";
 
 import { SkinProvider } from "@/contexts/SkinContext";
 import { CirclePlusIcon } from "lucide-react";
+import CreateUserPage from "../components/dashboard/CreateUserModal";
+import UserListModal from "@/components/dashboard/UserListModal";
+import VoucherModal from "@/components/dashboard/VoucherModal";
 
 const PAGINATION_SIZE = 100;
 
 export default function Dashboard() {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
+  const [openCreateUserAccount, setOpenCreateUserAccount] = useState(false);
+  const [openUserList, setOpenUserList] = useState(false);
+  const [openVoucherModal, setopenVoucherModal] = useState(false);
+
 
   const [isLoadingStatistics, setIsLoadingStatistics] = useState(false);
   const [statistics, setStatistics] = useState<StatisticResponse>();
@@ -232,12 +239,26 @@ export default function Dashboard() {
                 </SkinProvider>
                 <PriceTierModal />
                 <CarouselManagementModal />
+
                 <Button
                   className="w-full xl:w-fit"
                   onClick={() => setOpenAccountDetail(true)}
                 >
                   <CirclePlusIcon />
                   Add New Account
+                </Button>
+                <Button
+                className="w-full xl:w-fit"
+                  onClick={() => setOpenUserList(true)}
+                >
+                  User Account List
+                </Button>
+
+                <Button
+                className="w-full xl:w-fit"
+                  onClick={() => setopenVoucherModal(true)}
+                >
+                  Vouchers
                 </Button>
               </Fragment>
             }
@@ -250,6 +271,22 @@ export default function Dashboard() {
         mode="add"
         resetParent={resetParent}
       />
+      <CreateUserPage
+        open={openCreateUserAccount}
+        onOpenChange={setOpenCreateUserAccount}
+      />
+      <UserListModal
+        open={openUserList}
+        onOpenChange={setOpenUserList}
+        onOpenCreateUser={() => {
+          setOpenUserList(false);
+          setOpenCreateUserAccount(true);
+        }}
+      />
+      <VoucherModal open={openVoucherModal} 
+      onOpenChange={setopenVoucherModal}/>
+      
+
     </Fragment>
   );
 }
