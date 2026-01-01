@@ -106,12 +106,12 @@ export class BookingService {
   private calculateValues = (
     mainValuePerUnit: number,
     othersValuePerUnit: number,
-    voucherPercentage: number,
+    voucherPercent: number,
     quantity: number
   ) => {
     const mainValue = mainValuePerUnit * quantity;
     const othersValue = othersValuePerUnit * quantity;
-    const discount = mainValue * voucherPercentage;
+    const discount = mainValue * voucherPercent;
     const totalValue = mainValue + othersValue - discount;
 
     return {
@@ -143,12 +143,12 @@ export class BookingService {
       // TODO: Get voucher
       //    - If invalid, throw error
       //    - If valid calculate, get voucher percentage
-      const voucherPercentage = voucherCode ? 100 : 0;
+      const voucherPercent = voucherCode ? 100 : 0;
 
       const bookingPriceValues = this.calculateValues(
         mainValuePerUnit,
         othersValuePerUnit ?? 0,
-        voucherPercentage,
+        voucherPercent,
         quantity,
       );
 
@@ -206,7 +206,7 @@ export class BookingService {
             mainValuePerUnit,
             othersValuePerUnit,
             voucherCode,
-            voucherPercentage,
+            voucherPercent,
             mainValue: bookingPriceValues.mainValue,
             othersValue: bookingPriceValues.othersValue,
             discount: bookingPriceValues.discount,
@@ -277,8 +277,7 @@ export class BookingService {
         const updatedPayment = await prisma.payment.update({
           where: { id: payment.id },
           data: {
-            qrUrl: providerResponse.qrUrl,
-            version: { increment: 1 }
+            qrUrl: providerResponse.qrUrl
           }
         })
   
@@ -287,8 +286,7 @@ export class BookingService {
         await prisma.payment.update({
           where: { id: payment.id },
           data: {
-            status: PaymentStatus.FAILED,
-            version: { increment: 1 }
+            status: PaymentStatus.FAILED
           }
         })
         console.error("Faspay QRIS Generation Failed:", error);
@@ -389,14 +387,13 @@ export class BookingService {
     const paymentUpdate = {
       status: paymentStatus,
       paidAt: paidAt,
-      version: { increment: 1 }
     };
     
     const bookingStatus = PAYMENT_TO_BOOKING_STATUS_MAP[paymentStatus];
     let bookingUpdate: any = {
       status: bookingStatus,
       expiredAt: null,
-      version: { increment: 1 }
+      version: { increment: 1 },
     };
 
     if (paymentStatus === PaymentStatus.SUCCESS && booking.immediate) {
