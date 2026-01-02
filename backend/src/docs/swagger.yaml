@@ -431,7 +431,7 @@ components:
         mainValuePerUnit: { type: integer }
         othersValuePerUnit: { type: integer }
         quantity: { type: integer }
-        voucherCode: { type: string }
+        voucherId: { type: integer }
         startAt: { type: string, format: date-time }
 
     BookingResponse:
