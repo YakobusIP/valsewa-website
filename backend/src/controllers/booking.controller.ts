@@ -1,13 +1,13 @@
-import { Request, Response, NextFunction } from "express";
-import { PaymentChannelType, DurationType } from "@prisma/client";
+import { Request, Response, NextFunction, response } from "express";
+import { DurationType, Provider, PaymentMethodType } from "@prisma/client";
 import { BookingService } from "../services/booking.service";
-import { PaymentService } from "../services/payment.service";
 import { BadRequestError, ForbiddenError } from "../lib/error";
+import { FASPAY_STATUS_MAP, FaspayClient, parseFaspayDate, toFaspayDate } from "../faspay/faspay.client";
 
 export class BookingController {
   constructor(
     private readonly bookingService: BookingService,
-    private readonly paymentService: PaymentService
+    private readonly faspayClient: FaspayClient,
   ) {}
 
   getBookingById = async (req: Request, res: Response, next: NextFunction) => {
@@ -41,6 +41,48 @@ export class BookingController {
     }
   };
 
+  getHoldBookingsByUserId = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const userId = parseInt(req.params.userId, 10);
+
+      if (!userId) {
+        throw new BadRequestError("User ID is required.");
+      }
+
+      const bookings = await this.bookingService.getHoldBookingsByUserId(userId);
+
+      return res.status(200).json(bookings);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getPaymentById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const paymentId = req.params.id;
+      const payment = await this.bookingService.getPaymentById(paymentId);
+
+      return res.status(200).json(payment);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getActivePaymentByBookingId = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const bookingId = req.params.id;
+      const payment = await this.bookingService.getActivePaymentByBookingId(bookingId);
+
+      return res.status(200).json(payment);
+    } catch (error) {
+      return next(error);
+    }
+  };
+  
   createBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const {
@@ -48,8 +90,10 @@ export class BookingController {
         accountId,
         baseDurationUnit,
         baseDurationType,
-        pricePerUnit,
+        mainValuePerUnit,
+        othersValuePerUnit,
         quantity,
+        voucherId,
         startAt
       } = req.body;
 
@@ -57,7 +101,7 @@ export class BookingController {
         !accountId ||
         !baseDurationUnit ||
         !baseDurationType ||
-        !pricePerUnit ||
+        !mainValuePerUnit ||
         !quantity
       ) {
         throw new BadRequestError("Missing required fields.");
@@ -69,81 +113,111 @@ export class BookingController {
         throw new BadRequestError("Invalid baseDurationType provided.");
       }
 
-      const holdMinutes = 15;
-
       const result = await this.bookingService.createBooking({
         userId,
         accountId,
         baseDurationUnit,
         baseDurationType,
-        pricePerUnit,
+        mainValuePerUnit,
+        othersValuePerUnit,
         quantity,
+        voucherId,
         startAt: startAt ? new Date(startAt) : undefined,
-        holdMinutes
       });
 
-      return res.status(201).json({
-        id: result.id,
-        status: result.status,
-        startAt: result.startAt,
-        endAt: result.endAt,
-        expiresAt: result.expiresAt,
-        totalValue: result.totalValue,
-        holdMinutes
-      });
+      return res.status(201).json(result);
     } catch (error) {
       return next(error);
     }
   };
 
-  initiatePayment = async (req: Request, res: Response, next: NextFunction) => {
+  payBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const bookingId = req.params.id;
-      const { channelType } = req.body;
+      if (!bookingId) throw new BadRequestError("Missing required fields.");
 
-      const validatedChannel: PaymentChannelType =
-        channelType as PaymentChannelType;
-      if (!Object.values(PaymentChannelType).includes(validatedChannel)) {
-        throw new BadRequestError("Invalid channelType provided.");
-      }
+      const result = await this.bookingService.payBooking(bookingId, Provider.FASPAY, PaymentMethodType.QRIS);
 
-      const result = await this.bookingService.payBooking(
-        bookingId,
-        validatedChannel
-      );
-
-      return res.status(200).json({
-        paymentId: result.paymentId,
-        redirectUrl: result.redirectUrl
-      });
+      return res.status(200).json(result);
     } catch (error) {
       return next(error);
     }
   };
 
-  handlePaymentWebhook = async (
+  verifyPayment = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { paymentId } = req.body;
+      if (!paymentId) throw new BadRequestError("Missing required fields.");
+
+      const result = await this.bookingService.verifyPayment(paymentId);
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  callbackFaspayPayment = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const signature =
-        req.header("x-faspay-signature") || req.header("x-signature");
+      const payload = req.body;
+      const {
+        trx_id,
+        merchant_id,
+        merchant,
+        bill_no,
+        payment_date,
+        payment_status_code,
+      } = payload;
+      const signature = req.header("x-signature");
+      const timestamp = req.header('x-timestamp');
 
-      if (!signature) {
-        throw new ForbiddenError("Invalid webhook signature. Request blocked.");
+      if (!trx_id || !payment_status_code || !signature || !timestamp) throw new BadRequestError("Missing required fields.");
+
+      if (!this.faspayClient.verifyWebhookNotification({
+        payload,
+        timestamp,
+        signature,
+        notificationUrlPath: "/api/bookings/faspay/callback",
+      })) {
+        throw new ForbiddenError("Signature Invalid")
       }
 
-      await this.paymentService.handlePaymentWebhook(req.body, signature);
+      await this.bookingService.callbackFaspayPayment({
+        providerPaymentId: trx_id,
+        paidAt: payment_date ? parseFaspayDate(payment_date) : null,
+        paymentStatus: FASPAY_STATUS_MAP[payment_status_code],
+      });
 
-      return res.status(200).send("ok");
+      return res.status(200).json({
+        response: "Payment Notification",
+        trx_id,
+        merchant_id,
+        merchant,
+        bill_no,
+        response_code: "00",
+        response_desc: "Success",
+        response_date: toFaspayDate(new Date()),
+      });
     } catch (error) {
       if (error instanceof ForbiddenError) {
         return res.status(403).send("Signature Invalid");
       }
 
       console.error("Webhook processing error:", error);
-      return res.status(200).send("ok");
+      return res.status(200).json({
+        response: "Payment Notification",
+        trx_id: "",
+        merchant_id: "",
+        merchant: "",
+        bill_no: "",
+        response_code: "00",
+        response_desc: "Success",
+        response_date: toFaspayDate(new Date()),
+      });
     }
   };
 }

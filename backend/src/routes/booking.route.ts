@@ -2,45 +2,71 @@ import { Router } from "express";
 import { BookingService } from "../services/booking.service";
 import { BookingController } from "../controllers/booking.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
-import { PaymentService } from "../services/payment.service";
+import { FaspayClient } from "../faspay/faspay.client";
 
 class BookingRouter {
   public router: Router;
   private bookingService: BookingService;
-  private paymentService: PaymentService;
+  private faspayClient: FaspayClient;
   private bookingController: BookingController;
 
   constructor() {
     this.router = Router();
-    this.bookingService = new BookingService(new PaymentService(null as any));
-    this.paymentService = new PaymentService(new BookingService(null as any));
-    this.bookingController = new BookingController(
-      this.bookingService,
-      this.paymentService
-    );
+    this.faspayClient = new FaspayClient();
+    this.bookingService = new BookingService(this.faspayClient);
+    this.bookingController = new BookingController(this.bookingService, this.faspayClient);
     this.initializeRoutes();
   }
 
   private initializeRoutes() {
     this.router.get(
-      "/:id",
+      "/bookings/:id",
       authMiddleware,
       this.bookingController.getBookingById
     );
     this.router.get(
-      "/user/:userId",
+      "/users/bookings/:userId",
       authMiddleware,
       this.bookingController.getBookingsByUserId
     );
-    this.router.post("/", authMiddleware, this.bookingController.createBooking);
-    this.router.post(
-      "/:id/pay",
+    this.router.get(
+      "/users/hold-bookings/:userId",
       authMiddleware,
-      this.bookingController.initiatePayment
+      this.bookingController.getHoldBookingsByUserId
+    );
+    this.router.get(
+      "/user/booking/:userId",
+      authMiddleware,
+      this.bookingController.getBookingsByUserId
+    );
+    this.router.get(
+      "/payments/:id",
+      authMiddleware,
+      this.bookingController.getPaymentById
+    );
+    this.router.get(
+      "/active-payments/bookings/:bookingId",
+      authMiddleware,
+      this.bookingController.getActivePaymentByBookingId
     );
     this.router.post(
-      "/webhooks/payment",
-      this.bookingController.handlePaymentWebhook
+      "/book",
+      authMiddleware,
+      this.bookingController.createBooking
+    );
+    this.router.post(
+      "/pay",
+      authMiddleware,
+      this.bookingController.payBooking
+    );
+    this.router.post(
+      "/verify-payment",
+      authMiddleware,
+      this.bookingController.verifyPayment
+    );
+    this.router.post(
+      "/faspay/callback",
+      this.bookingController.callbackFaspayPayment
     );
   }
 }
