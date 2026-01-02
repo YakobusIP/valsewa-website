@@ -57,30 +57,29 @@ model AccountResetLog {
 }
 
 model PriceTier {
-  id          Int      @id @default(autoincrement())
-  code        String   @unique
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  accounts Account[]
+  accounts  Account[]
   priceList PriceList[]
 }
 
 model PriceList {
-  id          Int      @id @default(autoincrement())
-  duration    String   
-  normalPrice Int 
-  lowPrice    Int 
+  id          Int    @id @default(autoincrement())
+  duration    String
+  normalPrice Int
+  lowPrice    Int
 
-  tierId      Int
-  tier        PriceTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  tierId Int
+  tier   PriceTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([tierId])
 }
-
 
 model Skin {
   id       Int     @id @default(autoincrement())
@@ -118,14 +117,14 @@ model User {
 }
 
 model Customer {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  passwordChangedAt DateTime @default(now())
-  isActive Boolean @default(true)
-  passwordExpireAt    DateTime?
+  id                Int       @id @default(autoincrement())
+  username          String    @unique
+  password          String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  passwordChangedAt DateTime  @default(now())
+  isActive          Boolean   @default(true)
+  passwordExpireAt  DateTime?
 }
 
 model CarouselSlide {
@@ -197,8 +196,10 @@ model Booking {
   // Pricing
   mainValuePerUnit   Int
   othersValuePerUnit Int?
-  voucherCode        String?
-  voucherPercent     Int?
+  voucherId          Int?
+  voucherType        Type?
+  voucherAmount      Float?
+  voucherMaxDiscount Float?
   mainValue          Int
   othersValue        Int?
   discount           Int? // mainValue * voucher_percentage
@@ -242,23 +243,23 @@ model Payment {
   @@index([bookingId]) // verify payment lookup
   @@index([providerPaymentId]) // callback lookup
 }
+
 enum Type {
   PERSENTASE
   NOMINAL
 }
 
 model Voucher {
-  id           Int       @id @default(autoincrement())
-  createdAt   DateTime  @default(now())
+  id          Int      @id @default(autoincrement())
+  createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  voucherName String  @unique
-  isValid     Boolean @default(true)
-  isVisible   Boolean @default(true)
-  type         Type        
-  percentage   Float?
-  nominal      Float?
+  voucherName String   @unique
+  isValid     Boolean  @default(true)
+  isVisible   Boolean  @default(true)
+  type        Type
+  percentage  Float?
+  nominal     Float?
   maxDiscount Float?
   dateStart   DateTime
   dateEnd     DateTime
-  
 }

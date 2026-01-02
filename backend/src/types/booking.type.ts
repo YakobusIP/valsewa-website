@@ -1,4 +1,4 @@
-import { BookingStatus, DurationType, PaymentMethodType, PaymentStatus, Provider } from "@prisma/client";
+import { BookingStatus, DurationType, PaymentMethodType, PaymentStatus, Provider, Type } from "@prisma/client";
 
 export type CreateBookingRequest = {
   userId: number;
@@ -9,7 +9,7 @@ export type CreateBookingRequest = {
   mainValuePerUnit: number;
   othersValuePerUnit?: number;
   quantity: number;
-  voucherCode?: string;
+  voucherId?: number;
   startAt?: Date;
 };
 
@@ -26,8 +26,10 @@ export type BookingResponse = {
   expiredAt: Date | null,
   mainValuePerUnit: number,
   othersValuePerUnit: number | null,
-  voucherCode: string | null,
-  voucherPercent: number | null,
+  voucherId: number | null,
+  voucherType: Type | null,
+  voucherAmount: number | null,
+  voucherMaxDiscount: number | null,
   mainValue: number,
   othersValue: number | null,
   discount: number | null,
@@ -59,4 +61,14 @@ export type CallbackNotificationRequest = {
   providerPaymentId: string,
   paymentStatus: PaymentStatus,
   paidAt: Date | null,
+}
+
+export type VoucherResponse = {
+  id: number,
+  voucherName: string,
+  isValid: boolean,
+  type: Type,
+  percentage: number | null,
+  nominal: number | null,
+  maxDiscount: number | null,
 }

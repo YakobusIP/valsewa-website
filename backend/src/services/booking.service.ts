@@ -5,7 +5,9 @@ import {
   Payment,
   PaymentMethodType,
   PaymentStatus,
-  Provider
+  Provider,
+  Type,
+  Voucher
 } from "@prisma/client";
 import {
   BadRequestError,
@@ -15,7 +17,7 @@ import {
 } from "../lib/error";
 import { addDays, addHours, addMinutes } from "../lib/utils";
 import { prisma } from "../lib/prisma";
-import { BookingResponse, CallbackNotificationRequest, CreateBookingRequest, PaymentResponse } from "../types/booking.type";
+import { BookingResponse, CallbackNotificationRequest, CreateBookingRequest, PaymentResponse, VoucherResponse } from "../types/booking.type";
 import { FaspayClient } from "../faspay/faspay.client";
 
 export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<PaymentStatus, BookingStatus> = {
@@ -106,15 +108,38 @@ export class BookingService {
   private calculateValues = (
     mainValuePerUnit: number,
     othersValuePerUnit: number,
-    voucherPercent: number,
+    voucher: VoucherResponse | null,
     quantity: number
   ) => {
     const mainValue = mainValuePerUnit * quantity;
     const othersValue = othersValuePerUnit * quantity;
-    const discount = mainValue * voucherPercent;
+
+    let voucherType = null;
+    let voucherAmount = null;
+    let voucherMaxDiscount = null;
+    let discount = 0;
+    if (voucher) {
+      voucherType = voucher.type;
+      if (voucher.type === Type.PERSENTASE) {
+        voucherAmount = voucher.percentage ?? 0;
+        discount = mainValue * voucherAmount;
+      } else {
+        voucherAmount = voucher.nominal ?? 0;
+        discount = voucherAmount;
+      }
+      
+      if (voucher.maxDiscount) {
+        voucherMaxDiscount = voucher.maxDiscount;
+        discount = Math.min(discount, voucherMaxDiscount);
+      }
+    }
+
     const totalValue = mainValue + othersValue - discount;
 
     return {
+      voucherType,
+      voucherAmount,
+      voucherMaxDiscount,
       mainValue,
       othersValue,
       discount,
@@ -132,7 +157,7 @@ export class BookingService {
         mainValuePerUnit,
         othersValuePerUnit,
         quantity,
-        voucherCode,
+        voucherId,
         startAt,
       } = data;
 
@@ -140,15 +165,12 @@ export class BookingService {
       //    - If not found, throw error
       //    - If found, get baseDurationUnit, baseDurationType, mainValuePerUnit, and othersValuePerUnit here
 
-      // TODO: Get voucher
-      //    - If invalid, throw error
-      //    - If valid calculate, get voucher percentage
-      const voucherPercent = voucherCode ? 100 : 0;
+      const voucher = voucherId ? await this.getValidVoucherById(voucherId) : null;
 
       const bookingPriceValues = this.calculateValues(
         mainValuePerUnit,
         othersValuePerUnit ?? 0,
-        voucherPercent,
+        voucher,
         quantity,
       );
 
@@ -205,8 +227,10 @@ export class BookingService {
             expiredAt: bookingExpiredAt,
             mainValuePerUnit,
             othersValuePerUnit,
-            voucherCode,
-            voucherPercent,
+            voucherId,
+            voucherType: bookingPriceValues.voucherType, 
+            voucherAmount: bookingPriceValues.voucherAmount,
+            voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
             mainValue: bookingPriceValues.mainValue,
             othersValue: bookingPriceValues.othersValue,
             discount: bookingPriceValues.discount,
@@ -373,6 +397,18 @@ export class BookingService {
     }
   }
 
+  private getValidVoucherById = async (voucherId: number): Promise<VoucherResponse> => {
+    const voucher = await prisma.voucher.findFirst({
+      where: { id: voucherId },
+    })
+
+    if (!voucher) throw new BadRequestError("Voucher not found!");
+
+    if (!voucher.isValid) throw new BadRequestError("Voucher not valid!");
+    
+    return this.mapVoucherDataToVoucherResponse(voucher);
+  }
+
   private isPaymentFinal = (status: PaymentStatus): boolean => {    
     return status !== PaymentStatus.PENDING;
   }
@@ -435,8 +471,10 @@ export class BookingService {
       expiredAt: booking.expiredAt,
       mainValuePerUnit: booking.mainValuePerUnit,
       othersValuePerUnit: booking.othersValuePerUnit,
-      voucherCode: booking.voucherCode,
-      voucherPercent: booking.voucherPercent,
+      voucherId: booking.voucherId,
+      voucherType: booking.voucherType,
+      voucherAmount: booking.voucherAmount,
+      voucherMaxDiscount: booking.voucherMaxDiscount,
       mainValue: booking.mainValue,
       othersValue: booking.othersValue,
       discount: booking.discount,
@@ -457,6 +495,18 @@ export class BookingService {
       qrUrl: payment.qrUrl,
       paidAt: payment.paidAt,
       refundedAt: payment.refundedAt,
+    }; 
+  }
+
+  private mapVoucherDataToVoucherResponse = (voucher: Voucher): VoucherResponse => {
+    return {
+      id: voucher.id,
+      voucherName: voucher.voucherName,
+      isValid: voucher.isValid,
+      type: voucher.type,
+      percentage: voucher.percentage,
+      nominal: voucher.nominal,
+      maxDiscount: voucher.maxDiscount,
     }; 
   }
 }

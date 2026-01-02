@@ -64,8 +64,10 @@ ADD COLUMN     "mainValue" INTEGER NOT NULL,
 ADD COLUMN     "mainValuePerUnit" INTEGER NOT NULL,
 ADD COLUMN     "othersValue" INTEGER,
 ADD COLUMN     "othersValuePerUnit" INTEGER,
-ADD COLUMN     "voucherCode" TEXT,
-ADD COLUMN     "voucherPercent" INTEGER,
+ADD COLUMN     "voucherAmount" DOUBLE PRECISION,
+ADD COLUMN     "voucherId" INTEGER,
+ADD COLUMN     "voucherMaxDiscount" DOUBLE PRECISION,
+ADD COLUMN     "voucherType" "Type",
 ALTER COLUMN "startAt" DROP NOT NULL,
 ALTER COLUMN "endAt" DROP NOT NULL;
 

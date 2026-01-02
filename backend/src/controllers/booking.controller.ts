@@ -93,7 +93,7 @@ export class BookingController {
         mainValuePerUnit,
         othersValuePerUnit,
         quantity,
-        voucherCode,
+        voucherId,
         startAt
       } = req.body;
 
@@ -121,7 +121,7 @@ export class BookingController {
         mainValuePerUnit,
         othersValuePerUnit,
         quantity,
-        voucherCode,
+        voucherId,
         startAt: startAt ? new Date(startAt) : undefined,
       });
 
