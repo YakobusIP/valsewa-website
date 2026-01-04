@@ -37,7 +37,15 @@ const envSchema = z.object({
     return parsed;
   }),
 
-  SCHEDULER_API_KEY: z.string()
+  SCHEDULER_API_KEY: z.string(),
+
+  SNAP_BI_MERCHANT_ID: z.string(),
+  SNAP_BI_CLIENT_ID: z.string(),
+  SNAP_BI_PRIVATE_KEY: z.string(),
+  SNAP_BI_CLIENT_SECRET: z.string(),
+  SNAP_BI_PARTNER_ID: z.string(),
+  SNAP_BI_CHANNEL_ID: z.string(),
+  SNAP_BI_PUBLIC_KEY: z.string()
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

@@ -408,126 +408,60 @@ components:
         total:
           type: number
 
+    BookingStatus:
+      type: string
+      enum: [HOLD, RESERVED, EXPIRED, FAILED, CANCELLED, COMPLETED]
+
+    DurationType:
+      type: string
+      enum: [HOURLY, DAILY]
+
+    PaymentStatus:
+      type: string
+      enum: [PENDING, SUCCESS, EXPIRED, FAILED, CANCELLED, REFUNDED]
+
     CreateBookingRequest:
       type: object
-      required:
-        [
-          userId,
-          accountId,
-          quantity,
-          baseDurationUnit,
-          baseDurationType,
-          pricePerUnit
-        ]
+      required: [userId, accountId, baseDurationUnit, baseDurationType, mainValuePerUnit, quantity]
       properties:
-        userId:
-          type: integer
-          description: The ID of the user creating the booking.
-        accountId:
-          type: integer
-          description: The ID of the account being reserved.
-        baseDurationUnit:
-          type: integer
-          description: The number of units per segment (e.g., 1).
-        baseDurationType:
-          type: string
-          enum: [HOURLY, DAILY, MINUTELY]
-          description: Type of unit (e.g., HOURLY).
-        pricePerUnit:
-          type: integer
-          description: Price per unit recorded at the time of booking.
-        quantity:
-          type: integer
-          description: Number of duration units being booked (e.g., 2 hours).
-        startAt:
-          type: string
-          format: date-time
-          description: The start date and time of the reservation.
-
-    CreateBookingResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: [HOLD, PENDING, RESERVED, EXPIRED, CANCELLED]
-        startAt:
-          type: string
-          format: date-time
-        endAt:
-          type: string
-          format: date-time
-        expiresAt:
-          type: string
-          format: date-time
-        totalValue:
-          type: integer
-        holdMinutes:
-          type: integer
+        userId: { type: integer }
+        accountId: { type: integer }
+        baseDurationUnit: { type: integer }
+        baseDurationType: { $ref: '#/components/schemas/DurationType' }
+        mainValuePerUnit: { type: integer }
+        othersValuePerUnit: { type: integer }
+        quantity: { type: integer }
+        voucherId: { type: integer }
+        startAt: { type: string, format: date-time }
 
     BookingResponse:
       type: object
       properties:
-        id:
-          type: string
-          format: uuid
-        userId:
-          type: integer
-        accountId:
-          type: integer
-        baseDurationUnit:
-          type: integer
-        baseDurationType:
-          type: string
-          enum: [HOURLY, DAILY]
-        pricePerUnit:
-          type: integer
-          enum: [HOURLY, DAILY]
-        quantity:
-          type: integer
-        startAt:
-          type: string
-          format: date-time
-        endAt:
-          type: string
-          format: date-time
-        expiresAt:
-          type: string
-          format: date-time
-        cancelledAt:
-          type: string
-          format: date-time
-        status:
-          type: string
-          enum: [HOLD, PENDING, RESERVED, EXPIRED, CANCELLED]
-        version:
-          type: integer
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        successfulPaymentId:
-          type: string
-          nullable: true
-        successfulPayment:
-          $ref: "#/components/schemas/PaymentDetail"
-          nullable: true
+        id: { type: string, format: uuid }
+        userId: { type: integer, nullable: true }
+        accountId: { type: integer }
+        status: { $ref: '#/components/schemas/BookingStatus' }
+        baseDurationUnit: { type: integer }
+        baseDurationType: { $ref: '#/components/schemas/DurationType' }
+        quantity: { type: integer }
+        startAt: { type: string, format: date-time, nullable: true }
+        endAt: { type: string, format: date-time, nullable: true }
+        expiredAt: { type: string, format: date-time, nullable: true }
+        mainValuePerUnit: { type: integer }
+        othersValuePerUnit: { type: integer, nullable: true }
+        mainValue: { type: integer }
+        totalValue: { type: integer }
 
-    InitiatePaymentResponse:
+    PaymentResponse:
       type: object
       properties:
-        paymentId:
-          type: string
-          format: uuid
-          description: The internal ID of the created PENDING payment record.
-        redirectUrl:
-          type: string
-          format: url
-          description: The URL the client must redirect to for payment authorization.
+        paymentId: { type: string, format: uuid }
+        bookingId: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/PaymentStatus' }
+        value: { type: integer }
+        currency: { type: string, example: "IDR" }
+        qrUrl: { type: string, format: uri, nullable: true }
+        paidAt: { type: string, format: date-time, nullable: true }
 
     ErrorResponse:
       type: object
@@ -1835,171 +1769,137 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /api/bookings:
-    post:
-      tags:
-        - Bookings
-      summary: "Creates a new HOLD booking after checking availability."
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CreateBookingRequest"
-      responses:
-        "201":
-          description: "Booking created successfully in HOLD status."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CreateBookingResponse"
-        "400":
-          description: "Bad Request: Invalid or missing input data."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "409":
-          description: "Conflict: Booking slot is already reserved or on hold (Availability Conflict)."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
+  # --- Booking Endpoints ---
   /api/bookings/{id}:
     get:
-      tags:
-        - Bookings
-      summary: "Retrieve a booking by ID."
-      security:
-        - bearerAuth: []
+      tags: [Bookings]
+      summary: Get booking by ID
       parameters:
-        - in: path
-          name: id
+        - name: id
+          in: path
           required: true
           schema:
             type: string
             format: uuid
-          description: "The unique ID of the booking."
       responses:
         "200":
-          description: "Booking details successfully retrieved."
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BookingResponse"
-        "404":
-          description: "Not Found: Booking ID does not exist."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/BookingResponse'
 
-  /api/bookings/user/{userId}:
+  /api/users/bookings/{userId}:
     get:
-      tags:
-        - Bookings
-      summary: "Retrieve all bookings by user ID."
-      security:
-        - bearerAuth: []
+      tags: [Bookings]
+      summary: Get all bookings for a user
       parameters:
-        - in: path
-          name: userId
+        - name: userId
+          in: path
           required: true
           schema:
             type: integer
-          description: "The unique ID of the user."
       responses:
         "200":
-          description: "List of bookings."
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/BookingResponse"
+                  $ref: '#/components/schemas/BookingResponse'
 
-  /api/bookings/{id}/pay:
-    post:
-      tags:
-        - Bookings
-      summary: "Initiate payment session for a booking."
-      security:
-        - bearerAuth: []
+  /api/users/hold-bookings/{userId}:
+    get:
+      tags: [Bookings]
+      summary: Get only bookings with HOLD status for a user
       parameters:
-        - in: path
-          name: id
+        - name: userId
+          in: path
           required: true
           schema:
-            type: string
-            format: uuid
-          description: "The unique ID of the booking."
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookingResponse'
+
+  /api/book:
+    post:
+      tags: [Bookings]
+      summary: Create a new booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+
+  # --- Payment Endpoints ---
+  /api/pay:
+    post:
+      tags: [Payments]
+      summary: Initiate payment for a booking
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [channelType]
+              required: [id]
               properties:
-                channelType:
+                id:
                   type: string
-                  enum:
-                    [
-                      VIRTUAL_ACCOUNT,
-                      E_WALLET,
-                      RETAIL_OUTLET,
-                      ONLINE_BANKING,
-                      CREDIT_FINANCE,
-                      OTHER
-                    ]
-                  description: The preferred payment channel.
+                  format: uuid
+                  description: Booking ID
       responses:
         "200":
-          description: "List of bookings."
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/InitiatePaymentResponse"
-        "404":
-          description: "Not Found: Booking ID does not exist."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-        "409":
-          description: "Conflict: Booking is not in HOLD state (e.g., already EXPIRED or RESERVED)."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
+                $ref: '#/components/schemas/PaymentResponse'
 
-  /api/bookings/webhooks/payment:
+  /api/verify-payment:
     post:
-      tags:
-        - Bookings
-      summary: "Handle payment confirmation webhooks from the gateway."
-      parameters:
-        - in: header
-          name: x-faspay-signature
-          required: true
-          schema:
-            type: string
-          description: "Security signature hash provided by the gateway for verification."
+      tags: [Payments]
+      summary: Manually verify payment status
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              description: "Raw payload sent by the payment gateway."
+              required: [paymentId]
+              properties:
+                paymentId:
+                  type: string
+                  format: uuid
       responses:
         "200":
-          description: "OK. Acknowledgment to the gateway that the webhook was received and will be processed (best practice for webhooks)."
-        "403":
-          description: "Forbidden: Signature verification failed (SecurityError)."
           content:
-            text/plain:
-              example: "Signature Invalid"
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  /api/faspay/callback:
+    post:
+      tags: [Webhooks]
+      summary: Faspay Payment Notification Webhook
+      responses:
+        "200":
+          description: Acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response: { type: string }
+                  response_code: { type: string }
