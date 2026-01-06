@@ -26,6 +26,7 @@ class AccountRouter {
   private initializeRoutes() {
     this.router.get("/", authMiddleware, this.accountController.getAllAccounts);
     this.router.get("/public", this.accountController.getAllPublicAccounts);
+    this.router.get("/public/:id", this.accountController.getAccountById);
     this.router.get(
       "/failed-jobs",
       authMiddleware,

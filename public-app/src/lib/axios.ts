@@ -114,8 +114,6 @@ interceptedAxios.interceptors.response.use(
           .then((response) => {
             const newAccessToken = response.data.pubAccessToken;
             const newRefreshToken = response.data.pubRefreshToken;
-            console.log("Access token:", newAccessToken);
-            console.log("Refresh token:", newRefreshToken);
             setAccessToken(newAccessToken);
             localStorage.setItem("refreshToken", newRefreshToken);
 

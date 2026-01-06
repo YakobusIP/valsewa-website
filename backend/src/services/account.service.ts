@@ -342,6 +342,7 @@ export class AccountService {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
         select: {
+          id: true,
           nickname: true,
           accountCode: true,
           description: true,
@@ -407,35 +408,23 @@ export class AccountService {
 
   getAccountById = async (id: number) => {
     try {
-      const account = await prisma.account.findFirst({
+      const account = await prisma.account.findUnique({
         where: { id },
-        select: {
-          id: true,
-          username: true,
-          nickname: true,
-          accountCode: true,
-          description: true,
-          accountRank: true,
-          availabilityStatus: true,
-          currentBookingDate: true,
-          currentBookingDuration: true,
-          currentExpireAt: true,
-          nextBookingDate: true,
-          nextBookingDuration: true,
-          nextExpireAt: true,
-          totalRentHour: true,
-          rentHourUpdated: true,
-          password: true,
-          passwordResetRequired: true,
-          createdAt: true,
-          updatedAt: true,
+        include: {
+          priceTier: {
+            include: {
+              priceList: true
+            }
+          },
           skinList: true,
-          priceTierId: true,
-          thumbnailId: true
+          thumbnail: true,
+          otherImages: true
         }
       });
 
-      if (!account) throw new NotFoundError("Account not found!");
+      if (!account) {
+        throw new NotFoundError("Account not found!");
+      }
 
       return account;
     } catch (error) {

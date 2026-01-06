@@ -19,6 +19,8 @@ import { useAccountController } from "@/controllers/useAccountController";
 import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
 import { FaArrowUp } from "react-icons/fa";
+// import Navbar3 from "@/components/Navbar3";
+// import Hero from "@/components/Hero";
 
 interface Props {
   initialAccount: AccountEntity[];
@@ -40,6 +42,12 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
   const autoplay = Autoplay({ delay: 5000, stopOnInteraction: false });
   return (
     <section className="bg-[#101822] md:pb-64 pb-32 relative ">
+      <div className="relative w-full max-w-[1920px] h-auto min-h-[720px] rounded-2xl bg-[radial-gradient(circle_at_left,#210004_0%,#000_50%)] border border-white/10 shadow-2xl overflow-hidden px-4 sm:px-6 lg:px-12 py-8">
+
+        {/* <Navbar3 />
+        <Hero /> */}
+
+      </div>
       <div className="relative max-lg:hidden">
         <Navbar />
       </div>
