@@ -27,30 +27,30 @@ const goldman = Goldman({
 });
 
 export const navbarItem: NavbarItem[] = [
-  {
-    name: "Jual Akun",
-    icon: (
-      <Image
-        src="/navbar/Logo - Valforum - White 2.png"
-        alt="Jual Akun"
-        width={35}
-        height={35}
-      />
-    ),
-    href: "https://api.whatsapp.com/send?phone=6285176983434&text=Halo%20admin%20VALJUBEL%2C%20aku%20mau%20JUAL%20akun%20Valorant%20nih!"
-  },
-  {
-    name: "Beli Akun",
-    icon: (
-      <Image
-        src="/navbar/Logo - Valjubel - White 2.png"
-        alt="Beli Akun"
-        width={35}
-        height={35}
-      />
-    ),
-    href: "https://www.instagram.com/valjubel/"
-  },
+  // {
+  //   name: "Jual Akun",
+  //   icon: (
+  //     <Image
+  //       src="/navbar/Logo - Valforum - White 2.png"
+  //       alt="Jual Akun"
+  //       width={35}
+  //       height={35}
+  //     />
+  //   ),
+  //   href: "https://api.whatsapp.com/send?phone=6285176983434&text=Halo%20admin%20VALJUBEL%2C%20aku%20mau%20JUAL%20akun%20Valorant%20nih!"
+  // },
+  // {
+  //   name: "Beli Akun",
+  //   icon: (
+  //     <Image
+  //       src="/navbar/Logo - Valjubel - White 2.png"
+  //       alt="Beli Akun"
+  //       width={35}
+  //       height={35}
+  //     />
+  //   ),
+  //   href: "https://www.instagram.com/valjubel/"
+  // },
   {
     name: "Joki Akun",
     icon: (
