@@ -35,7 +35,7 @@ const DURATION_RE = /^(?:(\d+)d(?:\s+([01]?\d|2[0-3])h)?|([01]?\d|2[0-3])h)$/;
 const priceListSchema = z.object({
   duration: z.string().regex(DURATION_RE, "Duration must be like '1d 5h or 1d or 5h' (hours 0–23)"),
   normalPrice: z.coerce.number().min(0, "Normal price must be 0 or more"),
-  lowPrice: z.coerce.number().min(0, "Low price must be 0 or more"),
+  lowPrice: z.coerce.number().min(0, "Low rank price must be 0 or more"),
 })
 
 const formSchema = z.object({
@@ -187,7 +187,7 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
               <div className="grid grid-cols-[1.2fr_1fr_1fr_auto] gap-2 border-b bg-muted/40 p-2 text-sm font-medium">
                   <div>Duration</div>
                   <div>Normal Price</div>
-                  <div>Low Price</div>
+                  <div>Low Rank Price</div>
                   <div className="w-10" />
                 </div>
 
