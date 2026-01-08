@@ -1,9 +1,19 @@
+import { Skin } from "./skin.type";
+
 export type { AccountEntity, AccountEntityRequest, RankResponse };
+
+type PriceList = {
+  id: number;
+  duration: string;
+  normalPrice: number;
+  lowPrice: number;
+  tierId: number;
+};
 
 type PriceTier = {
   id: number;
   code: string;
-  description: string;
+  priceList: PriceList[];
 };
 
 type PriceTierRequest = Omit<PriceTier, "id">;
@@ -30,7 +40,7 @@ type AccountEntity = {
   currentExpireAt?: Date | null;
   totalRentHour: number;
   password: string;
-  skinList: string[];
+  skinList: Skin[];
   stale_password: boolean;
   thumbnail: UploadResponse;
   otherImages: UploadResponse[] | null;

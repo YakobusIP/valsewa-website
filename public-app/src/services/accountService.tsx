@@ -1,3 +1,4 @@
+import { AccountEntity } from "@/types/account.type";
 import axios from "axios";
 
 export async function fetchAccounts(
@@ -29,5 +30,19 @@ export async function fetchCarousel() {
   } catch (error) {
     console.error("Error fetching data:", error);
     return [];
+  }
+}
+
+export async function fetchAccountById(
+  id: string 
+): Promise<AccountEntity | null> {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/${id}`;
+    const response = await axios.get(url);
+    console.log("a",response.data)
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching account detail:", error);
+    return null;
   }
 }
