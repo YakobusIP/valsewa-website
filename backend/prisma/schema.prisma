@@ -35,6 +35,7 @@ model Account {
   skinList               Skin[]
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
+  isLowRank              Boolean   @default(false)
 
   priceTier   PriceTier @relation(fields: [priceTierId], references: [id])
   priceTierId Int

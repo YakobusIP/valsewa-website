@@ -20,6 +20,7 @@ type AccountEntityRequest = {
   otherImages: number[] | null;
   priceTier: number;
   skinList: number[];
+  isLowRank: boolean;
 };
 
 type AccountWithSkins = Prisma.AccountGetPayload<{
@@ -39,6 +40,7 @@ type PublicAccount = Prisma.AccountGetPayload<{
     priceTier: true;
     thumbnail: true;
     otherImages: true;
+    isLowRank: true;
   };
 }>;
 

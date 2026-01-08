@@ -353,7 +353,8 @@ export class AccountService {
           skinList: true,
           priceTier: true,
           thumbnail: true,
-          otherImages: true
+          otherImages: true,
+          isLowRank: true
         }
       });
 

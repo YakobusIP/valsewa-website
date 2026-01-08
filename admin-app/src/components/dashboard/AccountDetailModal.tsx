@@ -14,6 +14,7 @@ import { skinService } from "@/services/skin.service";
 import { uploadService } from "@/services/upload.service";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -93,7 +94,8 @@ const formSchema = z.object({
         z.object({ id: z.number(), imageUrl: z.string().url() })
       ])
     )
-    .optional()
+    .optional(),
+    isLowRank: z.boolean().optional().default(false)
 });
 
 type Props = {
@@ -176,7 +178,8 @@ export default function AccountDetailModal({
             passwordResetRequired: data.passwordResetRequired,
             skinList: data.skinList.map((skin) => skin.id),
             thumbnail: data.thumbnail,
-            otherImages: data.otherImages ? data.otherImages : []
+            otherImages: data.otherImages ? data.otherImages : [],
+            isLowRank: data.isLowRank
           }
         : {
             username: "",
@@ -189,7 +192,8 @@ export default function AccountDetailModal({
             passwordResetRequired: false,
             skinList: [],
             thumbnail: undefined,
-            otherImages: []
+            otherImages: [],
+            isLowRank: false
           },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -491,7 +495,8 @@ export default function AccountDetailModal({
         password: data.password,
         skinList: data.skinList.map((skin) => skin.id),
         thumbnail: data.thumbnail,
-        otherImages: data.otherImages || []
+        otherImages: data.otherImages || [],
+        isLowRank: data.isLowRank
       });
     } else if (mode === "add") {
       form.reset({
@@ -504,7 +509,8 @@ export default function AccountDetailModal({
         password: "",
         skinList: [],
         thumbnail: undefined,
-        otherImages: []
+        otherImages: [],
+        isLowRank: undefined
       });
     }
   }, [mode, data, form]);
@@ -602,11 +608,12 @@ export default function AccountDetailModal({
               )}
             />
 
-            <FormField
+            <div className="col-span-1 flex items-end gap-3">
+              <FormField
               control={form.control}
               name="priceTier"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="flex-1 min-w-0">
                   <FormLabel>
                     Price Tier <span className="text-destructive">*</span>
                   </FormLabel>
@@ -615,7 +622,7 @@ export default function AccountDetailModal({
                     value={field.value?.toString()}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a price tier" />
                       </SelectTrigger>
                     </FormControl>
@@ -647,6 +654,29 @@ export default function AccountDetailModal({
                 </FormItem>
               )}
             />
+            
+            <div className="ml-auto">
+              <FormField
+                control={form.control}
+                name="isLowRank"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
+                      />
+                    </FormControl>
+                
+                    <FormLabel className="font-normal cursor-pointer">
+                      Low Rank Price
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
+            </div>
+          
             <FormField
               control={form.control}
               name="accountRank"

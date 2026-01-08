@@ -23,6 +23,7 @@ type AccountEntity = {
   otherImages: UploadResponse[] | null;
   priceTier: PriceTier;
   skinList: Skin[];
+  isLowRank: boolean;
 };
 
 type AccountEntityRequest = Omit<
