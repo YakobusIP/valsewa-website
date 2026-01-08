@@ -19,6 +19,7 @@ import { useAccountController } from "@/controllers/useAccountController";
 import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
 import { FaArrowUp } from "react-icons/fa";
+import NavbarHome from "@/components/NavbarHome";
 // import Navbar3 from "@/components/Navbar3";
 // import Hero from "@/components/Hero";
 
@@ -49,7 +50,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
 
       </div>
       <div className="relative max-lg:hidden">
-        <Navbar />
+        <NavbarHome />
       </div>
       <div className="lg:hidden">
         <Navbar1 />

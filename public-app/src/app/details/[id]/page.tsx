@@ -160,7 +160,7 @@ export default function AccountDetailPage() {
     <main className="min-h-screen bg-black text-white">
       <Navbar />
 
-      <div className="pt-[150px] px-4 lg:px-10">
+      <div className="pt-[110px] px-4 lg:px-10">
         <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8">
 
           {/* LEFT — GALLERY */}

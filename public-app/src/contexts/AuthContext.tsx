@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         description: "Login successful"
       });
 
-      router.push("/profile");
+      router.push("/details");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Login failed";
