@@ -20,6 +20,7 @@ import swaggerJSDoc, { OAS3Definition, Options } from "swagger-jsdoc";
 import { serve, setup } from "swagger-ui-express";
 import SkinRouter from "./routes/skin.route";
 import CustomerRouter from "./routes/customer.route";
+import SnapBiConfig from "./lib/snapbi/snapbi.config";
 
 const app: Express = express();
 
@@ -85,5 +86,7 @@ const swaggerSpec = swaggerJSDoc(options);
 app.use("/docs", serve, setup(swaggerSpec));
 
 app.use(errorMiddleware);
+
+SnapBiConfig.init();
 
 export default app;

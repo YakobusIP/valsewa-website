@@ -1,5 +1,5 @@
 import { Prisma, Type } from "@prisma/client";
-import { BadRequestError, InternalServerError } from "../lib/error";
+import { BadRequestError, InternalServerError, NotFoundError } from "../lib/error";
 import { prisma } from "../lib/prisma";
 import { Metadata } from "../types/metadata.type";
 
@@ -56,6 +56,21 @@ export class VoucherService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  getActiveVoucherByVoucherName = async (voucherName: string) => {
+    try {
+      const voucher = await prisma.voucher.findUnique({
+        where: { voucherName, isValid: true }
+      });
+
+      if (!voucher) throw new NotFoundError("Voucher not found");
+
+      return voucher;
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  }
 
   create = async (data: {
     voucherName: string;

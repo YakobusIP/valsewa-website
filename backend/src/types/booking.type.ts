@@ -1,16 +1,21 @@
-import { BookingStatus, DurationType, PaymentMethodType, PaymentStatus, Provider, Type } from "@prisma/client";
+import { BookingStatus, PaymentMethodType, PaymentStatus, Provider, Type } from "@prisma/client";
 
 export type CreateBookingRequest = {
-  userId: number;
+  userId?: number;
   accountId: number;
-  // TODO: Change to price tier ID
-  baseDurationUnit: number;
-  baseDurationType: DurationType;
-  mainValuePerUnit: number;
-  othersValuePerUnit?: number;
+  priceListId: number;
   quantity: number;
   voucherId?: number;
   startAt?: Date;
+};
+
+export type PayBookingRequest = {
+  bookingId: string;
+  voucherId?: number;
+  provider: Provider;
+  paymentMethod: PaymentMethodType;
+  bankCode?: string;
+  bankAccountName?: string;
 };
 
 export type BookingResponse = {
@@ -18,8 +23,7 @@ export type BookingResponse = {
   userId: number | null,
   accountId: number,
   status: BookingStatus,
-  baseDurationUnit: number,
-  baseDurationType: DurationType,
+  duration: string,
   quantity: number,
   startAt: Date | null,
   endAt: Date | null,
@@ -34,6 +38,7 @@ export type BookingResponse = {
   othersValue: number | null,
   discount: number | null,
   totalValue: number,
+  account?: any,
 }
 
 export type PaymentResponse = {

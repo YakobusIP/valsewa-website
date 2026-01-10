@@ -1,5 +1,5 @@
 export type HttpHeaders = Record<string, string>;
-export type PaymentMethod = "qris" | "";
+export type PaymentMethod = "qris" | "va" | "";
 
 export interface AccessTokenResponse {
   accessToken?: string;

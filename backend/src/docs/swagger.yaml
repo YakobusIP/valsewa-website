@@ -420,48 +420,77 @@ components:
       type: string
       enum: [PENDING, SUCCESS, EXPIRED, FAILED, CANCELLED, REFUNDED]
 
+    Provider:
+      type: string
+      enum: [FASPAY, MANUAL]
+
+    PaymentMethodType:
+      type: string
+      enum: [QRIS, VIRTUAL_ACCOUNT, MANUAL]
+
+    Type:
+      type: string
+      enum: [PERSENTASE, NOMINAL]
+
     CreateBookingRequest:
       type: object
-      required: [userId, accountId, baseDurationUnit, baseDurationType, mainValuePerUnit, quantity]
+      required: [userId, accountId, priceListId, quantity]
       properties:
         userId: { type: integer }
         accountId: { type: integer }
-        baseDurationUnit: { type: integer }
-        baseDurationType: { $ref: '#/components/schemas/DurationType' }
-        mainValuePerUnit: { type: integer }
-        othersValuePerUnit: { type: integer }
+        priceListId: { type: integer }
         quantity: { type: integer }
         voucherId: { type: integer }
         startAt: { type: string, format: date-time }
 
+    PayBookingRequest:
+      type: object
+      required: [bookingId, provider, paymentMethod]
+      properties:
+        bookingId: { type: string, format: cuid }
+        voucherId: { type: integer }
+        provider: { $ref: '#/components/schemas/Provider' }
+        paymentMethod: { $ref: '#/components/schemas/PaymentMethodType' }
+        bankCode: { type: string }
+        bankAccountName: { type: string }
+
     BookingResponse:
       type: object
       properties:
-        id: { type: string, format: uuid }
+        id: { type: string, format: cuid }
         userId: { type: integer, nullable: true }
         accountId: { type: integer }
         status: { $ref: '#/components/schemas/BookingStatus' }
-        baseDurationUnit: { type: integer }
-        baseDurationType: { $ref: '#/components/schemas/DurationType' }
+        duration: { type: string }
         quantity: { type: integer }
         startAt: { type: string, format: date-time, nullable: true }
         endAt: { type: string, format: date-time, nullable: true }
         expiredAt: { type: string, format: date-time, nullable: true }
         mainValuePerUnit: { type: integer }
         othersValuePerUnit: { type: integer, nullable: true }
+        voucherId: { type: integer }
+        voucherType: { $ref: '#/components/schemas/Type' }
+        voucherAmount: { type: integer }
+        voucherMaxDiscount: { type: integer }
         mainValue: { type: integer }
+        othersValue: { type: integer }
         totalValue: { type: integer }
+        account: { type: integer, nullable: true }
 
     PaymentResponse:
       type: object
       properties:
-        paymentId: { type: string, format: uuid }
-        bookingId: { type: string, format: uuid }
+        paymentId: { type: string, format: cuid }
+        bookingId: { type: string, format: cuid }
         status: { $ref: '#/components/schemas/PaymentStatus' }
         value: { type: integer }
         currency: { type: string, example: "IDR" }
+        provider: { $ref: '#/components/schemas/Provider' }
+        providerPaymentId: { type: string }
+        paymentMethod: { $ref: '#/components/schemas/PaymentMethodType' }
         qrUrl: { type: string, format: uri, nullable: true }
         paidAt: { type: string, format: date-time, nullable: true }
+        refundedAt: { type: string, format: date-time, nullable: true }
 
     ErrorResponse:
       type: object
@@ -1774,13 +1803,15 @@ paths:
     get:
       tags: [Bookings]
       summary: Get booking by ID
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: string
-            format: uuid
+            format: cuid
       responses:
         "200":
           content:
@@ -1788,10 +1819,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/BookingResponse'
 
-  /api/users/bookings/{userId}:
+  /api/bookings/users/{userId}:
     get:
       tags: [Bookings]
       summary: Get all bookings for a user
+      security:
+        - bearerAuth: []
       parameters:
         - name: userId
           in: path
@@ -1807,10 +1840,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/BookingResponse'
 
-  /api/users/hold-bookings/{userId}:
+  /api/bookings/users/hold-bookings/{userId}:
     get:
       tags: [Bookings]
       summary: Get only bookings with HOLD status for a user
+      security:
+        - bearerAuth: []
       parameters:
         - name: userId
           in: path
@@ -1826,10 +1861,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/BookingResponse'
 
-  /api/book:
+  /api/bookings/book:
     post:
       tags: [Bookings]
       summary: Create a new booking
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1843,23 +1880,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/BookingResponse'
 
-  # --- Payment Endpoints ---
-  /api/pay:
+  /api/bookings/cancel:
     post:
-      tags: [Payments]
-      summary: Initiate payment for a booking
+      tags: [Bookings]
+      summary: Cancel booking
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [id]
+              required: [bookingId]
               properties:
-                id:
+                bookingId:
                   type: string
-                  format: uuid
-                  description: Booking ID
+                  format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingResponse'
+
+  # --- Payment Endpoints ---
+  /api/bookings/payments/{id}:
+    get:
+      tags: [Payments]
+      summary: Get payment by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: cuid
       responses:
         "200":
           content:
@@ -1867,10 +1925,51 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaymentResponse'
 
-  /api/verify-payment:
+  /api/bookings/active-payments/{bookingId}:
+    get:
+      tags: [Payments]
+      summary: Get active payment by booking ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  /api/bookings/pay:
+    post:
+      tags: [Payments]
+      summary: Initiate payment for a booking
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayBookingRequest'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  /api/bookings/verify-payment:
     post:
       tags: [Payments]
       summary: Manually verify payment status
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1881,7 +1980,7 @@ paths:
               properties:
                 paymentId:
                   type: string
-                  format: uuid
+                  format: cuid
       responses:
         "200":
           content:
@@ -1889,7 +1988,46 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaymentResponse'
 
-  /api/faspay/callback:
+  /api/bookings/force-pay:
+    post:
+      tags: [Payments]
+      summary: Manually verify payment status
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentId]
+              properties:
+                paymentId:
+                  type: string
+                  format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+
+  /api/bookings/sync-expired:
+    post:
+      tags: [Bookings]
+      summary: Sync expired bookings
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+
+  /api/bookings/faspay/callback:
     post:
       tags: [Webhooks]
       summary: Faspay Payment Notification Webhook
