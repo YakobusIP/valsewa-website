@@ -166,28 +166,25 @@ enum PaymentStatus {
   REFUNDED
 }
 
-enum DurationType {
-  HOURLY
-  DAILY
-}
-
 enum Provider {
   FASPAY
+  MANUAL
 }
 
 enum PaymentMethodType {
   QRIS
+  VIRTUAL_ACCOUNT
+  MANUAL
 }
 
 model Booking {
-  id        String        @id @default(uuid())
+  id        String        @id @default(cuid())
   userId    Int? // optional when booking is made by an admin
   accountId Int
   status    BookingStatus @default(HOLD)
 
   // Duration
-  baseDurationUnit Int
-  baseDurationType DurationType
+  duration         String
   quantity         Int
   immediate        Boolean
   startAt          DateTime?
@@ -220,7 +217,7 @@ model Booking {
 }
 
 model Payment {
-  id        String        @id @default(uuid())
+  id        String        @id @default(cuid())
   bookingId String
   status    PaymentStatus
   value     Int
@@ -230,7 +227,13 @@ model Payment {
   providerPaymentId String?
   paymentMethod     PaymentMethodType?
 
+  // For PaymentMethodType = QRIS
   qrUrl String?
+
+  // For PaymentMethodType = VIRTUAL_ACCOUNT
+  bankCode String?
+  bankAccountNo String?
+  bankAccountName String?
 
   paidAt        DateTime?
   refundedValue Int       @default(0)

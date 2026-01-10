@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, response } from "express";
-import { DurationType, Provider, PaymentMethodType } from "@prisma/client";
+import { Provider, PaymentMethodType } from "@prisma/client";
 import { BookingService } from "../services/booking.service";
 import { BadRequestError, ForbiddenError } from "../lib/error";
 import { FASPAY_STATUS_MAP, FaspayClient, parseFaspayDate, toFaspayDate } from "../faspay/faspay.client";
@@ -88,10 +88,7 @@ export class BookingController {
       const {
         userId,
         accountId,
-        baseDurationUnit,
-        baseDurationType,
-        mainValuePerUnit,
-        othersValuePerUnit,
+        priceListId,
         quantity,
         voucherId,
         startAt
@@ -99,27 +96,16 @@ export class BookingController {
 
       if (
         !accountId ||
-        !baseDurationUnit ||
-        !baseDurationType ||
-        !mainValuePerUnit ||
+        !priceListId ||
         !quantity
       ) {
         throw new BadRequestError("Missing required fields.");
       }
 
-      const validatedDurationType: DurationType =
-        baseDurationType as DurationType;
-      if (!Object.values(DurationType).includes(validatedDurationType)) {
-        throw new BadRequestError("Invalid baseDurationType provided.");
-      }
-
       const result = await this.bookingService.createBooking({
         userId,
         accountId,
-        baseDurationUnit,
-        baseDurationType,
-        mainValuePerUnit,
-        othersValuePerUnit,
+        priceListId,
         quantity,
         voucherId,
         startAt: startAt ? new Date(startAt) : undefined,
@@ -131,12 +117,46 @@ export class BookingController {
     }
   };
 
-  payBooking = async (req: Request, res: Response, next: NextFunction) => {
+  cancelBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const bookingId = req.params.id;
+      const { bookingId } = req.body;
       if (!bookingId) throw new BadRequestError("Missing required fields.");
 
-      const result = await this.bookingService.payBooking(bookingId, Provider.FASPAY, PaymentMethodType.QRIS);
+      const result = await this.bookingService.cancelBooking(bookingId);
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  payBooking = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const {
+        bookingId,
+        voucherId,
+        provider,
+        paymentMethod,
+        bankCode,
+        bankAccountName
+      } = req.body;
+      if (
+        !bookingId ||
+        (paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT &&
+          (!bankCode || !bankAccountName)
+        )
+      ) {
+        throw new BadRequestError("Missing required fields.");
+      }
+
+      const result = await this.bookingService.payBooking({
+        bookingId,
+        voucherId,
+        provider: provider ?? Provider.FASPAY,
+        paymentMethod: paymentMethod ?? PaymentMethodType.QRIS,
+        bankCode,
+        bankAccountName,
+      });
 
       return res.status(200).json(result);
     } catch (error) {
@@ -150,6 +170,29 @@ export class BookingController {
       if (!paymentId) throw new BadRequestError("Missing required fields.");
 
       const result = await this.bookingService.verifyPayment(paymentId);
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  forcePay = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { paymentId } = req.body;
+      if (!paymentId) throw new BadRequestError("Missing required fields.");
+
+      const result = await this.bookingService.forcePay(paymentId);
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  syncExpiredBookings = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.bookingService.syncExpiredBookings();
 
       return res.status(200).json(result);
     } catch (error) {
