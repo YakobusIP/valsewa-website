@@ -18,7 +18,7 @@ type PriceTier = {
 
 type PriceTierRequest = Omit<PriceTier, "id">;
 
-export type { PriceTier, PriceTierRequest };
+export type { PriceList, PriceTier, PriceTierRequest };
 
 type UploadResponse = {
   id: number;
@@ -46,6 +46,7 @@ type AccountEntity = {
   otherImages: UploadResponse[] | null;
   priceTier: PriceTier;
   nickname: string;
+  isLowRank: boolean;
 };
 
 export type CarouselSlide = {

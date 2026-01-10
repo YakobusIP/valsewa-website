@@ -10,7 +10,12 @@ const nextConfig: NextConfig = {
             ? process.env.NEXT_PUBLIC_AXIOS_BASE_URL || ""
             : "localhost",
         port: process.env.NODE_ENV === "production" ? undefined : "5000"
-      }
+      },
+      {
+        protocol: "https",
+        hostname: "debit-sandbox.faspay.co.id",
+        pathname: "/__assets/qr/**",
+      },
     ]
   }
 };

@@ -1,16 +1,21 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
-import { notFound, useParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { notFound, useParams, useRouter } from "next/navigation";
 
 import Navbar from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { fetchAccountById } from "@/services/accountService";
-import { AccountEntity, UploadResponse } from "@/types/account.type";
+import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
 import { Calendar } from "@/components/ui/calendar";
+import { bookingService } from "@/services/booking.service";
+import { toast } from "@/hooks/useToast";
+import { isAxiosError } from "axios";
 
 export default function AccountDetailPage() {
+  const router = useRouter();
+
   const params = useParams<{ id: string }>();
   const id = params?.id;
 
@@ -24,7 +29,7 @@ export default function AccountDetailPage() {
   const [qty, setQty] = useState(1);
   const [selectedDuration, setSelectedDuration] = useState<{
     label: string;
-    price: string;
+    value: PriceList;
   } | null>(null);
   const [bookDate, setBookDate] = useState<Date | null>(null);
   const [startTime, setStartTime] = useState<string>(""); // "09:00"
@@ -40,6 +45,40 @@ export default function AccountDetailPage() {
   useEffect(() => {
     setSelectedDuration(null);
   }, [mode]);
+
+  const onSubmit = async () => {
+    try {
+      if (!selectedDuration) return;
+      const booking = await bookingService.createBooking({
+        // TODO: userId
+        accountId: parseInt(id),
+        priceListId: selectedDuration.value.id,
+        quantity: qty,
+        ...( bookDate ? { startAt: bookDate } : {}),
+      })
+  
+      if (booking) {
+        router.push(`/bookings/${booking.id}`);
+      }
+    } catch (error) {
+      let message = "Booking failed";
+
+      if (isAxiosError(error)) {
+        message =
+          error.response?.data?.error ||
+          error.message ||
+          message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+
+      toast({
+        variant: "destructive",
+        title: "Booking failed",
+        description: message
+      });
+    }
+  }
 
   const filteredSkins = useMemo(() => {
     if (!account?.skinList) return [];
@@ -73,7 +112,7 @@ export default function AccountDetailPage() {
       return;
     }
 
-    const durationHours = parseDurationToHours(selectedDuration.label);
+    const durationHours = parseDurationToHours(selectedDuration.value.duration);
     const totalHours = durationHours * qty;
 
     const [startHour, startMinute] = startTime.split(":").map(Number);
@@ -89,19 +128,16 @@ export default function AccountDetailPage() {
     setEndTime(`${hh}:${mm}`);
   }, [selectedDuration, startTime, qty]);
 
-  const bookTotalPrice = useMemo(() => {
+  const calculateBasePrice = useCallback((priceList: PriceList) => {
+    if (!priceList) return 0;
+    return (Number(priceList.normalPrice) + (account?.isLowRank ? Number(priceList.lowPrice) : 0))
+  }, [account?.isLowRank])
+
+  const calculateTotalPrice = useMemo(() => {
     if (!selectedDuration || qty === 0) return 0;
 
-    const basePrice = Number(selectedDuration.price);
-
-    return basePrice * qty;
-  }, [selectedDuration, qty]);
-
-  const rentTotalPrice = useMemo(() => {
-    if (!selectedDuration || qty === 0) return 0;
-
-    return Number(selectedDuration.price) * qty;
-  }, [selectedDuration, qty]);
+    return calculateBasePrice(selectedDuration.value) * qty;
+  }, [selectedDuration, qty, calculateBasePrice]);
 
 
   const isDisabled =
@@ -340,7 +376,7 @@ export default function AccountDetailPage() {
                         onClick={() =>
                           setSelectedDuration({
                             label: item.duration,
-                            price: item.normalPrice.toString()
+                            value: item,
                           })
                         }
                         className={`border rounded-md py-2 cursor-pointer transition
@@ -352,7 +388,7 @@ export default function AccountDetailPage() {
                       >
                         <p className="text-xs font-semibold uppercase">{item.duration}</p>
                         <p className="text-[11px] text-neutral-400">
-                          IDR {item.normalPrice.toLocaleString("id-ID")}
+                          IDR {calculateBasePrice(item).toLocaleString("id-ID")}
                         </p>
                       </div>
                     );
@@ -375,7 +411,7 @@ export default function AccountDetailPage() {
                           onClick={() =>
                             setSelectedDuration({
                               label: item.duration,
-                              price: item.normalPrice.toString()
+                              value: item,
                             })
                           }
                           className={`border rounded-md py-2 cursor-pointer transition
@@ -387,7 +423,7 @@ export default function AccountDetailPage() {
                         >
                           <p className="text-xs font-semibold uppercase">{item.duration}</p>
                           <p className="text-[11px] text-neutral-400">
-                            IDR {item.normalPrice.toLocaleString("id-ID")}
+                            IDR {calculateBasePrice(item).toLocaleString("id-ID")}
                           </p>
                         </div>
                       );
@@ -481,6 +517,7 @@ export default function AccountDetailPage() {
 
 
               <button
+                onClick={onSubmit}
                 disabled={isDisabled}
                 className={`w-full font-semibold py-3 rounded-md transition
                   ${
@@ -490,11 +527,11 @@ export default function AccountDetailPage() {
                   }`}
               >
                 {mode === "RENT" && selectedDuration && (
-                  <>IDR {rentTotalPrice.toLocaleString("id-ID")} | Rent Now</>
+                  <>IDR {calculateTotalPrice.toLocaleString("id-ID")} | Rent Now</>
                 )}
 
                 {mode === "BOOK" && selectedDuration && (
-                  <>IDR {bookTotalPrice.toLocaleString("id-ID")} | Book Now</>
+                  <>IDR {calculateTotalPrice.toLocaleString("id-ID")} | Book Now</>
                 )}
 
 
