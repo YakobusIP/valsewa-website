@@ -91,11 +91,18 @@ model Skin {
   accounts Account[]
 }
 
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
 model ImageUpload {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   imageUrl  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  type      MediaType @default(IMAGE)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   thumbnailOf Account? @relation("Thumbnail")
 
@@ -140,9 +147,12 @@ model CarouselSlide {
   image129   ImageUpload @relation("Slide129", fields: [image129Id], references: [id])
   image129Id Int         @unique
 
+  duration Int @default(5)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
 
 // ----------------------------------------------------------------------
 // BOOKING-RELATED ENUMS & MODELS

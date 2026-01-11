@@ -23,6 +23,7 @@ export type { PriceTier, PriceTierRequest };
 type UploadResponse = {
   id: number;
   imageUrl: string;
+  type: "IMAGE" | "VIDEO";
 };
 
 export type { UploadResponse };
@@ -53,6 +54,7 @@ export type CarouselSlide = {
   image123: UploadResponse;
   image126: UploadResponse;
   image129: UploadResponse;
+  duration: number;
 };
 
 type AccountEntityRequest = Omit<

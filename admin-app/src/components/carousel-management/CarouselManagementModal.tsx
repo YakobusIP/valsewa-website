@@ -86,11 +86,25 @@ export default function CarouselManagementModal() {
                 <CarouselItem key={slide.id}>
                   <Card>
                     <CardContent className="flex aspect-video items-center justify-center p-6 relative">
-                      <img
-                        src={slide.image126.imageUrl || "/1200x600.svg"}
-                        alt={`Slide ${slide.id}`}
-                        className="rounded-md object-cover w-full h-full"
-                      />
+                      {slide.image126.type === "VIDEO" ? (
+                        <video
+                          src={slide.image126.imageUrl}
+                          className="rounded-md object-cover w-full h-full"
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={slide.image126.imageUrl || "/1200x600.svg"}
+                          alt={`Slide ${slide.id}`}
+                          className="rounded-md object-cover w-full h-full"
+                        />
+                      )}
+
+                      <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                        {slide.duration}s
+                      </div>
+
                       <Button
                         variant="outline"
                         size="icon"

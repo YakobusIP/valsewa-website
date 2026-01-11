@@ -7,6 +7,7 @@ import SearchBar from "@/components/SearchBar";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
   Carousel,
+  CarouselApi,
   CarouselContent,
   CarouselItem,
   CarouselNext,
@@ -20,6 +21,7 @@ import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
 import { FaArrowUp } from "react-icons/fa";
 import NavbarHome from "@/components/NavbarHome";
+import { useEffect, useState, useRef } from "react";
 // import Navbar3 from "@/components/Navbar3";
 // import Hero from "@/components/Hero";
 
@@ -37,10 +39,17 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
     getSortLabel
   } = useAccountController(initialAccount);
 
+  const [api, setApi] = useState<CarouselApi>();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 300, behavior: "smooth" });
   };
-  const autoplay = Autoplay({ delay: 5000, stopOnInteraction: false });
+  const autoplay = useRef(
+    Autoplay({
+      delay: () => initialCarousel.map((slide) => slide.duration * 1000),
+      stopOnInteraction: false
+    })
+  ).current;
   return (
     <section className="bg-[#101822] md:pb-64 pb-32 relative ">
       <div className="relative w-full max-w-[1920px] h-auto min-h-[720px] rounded-2xl bg-[radial-gradient(circle_at_left,#210004_0%,#000_50%)] border border-white/10 shadow-2xl overflow-hidden px-4 sm:px-6 lg:px-12 py-8">
@@ -134,47 +143,81 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
             {/* Carousel */}
             <div className="w-full md:px-14 px-7">
               <Carousel
+                setApi={setApi}
                 className="shadow-lg rounded-2xl overflow-hidden"
                 plugins={[autoplay]}
                 opts={{ loop: true }}
               >
                 <CarouselContent>
-                  {initialCarousel?.map((image, index) => (
+                  {initialCarousel?.map((slide, index) => (
                     <CarouselItem key={index}>
                       <div className="h-full w-full relative max-lg:hidden">
                         <AspectRatio ratio={12 / 3}>
-                          <Image
-                            loading="lazy"
-                            src={image.image123.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover rounded-2xl"
-                            unoptimized
-                          />
+                          {slide.image123.type === "VIDEO" ? (
+                            <video
+                              src={slide.image123.imageUrl}
+                              className="object-cover rounded-2xl w-full h-full"
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                            />
+                          ) : (
+                            <Image
+                              loading="lazy"
+                              src={slide.image123.imageUrl}
+                              alt="Carousel Image"
+                              fill
+                              className="object-cover rounded-2xl"
+                              unoptimized
+                            />
+                          )}
                         </AspectRatio>
                       </div>
                       <div className="h-full w-full relative max-sm:hidden lg:hidden">
                         <AspectRatio ratio={12 / 6}>
-                          <Image
-                            loading="lazy"
-                            src={image.image126.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover rounded-2xl"
-                            unoptimized
-                          />
+                          {slide.image126.type === "VIDEO" ? (
+                            <video
+                              src={slide.image126.imageUrl}
+                              className="object-cover rounded-2xl w-full h-full"
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                            />
+                          ) : (
+                            <Image
+                              loading="lazy"
+                              src={slide.image126.imageUrl}
+                              alt="Carousel Image"
+                              fill
+                              className="object-cover rounded-2xl"
+                              unoptimized
+                            />
+                          )}
                         </AspectRatio>
                       </div>
                       <div className="h-full w-full relative sm:hidden">
                         <AspectRatio ratio={12 / 9}>
-                          <Image
-                            loading="lazy"
-                            src={image.image129.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover rounded-2xl"
-                            unoptimized
-                          />
+                          {slide.image129.type === "VIDEO" ? (
+                            <video
+                              src={slide.image129.imageUrl}
+                              className="object-cover rounded-2xl w-full h-full"
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                            />
+                          ) : (
+                            <Image
+                              loading="lazy"
+                              src={slide.image129.imageUrl}
+                              alt="Carousel Image"
+                              fill
+                              className="object-cover rounded-2xl"
+                              unoptimized
+                            />
+                          )}
                         </AspectRatio>
                       </div>
                     </CarouselItem>

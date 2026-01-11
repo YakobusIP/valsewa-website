@@ -47,6 +47,7 @@ export default function CarouselDetailModal({
     Partial<Record<AspectRatio, string>>
   >({});
   const [selectedTab, setSelectedTab] = useState<AspectRatio>("126");
+  const [duration, setDuration] = useState<number>(10);
   const [isLoadingSave, setIsLoadingSave] = useState(false);
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
 
@@ -57,8 +58,10 @@ export default function CarouselDetailModal({
         "126": slide.image126.imageUrl,
         "129": slide.image129.imageUrl
       });
+      setDuration(slide.duration);
     } else {
       setPreviews({});
+      setDuration(10);
     }
 
     setFiles({});
@@ -92,7 +95,25 @@ export default function CarouselDetailModal({
     }
   };
 
-  const allReady = !!(previews["123"] && previews["126"] && previews["129"]);
+  const getMediaType = (aspect: AspectRatio) => {
+    if (files[aspect]) {
+      return files[aspect]!.type.startsWith("video/") ? "VIDEO" : "IMAGE";
+    }
+    if (slide) {
+      switch (aspect) {
+        case "123":
+          return slide.image123.type;
+        case "126":
+          return slide.image126.type;
+        case "129":
+          return slide.image129.type;
+      }
+    }
+    return "IMAGE";
+  };
+
+  const allReady =
+    !!(previews["123"] && previews["126"] && previews["129"]) && duration > 0;
 
   const handleSave = async () => {
     if (!isEditMode && (!files["123"] || !files["126"] || !files["129"])) {
@@ -100,6 +121,15 @@ export default function CarouselDetailModal({
         variant: "destructive",
         title: "Uh oh! Something went wrong!",
         description: "Please select files for all three ratios."
+      });
+      return;
+    }
+
+    if (!duration) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: "Duration is required."
       });
       return;
     }
@@ -126,7 +156,9 @@ export default function CarouselDetailModal({
       }
 
       if (isEditMode) {
-        const payload: Partial<CarouselSlideRequest> = {};
+        const payload: Partial<CarouselSlideRequest> = {
+          duration
+        };
         for (const ar of changed) {
           payload[`image${ar}Id`] = uploadMap[ar]!;
         }
@@ -135,7 +167,8 @@ export default function CarouselDetailModal({
         const payload: CarouselSlideRequest = {
           image123Id: uploadMap["123"]!,
           image126Id: uploadMap["126"]!,
-          image129Id: uploadMap["129"]!
+          image129Id: uploadMap["129"]!,
+          duration
         };
         await carouselSlideService.create(payload);
       }
@@ -196,6 +229,17 @@ export default function CarouselDetailModal({
           </DialogDescription>
         </DialogHeader>
 
+        <div className="grid w-full max-w-sm items-center gap-1.5 mb-4">
+          <Label htmlFor="duration">Duration (Seconds)</Label>
+          <Input
+            type="number"
+            id="duration"
+            placeholder="Duration in seconds"
+            value={duration}
+            onChange={(e) => setDuration(Number(e.target.value))}
+          />
+        </div>
+
         <Tabs
           defaultValue="123"
           value={selectedTab}
@@ -220,11 +264,21 @@ export default function CarouselDetailModal({
                   <div className="flex-1">
                     <div className="relative overflow-hidden">
                       {previews[aspect] ? (
-                        <img
-                          src={previews[aspect]}
-                          alt={`Ratio ${aspect}`}
-                          className="object-contain"
-                        />
+                        getMediaType(aspect) === "VIDEO" ? (
+                          <video
+                            src={previews[aspect]}
+                            className="w-full h-full object-contain"
+                            muted
+                            autoPlay
+                            loop
+                          />
+                        ) : (
+                          <img
+                            src={previews[aspect]}
+                            alt={`Ratio ${aspect}`}
+                            className="object-contain"
+                          />
+                        )
                       ) : (
                         <div className="flex flex-col items-center justify-center h-full gap-2">
                           <img
@@ -235,7 +289,7 @@ export default function CarouselDetailModal({
                           <Input
                             id={`upload-${aspect}`}
                             type="file"
-                            accept="image/*"
+                            accept="image/*,video/*"
                             className="sr-only"
                             onChange={(e) =>
                               handleFileChange(aspect, e.target.files![0])
@@ -252,7 +306,7 @@ export default function CarouselDetailModal({
                             }
                           >
                             <UploadIcon className="h-4 w-4" />
-                            Upload Image
+                            Upload Media
                           </Button>
                         </div>
                       )}
@@ -286,13 +340,13 @@ export default function CarouselDetailModal({
                         >
                           <div className="flex items-center gap-2 text-sm text-primary hover:underline">
                             <UploadIcon className="h-4 w-4" />
-                            Change image
+                            Change media
                           </div>
                         </Label>
                         <Input
                           id={`upload-${aspect}`}
                           type="file"
-                          accept="image/*"
+                          accept="image/*,video/*"
                           className="hidden"
                           onChange={(e) =>
                             handleFileChange(aspect, e.target.files![0])

@@ -34,6 +34,7 @@ export class CarouselSlideService {
       image123Id: number;
       image126Id: number;
       image129Id: number;
+      duration: number;
     }>
   ) => {
     try {
@@ -48,8 +49,13 @@ export class CarouselSlideService {
         image123Id?: number;
         image126Id?: number;
         image129Id?: number;
+        duration?: number;
       } = {};
       const toDelete: number[] = [];
+
+      if (data.duration !== undefined) {
+        updateData.duration = data.duration;
+      }
 
       if (data.image123Id !== undefined) {
         updateData.image123Id = data.image123Id;
