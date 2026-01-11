@@ -1,10 +1,12 @@
 import {
+  Account,
   Booking,
   BookingStatus,
-  DurationType,
   Payment,
   PaymentMethodType,
   PaymentStatus,
+  PriceList,
+  Prisma,
   Provider,
   Type,
   Voucher
@@ -17,44 +19,149 @@ import {
 } from "../lib/error";
 import { addDays, addHours, addMinutes } from "../lib/utils";
 import { prisma } from "../lib/prisma";
-import { BookingResponse, CallbackNotificationRequest, CreateBookingRequest, PaymentResponse, VoucherResponse } from "../types/booking.type";
+import {
+  BankCodes,
+  BookingResponse,
+  CallbackNotificationRequest,
+  CreateBookingRequest,
+  PayBookingRequest,
+  PaymentMethodRequest,
+  PaymentResponse,
+  VoucherResponse
+} from "../types/booking.type";
 import { FaspayClient } from "../faspay/faspay.client";
+import { Metadata } from "../types/metadata.type";
 
-export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<PaymentStatus, BookingStatus> = {
+export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<
+  PaymentStatus,
+  BookingStatus
+> = {
   [PaymentStatus.SUCCESS]: BookingStatus.RESERVED,
   [PaymentStatus.PENDING]: BookingStatus.HOLD,
   [PaymentStatus.REFUNDED]: BookingStatus.FAILED,
   [PaymentStatus.CANCELLED]: BookingStatus.CANCELLED,
   [PaymentStatus.FAILED]: BookingStatus.FAILED,
-  [PaymentStatus.EXPIRED]: BookingStatus.EXPIRED,
+  [PaymentStatus.EXPIRED]: BookingStatus.EXPIRED
+};
+
+export type PaymentMethodTypeAndCode = {
+  paymentMethodType: PaymentMethodType;
+  bankCode?: BankCodes;
+};
+
+export const PAYMENT_METHODS_MAP: Record<
+  PaymentMethodRequest,
+  PaymentMethodTypeAndCode
+> = {
+  [PaymentMethodRequest.QRIS]: { paymentMethodType: PaymentMethodType.QRIS },
+  [PaymentMethodRequest.VA_BNI]: {
+    paymentMethodType: PaymentMethodType.VIRTUAL_ACCOUNT,
+    bankCode: BankCodes.BNI
+  },
+  [PaymentMethodRequest.VA_PERMATA]: {
+    paymentMethodType: PaymentMethodType.VIRTUAL_ACCOUNT,
+    bankCode: BankCodes.PERMATA
+  },
+  [PaymentMethodRequest.VA_BRI]: {
+    paymentMethodType: PaymentMethodType.VIRTUAL_ACCOUNT,
+    bankCode: BankCodes.BRI
+  },
+  [PaymentMethodRequest.MANUAL]: { paymentMethodType: PaymentMethodType.MANUAL }
 };
 
 export class BookingService {
   private readonly holdBookingTimeInMinutes: number = 15;
+  private readonly gracePeriodInMillis: number = 30000;
 
   constructor(private readonly faspayClient: FaspayClient) {}
+
+  getAllBookings = async (
+    page?: number,
+    limit?: number,
+    query?: string
+  ): Promise<[BookingResponse[], Metadata]> => {
+    try {
+      const trimmed = (query ?? "").trim();
+      const whereCriteria: Prisma.BookingWhereInput | undefined = undefined;
+
+      let data: Booking[];
+      let metadata: Metadata;
+
+      if (page !== undefined && limit !== undefined) {
+        const skip = (page - 1) * limit;
+
+        data = await prisma.booking.findMany({
+          where: whereCriteria,
+          take: limit,
+          skip: skip
+        });
+
+        const itemCount = await prisma.booking.count({
+          where: whereCriteria
+        });
+        const pageCount = Math.ceil(itemCount / limit);
+
+        metadata = {
+          page: page,
+          limit: limit,
+          pageCount,
+          total: itemCount
+        };
+      } else {
+        data = await prisma.booking.findMany({
+          where: whereCriteria
+        });
+        metadata = {
+          page: 0,
+          limit: 0,
+          pageCount: 0,
+          total: 0
+        };
+      }
+
+      return [
+        data.map((datum) => this.mapBookingDataToBookingResponse(datum)),
+        metadata
+      ];
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
 
   getBookingById = async (bookingId: string): Promise<BookingResponse> => {
     try {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
+        include: {
+          account: {
+            include: {
+              priceTier: true,
+              thumbnail: true,
+              otherImages: true,
+              skinList: true
+            }
+          }
+        }
       });
 
       if (!booking) {
         throw new NotFoundError(`Booking with ID ${bookingId} not found.`);
       }
-      return this.mapBookingDataToBookingResponse(booking);
+      return this.mapBookingWithAccountDataToBookingResponse(booking);
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
   };
 
-  getBookingsByUserId = async (userId: number): Promise<BookingResponse[]> => {
+  getBookingsByCustomerId = async (
+    customerId: number
+  ): Promise<BookingResponse[]> => {
     try {
       const bookings = await prisma.booking.findMany({
-        where: { userId: userId },
-        orderBy: { startAt: "desc" },
+        where: { customerId: customerId },
+        orderBy: { startAt: "desc" }
       });
       return bookings.map(this.mapBookingDataToBookingResponse);
     } catch (error) {
@@ -62,57 +169,83 @@ export class BookingService {
     }
   };
 
-  getHoldBookingsByUserId = async (userId: number): Promise<BookingResponse[]> => {
+  getHoldBookingsByCustomerId = async (
+    customerId: number
+  ): Promise<BookingResponse[]> => {
     try {
       const bookings = await prisma.booking.findMany({
-        where: { userId: userId, status: BookingStatus.HOLD },
-        orderBy: { startAt: "desc" },
+        where: { customerId: customerId, status: BookingStatus.HOLD },
+        orderBy: { startAt: "desc" }
       });
       return bookings.map(this.mapBookingDataToBookingResponse);
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
-  }
+  };
 
   getPaymentById = async (paymentId: string): Promise<PaymentResponse> => {
     try {
       const payment = await prisma.payment.findUnique({
         where: { id: paymentId },
+        include: {
+          booking: true
+        }
       });
 
       if (!payment) {
         throw new NotFoundError(`Payment with ID ${paymentId} not found.`);
+      }
+      return this.mapPaymentWithBookingDataToPaymentResponse(payment);
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  getActivePaymentByBookingId = async (
+    bookingId: string
+  ): Promise<PaymentResponse> => {
+    try {
+      const payment = await prisma.payment.findFirst({
+        where: { bookingId: bookingId, status: PaymentStatus.PENDING }
+      });
+
+      if (!payment) {
+        throw new NotFoundError(
+          `Active payment with booking ID ${bookingId} not found.`
+        );
       }
       return this.mapPaymentDataToPaymentResponse(payment);
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
-  }
+  };
 
-  getActivePaymentByBookingId = async (bookingId: string): Promise<PaymentResponse> => {
-    try {
-      const payment = await prisma.payment.findFirst({
-        where: { bookingId: bookingId, status: PaymentStatus.PENDING },
-      });
-      
-      if (!payment) {
-        throw new NotFoundError(`Active payment with booking ID ${bookingId} not found.`);
-      }
-      return this.mapPaymentDataToPaymentResponse(payment);
-    } catch (error) {
-      throw new InternalServerError((error as Error).message);
+  private parseDurationToHours = (duration: string): number => {
+    const lower = duration.toLowerCase().trim();
+
+    if (lower.endsWith("h")) {
+      return Number(lower.replace("h", ""));
     }
-  }
+
+    if (lower.endsWith("d")) {
+      return Number(lower.replace("d", "")) * 24;
+    }
+
+    return 0;
+  };
 
   private calculateValues = (
-    mainValuePerUnit: number,
-    othersValuePerUnit: number,
+    normalPrice: number,
+    lowPrice: number,
+    isLowRank: boolean,
+    duration: string,
     voucher: VoucherResponse | null,
     quantity: number
   ) => {
-    const mainValue = mainValuePerUnit * quantity;
-    const othersValue = othersValuePerUnit * quantity;
+    const mainValue = normalPrice * quantity;
+    const othersValue = isLowRank ? lowPrice * quantity : 0;
 
     let voucherType = null;
     let voucherAmount = null;
@@ -122,19 +255,23 @@ export class BookingService {
       voucherType = voucher.type;
       if (voucher.type === Type.PERSENTASE) {
         voucherAmount = voucher.percentage ?? 0;
-        discount = mainValue * voucherAmount;
+        discount = mainValue * voucherAmount * 0.01;
       } else {
         voucherAmount = voucher.nominal ?? 0;
         discount = voucherAmount;
       }
-      
+
       if (voucher.maxDiscount) {
         voucherMaxDiscount = voucher.maxDiscount;
         discount = Math.min(discount, voucherMaxDiscount);
       }
+
+      discount = Math.min(discount, mainValue);
     }
 
     const totalValue = mainValue + othersValue - discount;
+
+    const durationInHours = this.parseDurationToHours(duration);
 
     return {
       voucherType,
@@ -142,36 +279,54 @@ export class BookingService {
       voucherMaxDiscount,
       mainValue,
       othersValue,
+      duration,
+      durationInHours,
       discount,
-      totalValue,
-    }
-  }
+      totalValue
+    };
+  };
 
-  createBooking = async (data: CreateBookingRequest): Promise<BookingResponse> => {
+  createBooking = async (
+    data: CreateBookingRequest
+  ): Promise<BookingResponse> => {
     try {
       const {
-        userId,
+        customerId,
         accountId,
-        baseDurationUnit,
-        baseDurationType,
-        mainValuePerUnit,
-        othersValuePerUnit,
+        priceListId,
         quantity,
         voucherId,
-        startAt,
+        startAt
       } = data;
 
-      // TODO: instead of passing baseDurationUnit, baseDurationType, mainValuePerUnit, and othersValuePerUnit, need to only pass price tier ID and get the corresponding data from table price tier
-      //    - If not found, throw error
-      //    - If found, get baseDurationUnit, baseDurationType, mainValuePerUnit, and othersValuePerUnit here
+      if (customerId) {
+        const customer = await prisma.customer.findUnique({
+          where: { id: customerId }
+        });
+        if (!customer) throw new NotFoundError("Customer not found!");
+      }
 
-      const voucher = voucherId ? await this.getValidVoucherById(voucherId) : null;
+      const account = await prisma.account.findUnique({
+        where: { id: accountId }
+      });
+      if (!account) throw new NotFoundError("Account not found!");
+
+      const priceList = await prisma.priceList.findUnique({
+        where: { id: priceListId }
+      });
+      if (!priceList) throw new NotFoundError("Price list not found!");
+
+      const voucher = voucherId
+        ? await this.getValidVoucherById(voucherId)
+        : null;
 
       const bookingPriceValues = this.calculateValues(
-        mainValuePerUnit,
-        othersValuePerUnit ?? 0,
+        priceList.normalPrice,
+        priceList.lowPrice,
+        account.isLowRank,
+        priceList.duration,
         voucher,
-        quantity,
+        quantity
       );
 
       const immediate = !startAt;
@@ -179,18 +334,10 @@ export class BookingService {
       const now = new Date();
       const bookingExpiredAt = addMinutes(now, this.holdBookingTimeInMinutes);
       const bookingStartAt = immediate ? bookingExpiredAt : startAt;
-
-      let bookingEndAt: Date;
-      switch (baseDurationType) {
-        case DurationType.HOURLY:
-          bookingEndAt = addHours(bookingStartAt, baseDurationUnit * quantity);
-          break;
-        case DurationType.DAILY:
-          bookingEndAt = addDays(bookingStartAt, baseDurationUnit * quantity);
-          break;
-        default:
-          throw new BadRequestError(`Unsupported duration type: ${baseDurationType}`);
-      }
+      const bookingEndAt = addHours(
+        bookingStartAt,
+        bookingPriceValues.durationInHours * quantity
+      );
 
       const booking = await prisma.$transaction(async (tx) => {
         // Prevent race condition
@@ -215,20 +362,19 @@ export class BookingService {
 
         return await tx.booking.create({
           data: {
-            userId,
+            customerId,
             accountId,
             status: BookingStatus.HOLD,
-            baseDurationUnit,
-            baseDurationType,
+            duration: bookingPriceValues.duration,
             quantity,
             immediate,
             startAt: bookingStartAt,
             endAt: bookingEndAt,
             expiredAt: bookingExpiredAt,
-            mainValuePerUnit,
-            othersValuePerUnit,
-            voucherId,
-            voucherType: bookingPriceValues.voucherType, 
+            mainValuePerUnit: priceList.normalPrice,
+            othersValuePerUnit: account.isLowRank ? priceList.lowPrice : 0,
+            voucherName: voucher?.voucherName,
+            voucherType: bookingPriceValues.voucherType,
             voucherAmount: bookingPriceValues.voucherAmount,
             voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
             mainValue: bookingPriceValues.mainValue,
@@ -243,83 +389,146 @@ export class BookingService {
       return this.mapBookingDataToBookingResponse(booking);
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
+      if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
   };
 
-  payBooking = async (
-    bookingId: string,
-    provider: Provider,
-    paymentMethod: PaymentMethodType
-  ): Promise<PaymentResponse> => {
+  payBooking = async (data: PayBookingRequest): Promise<PaymentResponse> => {
     try {
-      if (provider !== Provider.FASPAY) throw new BadRequestError("Invalid provider provided.");
-      if (paymentMethod !== PaymentMethodType.QRIS) throw new BadRequestError("Invalid paymentMethod provided.");
+      const { bookingId, voucherId, provider, paymentMethod } = data;
 
       const booking = await prisma.booking.findUnique({
-        where: { id: bookingId }
+        where: { id: bookingId },
+        include: {
+          customer: true
+        }
       });
 
       if (!booking) throw new NotFoundError("Booking not found!");
-
       if (booking.status !== BookingStatus.HOLD) {
         throw new PrismaUniqueError(
           `Booking is in ${booking.status} status, expected HOLD.`
         );
       }
 
-      const existingOngoingOrSuccessPayment = await prisma.payment.findFirst({
-        where: {
-          bookingId: booking.id,
-          status: { in: [PaymentStatus.PENDING, PaymentStatus.SUCCESS] }
-        }
+      if (
+        booking.expiredAt! < new Date(Date.now() - this.gracePeriodInMillis)
+      ) {
+        await prisma.booking.update({
+          where: { id: booking.id },
+          data: { status: BookingStatus.EXPIRED }
+        });
+        throw new BadRequestError("Booking is expired!");
+      }
+
+      const account = await prisma.account.findUnique({
+        where: { id: booking.accountId }
       });
+      if (!account) throw new NotFoundError("Account not found!");
 
-      if (existingOngoingOrSuccessPayment) {
-        return this.mapPaymentDataToPaymentResponse(existingOngoingOrSuccessPayment);
-      }
+      const voucher = voucherId
+        ? await this.getValidVoucherById(voucherId)
+        : null;
 
-      const payment = await prisma.payment.create({
-        data: {
-          bookingId: booking.id,
-          status: PaymentStatus.PENDING,
-          value: booking.totalValue,
-          currency: "IDR",
-          provider: Provider.FASPAY,
-          paymentMethod: PaymentMethodType.QRIS,
+      const bookingPriceValues = this.calculateValues(
+        booking.mainValuePerUnit,
+        booking.othersValuePerUnit ?? 0,
+        account.isLowRank,
+        booking.duration,
+        voucher,
+        booking.quantity
+      );
+
+      const { paymentMethodType, bankCode } =
+        PAYMENT_METHODS_MAP[paymentMethod];
+
+      const { payment, isPaymentNew } = await prisma.$transaction(
+        async (tx) => {
+          await tx.$executeRaw`
+          SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE
+        `;
+
+          const updatedBooking = await tx.booking.update({
+            where: { id: booking.id },
+            data: {
+              voucherName: voucher?.voucherName,
+              voucherType: bookingPriceValues.voucherType,
+              voucherAmount: bookingPriceValues.voucherAmount,
+              voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
+              mainValue: bookingPriceValues.mainValue,
+              othersValue: bookingPriceValues.othersValue,
+              discount: bookingPriceValues.discount,
+              totalValue: bookingPriceValues.totalValue,
+              version: { increment: 1 }
+            }
+          });
+
+          let payment = await tx.payment.findFirst({
+            where: {
+              bookingId: booking.id,
+              status: { in: [PaymentStatus.PENDING, PaymentStatus.SUCCESS] }
+            }
+          });
+
+          if (payment) {
+            return { payment, isPaymentNew: false };
+          }
+
+          payment = await tx.payment.create({
+            data: {
+              bookingId: booking.id,
+              status: PaymentStatus.PENDING,
+              value: updatedBooking.totalValue,
+              currency: "IDR",
+              provider: provider,
+              paymentMethod: paymentMethodType,
+              bankCode: bankCode?.toString()
+            }
+          });
+
+          return { payment, isPaymentNew: true };
         }
-      })
+      );
 
-      try {
-        const providerResponse = await this.faspayClient.generateQris({
-          bookingId: booking.id,
-          paymentId: payment.id,
-          amount: payment.value,
-          qrisValidTo: booking.expiredAt!,
-        })
-  
-        const updatedPayment = await prisma.payment.update({
-          where: { id: payment.id },
-          data: {
-            qrUrl: providerResponse.qrUrl
-          }
-        })
-  
-        return this.mapPaymentDataToPaymentResponse(updatedPayment);
-      } catch (error) {
-        await prisma.payment.update({
-          where: { id: payment.id },
-          data: {
-            status: PaymentStatus.FAILED
-          }
-        })
-        console.error("Faspay QRIS Generation Failed:", error);
-        throw error;
+      if (!isPaymentNew) {
+        return this.mapPaymentDataToPaymentResponse(payment);
       }
+
+      const updatedPayment = await this.processPaymentProvider(
+        booking,
+        payment,
+        paymentMethodType,
+        bankCode,
+        booking.customer?.username
+      );
+      return this.mapPaymentDataToPaymentResponse(updatedPayment);
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
       if (error instanceof BadRequestError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  cancelBooking = async (bookingId: string): Promise<BookingResponse> => {
+    try {
+      let booking = await prisma.booking.findUnique({
+        where: { id: bookingId }
+      });
+
+      if (!booking) throw new NotFoundError("Booking not found!");
+
+      if (booking.status === BookingStatus.HOLD) {
+        booking = await prisma.booking.update({
+          where: { id: booking.id },
+          data: { status: BookingStatus.CANCELLED }
+        });
+      }
+
+      return this.mapBookingDataToBookingResponse(booking);
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
   };
@@ -331,38 +540,120 @@ export class BookingService {
         include: { booking: true }
       });
 
-      if (!payment || !payment.booking) throw new NotFoundError("Record not found!");
+      if (!payment || !payment.booking)
+        throw new NotFoundError("Record not found!");
 
       if (this.isPaymentFinal(payment.status)) {
-        return this.mapPaymentDataToPaymentResponse(payment);
+        return this.mapPaymentWithBookingDataToPaymentResponse(payment);
       }
 
-      const providerResponse = await this.faspayClient.getPaymentStatus({
-        paymentId: payment.id,
-        providerPaymentId: payment.providerPaymentId!,
-      })
+      const providerResponse =
+        await this.faspayClient.getPaymentStatus(payment);
 
       if (this.isPaymentFinal(providerResponse.paymentStatus)) {
         return await prisma.$transaction(async (tx) => {
           return await this.finalizeStatus(
-            tx, 
-            payment, 
-            payment.booking!, 
-            providerResponse.paymentStatus, 
+            tx,
+            payment,
+            payment.booking!,
+            providerResponse.paymentStatus,
             providerResponse.paidAt
           );
         });
       }
 
-      return this.mapPaymentDataToPaymentResponse(payment);
+      return this.mapPaymentWithBookingDataToPaymentResponse(payment);
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
       if (error instanceof BadRequestError) throw error;
       throw new InternalServerError((error as Error).message);
     }
-  }
-  
+  };
+
+  forcePay = async (paymentId: string): Promise<PaymentResponse> => {
+    try {
+      const payment = await prisma.payment.findUnique({
+        where: { id: paymentId },
+        include: { booking: true }
+      });
+
+      if (!payment || !payment.booking)
+        throw new NotFoundError("Record not found!");
+
+      if (payment.status === PaymentStatus.SUCCESS) {
+        return this.mapPaymentDataToPaymentResponse(payment);
+      }
+
+      const updatedPayment = await prisma.$transaction(async (tx) => {
+        return await this.finalizeStatus(
+          tx,
+          payment,
+          payment.booking!,
+          PaymentStatus.SUCCESS,
+          new Date()
+        );
+      });
+
+      return updatedPayment;
+    } catch (error) {
+      if (error instanceof PrismaUniqueError) throw error;
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  syncExpiredBookings = async () => {
+    try {
+      const nowWithGrace = new Date(Date.now() - this.gracePeriodInMillis);
+
+      const count = await prisma.$transaction(async (tx) => {
+        const expiredBookings = await tx.booking.findMany({
+          where: {
+            status: BookingStatus.HOLD,
+            expiredAt: {
+              lte: nowWithGrace
+            }
+          },
+          select: {
+            id: true
+          }
+        });
+
+        if (expiredBookings.length === 0) return 0;
+
+        const bookingIds = expiredBookings.map((b) => b.id);
+
+        await tx.booking.updateMany({
+          where: {
+            id: { in: bookingIds },
+            status: BookingStatus.HOLD
+          },
+          data: {
+            status: BookingStatus.EXPIRED
+          }
+        });
+
+        await tx.payment.updateMany({
+          where: {
+            bookingId: { in: bookingIds },
+            status: PaymentStatus.PENDING
+          },
+          data: {
+            status: PaymentStatus.EXPIRED
+          }
+        });
+
+        return bookingIds.length;
+      });
+
+      return { count };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   callbackFaspayPayment = async (data: CallbackNotificationRequest) => {
     try {
       let payment = await prisma.payment.findFirst({
@@ -370,7 +661,8 @@ export class BookingService {
         include: { booking: true }
       });
 
-      if (!payment || !payment.booking) throw new NotFoundError("Record not found!");
+      if (!payment || !payment.booking)
+        throw new NotFoundError("Record not found!");
 
       if (this.isPaymentFinal(payment.status)) {
         return this.mapPaymentDataToPaymentResponse(payment);
@@ -379,10 +671,10 @@ export class BookingService {
       if (this.isPaymentFinal(data.paymentStatus)) {
         return await prisma.$transaction(async (tx) => {
           return await this.finalizeStatus(
-            tx, 
-            payment, 
-            payment.booking!, 
-            data.paymentStatus, 
+            tx,
+            payment,
+            payment.booking!,
+            data.paymentStatus,
             data.paidAt
           );
         });
@@ -395,83 +687,176 @@ export class BookingService {
       if (error instanceof BadRequestError) throw error;
       throw new InternalServerError((error as Error).message);
     }
-  }
+  };
 
-  private getValidVoucherById = async (voucherId: number): Promise<VoucherResponse> => {
+  private getValidVoucherById = async (
+    voucherId: number
+  ): Promise<VoucherResponse> => {
     const voucher = await prisma.voucher.findFirst({
-      where: { id: voucherId },
-    })
+      where: { id: voucherId }
+    });
 
     if (!voucher) throw new BadRequestError("Voucher not found!");
 
     if (!voucher.isValid) throw new BadRequestError("Voucher not valid!");
-    
+
     return this.mapVoucherDataToVoucherResponse(voucher);
-  }
+  };
 
-  private isPaymentFinal = (status: PaymentStatus): boolean => {    
+  isPaymentFinal = (status: PaymentStatus): boolean => {
     return status !== PaymentStatus.PENDING;
-  }
+  };
 
-  private finalizeStatus = async (
+  private processPaymentProvider = async (
+    booking: Booking,
+    payment: Payment,
+    paymentMethod: PaymentMethodType,
+    bankCode?: BankCodes,
+    bankAccountName?: string
+  ): Promise<Payment> => {
+    try {
+      if (paymentMethod === PaymentMethodType.QRIS) {
+        const providerResponse = await this.faspayClient.createQrisPayment({
+          bookingId: booking.id,
+          paymentId: payment.id,
+          amount: payment.value,
+          expiredAt: booking.expiredAt!
+        });
+
+        return await prisma.payment.update({
+          where: { id: payment.id },
+          data: {
+            providerPaymentId: providerResponse.providerPaymentId,
+            qrUrl: providerResponse.qrUrl
+          }
+        });
+      }
+
+      if (paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT) {
+        const providerResponse = await this.faspayClient.createVaPayment({
+          bookingId: booking.id,
+          paymentId: payment.id,
+          customerId: booking.customerId!,
+          amount: payment.value,
+          bankCode: bankCode!,
+          bankAccountName: bankAccountName!,
+          expiredAt: booking.expiredAt!
+        });
+
+        return await prisma.payment.update({
+          where: { id: payment.id },
+          data: {
+            providerPaymentId: providerResponse.providerPaymentId,
+            bankCode: bankCode!,
+            bankAccountNo: providerResponse.bankAccountNo,
+            bankAccountName: providerResponse.bankAccountName
+          }
+        });
+      }
+
+      if (paymentMethod === PaymentMethodType.MANUAL) {
+        return await prisma.payment.update({
+          where: { id: payment.id },
+          data: { status: PaymentStatus.SUCCESS }
+        });
+      }
+
+      throw new BadRequestError("Payment method is not supported!");
+    } catch (error) {
+      console.error("Process payment to provider failed:", error);
+      return await prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: PaymentStatus.FAILED
+        }
+      });
+    }
+  };
+
+  finalizeStatus = async (
     tx: any,
     payment: Payment,
     booking: Booking,
     paymentStatus: PaymentStatus,
-    paidAt: Date | null
+    paidAt: Date | null,
+    providerPaymentId?: string
   ): Promise<PaymentResponse> => {
     const paymentUpdate = {
       status: paymentStatus,
       paidAt: paidAt,
+      providerPaymentId
     };
-    
+
     const bookingStatus = PAYMENT_TO_BOOKING_STATUS_MAP[paymentStatus];
     let bookingUpdate: any = {
       status: bookingStatus,
       expiredAt: null,
-      version: { increment: 1 },
+      version: { increment: 1 }
     };
 
     if (paymentStatus === PaymentStatus.SUCCESS && booking.immediate) {
       const actualStart = new Date();
-      let actualEnd: Date;
-
-      switch (booking.baseDurationType) {
-        case DurationType.HOURLY:
-          actualEnd = addHours(actualStart, booking.baseDurationUnit * booking.quantity);
-          break;
-        case DurationType.DAILY:
-          actualEnd = addDays(actualStart, booking.baseDurationUnit * booking.quantity);
-          break;
-        default:
-          throw new BadRequestError(`Unsupported duration type: ${booking.baseDurationType}`);
-      }
+      const durationInHours = this.parseDurationToHours(booking.duration);
+      const actualEnd = addHours(
+        actualStart,
+        durationInHours * booking.quantity
+      );
 
       bookingUpdate.startAt = actualStart;
       bookingUpdate.endAt = actualEnd;
     }
 
-    const updatedPayment = await tx.payment.update({ where: { id: payment.id }, data: paymentUpdate });
+    const updatedPayment = await tx.payment.update({
+      where: { id: payment.id },
+      data: paymentUpdate
+    });
     await tx.booking.update({ where: { id: booking.id }, data: bookingUpdate });
 
     return this.mapPaymentDataToPaymentResponse(updatedPayment);
-  }
+  };
 
-  private mapBookingDataToBookingResponse = (booking: Booking): BookingResponse => {
+  private mapBookingDataToBookingResponse = (
+    booking: Booking
+  ): BookingResponse => {
     return {
       id: booking.id,
-      userId: booking.userId,
+      customerId: booking.customerId,
       accountId: booking.accountId,
       status: booking.status,
-      baseDurationUnit: booking.baseDurationUnit,
-      baseDurationType: booking.baseDurationType,
+      duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
       endAt: booking.endAt,
       expiredAt: booking.expiredAt,
       mainValuePerUnit: booking.mainValuePerUnit,
       othersValuePerUnit: booking.othersValuePerUnit,
-      voucherId: booking.voucherId,
+      voucherName: booking.voucherName,
+      voucherType: booking.voucherType,
+      voucherAmount: booking.voucherAmount,
+      voucherMaxDiscount: booking.voucherMaxDiscount,
+      mainValue: booking.mainValue,
+      othersValue: booking.othersValue,
+      discount: booking.discount,
+      totalValue: booking.totalValue
+    };
+  };
+
+  private mapBookingWithAccountDataToBookingResponse = (
+    booking: Booking & { account: Account }
+  ): BookingResponse => {
+    return {
+      id: booking.id,
+      customerId: booking.customerId,
+      accountId: booking.accountId,
+      status: booking.status,
+      duration: booking.duration,
+      quantity: booking.quantity,
+      startAt: booking.startAt,
+      endAt: booking.endAt,
+      expiredAt: booking.expiredAt,
+      mainValuePerUnit: booking.mainValuePerUnit,
+      othersValuePerUnit: booking.othersValuePerUnit,
+      voucherName: booking.voucherName,
       voucherType: booking.voucherType,
       voucherAmount: booking.voucherAmount,
       voucherMaxDiscount: booking.voucherMaxDiscount,
@@ -479,10 +864,31 @@ export class BookingService {
       othersValue: booking.othersValue,
       discount: booking.discount,
       totalValue: booking.totalValue,
-    }; 
-  }
+      account: booking.account
+    };
+  };
 
-  private mapPaymentDataToPaymentResponse = (payment: Payment): PaymentResponse => {
+  private mapPaymentDataToPaymentResponse = (
+    payment: Payment
+  ): PaymentResponse => {
+    return {
+      paymentId: payment.id,
+      bookingId: payment.bookingId,
+      status: payment.status,
+      value: payment.value,
+      currency: payment.currency,
+      provider: payment.provider,
+      providerPaymentId: payment.providerPaymentId,
+      paymentMethod: payment.paymentMethod,
+      qrUrl: payment.qrUrl,
+      paidAt: payment.paidAt,
+      refundedAt: payment.refundedAt
+    };
+  };
+
+  private mapPaymentWithBookingDataToPaymentResponse = (
+    payment: Payment & { booking: Booking | null }
+  ): PaymentResponse => {
     return {
       paymentId: payment.id,
       bookingId: payment.bookingId,
@@ -495,10 +901,13 @@ export class BookingService {
       qrUrl: payment.qrUrl,
       paidAt: payment.paidAt,
       refundedAt: payment.refundedAt,
-    }; 
-  }
+      booking: payment.booking
+    };
+  };
 
-  private mapVoucherDataToVoucherResponse = (voucher: Voucher): VoucherResponse => {
+  private mapVoucherDataToVoucherResponse = (
+    voucher: Voucher
+  ): VoucherResponse => {
     return {
       id: voucher.id,
       voucherName: voucher.voucherName,
@@ -506,7 +915,7 @@ export class BookingService {
       type: voucher.type,
       percentage: voucher.percentage,
       nominal: voucher.nominal,
-      maxDiscount: voucher.maxDiscount,
-    }; 
-  }
+      maxDiscount: voucher.maxDiscount
+    };
+  };
 }

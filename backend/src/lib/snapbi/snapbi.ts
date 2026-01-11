@@ -13,6 +13,9 @@ export default class SnapBi {
    * API CONSTANTS
    * ========================== */
   private static readonly ACCESS_TOKEN = "/v1.0/access-token/b2b";
+  static CREATE_VA = "/v1.0/transfer-va/create-va";
+  static VA_STATUS = "/v1.0/transfer-va/status";
+  static VA_CANCEL = "/v1.0/transfer-va/delete-va";
   private static readonly QRIS_PAYMENT = "/v1.0/qr/qr-mpm-generate";
   private static readonly QRIS_STATUS = "/v1.0/qr/qr-mpm-query";
   private static readonly QRIS_REFUND = "/v1.0/qr/qr-mpm-refund";
@@ -36,6 +39,10 @@ export default class SnapBi {
   /* ==========================
    * FACTORY METHODS
    * ========================== */
+  static va(): SnapBi {
+    return new SnapBi("va");
+  }
+
   static qris(): SnapBi {
     return new SnapBi("qris");
   }
@@ -109,6 +116,8 @@ export default class SnapBi {
     switch (this.paymentMethod) {
       case "qris":
         return SnapBi.QRIS_PAYMENT;
+      case "va":
+        return SnapBi.CREATE_VA;
       default:
         throw new Error("Unsupported payment method");
     }
@@ -121,53 +130,59 @@ export default class SnapBi {
 
   private getCancelPath(): string {
     if (this.paymentMethod === "qris") return SnapBi.QRIS_CANCEL;
+    if (this.paymentMethod === "va") return SnapBi.VA_CANCEL;
     throw new Error("Cancel not supported");
   }
 
   private getStatusPath(): string {
     if (this.paymentMethod === "qris") return SnapBi.QRIS_STATUS;
+    if (this.paymentMethod === "va") return SnapBi.VA_STATUS;
     throw new Error("Status not supported");
   }
 
   /* ==========================
    * HEADER BUILDERS
    * ========================== */
-  private buildTransactionHeader(externalId?: string): HttpHeaders {
-    return {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${this.accessToken}`,
-      "X-PARTNER-ID": SnapBiConfig.snapBiPartnerId,
-      "X-EXTERNAL-ID": externalId ?? "",
-      "X-DEVICE-ID": this.deviceId,
-      "CHANNEL-ID": SnapBiConfig.snapBiChannelId,
-      "X-TIMESTAMP": this.timeStamp,
-      "debug-id": this.debugId,
-      "X-SIGNATURE": SnapBi.getHmacSignature(
-        this.accessToken,
-        this.body,
-        "post",
-        this.apiPath,
-        SnapBiConfig.snapBiClientSecret,
-        this.timeStamp
-      ),
-      ...this.transactionHeader
-    };
-  }
-
-  private buildAccessTokenHeader(): HttpHeaders {
-    return {
+  buildAccessTokenHeader() {
+    let snapBiAccessTokenHeader = {
       "Content-Type": "application/json",
       Accept: "application/json",
       "X-CLIENT-KEY": SnapBiConfig.snapBiClientId,
-      "X-TIMESTAMP": this.timeStamp,
-      "debug-id": this.debugId,
       "X-SIGNATURE": SnapBi.getRsaSignature(
         SnapBiConfig.snapBiClientId,
         this.timeStamp,
         SnapBiConfig.snapBiPrivateKey
       ),
-      ...this.accessTokenHeader
+      "X-TIMESTAMP": this.timeStamp,
+      "debug-id": this.debugId
+    };
+
+    if (this.accessTokenHeader) {
+      snapBiAccessTokenHeader = {
+        ...snapBiAccessTokenHeader,
+        ...this.accessTokenHeader
+      };
+    }
+
+    return snapBiAccessTokenHeader;
+  }
+
+  private buildTransactionHeader(externalId?: string): HttpHeaders {
+    return {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-PARTNER-ID": SnapBiConfig.snapBiPartnerId,
+      "X-EXTERNAL-ID": externalId ?? "",
+      "CHANNEL-ID": SnapBiConfig.snapBiChannelId,
+      "X-TIMESTAMP": this.timeStamp,
+      "X-SIGNATURE": SnapBi.getTransactionSignature(
+        this.body,
+        "post",
+        this.apiPath,
+        this.timeStamp,
+        SnapBiConfig.snapBiPrivateKey
+      ),
+      ...this.transactionHeader
     };
   }
 
@@ -203,6 +218,35 @@ export default class SnapBi {
       .toString("base64");
   }
 
+  private static getTransactionSignature(
+    body: unknown,
+    method: string,
+    path: string,
+    timeStamp: string,
+    privateKey: string
+  ): string {
+    const hashedBody = crypto
+      .createHash("sha256")
+      .update(JSON.stringify(body))
+      .digest("hex")
+      .toLowerCase();
+
+    const payload = `${method.toUpperCase()}:${path}:${hashedBody}:${timeStamp}`;
+
+    const signature = crypto
+      .sign("RSA-SHA256", Buffer.from(payload), privateKey)
+      .toString("base64");
+
+    console.log(
+      "[getTransactionSignature] payload:",
+      payload,
+      ", signature:",
+      signature
+    );
+
+    return signature;
+  }
+
   /* ==========================
    * INTERNAL FLOW
    * ========================== */
@@ -216,11 +260,12 @@ export default class SnapBi {
   }
 
   private async createConnection(externalId?: string) {
-    if (!this.accessToken) {
-      const tokenResponse = await this.getAccessToken();
-      if (!tokenResponse.accessToken) return tokenResponse;
-      this.accessToken = tokenResponse.accessToken;
-    }
+    // midtrans
+    // if (!this.accessToken) {
+    //   const tokenResponse = await this.getAccessToken();
+    //   if (!tokenResponse.accessToken) return tokenResponse;
+    //   this.accessToken = tokenResponse.accessToken;
+    // }
 
     return SnapBiApiRequestor.remoteCall(
       SnapBiConfig.getBaseUrl() + this.apiPath,
