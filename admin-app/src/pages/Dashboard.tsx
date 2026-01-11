@@ -25,6 +25,7 @@ import { SORT_ORDER } from "@/lib/enums";
 import { SkinProvider } from "@/contexts/SkinContext";
 import { CirclePlusIcon } from "lucide-react";
 import CreateUserPage from "../components/dashboard/CreateUserModal";
+import SettingsModal from "@/components/dashboard/SettingsModal";
 import UserListModal from "@/components/dashboard/UserListModal";
 import VoucherModal from "@/components/dashboard/VoucherModal";
 
@@ -255,11 +256,14 @@ export default function Dashboard() {
                 </Button>
 
                 <Button
-                className="w-full xl:w-fit"
+                  className="w-full xl:w-fit"
                   onClick={() => setopenVoucherModal(true)}
                 >
                   Vouchers
                 </Button>
+                <VoucherModal open={openVoucherModal} 
+                  onOpenChange={setopenVoucherModal}/>
+                <SettingsModal />
               </Fragment>
             }
           />

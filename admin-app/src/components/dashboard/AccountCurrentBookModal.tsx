@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import { accountService } from "@/services/account.service";
+import { settingService } from "@/services/setting.service";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -221,14 +222,43 @@ export default function AccountCurrentBookModal({
     }
   }, [durationValue, currentBookingValue, form, parseDurationToHours]);
 
+  const [reminderTemplate, setReminderTemplate] = useState("");
+
   useEffect(() => {
-    setReminderText(`Username Riot: ${data.username}\nPassword Riot: ${data.password}\nKode Akun: ${data.accountCode}\nExpired: ${format(expireAtValue || new Date(), "dd MMMM yyyy 'at' HH:mm")} WIB
-                    \n⚠ HARAP LOGOUT AKUN SEBELUM RENTAL BERAKHIR! ⚠
-                    \n Pastikan akun sudah logout tepat waktu untuk menghindari penalty yang dapat menyebabkan denda ❗
-                    \n 📌 Setelah berhasil login, jika berkenan, bisa bantu berikan testimoni dan rekomendasi ke teman-teman kalian yaa 😱
-                    \n 📢 Join Discord Community Valforum.id & dapatkan role @Juragan Valsewa 👇🏻
-                    \n https://discord.gg/ywqTZSTwRY `);
-  }, [expireAtValue, data]);
+    const fetchSettings = async () => {
+      try {
+        const setting = await settingService.getSetting("reminder_text");
+        if (setting && setting.value) {
+          setReminderTemplate(setting.value);
+        } else {
+          setReminderTemplate(
+            `Username Riot: {username}\nPassword Riot: {password}\nKode Akun: {accountCode}\nExpired: {expired} WIB\n\n⚠ HARAP LOGOUT AKUN SEBELUM RENTAL BERAKHIR! ⚠\n\n Pastikan akun sudah logout tepat waktu untuk menghindari penalty yang dapat menyebabkan denda ❗\n\n 📌 Setelah berhasil login, jika berkenan, bisa bantu berikan testimoni dan rekomendasi ke teman-teman kalian yaa 😱\n\n 📢 Join Discord Community Valforum.id & dapatkan role @Juragan Valsewa 👇🏻\n\n https://discord.gg/ywqTZSTwRY`
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch reminder settings", error);
+      }
+    };
+
+    if (open) {
+      fetchSettings();
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!reminderTemplate) return;
+
+    let text = reminderTemplate;
+    text = text.replace(/{username}/g, data.username);
+    text = text.replace(/{password}/g, data.password);
+    text = text.replace(/{accountCode}/g, data.accountCode);
+    text = text.replace(
+      /{expired}/g,
+      format(expireAtValue || new Date(), "dd MMMM yyyy 'at' HH:mm")
+    );
+
+    setReminderText(text);
+  }, [expireAtValue, data, reminderTemplate]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

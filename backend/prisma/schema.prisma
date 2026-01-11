@@ -274,3 +274,8 @@ model Voucher {
   dateStart   DateTime
   dateEnd     DateTime
 }
+
+model GlobalSettings {
+  key   String @id
+  value String
+}
