@@ -22,6 +22,11 @@ type TokenPayload = {
   username: string;
 };
 
+type PubTokenPayload = {
+  id: number;
+  username: string;
+};
+
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -146,20 +151,23 @@ export class AuthController {
       if (!username || !password) {
         throw new BadRequestError("Invalid request body!");
       }
+      
+      const { valid, id } = await this.authService.publogin(username, password);
 
-      if (await this.authService.publogin(username, password)) {
-        const accessToken = jwt.sign({ username }, PUB_ACCESS_TOKEN_SECRET, {
+      if (valid) {
+        const accessToken = jwt.sign({ id, username }, PUB_ACCESS_TOKEN_SECRET, {
           expiresIn: env.PUB_ACCESS_TOKEN_DURATION as StringValue
         });
 
-        const refreshToken = jwt.sign({ username }, PUB_REFRESH_TOKEN_SECRET, {
+        const refreshToken = jwt.sign({ id, username }, PUB_REFRESH_TOKEN_SECRET, {
           expiresIn: env.PUB_REFRESH_TOKEN_DURATION as StringValue
         });
 
         res.status(200).json({
           pubAccessToken: accessToken,
           pubRefreshToken: refreshToken,
-          username
+          username,
+          id
         });
       } else {
         throw new UnauthorizedError("Wrong username or password");
@@ -203,7 +211,7 @@ export class AuthController {
           return res.status(401).json({ error: "Invalid token!" });
         }
 
-        const payload = decoded as TokenPayload;
+        const payload = decoded as PubTokenPayload;
 
         return res.json({ username: payload.username });
       });
@@ -233,7 +241,7 @@ export class AuthController {
             )
           );
 
-        const payload = decoded as TokenPayload;
+        const payload = decoded as PubTokenPayload;
 
         const accessToken = jwt.sign(
           { username: payload.username },

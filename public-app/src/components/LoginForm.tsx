@@ -66,7 +66,7 @@ export function LoginForm({
         {/* LEFT IMAGE */}
         <div className="relative hidden md:block">
           <Image
-            src="/LS/SVG/Loading Screen_VS_Loading_1280x2800px.svg"
+            src="/login/Login Page Interface.png"
             fill
             alt="Login visual"
             className="object-cover"

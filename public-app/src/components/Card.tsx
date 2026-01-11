@@ -98,7 +98,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   key={item.id}
                   onClick={() => handleCardClick(String(item.id), item.availabilityStatus, item.accountCode)}
                   className={`
-                    col-span-6 sm:col-span-4 lg:col-span-3
+                    col-span-6 sm:col-span-4 lg:col-span-4
                     w-full cursor-pointer
                     transition-all duration-300
                     ${inUse ? "opacity-80" : "hover:scale-[1.02]"}
