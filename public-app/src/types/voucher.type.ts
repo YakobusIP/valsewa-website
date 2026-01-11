@@ -1,6 +1,6 @@
 export enum TYPE {
   PERSENTASE = "PERSENTASE",
-  NOMINAL = "NOMINAL",
+  NOMINAL = "NOMINAL"
 }
 
 export type VoucherEntity = {

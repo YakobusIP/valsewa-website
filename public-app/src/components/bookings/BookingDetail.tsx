@@ -1,28 +1,27 @@
-import Image from "next/image";
 import { BookingWithAccountEntity } from "@/types/booking.type";
+
 import { Instrument_Sans, Staatliches } from "next/font/google";
+import Image from "next/image";
 
 const staatliches = Staatliches({
   subsets: ["latin"],
   weight: ["400"],
   display: "swap"
-}) 
+});
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap"
-})
+});
 
 type BookingDetailProps = {
   booking: BookingWithAccountEntity;
-}
+};
 
 export default function BookingDetail({ booking }: BookingDetailProps) {
   function formatDuration(duration: string): string {
-    return duration
-      .replace(/d/g, " Day(s)")
-      .replace(/h/g, " Hour(s)");
+    return duration.replace(/d/g, " Day(s)").replace(/h/g, " Hour(s)");
   }
 
   function getRankImageUrl(rank: string): string {
@@ -43,7 +42,11 @@ export default function BookingDetail({ booking }: BookingDetailProps) {
 
   return (
     <div>
-      <h1 className={`text-2xl font-semibold mb-4 leading-[1.2] ${staatliches.className}`}>PURCHASE DETAILS</h1>
+      <h1
+        className={`text-2xl font-semibold mb-4 leading-[1.2] ${staatliches.className}`}
+      >
+        PURCHASE DETAILS
+      </h1>
 
       <div className="flex gap-6">
         <div className="w-full overflow-hidden rounded-md max-w-80 max-h-48">
@@ -70,7 +73,9 @@ export default function BookingDetail({ booking }: BookingDetailProps) {
             </div>
 
             <h2 className={`text-xl text-white tracking-wide leading-tight`}>
-              <span className="font-semibold uppercase">{booking.account.accountRank}</span>
+              <span className="font-semibold uppercase">
+                {booking.account.accountRank}
+              </span>
               <span className="text-neutral-400"> | </span>
               <span>{booking.account.accountCode}</span>
             </h2>
@@ -85,7 +90,9 @@ export default function BookingDetail({ booking }: BookingDetailProps) {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className={`bg-[#2F40FF] text-white px-2 py-1 text-sm rounded-sm font-semibold ${instrumentSans.className}`}>
+              <div
+                className={`bg-[#2F40FF] text-white px-2 py-1 text-sm rounded-sm font-semibold ${instrumentSans.className}`}
+              >
                 {booking.account.priceTier.code}
               </div>
             </div>
@@ -95,19 +102,13 @@ export default function BookingDetail({ booking }: BookingDetailProps) {
             {/* Duration row */}
             <div className="flex justify-between">
               <p>Duration</p>
-              <p>
-                {formatDuration(booking.duration)}
-              </p>
+              <p>{formatDuration(booking.duration)}</p>
             </div>
 
             {/* Price × quantity row */}
             <div className="flex justify-between">
-              <p>
-                IDR {booking.mainValuePerUnit.toLocaleString()}
-              </p>
-              <p>
-                × {booking.quantity}
-              </p>
+              <p>IDR {booking.mainValuePerUnit.toLocaleString()}</p>
+              <p>× {booking.quantity}</p>
             </div>
           </div>
         </div>

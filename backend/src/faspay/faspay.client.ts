@@ -6,6 +6,7 @@ import { format, isValid, parse } from "date-fns";
 import { randomBytes } from "crypto";
 import dayjs from "dayjs";
 import { PaymentMethod } from "../lib/snapbi/types";
+import { BankCodes, PaymentMethodRequest } from "../types/booking.type";
 
 export type CreateQrisPaymentRequest = {
   bookingId: string,
@@ -19,7 +20,6 @@ export type CreateVaPaymentRequest = {
   paymentId: string,
   amount: number,
   bankCode: string,
-  bankAccountName: string,
   expiredAt: Date,
 }
 
@@ -119,7 +119,7 @@ export class FaspayClient {
     const dateNow = toFaspayLocalDate(new Date());
     const payload = {
       virtualAccountNo: "365901",
-      virtualAccountName: request.bankAccountName,
+      virtualAccountName: "request.bankAccountName",
       trxId: request.paymentId,
       totalAmount: {
         value: request.amount.toFixed(2),

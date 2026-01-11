@@ -1,17 +1,21 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { notFound, useParams, useRouter } from "next/navigation";
+
+import { fetchAccountById } from "@/services/accountService";
+import { bookingService } from "@/services/booking.service";
 
 import Navbar from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
-import { fetchAccountById } from "@/services/accountService";
-import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
 import { Calendar } from "@/components/ui/calendar";
-import { bookingService } from "@/services/booking.service";
+
 import { toast } from "@/hooks/useToast";
+
+import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
+
 import { isAxiosError } from "axios";
+import Image from "next/image";
+import { notFound, useParams, useRouter } from "next/navigation";
 
 export default function AccountDetailPage() {
   const router = useRouter();
@@ -54,9 +58,9 @@ export default function AccountDetailPage() {
         accountId: parseInt(id),
         priceListId: selectedDuration.value.id,
         quantity: qty,
-        ...( bookDate ? { startAt: bookDate } : {}),
-      })
-  
+        ...(bookDate ? { startAt: bookDate } : {})
+      });
+
       if (booking) {
         router.push(`/bookings/${booking.id}`);
       }
@@ -64,10 +68,7 @@ export default function AccountDetailPage() {
       let message = "Booking failed";
 
       if (isAxiosError(error)) {
-        message =
-          error.response?.data?.error ||
-          error.message ||
-          message;
+        message = error.response?.data?.error || error.message || message;
       } else if (error instanceof Error) {
         message = error.message;
       }
@@ -78,7 +79,7 @@ export default function AccountDetailPage() {
         description: message
       });
     }
-  }
+  };
 
   const filteredSkins = useMemo(() => {
     if (!account?.skinList) return [];
@@ -128,10 +129,16 @@ export default function AccountDetailPage() {
     setEndTime(`${hh}:${mm}`);
   }, [selectedDuration, startTime, qty]);
 
-  const calculateBasePrice = useCallback((priceList: PriceList) => {
-    if (!priceList) return 0;
-    return (Number(priceList.normalPrice) + (account?.isLowRank ? Number(priceList.lowPrice) : 0))
-  }, [account?.isLowRank])
+  const calculateBasePrice = useCallback(
+    (priceList: PriceList) => {
+      if (!priceList) return 0;
+      return (
+        Number(priceList.normalPrice) +
+        (account?.isLowRank ? Number(priceList.lowPrice) : 0)
+      );
+    },
+    [account?.isLowRank]
+  );
 
   const calculateTotalPrice = useMemo(() => {
     if (!selectedDuration || qty === 0) return 0;
@@ -139,13 +146,10 @@ export default function AccountDetailPage() {
     return calculateBasePrice(selectedDuration.value) * qty;
   }, [selectedDuration, qty, calculateBasePrice]);
 
-
   const isDisabled =
     (mode === "RENT" && (!selectedDuration || qty === 0)) ||
     (mode === "BOOK" &&
       (!selectedDuration || !bookDate || !startTime || qty === 0));
-
-
 
   function formatRentDuration(totalHours: number): string {
     if (!totalHours || totalHours <= 0) return "0h";
@@ -159,7 +163,7 @@ export default function AccountDetailPage() {
 
     return `${hours}h`;
   }
-  
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -173,8 +177,7 @@ export default function AccountDetailPage() {
   const images =
     account.thumbnail && account.otherImages?.length
       ? [{ ...account.thumbnail, isThumbnail: true }, ...account.otherImages]
-      : account.otherImages ?? [account.thumbnail];
-
+      : (account.otherImages ?? [account.thumbnail]);
 
   function getRankImageUrl(rank: string): string {
     const r = rank.toLowerCase();
@@ -198,7 +201,6 @@ export default function AccountDetailPage() {
 
       <div className="pt-[110px] px-4 lg:px-10">
         <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8">
-
           {/* LEFT — GALLERY */}
           <div className="col-span-12 lg:col-span-7 grid grid-cols-2 gap-4">
             {images.map((img: UploadResponse, i: number) => (
@@ -250,7 +252,6 @@ export default function AccountDetailPage() {
                 </span>
               </div>
 
-
               {/* COL 2 ROW 2 — PRICE TIER + STATUS */}
               <div className="flex items-center gap-3">
                 <div className="bg-purple-600 text-white px-2 py-0.5 text-xs rounded-sm">
@@ -258,8 +259,6 @@ export default function AccountDetailPage() {
                 </div>
               </div>
             </div>
-
-
 
             {/* META */}
             <div className="space-y-2 text-sm text-neutral-300">
@@ -295,17 +294,13 @@ export default function AccountDetailPage() {
                     </span>
                   </div>
                 </span>
-                
+
                 <p>{account.skinList.length} Skins</p>
               </div>
-              
-              
             </div>
 
             {/* SKIN LIST */}
             <div className="space-y-3">
-              
-
               {showSkins && (
                 <div className="space-y-3">
                   {/* SEARCH */}
@@ -319,11 +314,8 @@ export default function AccountDetailPage() {
 
                   {/* LIST */}
                   <div className="flex flex-wrap gap-2 max-h-[240px] overflow-y-auto pr-1">
-                    {
-                    filteredSkins.length === 0 ? (
-                      <p className="text-sm text-neutral-500">
-                        No skins found
-                      </p>
+                    {filteredSkins.length === 0 ? (
+                      <p className="text-sm text-neutral-500">No skins found</p>
                     ) : (
                       filteredSkins.map((skin, i) => (
                         <Badge
@@ -346,9 +338,11 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("RENT")}
                   className={`text-sm font-semibold py-2 rounded-md transition
-                    ${mode === "RENT"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"}`}
+                    ${
+                      mode === "RENT"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    }`}
                 >
                   RENT NOW
                 </button>
@@ -356,9 +350,11 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("BOOK")}
                   className={`text-sm font-semibold py-2 rounded-md transition
-                    ${mode === "BOOK"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"}`}
+                    ${
+                      mode === "BOOK"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    }`}
                 >
                   BOOK FOR LATER
                 </button>
@@ -376,7 +372,7 @@ export default function AccountDetailPage() {
                         onClick={() =>
                           setSelectedDuration({
                             label: item.duration,
-                            value: item,
+                            value: item
                           })
                         }
                         className={`border rounded-md py-2 cursor-pointer transition
@@ -386,24 +382,25 @@ export default function AccountDetailPage() {
                               : "border-neutral-700 hover:border-red-600"
                           }`}
                       >
-                        <p className="text-xs font-semibold uppercase">{item.duration}</p>
+                        <p className="text-xs font-semibold uppercase">
+                          {item.duration}
+                        </p>
                         <p className="text-[11px] text-neutral-400">
                           IDR {calculateBasePrice(item).toLocaleString("id-ID")}
                         </p>
                       </div>
                     );
                   })}
-
                 </div>
               )}
 
               {mode === "BOOK" && (
                 <div className="space-y-4">
-
                   {/* DURATION SELECT */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                     {priceList.map((item) => {
-                      const isActive = selectedDuration?.label === item.duration;
+                      const isActive =
+                        selectedDuration?.label === item.duration;
 
                       return (
                         <div
@@ -411,7 +408,7 @@ export default function AccountDetailPage() {
                           onClick={() =>
                             setSelectedDuration({
                               label: item.duration,
-                              value: item,
+                              value: item
                             })
                           }
                           className={`border rounded-md py-2 cursor-pointer transition
@@ -421,9 +418,12 @@ export default function AccountDetailPage() {
                                 : "border-neutral-700 hover:border-red-600"
                             }`}
                         >
-                          <p className="text-xs font-semibold uppercase">{item.duration}</p>
+                          <p className="text-xs font-semibold uppercase">
+                            {item.duration}
+                          </p>
                           <p className="text-[11px] text-neutral-400">
-                            IDR {calculateBasePrice(item).toLocaleString("id-ID")}
+                            IDR{" "}
+                            {calculateBasePrice(item).toLocaleString("id-ID")}
                           </p>
                         </div>
                       );
@@ -455,8 +455,6 @@ export default function AccountDetailPage() {
                         "
                       />
 
-
-
                       <p className="mt-2 text-xs text-neutral-400">
                         {bookDate
                           ? `Selected: ${bookDate.toLocaleDateString("id-ID")}`
@@ -466,10 +464,14 @@ export default function AccountDetailPage() {
 
                     {/* TIME */}
                     <div className="flex flex-col gap-3">
-                      <p className="text-white text-sm font-semibold">Rental Time</p>
+                      <p className="text-white text-sm font-semibold">
+                        Rental Time
+                      </p>
 
                       <div className="flex flex-col gap-1">
-                        <label className="text-xs text-neutral-400">Start Time</label>
+                        <label className="text-xs text-neutral-400">
+                          Start Time
+                        </label>
                         <input
                           type="time"
                           value={startTime}
@@ -479,7 +481,9 @@ export default function AccountDetailPage() {
                       </div>
 
                       <div className="flex flex-col gap-1">
-                        <label className="text-xs text-neutral-400">End Time</label>
+                        <label className="text-xs text-neutral-400">
+                          End Time
+                        </label>
                         <input
                           type="time"
                           value={endTime}
@@ -515,7 +519,6 @@ export default function AccountDetailPage() {
                 </div>
               </div>
 
-
               <button
                 onClick={onSubmit}
                 disabled={isDisabled}
@@ -527,18 +530,20 @@ export default function AccountDetailPage() {
                   }`}
               >
                 {mode === "RENT" && selectedDuration && (
-                  <>IDR {calculateTotalPrice.toLocaleString("id-ID")} | Rent Now</>
+                  <>
+                    IDR {calculateTotalPrice.toLocaleString("id-ID")} | Rent Now
+                  </>
                 )}
 
                 {mode === "BOOK" && selectedDuration && (
-                  <>IDR {calculateTotalPrice.toLocaleString("id-ID")} | Book Now</>
+                  <>
+                    IDR {calculateTotalPrice.toLocaleString("id-ID")} | Book Now
+                  </>
                 )}
-
 
                 {mode === "RENT" && !selectedDuration && "Select Duration"}
                 {mode === "BOOK" && !selectedDuration && "Select Date"}
               </button>
-
 
               {/* FOOTER */}
               <div className="text-center text-xs text-neutral-400 space-y-2">
@@ -548,8 +553,6 @@ export default function AccountDetailPage() {
                 </button>
               </div>
             </div>
-
-
           </div>
         </div>
       </div>

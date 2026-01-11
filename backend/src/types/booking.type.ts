@@ -1,5 +1,19 @@
 import { BookingStatus, PaymentMethodType, PaymentStatus, Provider, Type } from "@prisma/client";
 
+export enum PaymentMethodRequest {
+  QRIS = "QRIS",
+  VA_BNI = "VA_BNI",
+  VA_PERMATA = "VA_PERMATA",
+  VA_BRI = "VA_BRI",
+  MANUAL = "MANUAL",
+}
+
+export enum BankCodes {
+  BNI = "BNI",
+  PERMATA = "PERMATA",
+  BRI = "BRI",
+}
+
 export type CreateBookingRequest = {
   userId?: number;
   accountId: number;
@@ -13,9 +27,7 @@ export type PayBookingRequest = {
   bookingId: string;
   voucherId?: number;
   provider: Provider;
-  paymentMethod: PaymentMethodType;
-  bankCode?: string;
-  bankAccountName?: string;
+  paymentMethod: PaymentMethodRequest;
 };
 
 export type BookingResponse = {
@@ -51,8 +63,12 @@ export type PaymentResponse = {
   providerPaymentId: string | null,
   paymentMethod: PaymentMethodType | null,
   qrUrl: string | null,
+  bankCode?: BankCodes | null,
+  bankAccountNo?: string | null,
+  bankAccountName?: string | null,
   paidAt: Date | null,
   refundedAt: Date | null,
+  booking?: any,
 }
 
 export type BookingPriceValues = {

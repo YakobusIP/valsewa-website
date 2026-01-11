@@ -18,7 +18,7 @@ import {
 } from "../lib/error";
 import { addDays, addHours, addMinutes } from "../lib/utils";
 import { prisma } from "../lib/prisma";
-import { BookingResponse, CallbackNotificationRequest, CreateBookingRequest, PayBookingRequest, PaymentResponse, VoucherResponse } from "../types/booking.type";
+import { BankCodes, BookingResponse, CallbackNotificationRequest, CreateBookingRequest, PayBookingRequest, PaymentMethodRequest, PaymentResponse, VoucherResponse } from "../types/booking.type";
 import { FaspayClient } from "../faspay/faspay.client";
 
 export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<PaymentStatus, BookingStatus> = {
@@ -28,6 +28,19 @@ export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<PaymentStatus, BookingStatus>
   [PaymentStatus.CANCELLED]: BookingStatus.CANCELLED,
   [PaymentStatus.FAILED]: BookingStatus.FAILED,
   [PaymentStatus.EXPIRED]: BookingStatus.EXPIRED,
+};
+
+export type PaymentMethodTypeAndCode = {
+  paymentMethodType: PaymentMethodType,
+  bankCode?: BankCodes,
+}
+
+export const PAYMENT_METHODS_MAP: Record<PaymentMethodRequest, PaymentMethodTypeAndCode> = {
+  [PaymentMethodRequest.QRIS]: { paymentMethodType: PaymentMethodType.QRIS },
+  [PaymentMethodRequest.VA_BNI]: { paymentMethodType: PaymentMethodType.VIRTUAL_ACCOUNT, bankCode: BankCodes.BNI },
+  [PaymentMethodRequest.VA_PERMATA]: { paymentMethodType: PaymentMethodType.VIRTUAL_ACCOUNT, bankCode: BankCodes.PERMATA },
+  [PaymentMethodRequest.VA_BRI]: { paymentMethodType: PaymentMethodType.VIRTUAL_ACCOUNT, bankCode: BankCodes.BRI },
+  [PaymentMethodRequest.MANUAL]: { paymentMethodType: PaymentMethodType.MANUAL },
 };
 
 export class BookingService {
@@ -90,12 +103,15 @@ export class BookingService {
     try {
       const payment = await prisma.payment.findUnique({
         where: { id: paymentId },
+        include: {
+          booking: true,
+        }
       });
 
       if (!payment) {
         throw new NotFoundError(`Payment with ID ${paymentId} not found.`);
       }
-      return this.mapPaymentDataToPaymentResponse(payment);
+      return this.mapPaymentWithBookingDataToPaymentResponse(payment);
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
@@ -290,8 +306,6 @@ export class BookingService {
         voucherId,
         provider,
         paymentMethod,
-        bankCode,
-        bankAccountName
       } = data;
 
       const booking = await prisma.booking.findUnique({
@@ -331,6 +345,8 @@ export class BookingService {
         booking.quantity,
       );
 
+      const { paymentMethodType, bankCode } = PAYMENT_METHODS_MAP[paymentMethod];
+
       const { payment, isPaymentNew } = await prisma.$transaction(async (tx) => {
         await tx.$executeRaw`
           SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE
@@ -350,7 +366,7 @@ export class BookingService {
             version: { increment: 1 }
           }
         });
-  
+
         let payment = await tx.payment.findFirst({
           where: {
             bookingId: booking.id,
@@ -361,7 +377,7 @@ export class BookingService {
         if (payment) {
           return { payment, isPaymentNew: false }
         }
-  
+
         payment = await tx.payment.create({
           data: {
             bookingId: booking.id,
@@ -369,7 +385,8 @@ export class BookingService {
             value: updatedBooking.totalValue,
             currency: "IDR",
             provider: provider,
-            paymentMethod: paymentMethod,
+            paymentMethod: paymentMethodType,
+            bankCode: bankCode?.toString(),
           }
         })
 
@@ -383,8 +400,7 @@ export class BookingService {
       const updatedPayment = await this.processPaymentProvider(
         booking,
         payment,
-        paymentMethod,
-        bankAccountName,
+        paymentMethodType,
         bankCode,
       )
       return this.mapPaymentDataToPaymentResponse(updatedPayment);
@@ -428,7 +444,7 @@ export class BookingService {
       if (!payment || !payment.booking) throw new NotFoundError("Record not found!");
 
       if (this.isPaymentFinal(payment.status)) {
-        return this.mapPaymentDataToPaymentResponse(payment);
+        return this.mapPaymentWithBookingDataToPaymentResponse(payment);
       }
 
       const providerResponse = await this.faspayClient.getPaymentStatus({
@@ -449,7 +465,7 @@ export class BookingService {
         });
       }
 
-      return this.mapPaymentDataToPaymentResponse(payment);
+      return this.mapPaymentWithBookingDataToPaymentResponse(payment);
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
@@ -594,8 +610,7 @@ export class BookingService {
     booking: Booking,
     payment: Payment,
     paymentMethod: PaymentMethodType,
-    bankCode?: string,
-    bankAccountName?: string,
+    bankCode?: BankCodes,
   ): Promise<Payment> => {
     try {
       if (paymentMethod === PaymentMethodType.QRIS) {
@@ -620,8 +635,7 @@ export class BookingService {
           bookingId: booking.id,
           paymentId: payment.id,
           amount: payment.value,
-          bankCode: bankCode!,
-          bankAccountName: bankAccountName!,
+          bankCode: bankCode!.toString(),
           expiredAt: booking.expiredAt!,
         })
 
@@ -629,7 +643,7 @@ export class BookingService {
           where: { id: payment.id },
           data: {
             providerPaymentId: providerResponse.providerPaymentId,
-            bankCode: providerResponse.bankCode,
+            bankCode: bankCode!.toString(),
             bankAccountNo: providerResponse.bankAccountNo,
             bankAccountName: providerResponse.bankAccountName,
           }
@@ -751,6 +765,23 @@ export class BookingService {
       qrUrl: payment.qrUrl,
       paidAt: payment.paidAt,
       refundedAt: payment.refundedAt,
+    }; 
+  }
+
+  private mapPaymentWithBookingDataToPaymentResponse = (payment: Payment & { booking: Booking | null }): PaymentResponse => {
+    return {
+      paymentId: payment.id,
+      bookingId: payment.bookingId,
+      status: payment.status,
+      value: payment.value,
+      currency: payment.currency,
+      provider: payment.provider,
+      providerPaymentId: payment.providerPaymentId,
+      paymentMethod: payment.paymentMethod,
+      qrUrl: payment.qrUrl,
+      paidAt: payment.paidAt,
+      refundedAt: payment.refundedAt,
+      booking: payment.booking,
     }; 
   }
 

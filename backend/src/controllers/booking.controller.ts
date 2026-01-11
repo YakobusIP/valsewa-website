@@ -3,6 +3,7 @@ import { Provider, PaymentMethodType } from "@prisma/client";
 import { BookingService } from "../services/booking.service";
 import { BadRequestError, ForbiddenError } from "../lib/error";
 import { FASPAY_STATUS_MAP, FaspayClient, parseFaspayDate, toFaspayDate } from "../faspay/faspay.client";
+import { PaymentMethodRequest } from "../types/booking.type";
 
 export class BookingController {
   constructor(
@@ -137,25 +138,14 @@ export class BookingController {
         voucherId,
         provider,
         paymentMethod,
-        bankCode,
-        bankAccountName
       } = req.body;
-      if (
-        !bookingId ||
-        (paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT &&
-          (!bankCode || !bankAccountName)
-        )
-      ) {
-        throw new BadRequestError("Missing required fields.");
-      }
+      if (!bookingId) throw new BadRequestError("Missing required fields.");
 
       const result = await this.bookingService.payBooking({
         bookingId,
         voucherId,
         provider: provider ?? Provider.FASPAY,
-        paymentMethod: paymentMethod ?? PaymentMethodType.QRIS,
-        bankCode,
-        bankAccountName,
+        paymentMethod: paymentMethod ?? PaymentMethodRequest.QRIS,
       });
 
       return res.status(200).json(result);

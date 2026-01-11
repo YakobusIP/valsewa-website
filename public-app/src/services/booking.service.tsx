@@ -1,8 +1,20 @@
+import {
+  BookingEntity,
+  BookingWithAccountEntity,
+  CancelBookingRequest,
+  CreateBookingRequest,
+  PayBookingRequest,
+  PaymentEntity,
+  PaymentWithBookingEntity,
+  VerifyPaymentRequest
+} from "@/types/booking.type";
+
 import { interceptedAxios } from "@/lib/axios";
-import { BookingEntity, BookingWithAccountEntity, CreateBookingRequest, PayBookingRequest, PaymentEntity, VerifyPaymentRequest } from "@/types/booking.type";
 
 const createBookingService = () => {
-  const fetchBookingById = async (bookingId: string): Promise<BookingWithAccountEntity | null> => {
+  const fetchBookingById = async (
+    bookingId: string
+  ): Promise<BookingWithAccountEntity | null> => {
     try {
       const response = await interceptedAxios.get<BookingWithAccountEntity>(
         `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/${bookingId}`
@@ -12,11 +24,13 @@ const createBookingService = () => {
       console.error("Error when creating booking:", error);
       throw error;
     }
-  }
+  };
 
-  const fetchPaymentById = async (paymentId: string): Promise<PaymentEntity | null> => {
+  const fetchPaymentById = async (
+    paymentId: string
+  ): Promise<PaymentWithBookingEntity | null> => {
     try {
-      const response = await interceptedAxios.get<PaymentEntity>(
+      const response = await interceptedAxios.get<PaymentWithBookingEntity>(
         `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/payments/${paymentId}`
       );
       return response.data;
@@ -24,9 +38,11 @@ const createBookingService = () => {
       console.error("Error when creating payment:", error);
       throw error;
     }
-  }
+  };
 
-  const createBooking = async (data: CreateBookingRequest): Promise<BookingEntity | null> => {
+  const createBooking = async (
+    data: CreateBookingRequest
+  ): Promise<BookingEntity | null> => {
     try {
       const response = await interceptedAxios.post<BookingEntity>(
         `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/book`,
@@ -37,9 +53,24 @@ const createBookingService = () => {
       console.error("Error when creating booking:", error);
       throw error;
     }
-  }
+  };
 
-  const payBooking = async (data: PayBookingRequest): Promise<PaymentEntity | null> => {
+  const cancelBooking = async (data: CancelBookingRequest) => {
+    try {
+      const response = await interceptedAxios.post<BookingEntity>(
+        `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/cancel`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error when cancelling booking:", error);
+      throw error;
+    }
+  };
+
+  const payBooking = async (
+    data: PayBookingRequest
+  ): Promise<PaymentEntity | null> => {
     try {
       const response = await interceptedAxios.post<PaymentEntity>(
         `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/pay`,
@@ -50,11 +81,13 @@ const createBookingService = () => {
       console.error("Error when paying booking:", error);
       throw error;
     }
-  }
+  };
 
-  const verifyPayment = async (data: VerifyPaymentRequest): Promise<PaymentEntity | null> => {
+  const verifyPayment = async (
+    data: VerifyPaymentRequest
+  ): Promise<PaymentWithBookingEntity | null> => {
     try {
-      const response = await interceptedAxios.post<PaymentEntity>(
+      const response = await interceptedAxios.post<PaymentWithBookingEntity>(
         `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/verify-payment`,
         data
       );
@@ -63,10 +96,17 @@ const createBookingService = () => {
       console.error("Error when verifying payment:", error);
       throw error;
     }
-  }
+  };
 
-  return { fetchBookingById, fetchPaymentById, createBooking, payBooking, verifyPayment };
-}
+  return {
+    fetchBookingById,
+    fetchPaymentById,
+    createBooking,
+    cancelBooking,
+    payBooking,
+    verifyPayment
+  };
+};
 
 const bookingService = createBookingService();
 

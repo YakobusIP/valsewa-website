@@ -1,30 +1,42 @@
-import { BookingWithAccountEntity, PAYMENT_METHOD_TYPE } from "@/types/booking.type";
-import { TYPE, VoucherEntity } from "@/types/voucher.type";
-import { Instrument_Sans, Staatliches } from "next/font/google";
 import { useState } from "react";
+
+import {
+  BookingWithAccountEntity,
+  PAYMENT_METHOD_REQUEST
+} from "@/types/booking.type";
+import { TYPE, VoucherEntity } from "@/types/voucher.type";
+
+import { Instrument_Sans, Staatliches } from "next/font/google";
 
 const staatliches = Staatliches({
   subsets: ["latin"],
   weight: ["400"],
   display: "swap"
-}) 
+});
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap"
-})
+});
 
 type PaymentSummaryProps = {
   booking: BookingWithAccountEntity;
-  paymentMethod: PAYMENT_METHOD_TYPE | null;
+  paymentMethod: PAYMENT_METHOD_REQUEST | null;
   voucher: VoucherEntity | null;
   setVoucher: (value: VoucherEntity | null) => void;
   fetchVoucher: (voucherName: string) => Promise<VoucherEntity | null>;
   onSubmit: () => void;
-}
+};
 
-export default function PaymentSummary({ booking, paymentMethod, voucher, setVoucher, fetchVoucher, onSubmit }: PaymentSummaryProps) {
+export default function PaymentSummary({
+  booking,
+  paymentMethod,
+  voucher,
+  setVoucher,
+  fetchVoucher,
+  onSubmit
+}: PaymentSummaryProps) {
   const isDisabled = !booking || !paymentMethod;
   const [voucherName, setVoucherName] = useState<string>("");
 
@@ -40,17 +52,17 @@ export default function PaymentSummary({ booking, paymentMethod, voucher, setVou
         const voucherAmount = voucher.nominal ?? 0;
         discount = voucherAmount;
       }
-      
+
       if (voucher.maxDiscount) {
         const voucherMaxDiscount = voucher.maxDiscount;
         discount = Math.min(discount, voucherMaxDiscount);
       }
-      
+
       discount = Math.min(discount, booking.mainValue);
     }
 
     return discount;
-  }
+  };
 
   const onApplyVoucher = async () => {
     if (!voucherName.trim()) return;
@@ -67,7 +79,11 @@ export default function PaymentSummary({ booking, paymentMethod, voucher, setVou
   return (
     <div className={`w-3/4 space-y-6 rounded-lg ${instrumentSans.className}`}>
       <div>
-        <h1 className={`text-2xl font-semibold leading-[1.2] ${staatliches.className}`}>PROMO CODE</h1>
+        <h1
+          className={`text-2xl font-semibold leading-[1.2] ${staatliches.className}`}
+        >
+          PROMO CODE
+        </h1>
         <button className="text text-[#E8C545] mt-2 underline">
           Explore Promo Codes
         </button>
@@ -90,9 +106,12 @@ export default function PaymentSummary({ booking, paymentMethod, voucher, setVou
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className={`text-lg font-semibold leading-[1.2]`}>Valorant Account</h2>
+        <h2 className={`text-lg font-semibold leading-[1.2]`}>
+          Valorant Account
+        </h2>
         <span className="">
-          {booking.account.priceTier.code} - {booking.account.accountCode} - {booking.account.accountRank}
+          {booking.account.priceTier.code} - {booking.account.accountCode} -{" "}
+          {booking.account.accountRank}
         </span>
       </div>
 
@@ -131,13 +150,15 @@ export default function PaymentSummary({ booking, paymentMethod, voucher, setVou
           onClick={onSubmit}
           disabled={isDisabled}
           className={`w-full text-xl transition py-3 rounded font-semibold
-            ${isDisabled
-              ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-              : "bg-red-600 hover:bg-red-700"
+            ${
+              isDisabled
+                ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-700"
             }
           `}
         >
-          IDR {(booking.totalValue - calculateDiscount()).toLocaleString()} | Rent Now
+          IDR {(booking.totalValue - calculateDiscount()).toLocaleString()} |
+          Rent Now
         </button>
         <p className="text-xs">Any Questions?</p>
         <button className="w-full py-2 text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600">

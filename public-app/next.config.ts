@@ -14,8 +14,8 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "debit-sandbox.faspay.co.id",
-        pathname: "/__assets/qr/**",
-      },
+        pathname: "/__assets/qr/**"
+      }
     ]
   }
 };

@@ -1,35 +1,40 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
-import { notFound, useParams } from "next/navigation";
+
+import { bookingService } from "@/services/booking.service";
 
 import Navbar from "@/components/Navbar";
-import { bookingService } from "@/services/booking.service";
-import { PAYMENT_STATUS, PaymentEntity } from "@/types/booking.type";
-import { Instrument_Sans, Staatliches } from "next/font/google";
-import { toast } from "@/hooks/useToast";
-import { isAxiosError } from "axios";
+import PaymentCountdown from "@/components/bookings/PaymentCountdown";
 import ProgressStepper from "@/components/bookings/ProgressStepper";
+
+import { toast } from "@/hooks/useToast";
+
+import { PAYMENT_STATUS, PaymentWithBookingEntity } from "@/types/booking.type";
+
+import { isAxiosError } from "axios";
+import { ArrowDownToLineIcon, CheckIcon, XIcon } from "lucide-react";
+import { Instrument_Sans, Staatliches } from "next/font/google";
+import Image from "next/image";
+import { notFound, useParams } from "next/navigation";
 
 const staatliches = Staatliches({
   subsets: ["latin"],
   weight: ["400"],
   display: "swap"
-}) 
+});
 
 const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap"
-})
-
+});
 
 export default function BookingDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
 
-  const [payment, setPayment] = useState<PaymentEntity | null>(null);
+  const [payment, setPayment] = useState<PaymentWithBookingEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState(false);
 
@@ -54,10 +59,7 @@ export default function BookingDetailPage() {
       let message = "Download QR failed";
 
       if (isAxiosError(error)) {
-        message =
-          error.response?.data?.error ||
-          error.message ||
-          message;
+        message = error.response?.data?.error || error.message || message;
       } else if (error instanceof Error) {
         message = error.message;
       }
@@ -65,27 +67,27 @@ export default function BookingDetailPage() {
       toast({
         variant: "destructive",
         title: "Download QR failed",
-        description: message,
+        description: message
       });
     }
   }, [payment]);
 
   const onVerify = useCallback(async () => {
     if (verifying || !payment) return;
+    if (payment.status !== PAYMENT_STATUS.PENDING) return;
 
     try {
       setVerifying(true);
 
-      const verifiedPayment = await bookingService.verifyPayment({ paymentId: id });
+      const verifiedPayment = await bookingService.verifyPayment({
+        paymentId: id
+      });
       setPayment(verifiedPayment);
     } catch (error) {
       let message = "Payment confirmation failed";
 
       if (isAxiosError(error)) {
-        message =
-          error.response?.data?.error ||
-          error.message ||
-          message;
+        message = error.response?.data?.error || error.message || message;
       } else if (error instanceof Error) {
         message = error.message;
       }
@@ -100,8 +102,13 @@ export default function BookingDetailPage() {
     }
   }, [id, payment, verifying]);
 
+  const onBack = () => {
+    router.push("/");
+  };
+
   useEffect(() => {
-    bookingService.fetchPaymentById(id)
+    bookingService
+      .fetchPaymentById(id)
       .then((res) => {
         setPayment(res);
       })
@@ -109,10 +116,7 @@ export default function BookingDetailPage() {
         let message = "Fetch payment failed";
 
         if (isAxiosError(error)) {
-          message =
-            error.response?.data?.error ||
-            error.message ||
-            message;
+          message = error.response?.data?.error || error.message || message;
         } else if (error instanceof Error) {
           message = error.message;
         }
@@ -125,7 +129,7 @@ export default function BookingDetailPage() {
         });
       })
       .finally(() => setLoading(false));
-  }, [id])
+  }, [id]);
 
   useEffect(() => {
     if (!payment) return;
@@ -154,11 +158,26 @@ export default function BookingDetailPage() {
       [PAYMENT_STATUS.EXPIRED]: "expired",
       [PAYMENT_STATUS.FAILED]: "failed",
       [PAYMENT_STATUS.CANCELLED]: "cancelled",
-      [PAYMENT_STATUS.REFUNDED]: "refunded",
-    }
+      [PAYMENT_STATUS.REFUNDED]: "refunded"
+    };
     return (
       <div className="flex items-center justify-center min-h-screen text-white bg-black">
-        Payment is {statusMap[payment.status]}
+        <div
+          className={`py-[110px] items-center flex flex-col gap-4 px-4 lg:px-10 w-full ${instrumentSans.className}`}
+        >
+          <div className="flex items-center justify-center">
+            {payment.status === PAYMENT_STATUS.SUCCESS ? (
+              <CheckIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
+            ) : (
+              <XIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
+            )}
+          </div>
+          <h1
+            className={`text-6xl text-center font-bold mb-4 leading-[1.2] uppercase ${staatliches.className}`}
+          >
+            Order {statusMap[payment.status]}!
+          </h1>
+        </div>
       </div>
     );
   }
@@ -167,12 +186,22 @@ export default function BookingDetailPage() {
     <main className="min-h-screen text-white bg-black">
       <Navbar />
 
-      <div className={`py-[110px] items-center px-4 lg:px-10 w-full ${instrumentSans.className}`}>
-        <ProgressStepper stepIdx={2} />
+      <div
+        className={`py-[110px] items-center px-4 lg:px-10 w-full ${instrumentSans.className}`}
+      >
+        <ProgressStepper
+          bookingId={payment.booking.id}
+          stepIdx={2}
+          onBack={onBack}
+        />
 
-        <div className="flex flex-col gap-4 max-w-96 items-center w-full mx-auto mt-8">
+        {payment.booking.expiredAt && (
+          <PaymentCountdown expiredAt={payment.booking.expiredAt} />
+        )}
+
+        <div className="flex flex-col items-center w-full gap-4 mx-auto mt-8 max-w-96">
           {payment.qrUrl && (
-            <div className="w-full overflow-hidden rounded-md max-w-72 max-h-72 p-4 bg-white">
+            <div className="w-full p-4 overflow-hidden bg-white rounded-md max-w-72 max-h-72">
               <Image
                 src={payment.qrUrl}
                 alt="QRIS"
@@ -183,23 +212,29 @@ export default function BookingDetailPage() {
             </div>
           )}
 
-          <h1 className={`text-8xl text-center font-bold mb-4 leading-[1.2] ${staatliches.className}`}>IDR {payment.value.toLocaleString()}</h1>
+          <h1
+            className={`text-8xl text-center font-bold mb-4 leading-[1.2] ${staatliches.className}`}
+          >
+            IDR {payment.value.toLocaleString()}
+          </h1>
 
           <div className="w-full mt-auto space-y-1">
             <div className="flex justify-between">
               <p className="font-semibold">Selected Payment Method</p>
-              <p>
-                {payment.paymentMethod}
-              </p>
+              <p>{payment.paymentMethod}</p>
             </div>
           </div>
 
-          <div className="w-full flex flex-col gap-2 space-y-2 text-center text-white">
+          <div className="flex flex-col w-full gap-2 space-y-2 text-center text-white">
             <button
               onClick={onDownloadQR}
-              className="w-full text-xl transition py-3 mb-4 rounded font-semibold bg-red-600 hover:bg-red-700"
+              className="flex items-center justify-center w-full gap-2 py-3 mb-4 text-xl font-semibold transition bg-red-600 rounded hover:bg-red-700"
             >
-              Download QR
+              <p>Download QR</p>
+              <ArrowDownToLineIcon
+                className="w-6 h-6 text-white"
+                strokeWidth={3}
+              />
             </button>
             <p className="text-xs">No payment confirmation received?</p>
             <button
