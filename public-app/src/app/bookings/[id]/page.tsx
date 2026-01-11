@@ -54,34 +54,9 @@ export default function BookingDetailPage() {
     useState<PAYMENT_METHOD_REQUEST | null>(null);
   const [voucher, setVoucher] = useState<VoucherEntity | null>(null);
 
-  useEffect(() => {
-    bookingService
-      .fetchBookingById(id)
-      .then((res) => {
-        setBooking(res);
-        setAccount(res?.account ?? null);
-      })
-      .catch((error) => {
-        let message = "Fetch booking failed";
-
-        if (isAxiosError(error)) {
-          message = error.response?.data?.error || error.message || message;
-        } else if (error instanceof Error) {
-          message = error.message;
-        }
-
-        setBooking(null);
-        setAccount(null);
-        toast({
-          variant: "destructive",
-          title: "Fetch booking failed",
-          description: message
-        });
-      })
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  async function fetchVoucher(voucherName: string) {
+  const fetchVoucher = async (
+    voucherName: string
+  ): Promise<VoucherEntity | null> => {
     try {
       if (!voucherName) return null;
       return await voucherService.fetchActiveVoucherByVoucherName(voucherName);
@@ -102,13 +77,13 @@ export default function BookingDetailPage() {
 
       return null;
     }
-  }
+  };
 
-  async function onBack() {
+  const onBack = () => {
     router.push("/");
-  }
+  };
 
-  async function onSubmit() {
+  const onSubmit = async () => {
     try {
       if (!booking || !paymentMethod) return;
       const payment = await bookingService.payBooking({
@@ -136,7 +111,34 @@ export default function BookingDetailPage() {
         description: message
       });
     }
-  }
+  };
+
+  useEffect(() => {
+    bookingService
+      .fetchBookingById(id)
+      .then((res) => {
+        setBooking(res);
+        setAccount(res?.account ?? null);
+      })
+      .catch((error) => {
+        let message = "Fetch booking failed";
+
+        if (isAxiosError(error)) {
+          message = error.response?.data?.error || error.message || message;
+        } else if (error instanceof Error) {
+          message = error.message;
+        }
+
+        setBooking(null);
+        setAccount(null);
+        toast({
+          variant: "destructive",
+          title: "Fetch booking failed",
+          description: message
+        });
+      })
+      .finally(() => setLoading(false));
+  }, [id]);
 
   if (loading) {
     return (

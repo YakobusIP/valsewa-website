@@ -16,7 +16,7 @@ import { isAxiosError } from "axios";
 import { ArrowDownToLineIcon, CheckIcon, XIcon } from "lucide-react";
 import { Instrument_Sans, Staatliches } from "next/font/google";
 import Image from "next/image";
-import { notFound, useParams } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 
 const staatliches = Staatliches({
   subsets: ["latin"],
@@ -31,6 +31,8 @@ const instrumentSans = Instrument_Sans({
 });
 
 export default function BookingDetailPage() {
+  const router = useRouter();
+
   const params = useParams<{ id: string }>();
   const id = params?.id;
 

@@ -4,7 +4,6 @@ import { toast } from "@/hooks/useToast";
 
 import { isAxiosError } from "axios";
 import {
-  ArrowLeft,
   CheckIcon,
   ChevronLeftIcon,
   DollarSign,

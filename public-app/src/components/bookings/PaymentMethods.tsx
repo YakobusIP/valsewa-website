@@ -3,6 +3,8 @@ import { PAYMENT_METHOD_REQUEST } from "@/types/booking.type";
 import { Instrument_Sans, Staatliches } from "next/font/google";
 import Image from "next/image";
 
+import PaymentMethodCard from "./PaymentMethodCard";
+
 const staatliches = Staatliches({
   subsets: ["latin"],
   weight: ["400"],
@@ -14,11 +16,6 @@ const instrumentSans = Instrument_Sans({
   weight: ["400", "500", "600", "700"],
   display: "swap"
 });
-
-type PaymentMethodsProps = {
-  paymentMethod: PAYMENT_METHOD_REQUEST | null;
-  setPaymentMethod: (value: PAYMENT_METHOD_REQUEST) => void;
-};
 
 const VA_METHODS = [
   {
@@ -37,48 +34,11 @@ const VA_METHODS = [
     logo: "/paymentMethods/VA_BRI.svg"
   }
 ];
-type PaymentMethodCardProps = {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-  children: React.ReactNode;
+
+type PaymentMethodsProps = {
+  paymentMethod: PAYMENT_METHOD_REQUEST | null;
+  setPaymentMethod: (value: PAYMENT_METHOD_REQUEST) => void;
 };
-
-function PaymentMethodCard({
-  active,
-  label,
-  onClick,
-  children
-}: PaymentMethodCardProps) {
-  return (
-    <div
-      onClick={onClick}
-      className={`
-        group w-fit rounded-md cursor-pointer border-2 transition-all
-        ${active ? "bg-white border-red-500" : "border-white hover:border-red-500"}
-        ${label === "QRIS" ? "p-8" : "p-4 hover:bg-white"}
-      `}
-    >
-      <div
-        className={`
-          w-full flex items-center justify-center rounded-md transition-all
-          ${active ? "grayscale-0" : "grayscale group-hover:grayscale-0"}
-        `}
-      >
-        {children}
-      </div>
-
-      <p
-        className={`
-          text-center mt-2 font-semibold transition-colors
-          ${active ? "text-red-500" : "text-white group-hover:text-red-400"}
-        `}
-      >
-        {label}
-      </p>
-    </div>
-  );
-}
 
 export default function PaymentMethods({
   paymentMethod,
