@@ -26,7 +26,7 @@ export default function AccountDetailPage() {
     label: string;
     price: string;
   } | null>(null);
-  const [bookDate, setBookDate] = useState<Date | null>(null);
+  const [bookDate, setBookDate] = useState<Date | null>(new Date());
   const [startTime, setStartTime] = useState<string>(""); // "09:00"
   const [endTime, setEndTime] = useState<string>("");
 
