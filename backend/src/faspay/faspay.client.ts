@@ -17,7 +17,7 @@ export type CreateQrisPaymentRequest = {
 export type CreateVaPaymentRequest = {
   bookingId: string;
   paymentId: string;
-  userId: number;
+  customerId: number;
   amount: number;
   bankCode: BankCodes;
   bankAccountName: string;
@@ -81,8 +81,8 @@ export function generateLargeNumericId(): string {
     .slice(0, 32);
 }
 
-export function toCustomerNo(userId: number): string {
-  return String(userId).padStart(6, "0");
+export function toCustomerNo(customerId: number): string {
+  return String(customerId).padStart(6, "0");
 }
 
 export function parseCustomerNo(bankAccountNo: string): number {
@@ -91,9 +91,9 @@ export function parseCustomerNo(bankAccountNo: string): number {
 
 export function generateBankAccountNo(
   bankCode: BankCodes,
-  userId: number
+  customerId: number
 ): string {
-  return BANK_CODE_TO_PREFIX_MAP[bankCode] + toCustomerNo(userId);
+  return BANK_CODE_TO_PREFIX_MAP[bankCode] + toCustomerNo(customerId);
 }
 
 export class FaspayClient {
@@ -146,7 +146,10 @@ export class FaspayClient {
   createVaPayment = async (request: CreateVaPaymentRequest) => {
     const dateNow = toFaspayLocalDate(new Date());
     const payload = {
-      virtualAccountNo: generateBankAccountNo(request.bankCode, request.userId),
+      virtualAccountNo: generateBankAccountNo(
+        request.bankCode,
+        request.customerId
+      ),
       virtualAccountName: request.bankAccountName,
       trxId: request.paymentId,
       totalAmount: {

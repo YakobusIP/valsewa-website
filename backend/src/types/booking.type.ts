@@ -21,7 +21,7 @@ export enum BankCodes {
 }
 
 export type CreateBookingRequest = {
-  userId?: number;
+  customerId?: number;
   accountId: number;
   priceListId: number;
   quantity: number;
@@ -38,7 +38,7 @@ export type PayBookingRequest = {
 
 export type BookingResponse = {
   id: string;
-  userId: number | null;
+  customerId: number | null;
   accountId: number;
   status: BookingStatus;
   duration: string;
@@ -48,7 +48,7 @@ export type BookingResponse = {
   expiredAt: Date | null;
   mainValuePerUnit: number;
   othersValuePerUnit: number | null;
-  voucherId: number | null;
+  voucherName: string | null;
   voucherType: Type | null;
   voucherAmount: number | null;
   voucherMaxDiscount: number | null;

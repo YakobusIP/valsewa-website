@@ -6,6 +6,7 @@ import {
   PaymentMethodType,
   PaymentStatus,
   PriceList,
+  Prisma,
   Provider,
   Type,
   Voucher
@@ -29,6 +30,7 @@ import {
   VoucherResponse
 } from "../types/booking.type";
 import { FaspayClient } from "../faspay/faspay.client";
+import { Metadata } from "../types/metadata.type";
 
 export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<
   PaymentStatus,
@@ -73,6 +75,60 @@ export class BookingService {
 
   constructor(private readonly faspayClient: FaspayClient) {}
 
+  getAllBookings = async (
+    page?: number,
+    limit?: number,
+    query?: string
+  ): Promise<[BookingResponse[], Metadata]> => {
+    try {
+      const trimmed = (query ?? "").trim();
+      const whereCriteria: Prisma.BookingWhereInput | undefined = undefined;
+
+      let data: Booking[];
+      let metadata: Metadata;
+
+      if (page !== undefined && limit !== undefined) {
+        const skip = (page - 1) * limit;
+
+        data = await prisma.booking.findMany({
+          where: whereCriteria,
+          take: limit,
+          skip: skip
+        });
+
+        const itemCount = await prisma.booking.count({
+          where: whereCriteria
+        });
+        const pageCount = Math.ceil(itemCount / limit);
+
+        metadata = {
+          page: page,
+          limit: limit,
+          pageCount,
+          total: itemCount
+        };
+      } else {
+        data = await prisma.booking.findMany({
+          where: whereCriteria
+        });
+        metadata = {
+          page: 0,
+          limit: 0,
+          pageCount: 0,
+          total: 0
+        };
+      }
+
+      return [
+        data.map((datum) => this.mapBookingDataToBookingResponse(datum)),
+        metadata
+      ];
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   getBookingById = async (bookingId: string): Promise<BookingResponse> => {
     try {
       const booking = await prisma.booking.findUnique({
@@ -99,10 +155,12 @@ export class BookingService {
     }
   };
 
-  getBookingsByUserId = async (userId: number): Promise<BookingResponse[]> => {
+  getBookingsByCustomerId = async (
+    customerId: number
+  ): Promise<BookingResponse[]> => {
     try {
       const bookings = await prisma.booking.findMany({
-        where: { userId: userId },
+        where: { customerId: customerId },
         orderBy: { startAt: "desc" }
       });
       return bookings.map(this.mapBookingDataToBookingResponse);
@@ -111,12 +169,12 @@ export class BookingService {
     }
   };
 
-  getHoldBookingsByUserId = async (
-    userId: number
+  getHoldBookingsByCustomerId = async (
+    customerId: number
   ): Promise<BookingResponse[]> => {
     try {
       const bookings = await prisma.booking.findMany({
-        where: { userId: userId, status: BookingStatus.HOLD },
+        where: { customerId: customerId, status: BookingStatus.HOLD },
         orderBy: { startAt: "desc" }
       });
       return bookings.map(this.mapBookingDataToBookingResponse);
@@ -232,14 +290,20 @@ export class BookingService {
     data: CreateBookingRequest
   ): Promise<BookingResponse> => {
     try {
-      const { userId, accountId, priceListId, quantity, voucherId, startAt } =
-        data;
+      const {
+        customerId,
+        accountId,
+        priceListId,
+        quantity,
+        voucherId,
+        startAt
+      } = data;
 
-      if (userId) {
-        const user = await prisma.user.findUnique({
-          where: { id: userId }
+      if (customerId) {
+        const customer = await prisma.customer.findUnique({
+          where: { id: customerId }
         });
-        if (!user) throw new NotFoundError("User not found!");
+        if (!customer) throw new NotFoundError("Customer not found!");
       }
 
       const account = await prisma.account.findUnique({
@@ -298,7 +362,7 @@ export class BookingService {
 
         return await tx.booking.create({
           data: {
-            userId,
+            customerId,
             accountId,
             status: BookingStatus.HOLD,
             duration: bookingPriceValues.duration,
@@ -309,7 +373,7 @@ export class BookingService {
             expiredAt: bookingExpiredAt,
             mainValuePerUnit: priceList.normalPrice,
             othersValuePerUnit: account.isLowRank ? priceList.lowPrice : 0,
-            voucherId,
+            voucherName: voucher?.voucherName,
             voucherType: bookingPriceValues.voucherType,
             voucherAmount: bookingPriceValues.voucherAmount,
             voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
@@ -337,7 +401,7 @@ export class BookingService {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
         include: {
-          user: true
+          customer: true
         }
       });
 
@@ -388,7 +452,7 @@ export class BookingService {
           const updatedBooking = await tx.booking.update({
             where: { id: booking.id },
             data: {
-              voucherId,
+              voucherName: voucher?.voucherName,
               voucherType: bookingPriceValues.voucherType,
               voucherAmount: bookingPriceValues.voucherAmount,
               voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
@@ -436,7 +500,7 @@ export class BookingService {
         payment,
         paymentMethodType,
         bankCode,
-        booking.user?.username
+        booking.customer?.username
       );
       return this.mapPaymentDataToPaymentResponse(updatedPayment);
     } catch (error) {
@@ -672,7 +736,7 @@ export class BookingService {
         const providerResponse = await this.faspayClient.createVaPayment({
           bookingId: booking.id,
           paymentId: payment.id,
-          userId: booking.userId!,
+          customerId: booking.customerId!,
           amount: payment.value,
           bankCode: bankCode!,
           bankAccountName: bankAccountName!,
@@ -756,7 +820,7 @@ export class BookingService {
   ): BookingResponse => {
     return {
       id: booking.id,
-      userId: booking.userId,
+      customerId: booking.customerId,
       accountId: booking.accountId,
       status: booking.status,
       duration: booking.duration,
@@ -766,7 +830,7 @@ export class BookingService {
       expiredAt: booking.expiredAt,
       mainValuePerUnit: booking.mainValuePerUnit,
       othersValuePerUnit: booking.othersValuePerUnit,
-      voucherId: booking.voucherId,
+      voucherName: booking.voucherName,
       voucherType: booking.voucherType,
       voucherAmount: booking.voucherAmount,
       voucherMaxDiscount: booking.voucherMaxDiscount,
@@ -782,7 +846,7 @@ export class BookingService {
   ): BookingResponse => {
     return {
       id: booking.id,
-      userId: booking.userId,
+      customerId: booking.customerId,
       accountId: booking.accountId,
       status: booking.status,
       duration: booking.duration,
@@ -792,7 +856,7 @@ export class BookingService {
       expiredAt: booking.expiredAt,
       mainValuePerUnit: booking.mainValuePerUnit,
       othersValuePerUnit: booking.othersValuePerUnit,
-      voucherId: booking.voucherId,
+      voucherName: booking.voucherName,
       voucherType: booking.voucherType,
       voucherAmount: booking.voucherAmount,
       voucherMaxDiscount: booking.voucherMaxDiscount,

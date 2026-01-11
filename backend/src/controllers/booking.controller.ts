@@ -16,6 +16,24 @@ export class BookingController {
     private readonly faspayClient: FaspayClient
   ) {}
 
+  getAllBookings = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const page = req.query.page ?? undefined;
+      const limit = req.query.limit ?? undefined;
+      const query = req.query.q as string;
+
+      const [data, metadata] = await this.bookingService.getAllBookings(
+        page ? parseInt(page as string) : undefined,
+        limit ? parseInt(limit as string) : undefined,
+        query
+      );
+
+      return res.json({ data, metadata });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getBookingById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const bookingId = req.params.id;
@@ -27,19 +45,20 @@ export class BookingController {
     }
   };
 
-  getBookingsByUserId = async (
+  getBookingsByCustomerId = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const userId = parseInt(req.params.userId, 10);
+      const customerId = parseInt(req.params.customerId, 10);
 
-      if (!userId) {
-        throw new BadRequestError("User ID is required.");
+      if (!customerId) {
+        throw new BadRequestError("Customer ID is required.");
       }
 
-      const bookings = await this.bookingService.getBookingsByUserId(userId);
+      const bookings =
+        await this.bookingService.getBookingsByCustomerId(customerId);
 
       return res.status(200).json(bookings);
     } catch (error) {
@@ -47,20 +66,20 @@ export class BookingController {
     }
   };
 
-  getHoldBookingsByUserId = async (
+  getHoldBookingsByCustomerId = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const userId = parseInt(req.params.userId, 10);
+      const customerId = parseInt(req.params.customerId, 10);
 
-      if (!userId) {
-        throw new BadRequestError("User ID is required.");
+      if (!customerId) {
+        throw new BadRequestError("Customer ID is required.");
       }
 
       const bookings =
-        await this.bookingService.getHoldBookingsByUserId(userId);
+        await this.bookingService.getHoldBookingsByCustomerId(customerId);
 
       return res.status(200).json(bookings);
     } catch (error) {
@@ -97,15 +116,21 @@ export class BookingController {
 
   createBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { userId, accountId, priceListId, quantity, voucherId, startAt } =
-        req.body;
+      const {
+        customerId,
+        accountId,
+        priceListId,
+        quantity,
+        voucherId,
+        startAt
+      } = req.body;
 
       if (!accountId || !priceListId || !quantity) {
         throw new BadRequestError("Missing required fields.");
       }
 
       const result = await this.bookingService.createBooking({
-        userId,
+        customerId,
         accountId,
         priceListId,
         quantity,

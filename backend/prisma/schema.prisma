@@ -113,8 +113,6 @@ model User {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  Booking Booking[]
 }
 
 model Customer {
@@ -126,6 +124,8 @@ model Customer {
   passwordChangedAt DateTime  @default(now())
   isActive          Boolean   @default(true)
   passwordExpireAt  DateTime?
+
+  Booking Booking[]
 }
 
 model CarouselSlide {
@@ -178,23 +178,23 @@ enum PaymentMethodType {
 }
 
 model Booking {
-  id        String        @id @default(cuid())
-  userId    Int? // optional when booking is made by an admin
-  accountId Int
-  status    BookingStatus @default(HOLD)
+  id         String        @id @default(cuid())
+  customerId Int? // optional when booking is made by an admin
+  accountId  Int
+  status     BookingStatus @default(HOLD)
 
   // Duration
-  duration         String
-  quantity         Int
-  immediate        Boolean
-  startAt          DateTime?
-  endAt            DateTime?
-  expiredAt        DateTime?
+  duration  String
+  quantity  Int
+  immediate Boolean
+  startAt   DateTime?
+  endAt     DateTime?
+  expiredAt DateTime?
 
   // Pricing
   mainValuePerUnit   Int
   othersValuePerUnit Int?
-  voucherId          Int?
+  voucherName        String?
   voucherType        Type?
   voucherAmount      Float?
   voucherMaxDiscount Float?
@@ -208,11 +208,11 @@ model Booking {
   version   Int      @default(1)
 
   payments Payment[]
-  user     User?     @relation(fields: [userId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
   account  Account   @relation(fields: [accountId], references: [id])
 
   @@index([accountId, startAt, endAt]) // availability check
-  @@index([userId, createdAt(sort: Desc)]) // history
+  @@index([customerId, createdAt(sort: Desc)]) // history
   @@index([status, expiredAt]) // cleanup
 }
 
@@ -231,8 +231,8 @@ model Payment {
   qrUrl String?
 
   // For PaymentMethodType = VIRTUAL_ACCOUNT
-  bankCode String?
-  bankAccountNo String?
+  bankCode        String?
+  bankAccountNo   String?
   bankAccountName String?
 
   paidAt        DateTime?

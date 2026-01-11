@@ -40,7 +40,7 @@ export enum PAYMENT_METHOD_TYPE {
 
 export type BookingEntity = {
   id: string;
-  userId: number | null;
+  customerId: number | null;
   accountId: number;
   status: BOOKING_STATUS;
   duration: string;
@@ -50,7 +50,7 @@ export type BookingEntity = {
   expiredAt: Date | null;
   mainValuePerUnit: number;
   othersValuePerUnit: number | null;
-  voucherId: number | null;
+  voucherName: string | null;
   voucherType: TYPE | null;
   voucherAmount: number | null;
   voucherMaxDiscount: number | null;
@@ -83,7 +83,7 @@ export type PaymentWithBookingEntity = PaymentEntity & {
 };
 
 export type CreateBookingRequest = {
-  userId?: number;
+  customerId?: number;
   accountId: number;
   priceListId: number;
   quantity: number;

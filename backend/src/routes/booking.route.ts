@@ -22,20 +22,21 @@ class BookingRouter {
   }
 
   private initializeRoutes() {
+    this.router.get("/", authMiddleware, this.bookingController.getAllBookings);
     this.router.get(
       "/:id",
       authMiddleware,
       this.bookingController.getBookingById
     );
     this.router.get(
-      "/users/:userId",
+      "/customers/:customerId",
       authMiddleware,
-      this.bookingController.getBookingsByUserId
+      this.bookingController.getBookingsByCustomerId
     );
     this.router.get(
-      "/users/hold-bookings/:userId",
+      "/customers/hold-bookings/:customerId",
       authMiddleware,
-      this.bookingController.getHoldBookingsByUserId
+      this.bookingController.getHoldBookingsByCustomerId
     );
     this.router.get(
       "/payments/:id",

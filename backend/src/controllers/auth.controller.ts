@@ -156,13 +156,11 @@ export class AuthController {
           expiresIn: env.PUB_REFRESH_TOKEN_DURATION as StringValue
         });
 
-        res
-          .status(200)
-          .json({
-            pubAccessToken: accessToken,
-            pubRefreshToken: refreshToken,
-            username
-          });
+        res.status(200).json({
+          pubAccessToken: accessToken,
+          pubRefreshToken: refreshToken,
+          username
+        });
       } else {
         throw new UnauthorizedError("Wrong username or password");
       }
