@@ -1,5 +1,9 @@
 import { Prisma, Type } from "@prisma/client";
-import { BadRequestError, InternalServerError, NotFoundError } from "../lib/error";
+import {
+  BadRequestError,
+  InternalServerError,
+  NotFoundError
+} from "../lib/error";
 import { prisma } from "../lib/prisma";
 import { Metadata } from "../types/metadata.type";
 
@@ -70,7 +74,7 @@ export class VoucherService {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
-  }
+  };
 
   create = async (data: {
     voucherName: string;

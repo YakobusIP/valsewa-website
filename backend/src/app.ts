@@ -14,6 +14,7 @@ import StatisticRouter from "./routes/statistic.route";
 import CarouselSlideRouter from "./routes/carousel.route";
 import VoucherRouter from "./routes/voucher.route";
 import BookingRouter from "./routes/booking.route";
+import FaspayRouter from "./routes/faspay.route";
 import { throttleMiddleware } from "./middleware/throttle.middleware";
 
 import swaggerJSDoc, { OAS3Definition, Options } from "swagger-jsdoc";
@@ -57,6 +58,7 @@ app.use("/api/upload", UploadRouter);
 app.use("/api/customer", CustomerRouter);
 app.use("/api/vouchers", VoucherRouter);
 app.use("/api/bookings", BookingRouter);
+app.use("/api/faspay", FaspayRouter);
 
 const swaggerDefinition: OAS3Definition = {
   openapi: "3.0.0",

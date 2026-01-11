@@ -13,9 +13,9 @@ export default class SnapBi {
    * API CONSTANTS
    * ========================== */
   private static readonly ACCESS_TOKEN = "/v1.0/access-token/b2b";
-  static CREATE_VA = '/v1.0/transfer-va/create-va';
-  static VA_STATUS = '/v1.0/transfer-va/status';
-  static VA_CANCEL = '/v1.0/transfer-va/delete-va';
+  static CREATE_VA = "/v1.0/transfer-va/create-va";
+  static VA_STATUS = "/v1.0/transfer-va/status";
+  static VA_CANCEL = "/v1.0/transfer-va/delete-va";
   private static readonly QRIS_PAYMENT = "/v1.0/qr/qr-mpm-generate";
   private static readonly QRIS_STATUS = "/v1.0/qr/qr-mpm-query";
   private static readonly QRIS_REFUND = "/v1.0/qr/qr-mpm-refund";
@@ -145,20 +145,23 @@ export default class SnapBi {
    * ========================== */
   buildAccessTokenHeader() {
     let snapBiAccessTokenHeader = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'X-CLIENT-KEY': SnapBiConfig.snapBiClientId,
-      'X-SIGNATURE': SnapBi.getRsaSignature(
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-CLIENT-KEY": SnapBiConfig.snapBiClientId,
+      "X-SIGNATURE": SnapBi.getRsaSignature(
         SnapBiConfig.snapBiClientId,
         this.timeStamp,
         SnapBiConfig.snapBiPrivateKey
       ),
-      'X-TIMESTAMP': this.timeStamp,
-      'debug-id': this.debugId,
+      "X-TIMESTAMP": this.timeStamp,
+      "debug-id": this.debugId
     };
 
     if (this.accessTokenHeader) {
-        snapBiAccessTokenHeader = { ...snapBiAccessTokenHeader, ...this.accessTokenHeader };
+      snapBiAccessTokenHeader = {
+        ...snapBiAccessTokenHeader,
+        ...this.accessTokenHeader
+      };
     }
 
     return snapBiAccessTokenHeader;
@@ -177,7 +180,7 @@ export default class SnapBi {
         "post",
         this.apiPath,
         this.timeStamp,
-        SnapBiConfig.snapBiPrivateKey,
+        SnapBiConfig.snapBiPrivateKey
       ),
       ...this.transactionHeader
     };
@@ -204,7 +207,7 @@ export default class SnapBi {
 
     return crypto.createHmac("sha512", secret).update(payload).digest("base64");
   }
-  
+
   private static getRsaSignature(
     clientId: string,
     timeStamp: string,
@@ -215,13 +218,12 @@ export default class SnapBi {
       .toString("base64");
   }
 
-
   private static getTransactionSignature(
     body: unknown,
     method: string,
     path: string,
     timeStamp: string,
-    privateKey: string,
+    privateKey: string
   ): string {
     const hashedBody = crypto
       .createHash("sha256")
@@ -235,7 +237,12 @@ export default class SnapBi {
       .sign("RSA-SHA256", Buffer.from(payload), privateKey)
       .toString("base64");
 
-    console.log("[getTransactionSignature] payload:", payload, ", signature:", signature);
+    console.log(
+      "[getTransactionSignature] payload:",
+      payload,
+      ", signature:",
+      signature
+    );
 
     return signature;
   }

@@ -22,17 +22,22 @@ export class VoucherController {
     }
   };
 
-  getActiveVoucherByVoucherName = async (req: Request, res: Response, next: NextFunction) => {
+  getActiveVoucherByVoucherName = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const { voucherName } = req.params;
 
-      const data = await this.voucherService.getActiveVoucherByVoucherName(voucherName);
+      const data =
+        await this.voucherService.getActiveVoucherByVoucherName(voucherName);
 
       return res.json(data);
     } catch (error) {
       return next(error);
     }
-  }
+  };
 
   createVoucher = async (req: Request, res: Response) => {
     try {

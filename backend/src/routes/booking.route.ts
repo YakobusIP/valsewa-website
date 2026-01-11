@@ -14,7 +14,10 @@ class BookingRouter {
     this.router = Router();
     this.faspayClient = new FaspayClient();
     this.bookingService = new BookingService(this.faspayClient);
-    this.bookingController = new BookingController(this.bookingService, this.faspayClient);
+    this.bookingController = new BookingController(
+      this.bookingService,
+      this.faspayClient
+    );
     this.initializeRoutes();
   }
 
@@ -49,11 +52,7 @@ class BookingRouter {
       authMiddleware,
       this.bookingController.createBooking
     );
-    this.router.post(
-      "/pay",
-      authMiddleware,
-      this.bookingController.payBooking
-    );
+    this.router.post("/pay", authMiddleware, this.bookingController.payBooking);
     this.router.post(
       "/cancel",
       authMiddleware,

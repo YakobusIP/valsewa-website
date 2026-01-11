@@ -2,13 +2,18 @@ import { Request, Response, NextFunction, response } from "express";
 import { Provider, PaymentMethodType } from "@prisma/client";
 import { BookingService } from "../services/booking.service";
 import { BadRequestError, ForbiddenError } from "../lib/error";
-import { FASPAY_STATUS_MAP, FaspayClient, parseFaspayDate, toFaspayDate } from "../faspay/faspay.client";
+import {
+  FASPAY_STATUS_MAP,
+  FaspayClient,
+  parseFaspayDate,
+  toFaspayDate
+} from "../faspay/faspay.client";
 import { PaymentMethodRequest } from "../types/booking.type";
 
 export class BookingController {
   constructor(
     private readonly bookingService: BookingService,
-    private readonly faspayClient: FaspayClient,
+    private readonly faspayClient: FaspayClient
   ) {}
 
   getBookingById = async (req: Request, res: Response, next: NextFunction) => {
@@ -54,7 +59,8 @@ export class BookingController {
         throw new BadRequestError("User ID is required.");
       }
 
-      const bookings = await this.bookingService.getHoldBookingsByUserId(userId);
+      const bookings =
+        await this.bookingService.getHoldBookingsByUserId(userId);
 
       return res.status(200).json(bookings);
     } catch (error) {
@@ -73,33 +79,28 @@ export class BookingController {
     }
   };
 
-  getActivePaymentByBookingId = async (req: Request, res: Response, next: NextFunction) => {
+  getActivePaymentByBookingId = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const bookingId = req.params.id;
-      const payment = await this.bookingService.getActivePaymentByBookingId(bookingId);
+      const payment =
+        await this.bookingService.getActivePaymentByBookingId(bookingId);
 
       return res.status(200).json(payment);
     } catch (error) {
       return next(error);
     }
   };
-  
+
   createBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const {
-        userId,
-        accountId,
-        priceListId,
-        quantity,
-        voucherId,
-        startAt
-      } = req.body;
+      const { userId, accountId, priceListId, quantity, voucherId, startAt } =
+        req.body;
 
-      if (
-        !accountId ||
-        !priceListId ||
-        !quantity
-      ) {
+      if (!accountId || !priceListId || !quantity) {
         throw new BadRequestError("Missing required fields.");
       }
 
@@ -109,7 +110,7 @@ export class BookingController {
         priceListId,
         quantity,
         voucherId,
-        startAt: startAt ? new Date(startAt) : undefined,
+        startAt: startAt ? new Date(startAt) : undefined
       });
 
       return res.status(201).json(result);
@@ -133,19 +134,14 @@ export class BookingController {
 
   payBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const {
-        bookingId,
-        voucherId,
-        provider,
-        paymentMethod,
-      } = req.body;
+      const { bookingId, voucherId, provider, paymentMethod } = req.body;
       if (!bookingId) throw new BadRequestError("Missing required fields.");
 
       const result = await this.bookingService.payBooking({
         bookingId,
         voucherId,
         provider: provider ?? Provider.FASPAY,
-        paymentMethod: paymentMethod ?? PaymentMethodRequest.QRIS,
+        paymentMethod: paymentMethod ?? PaymentMethodRequest.QRIS
       });
 
       return res.status(200).json(result);
@@ -180,7 +176,11 @@ export class BookingController {
     }
   };
 
-  syncExpiredBookings = async (req: Request, res: Response, next: NextFunction) => {
+  syncExpiredBookings = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const result = await this.bookingService.syncExpiredBookings();
 
@@ -203,26 +203,29 @@ export class BookingController {
         merchant,
         bill_no,
         payment_date,
-        payment_status_code,
+        payment_status_code
       } = payload;
       const signature = req.header("x-signature");
-      const timestamp = req.header('x-timestamp');
+      const timestamp = req.header("x-timestamp");
 
-      if (!trx_id || !payment_status_code || !signature || !timestamp) throw new BadRequestError("Missing required fields.");
+      if (!trx_id || !payment_status_code || !signature || !timestamp)
+        throw new BadRequestError("Missing required fields.");
 
-      if (!this.faspayClient.verifyWebhookNotification({
-        payload,
-        timestamp,
-        signature,
-        notificationUrlPath: "/api/bookings/faspay/callback",
-      })) {
-        throw new ForbiddenError("Signature Invalid")
+      if (
+        !this.faspayClient.verifyWebhookNotification({
+          payload,
+          timestamp,
+          signature,
+          notificationUrlPath: "/api/bookings/faspay/callback"
+        })
+      ) {
+        throw new ForbiddenError("Signature Invalid");
       }
 
       await this.bookingService.callbackFaspayPayment({
         providerPaymentId: trx_id,
         paidAt: payment_date ? parseFaspayDate(payment_date) : null,
-        paymentStatus: FASPAY_STATUS_MAP[payment_status_code],
+        paymentStatus: FASPAY_STATUS_MAP[payment_status_code]
       });
 
       return res.status(200).json({
@@ -233,7 +236,7 @@ export class BookingController {
         bill_no,
         response_code: "00",
         response_desc: "Success",
-        response_date: toFaspayDate(new Date()),
+        response_date: toFaspayDate(new Date())
       });
     } catch (error) {
       if (error instanceof ForbiddenError) {
@@ -249,7 +252,7 @@ export class BookingController {
         bill_no: "",
         response_code: "00",
         response_desc: "Success",
-        response_date: toFaspayDate(new Date()),
+        response_date: toFaspayDate(new Date())
       });
     }
   };

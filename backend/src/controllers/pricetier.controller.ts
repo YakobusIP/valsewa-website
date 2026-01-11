@@ -83,7 +83,6 @@ export class PriceTierController {
     }
   };
 
-  
   getPriceListByTierId = async (
     req: Request,
     res: Response,
@@ -99,7 +98,6 @@ export class PriceTierController {
     }
   };
 
-  
   addPriceListItems = async (
     req: Request,
     res: Response,
@@ -112,16 +110,22 @@ export class PriceTierController {
       };
 
       if (!Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ message: "Body.items must be a non-empty array." });
+        return res
+          .status(400)
+          .json({ message: "Body.items must be a non-empty array." });
       }
 
-      const created = await this.priceTierService.addPriceListItems(tierId, items);
-      return res.status(201).json({ data: created, message: "Price list items created." });
+      const created = await this.priceTierService.addPriceListItems(
+        tierId,
+        items
+      );
+      return res
+        .status(201)
+        .json({ data: created, message: "Price list items created." });
     } catch (error) {
       return next(error);
     }
   };
-
 
   updatePriceListItem = async (
     req: Request,
@@ -136,7 +140,10 @@ export class PriceTierController {
         lowPrice: number;
       }>;
 
-      const updated = await this.priceTierService.updatePriceListItem(itemId, data);
+      const updated = await this.priceTierService.updatePriceListItem(
+        itemId,
+        data
+      );
       return res.json({ data: updated, message: "Price list item updated." });
     } catch (error) {
       return next(error);
@@ -151,14 +158,15 @@ export class PriceTierController {
     try {
       const { ids } = req.body as { ids: number[] };
       if (!Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ message: "Body.ids must be a non-empty array." });
+        return res
+          .status(400)
+          .json({ message: "Body.ids must be a non-empty array." });
       }
 
       await this.priceTierService.deletePriceListItems(ids);
       return res.status(204).end();
     } catch (error) {
       return next(error);
-      }
+    }
   };
-
 }

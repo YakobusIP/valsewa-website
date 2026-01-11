@@ -13,8 +13,10 @@ import { StringValue } from "ms";
 const ACCESS_TOKEN_SECRET = env.ACCESS_TOKEN_SECRET || "access_token_secret";
 const REFRESH_TOKEN_SECRET = env.REFRESH_TOKEN_SECRET || "refresh_token_secret";
 
-const PUB_ACCESS_TOKEN_SECRET = env.PUB_ACCESS_TOKEN_SECRET || "pub_access_token_secret";
-const PUB_REFRESH_TOKEN_SECRET = env.PUB_REFRESH_TOKEN_SECRET || "pub_refresh_token_secret";
+const PUB_ACCESS_TOKEN_SECRET =
+  env.PUB_ACCESS_TOKEN_SECRET || "pub_access_token_secret";
+const PUB_REFRESH_TOKEN_SECRET =
+  env.PUB_REFRESH_TOKEN_SECRET || "pub_refresh_token_secret";
 
 type TokenPayload = {
   username: string;
@@ -154,7 +156,13 @@ export class AuthController {
           expiresIn: env.PUB_REFRESH_TOKEN_DURATION as StringValue
         });
 
-        res.status(200).json({ pubAccessToken: accessToken, pubRefreshToken: refreshToken, username });
+        res
+          .status(200)
+          .json({
+            pubAccessToken: accessToken,
+            pubRefreshToken: refreshToken,
+            username
+          });
       } else {
         throw new UnauthorizedError("Wrong username or password");
       }
@@ -245,7 +253,9 @@ export class AuthController {
           }
         );
 
-        return res.status(200).json({ pubAccessToken: accessToken, pubRefreshToken: refreshToken });
+        return res
+          .status(200)
+          .json({ pubAccessToken: accessToken, pubRefreshToken: refreshToken });
       });
     } catch (error) {
       if (error instanceof ForbiddenError) {

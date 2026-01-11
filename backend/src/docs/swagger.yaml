@@ -158,7 +158,7 @@ components:
           type: string
         priceList:
           type: array
-          items: 
+          items:
             $ref: "#/components/schemas/PriceList"
         createdAt:
           type: string
@@ -315,7 +315,6 @@ components:
         - data
         - message
 
-    
     Skin:
       type: object
       properties:
@@ -359,8 +358,6 @@ components:
           type: string
           example: "prime"
       description: All fields are optional; only provided properties will be updated.
-
-
 
     Statistic:
       type: object
@@ -449,8 +446,8 @@ components:
       properties:
         bookingId: { type: string, format: cuid }
         voucherId: { type: integer }
-        provider: { $ref: '#/components/schemas/Provider' }
-        paymentMethod: { $ref: '#/components/schemas/PaymentMethodType' }
+        provider: { $ref: "#/components/schemas/Provider" }
+        paymentMethod: { $ref: "#/components/schemas/PaymentMethodType" }
         bankCode: { type: string }
         bankAccountName: { type: string }
 
@@ -460,7 +457,7 @@ components:
         id: { type: string, format: cuid }
         userId: { type: integer, nullable: true }
         accountId: { type: integer }
-        status: { $ref: '#/components/schemas/BookingStatus' }
+        status: { $ref: "#/components/schemas/BookingStatus" }
         duration: { type: string }
         quantity: { type: integer }
         startAt: { type: string, format: date-time, nullable: true }
@@ -469,7 +466,7 @@ components:
         mainValuePerUnit: { type: integer }
         othersValuePerUnit: { type: integer, nullable: true }
         voucherId: { type: integer }
-        voucherType: { $ref: '#/components/schemas/Type' }
+        voucherType: { $ref: "#/components/schemas/Type" }
         voucherAmount: { type: integer }
         voucherMaxDiscount: { type: integer }
         mainValue: { type: integer }
@@ -482,12 +479,12 @@ components:
       properties:
         paymentId: { type: string, format: cuid }
         bookingId: { type: string, format: cuid }
-        status: { $ref: '#/components/schemas/PaymentStatus' }
+        status: { $ref: "#/components/schemas/PaymentStatus" }
         value: { type: integer }
         currency: { type: string, example: "IDR" }
-        provider: { $ref: '#/components/schemas/Provider' }
+        provider: { $ref: "#/components/schemas/Provider" }
         providerPaymentId: { type: string }
-        paymentMethod: { $ref: '#/components/schemas/PaymentMethodType' }
+        paymentMethod: { $ref: "#/components/schemas/PaymentMethodType" }
         qrUrl: { type: string, format: uri, nullable: true }
         paidAt: { type: string, format: date-time, nullable: true }
         refundedAt: { type: string, format: date-time, nullable: true }
@@ -759,7 +756,7 @@ paths:
         "400": { description: Invalid payload }
         "401": { description: Unauthorized }
         "404": { description: Account not found }
-  
+
     delete:
       tags: [Accounts]
       summary: Remove skins from an account (IDs only)
@@ -1186,7 +1183,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-
   /api/price-tiers/{id}:
     get:
       tags:
@@ -1261,7 +1257,7 @@ paths:
       responses:
         "204":
           description: "Price tiers deleted successfully."
-  
+
   /api/price-tiers/{tierId}/price-list:
     get:
       tags:
@@ -1402,7 +1398,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
 
   /api/skins:
     get:
@@ -1691,7 +1686,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  
+
   /api/skins/image:
     get:
       tags:
@@ -1817,7 +1812,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BookingResponse'
+                $ref: "#/components/schemas/BookingResponse"
 
   /api/bookings/users/{userId}:
     get:
@@ -1838,7 +1833,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BookingResponse'
+                  $ref: "#/components/schemas/BookingResponse"
 
   /api/bookings/users/hold-bookings/{userId}:
     get:
@@ -1859,7 +1854,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BookingResponse'
+                  $ref: "#/components/schemas/BookingResponse"
 
   /api/bookings/book:
     post:
@@ -1872,13 +1867,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateBookingRequest'
+              $ref: "#/components/schemas/CreateBookingRequest"
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BookingResponse'
+                $ref: "#/components/schemas/BookingResponse"
 
   /api/bookings/cancel:
     post:
@@ -1902,7 +1897,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BookingResponse'
+                $ref: "#/components/schemas/BookingResponse"
 
   # --- Payment Endpoints ---
   /api/bookings/payments/{id}:
@@ -1923,7 +1918,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentResponse'
+                $ref: "#/components/schemas/PaymentResponse"
 
   /api/bookings/active-payments/{bookingId}:
     get:
@@ -1943,7 +1938,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentResponse'
+                $ref: "#/components/schemas/PaymentResponse"
 
   /api/bookings/pay:
     post:
@@ -1956,13 +1951,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PayBookingRequest'
+              $ref: "#/components/schemas/PayBookingRequest"
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentResponse'
+                $ref: "#/components/schemas/PaymentResponse"
 
   /api/bookings/verify-payment:
     post:
@@ -1986,7 +1981,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentResponse'
+                $ref: "#/components/schemas/PaymentResponse"
 
   /api/bookings/force-pay:
     post:
@@ -2010,7 +2005,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentResponse'
+                $ref: "#/components/schemas/PaymentResponse"
 
   /api/bookings/sync-expired:
     post:

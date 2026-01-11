@@ -7,31 +7,34 @@ import {
 } from "../lib/error";
 import { prisma } from "../lib/prisma";
 import { Metadata } from "../types/metadata.type";
-import { CreatePriceTierRequest, PriceListItem, UpdatePriceTierRequest } from "../types/pricetier.type";
+import {
+  CreatePriceTierRequest,
+  PriceListItem,
+  UpdatePriceTierRequest
+} from "../types/pricetier.type";
 
 const durationRegex = /^(?:(\d+)d(?:\s+([01]?\d|2[0-3])h)?|([01]?\d|2[0-3])h)$/;
 
-
 function validateDuration(input: string) {
   if (!durationRegex.test(input)) {
-    throw new BadRequestError("Invalid duration format. Use 'Xd Yh' (e.g., '1d 2h').");
+    throw new BadRequestError(
+      "Invalid duration format. Use 'Xd Yh' (e.g., '1d 2h')."
+    );
   }
 }
-
-
 
 export class PriceTierService {
   getAllPriceTiers = async (
     page?: number,
     limit?: number,
     query?: string
-  ): Promise<[(PriceTier & {priceList: PriceList[]})[], Metadata]> => {
+  ): Promise<[(PriceTier & { priceList: PriceList[] })[], Metadata]> => {
     try {
       const whereCriteria: Prisma.PriceTierWhereInput = {
         code: { contains: query, mode: "insensitive" }
       };
 
-      let data: (PriceTier & {priceList: PriceList[]})[];
+      let data: (PriceTier & { priceList: PriceList[] })[];
       let metadata: Metadata;
 
       if (page !== undefined && limit !== undefined) {
@@ -43,7 +46,7 @@ export class PriceTierService {
           skip: skip,
           include: {
             priceList: {
-              orderBy: {createdAt: "desc"}
+              orderBy: { createdAt: "desc" }
             }
           }
         });
@@ -64,7 +67,7 @@ export class PriceTierService {
           where: whereCriteria,
           include: {
             priceList: {
-              orderBy: {createdAt: "desc"}
+              orderBy: { createdAt: "desc" }
             }
           }
         });
@@ -82,9 +85,11 @@ export class PriceTierService {
     }
   };
 
-  getPriceTierById = async (id: number) : Promise<PriceTier & { priceList: PriceList[] }> => {
+  getPriceTierById = async (
+    id: number
+  ): Promise<PriceTier & { priceList: PriceList[] }> => {
     try {
-      const priceTier = await prisma.priceTier.findFirst({ 
+      const priceTier = await prisma.priceTier.findFirst({
         where: { id },
         include: {
           priceList: true
@@ -105,19 +110,22 @@ export class PriceTierService {
 
   createPriceTier = async (payload: CreatePriceTierRequest) => {
     try {
-      payload.priceList?.forEach((item) => validateDuration(item.duration))
+      payload.priceList?.forEach((item) => validateDuration(item.duration));
 
-      return await prisma.priceTier.create({ data: {
-        code: payload.code,
-        priceList: payload.priceList ? {
-          create: payload.priceList.map((item) => ({
-            duration: item.duration,
-            normalPrice: item.normalPrice,
-            lowPrice: item.lowPrice
-          }))
-        } : undefined
-      }
-    });
+      return await prisma.priceTier.create({
+        data: {
+          code: payload.code,
+          priceList: payload.priceList
+            ? {
+                create: payload.priceList.map((item) => ({
+                  duration: item.duration,
+                  normalPrice: item.normalPrice,
+                  lowPrice: item.lowPrice
+                }))
+              }
+            : undefined
+        }
+      });
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -134,10 +142,11 @@ export class PriceTierService {
     }
   };
 
-  
-updatePriceTier = async (id: number, payload: UpdatePriceTierRequest): Promise<PriceTier & { priceList: PriceList[] }> => {
+  updatePriceTier = async (
+    id: number,
+    payload: UpdatePriceTierRequest
+  ): Promise<PriceTier & { priceList: PriceList[] }> => {
     try {
-
       const replaceList = payload.replacePriceList ?? payload.priceList;
 
       if (replaceList) {
@@ -202,7 +211,6 @@ updatePriceTier = async (id: number, payload: UpdatePriceTierRequest): Promise<P
     }
   };
 
-
   deleteManyPriceTiers = async (ids: number[]) => {
     try {
       return await prisma.priceTier.deleteMany({ where: { id: { in: ids } } });
@@ -214,11 +222,11 @@ updatePriceTier = async (id: number, payload: UpdatePriceTierRequest): Promise<P
   addPriceListItems = async (tierId: number, items: PriceListItem[]) => {
     try {
       items.forEach((item) => validateDuration(item.duration));
-      const tier = await prisma.priceTier.findUnique({where: {id: tierId}})
+      const tier = await prisma.priceTier.findUnique({ where: { id: tierId } });
       if (!tier) throw new NotFoundError("Price Tier not Found!");
 
       return await prisma.$transaction(
-        items.map((item) => 
+        items.map((item) =>
           prisma.priceList.create({
             data: {
               tierId,
@@ -228,18 +236,16 @@ updatePriceTier = async (id: number, payload: UpdatePriceTierRequest): Promise<P
             }
           })
         )
-      )
+      );
     } catch (error) {
       if (error instanceof Prisma.PrismaClientValidationError) {
         throw new BadRequestError("Invalid request body!");
       }
       throw new InternalServerError((error as Error).message);
-
     }
-  }
+  };
 
-  
-updatePriceListItem = async (
+  updatePriceListItem = async (
     itemId: number,
     data: Partial<PriceListItem>
   ) => {
@@ -250,11 +256,11 @@ updatePriceListItem = async (
         where: { id: itemId },
         data: {
           duration: data.duration,
-          normalPrice: data.normalPrice !== undefined ? data.normalPrice : undefined,
+          normalPrice:
+            data.normalPrice !== undefined ? data.normalPrice : undefined,
           lowPrice: data.lowPrice !== undefined ? data.lowPrice : undefined
         }
       });
-      
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -269,14 +275,11 @@ updatePriceListItem = async (
     }
   };
 
-  
-deletePriceListItems = async (ids: number[]) => {
+  deletePriceListItems = async (ids: number[]) => {
     try {
       return await prisma.priceList.deleteMany({ where: { id: { in: ids } } });
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
   };
-
-
 }
