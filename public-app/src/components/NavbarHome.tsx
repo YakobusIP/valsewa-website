@@ -3,7 +3,7 @@
 import { Goldman } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import LoginPage from "./LoginPage";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -15,33 +15,77 @@ const goldman = Goldman({
 
 const Navbar = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
+  const [activeBrand, setActiveBrand] = useState<"valsewa" | "valjubel" | "valjoki">("valsewa");
+
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
   };
   const { isAuthenticated, username } = useAuth();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 60);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+
 
   return (
-    <div className="fixed top-0 z-50 w-full bg-[#000000] shadow-md shadow-black/5">
+    <div className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
+        isScrolled
+          ? "bg-black shadow-md shadow-black/20"
+          : "bg-transparent"
+      }`}>
       <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between px-5 md:px-14">
         <div className="flex items-center gap-16">
           <div className="relative md:pl-14">
-            <figure className="relative top-0 lg:max-w-[130px] sm:max-w-[130px] max-w-[130px] left-5">
-              <Image
-                src="/header/Logo Header Valforum.png"
-                alt="logo"
-                height={50}
-                width={130}
-                className="object-contain"
-              />
-            </figure>
+            {!isScrolled && (
+              <figure className="relative top-0 lg:max-w-[130px] sm:max-w-[130px] max-w-[130px] ">
+                <Image
+                  src="/header/Logo Header Valforum.png"
+                  alt="logo"
+                  height={50}
+                  width={130}
+                  className="object-contain"
+                />
+              </figure>
+            )}
+            {isScrolled && (
+              <figure className="relative top-0 lg:max-w-[130px] sm:max-w-[130px] max-w-[130px] ">
+                <Image
+                  src="/header/VALSEWA.png"
+                  alt="logo"
+                  height={50}
+                  width={130}
+                  className="object-contain"
+                />
+              </figure>
+            )}
           </div>
           {/* BRAND SWITCHER */}
-          <div className="relative ml-6">
+          <div
+            className={`relative ml-6 transition-all duration-300 ${
+              isScrolled
+                ? "opacity-0 translate-y-[-10px] pointer-events-none"
+                : "opacity-100 translate-y-0"
+            }`}
+          >
             <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
 
-              {/* ACTIVE - VALSEWA */}
-              <div className="flex items-center justify-center px-6 py-2 rounded-xl shadow-md cursor-pointer">
+              {/* VALSEWA */}
+              <div
+                onClick={() => setActiveBrand("valsewa")}
+                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${
+                  activeBrand === "valsewa"
+                    ? "bg-black shadow-md"
+                    : "hover:bg-white/10"
+                }`}
+              >
                 <Image
                   src="/header/VALSEWA.png"
                   alt="VALSEWA"
@@ -52,7 +96,14 @@ const Navbar = () => {
               </div>
 
               {/* VALJUBEL */}
-              <div className="flex items-center justify-center px-6 py-2 rounded-xl hover:bg-white/10 transition cursor-pointer">
+              <div
+                onClick={() => setActiveBrand("valjubel")}
+                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${
+                  activeBrand === "valjubel"
+                    ? "bg-black shadow-md"
+                    : "hover:bg-white/10"
+                }`}
+              >
                 <Image
                   src="/header/VALJUBEL.png"
                   alt="VALJUBEL"
@@ -63,7 +114,14 @@ const Navbar = () => {
               </div>
 
               {/* VALJOKI */}
-              <div className="flex items-center justify-center px-6 py-2 rounded-xl hover:bg-white/10 transition cursor-pointer">
+              <div
+                onClick={() => setActiveBrand("valjoki")}
+                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${
+                  activeBrand === "valjoki"
+                    ? "bg-black shadow-md"
+                    : "hover:bg-white/10"
+                }`}
+              >
                 <Image
                   src="/header/VALJOKI.png"
                   alt="VALJOKI"
@@ -75,6 +133,7 @@ const Navbar = () => {
 
             </div>
           </div>
+
 
           
         </div>
