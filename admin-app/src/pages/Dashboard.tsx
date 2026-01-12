@@ -6,13 +6,15 @@ import { statisticService } from "@/services/statistic.service";
 import CarouselManagementModal from "@/components/carousel-management/CarouselManagementModal";
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
 import Navbar from "@/components/dashboard/Navbar";
+import SettingsModal from "@/components/dashboard/SettingsModal";
 import SortComponent from "@/components/dashboard/SortComponent";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
+import UserListModal from "@/components/dashboard/UserListModal";
+import VoucherModal from "@/components/dashboard/VoucherModal";
 import DataTable from "@/components/data-table/DataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
 import PriceTierModal from "@/components/pricetier-management/PriceTierModal";
 import SkinManagementModal from "@/components/skin-management/SkinManagementModal";
-import { Button } from "@/components/ui/button";
 
 import { toast } from "@/hooks/useToast";
 
@@ -23,11 +25,8 @@ import { StatisticResponse } from "@/types/statistic.type";
 import { SORT_ORDER } from "@/lib/enums";
 
 import { SkinProvider } from "@/contexts/SkinContext";
-import { CirclePlusIcon } from "lucide-react";
+
 import CreateUserPage from "../components/dashboard/CreateUserModal";
-import SettingsModal from "@/components/dashboard/SettingsModal";
-import UserListModal from "@/components/dashboard/UserListModal";
-import VoucherModal from "@/components/dashboard/VoucherModal";
 
 const PAGINATION_SIZE = 100;
 
@@ -37,6 +36,10 @@ export default function Dashboard() {
   const [openUserList, setOpenUserList] = useState(false);
   const [openVoucherModal, setopenVoucherModal] = useState(false);
 
+  const [openSkinManagement, setOpenSkinManagement] = useState(false);
+  const [openPriceTier, setOpenPriceTier] = useState(false);
+  const [openCarouselManagement, setOpenCarouselManagement] = useState(false);
+  const [openSettings, setOpenSettings] = useState(false);
 
   const [isLoadingStatistics, setIsLoadingStatistics] = useState(false);
   const [statistics, setStatistics] = useState<StatisticResponse>();
@@ -210,6 +213,13 @@ export default function Dashboard() {
           failedJobs={failedJobs}
           resetLogs={resetLogs}
           resetParent={resetParent}
+          onOpenAddAccount={() => setOpenAccountDetail(true)}
+          onOpenSkinManagement={() => setOpenSkinManagement(true)}
+          onOpenPriceTiers={() => setOpenPriceTier(true)}
+          onOpenCarouselManagement={() => setOpenCarouselManagement(true)}
+          onOpenVouchers={() => setopenVoucherModal(true)}
+          onOpenUserList={() => setOpenUserList(true)}
+          onOpenSettings={() => setOpenSettings(true)}
         />
         <div className="container flex flex-col mx-auto p-4 xl:p-8 gap-4">
           <h1>Dashboard</h1>
@@ -235,35 +245,6 @@ export default function Dashboard() {
                   sortOrder={sortOrder}
                   handleSort={handleSort}
                 />
-                <SkinProvider>
-                  <SkinManagementModal />
-                </SkinProvider>
-                <PriceTierModal />
-                <CarouselManagementModal />
-
-                <Button
-                  className="w-full xl:w-fit"
-                  onClick={() => setOpenAccountDetail(true)}
-                >
-                  <CirclePlusIcon />
-                  Add New Account
-                </Button>
-                <Button
-                className="w-full xl:w-fit"
-                  onClick={() => setOpenUserList(true)}
-                >
-                  User Account List
-                </Button>
-
-                <Button
-                  className="w-full xl:w-fit"
-                  onClick={() => setopenVoucherModal(true)}
-                >
-                  Vouchers
-                </Button>
-                <VoucherModal open={openVoucherModal} 
-                  onOpenChange={setopenVoucherModal}/>
-                <SettingsModal />
               </Fragment>
             }
           />
@@ -287,10 +268,22 @@ export default function Dashboard() {
           setOpenCreateUserAccount(true);
         }}
       />
-      <VoucherModal open={openVoucherModal} 
-      onOpenChange={setopenVoucherModal}/>
-      
-
+      <VoucherModal
+        open={openVoucherModal}
+        onOpenChange={setopenVoucherModal}
+      />
+      <SkinProvider>
+        <SkinManagementModal
+          open={openSkinManagement}
+          onOpenChange={setOpenSkinManagement}
+        />
+      </SkinProvider>
+      <PriceTierModal open={openPriceTier} onOpenChange={setOpenPriceTier} />
+      <CarouselManagementModal
+        open={openCarouselManagement}
+        onOpenChange={setOpenCarouselManagement}
+      />
+      <SettingsModal open={openSettings} onOpenChange={setOpenSettings} />
     </Fragment>
   );
 }

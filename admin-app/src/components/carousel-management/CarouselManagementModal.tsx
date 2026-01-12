@@ -15,17 +15,22 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from "@/components/ui/dialog";
 
 import { toast } from "@/hooks/useToast";
 
 import { CarouselSlide } from "@/types/carousel.type";
 
-import { ImageIcon, PencilIcon, PlusIcon } from "lucide-react";
+import { PencilIcon, PlusIcon } from "lucide-react";
 
-export default function CarouselManagementModal() {
+export default function CarouselManagementModal({
+  open,
+  onOpenChange
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const [slides, setSlides] = useState<CarouselSlide[]>([]);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState<CarouselSlide | undefined>(
@@ -59,18 +64,14 @@ export default function CarouselManagementModal() {
   };
 
   useEffect(() => {
-    fetchAllSlides();
-  }, [fetchAllSlides]);
+    if (open) {
+      fetchAllSlides();
+    }
+  }, [fetchAllSlides, open]);
 
   return (
     <Fragment>
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button className="w-full xl:w-fit">
-            <ImageIcon className="h-4 w-4" />
-            Carousel Management
-          </Button>
-        </DialogTrigger>
+      <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Carousel Management</DialogTitle>

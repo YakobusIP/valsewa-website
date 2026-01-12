@@ -1,3 +1,7 @@
+import { useEffect, useState } from "react";
+
+import { settingService } from "@/services/setting.service";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -5,18 +9,20 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/hooks/useToast";
-import { settingService } from "@/services/setting.service";
-import { Settings } from "lucide-react";
-import { useEffect, useState } from "react";
 
-export default function SettingsModal() {
-  const [open, setOpen] = useState(false);
+import { toast } from "@/hooks/useToast";
+
+export default function SettingsModal({
+  open,
+  onOpenChange
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const [loading, setLoading] = useState(false);
   const [reminderText, setReminderText] = useState("");
 
@@ -48,7 +54,7 @@ export default function SettingsModal() {
         title: "Settings saved",
         description: "Reminder text has been updated successfully."
       });
-      setOpen(false);
+      onOpenChange(false);
     } catch (error) {
       if (error instanceof Error) {
         toast({
@@ -69,19 +75,11 @@ export default function SettingsModal() {
   }, [open]);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="w-full xl:w-fit">
-          <Settings className="w-4 h-4 mr-2" />
-          Settings
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Global Settings</DialogTitle>
-          <DialogDescription>
-            App global settings
-          </DialogDescription>
+          <DialogDescription>App global settings</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -94,7 +92,8 @@ export default function SettingsModal() {
               onChange={(e) => setReminderText(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Anda dapat menggunakan placeholder seperti {"{username}"}, {"{password}"}, {"{accountCode}"}, dan {"{expired}"}.
+              Anda dapat menggunakan placeholder seperti {"{username}"},{" "}
+              {"{password}"}, {"{accountCode}"}, dan {"{expired}"}.
             </p>
           </div>
         </div>
