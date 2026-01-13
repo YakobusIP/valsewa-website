@@ -81,19 +81,29 @@ export function generateLargeNumericId(): string {
     .slice(0, 32);
 }
 
-export function toCustomerNo(customerId: number): string {
-  return String(customerId).padStart(6, "0");
+export function toCustomerNo(customerId: number, padStart: number): string {
+  return String(customerId).padStart(padStart, "0");
 }
 
-export function parseCustomerNo(bankAccountNo: string): number {
-  return Number(bankAccountNo.slice(-6));
+export function bankAccountNoToCustomerNo(bankAccountNo: string, bankCode: BankCodes): string {
+  const padStart = Math.max(BANK_CODE_TO_PREFIX_MAP[bankCode].length, 8);
+  return bankAccountNo.slice(padStart);
 }
 
 export function generateBankAccountNo(
   bankCode: BankCodes,
   customerId: number
 ): string {
-  return BANK_CODE_TO_PREFIX_MAP[bankCode] + toCustomerNo(customerId);
+  let prefix = BANK_CODE_TO_PREFIX_MAP[bankCode];
+  if (prefix.length < 8) {
+    prefix = prefix.padStart(8 - prefix.length, " ");
+  }
+  const customerNo = toCustomerNo(customerId, 16 - prefix.length);
+  return prefix + customerNo;
+}
+
+export function generatePartnerServiceId(bankCode: BankCodes): string {
+  return SnapBiConfig.snapBiPartnerId + BANK_CODE_TO_CHANNEL_CODE_MAP[bankCode];
 }
 
 export class FaspayClient {
@@ -151,7 +161,10 @@ export class FaspayClient {
         request.customerId
       ),
       virtualAccountName: request.bankAccountName,
-      trxId: request.paymentId,
+      trxId: generateBankAccountNo(
+        request.bankCode,
+        request.customerId
+      ),
       totalAmount: {
         value: request.amount.toFixed(2),
         currency: "IDR"
@@ -160,7 +173,7 @@ export class FaspayClient {
       additionalInfo: {
         billDate: dateNow,
         billDescription: `Booking #${request.bookingId}`,
-        channelCode: request.bankCode
+        channelCode: BANK_CODE_TO_CHANNEL_CODE_MAP[request.bankCode]
       }
     };
 
@@ -189,12 +202,12 @@ export class FaspayClient {
     return {
       responseCode: response.responseCode,
       responseMessage: response.responseMessage,
-      paymentId: response.partnerReferenceNo,
-      providerPaymentId: response.referenceNo,
-      bankCode: response.additionalInfo.channelCode,
-      bankAccountNo: response.virtualAccountNo,
-      bankAccountName: response.virtualAccountName,
-      additionalInfo: response.additionalInfo,
+      paymentId: response.virtualAccountData.partnerReferenceNo,
+      providerPaymentId: response.virtualAccountData.referenceNo,
+      bankCode: response.virtualAccountData.additionalInfo.channelCode,
+      bankAccountNo: response.virtualAccountData.virtualAccountNo,
+      bankAccountName: response.virtualAccountData.virtualAccountName,
+      additionalInfo: response.virtualAccountData.additionalInfo,
       metadata: response
     };
   };
@@ -216,15 +229,17 @@ export class FaspayClient {
         .withBody(payload)
         .getStatus(generateLargeNumericId());
     } else if (payment.paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT) {
+      const bankAccountNo = payment.bankAccountNo!;
+      const bankCode = payment.bankCode as BankCodes;
       const payload = {
-        partnerServiceId: "",
-        customerNo: payment.bankAccountName?.slice(-8),
-        virtualAccountNo: payment.bankAccountNo,
-        inquiryRequestId: SnapBiConfig.snapBiMerchantId,
+        partnerServiceId: generatePartnerServiceId(bankCode),
+        customerNo: bankAccountNoToCustomerNo(bankAccountNo, bankCode),
+        virtualAccountNo: bankAccountNo,
+        inquiryRequestId: generateLargeNumericId(),
         additionalInfo: {
-          channelCode: "711",
-          trxId: payment.id
-        }
+          channelCode: BANK_CODE_TO_CHANNEL_CODE_MAP[bankCode],
+          trxId: bankAccountNo,
+        },
       };
       response = await SnapBi.va()
         .withTimeStamp(toFaspayLocalDate(new Date()))

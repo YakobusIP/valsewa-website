@@ -60,8 +60,11 @@ export default function AccountDetailPage() {
     if (!selectedDuration) return;
     try {
       setSubmitting(true);
+
+      if (!customerId) throw new Error("Log in first!");
+
       const booking = await bookingService.createBooking({
-        customerId: customerId ?? undefined,
+        customerId: customerId,
         accountId: parseInt(id),
         priceListId: selectedDuration.value.id,
         quantity: qty,
