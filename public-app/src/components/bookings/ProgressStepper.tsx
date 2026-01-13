@@ -1,21 +1,18 @@
+import { memo, useCallback, useState } from "react";
+
 import { bookingService } from "@/services/booking.service";
 
-import { toast } from "@/hooks/useToast";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
-import { isAxiosError } from "axios";
+import { instrumentSans } from "@/lib/fonts";
+import { cn } from "@/lib/utils";
+
 import {
   CheckIcon,
   ChevronLeftIcon,
   DollarSign,
   MoreHorizontal
 } from "lucide-react";
-import { Instrument_Sans } from "next/font/google";
-
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap"
-});
 
 type ProgressStepperProps = {
   bookingId: string;
@@ -23,42 +20,40 @@ type ProgressStepperProps = {
   onBack: () => void;
 };
 
-export default function ProgressStepper({
-  bookingId,
-  stepIdx,
-  onBack
-}: ProgressStepperProps) {
-  const isActive = (idx: number) => {
-    return idx <= stepIdx;
-  };
+function ProgressStepper({ bookingId, stepIdx, onBack }: ProgressStepperProps) {
+  const { handleAsyncError } = useErrorHandler();
+  const [isCancelling, setIsCancelling] = useState(false);
 
-  const handleBack = async () => {
+  const isActive = useCallback((idx: number) => idx <= stepIdx, [stepIdx]);
+
+  const handleBack = useCallback(async () => {
+    if (isCancelling) return;
+
     try {
+      setIsCancelling(true);
       await bookingService.cancelBooking({ bookingId });
     } catch (error) {
-      let message = "Cancel booking failed";
-
-      if (isAxiosError(error)) {
-        message = error.response?.data?.error || error.message || message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
-
-      toast({
-        variant: "destructive",
-        title: "Cancel booking failed",
-        description: message
-      });
+      handleAsyncError(error, "Cancel booking failed", "Cancel booking failed");
     } finally {
+      setIsCancelling(false);
       onBack();
     }
-  };
+  }, [bookingId, isCancelling, handleAsyncError, onBack]);
 
   return (
-    <div
-      className={`flex gap-6 text-sm font-bold items-center text-white ${instrumentSans.className}`}
+    <nav
+      className={cn(
+        "flex gap-6 text-sm font-bold items-center text-white",
+        instrumentSans.className
+      )}
+      aria-label="Booking progress"
     >
-      <button onClick={handleBack} className="cursor-pointer w-fit rounded-xl">
+      <button
+        onClick={handleBack}
+        disabled={isCancelling}
+        className="cursor-pointer w-fit rounded-xl disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+        aria-label="Go back and cancel booking"
+      >
         <div className="flex items-center gap-2 p-4 transition border cursor-pointer border-white/30 rounded-xl hover:border-white bg-white/30">
           <ChevronLeftIcon className="w-6 h-6 text-white" />
         </div>
@@ -101,6 +96,8 @@ export default function ProgressStepper({
           </span>
         </div>
       </div>
-    </div>
+    </nav>
   );
 }
+
+export default memo(ProgressStepper);

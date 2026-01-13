@@ -1,21 +1,12 @@
+import { memo, useMemo } from "react";
+
 import { PAYMENT_METHOD_REQUEST } from "@/types/booking.type";
 
-import { Instrument_Sans, Staatliches } from "next/font/google";
+import { instrumentSans, staatliches } from "@/lib/fonts";
+
 import Image from "next/image";
 
 import PaymentMethodCard from "./PaymentMethodCard";
-
-const staatliches = Staatliches({
-  subsets: ["latin"],
-  weight: ["400"],
-  display: "swap"
-});
-
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap"
-});
 
 const VA_METHODS = [
   {
@@ -33,17 +24,27 @@ const VA_METHODS = [
     label: "VA BRI",
     logo: "/paymentMethods/VA_BRI.svg"
   }
-];
+] as const;
 
 type PaymentMethodsProps = {
   paymentMethod: PAYMENT_METHOD_REQUEST | null;
   setPaymentMethod: (value: PAYMENT_METHOD_REQUEST) => void;
 };
 
-export default function PaymentMethods({
+function PaymentMethods({
   paymentMethod,
   setPaymentMethod
 }: PaymentMethodsProps) {
+  const handleQRISSelect = useMemo(
+    () => () => setPaymentMethod(PAYMENT_METHOD_REQUEST.QRIS),
+    [setPaymentMethod]
+  );
+
+  const handleVASelect = useMemo(
+    () => (type: PAYMENT_METHOD_REQUEST) => () => setPaymentMethod(type),
+    [setPaymentMethod]
+  );
+
   return (
     <div className={instrumentSans.className}>
       <h1
@@ -52,23 +53,26 @@ export default function PaymentMethods({
         SELECT A PAYMENT METHOD
       </h1>
 
-      <div className="flex flex-col gap-8">
-        {/* QRIS */}
+      <div
+        className="flex flex-col gap-8"
+        role="radiogroup"
+        aria-label="Payment methods"
+      >
         <PaymentMethodCard
           active={paymentMethod === PAYMENT_METHOD_REQUEST.QRIS}
-          onClick={() => setPaymentMethod(PAYMENT_METHOD_REQUEST.QRIS)}
+          onClick={handleQRISSelect}
           label="QRIS"
         >
           <Image
             src="/paymentMethods/QRIS.svg"
-            alt="QRIS"
+            alt="QRIS payment method"
             height={128}
             width={128}
             className="w-32 h-32 object-contain"
+            priority
           />
         </PaymentMethodCard>
 
-        {/* Other Methods */}
         <div>
           <p className="mb-3 flex items-center gap-2 text-white font-semibold">
             Other Methods
@@ -79,12 +83,12 @@ export default function PaymentMethods({
               <PaymentMethodCard
                 key={method.type}
                 active={paymentMethod === method.type}
-                onClick={() => setPaymentMethod(method.type)}
+                onClick={handleVASelect(method.type)}
                 label={method.label}
               >
                 <Image
                   src={method.logo}
-                  alt={method.label}
+                  alt={`${method.label} payment method`}
                   height={64}
                   width={64}
                   className="w-16 h-16 object-contain"
@@ -97,3 +101,5 @@ export default function PaymentMethods({
     </div>
   );
 }
+
+export default memo(PaymentMethods);

@@ -17,6 +17,7 @@ import {
   CarouselPrevious
 } from "@/components/ui/carousel";
 
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/useToast";
 
 import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
@@ -36,6 +37,7 @@ export default function AccountDetailPage() {
 
   const [account, setAccount] = useState<AccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   // Skin UI state
   const [showSkins, setShowSkins] = useState(false);
@@ -50,6 +52,8 @@ export default function AccountDetailPage() {
   const [startTime, setStartTime] = useState<string>(""); // "09:00"
   const [endTime, setEndTime] = useState<string>("");
 
+  const { customerId } = useAuth();
+
   useEffect(() => {
     fetchAccountById(id)
       .then((res) => setAccount(res))
@@ -62,10 +66,11 @@ export default function AccountDetailPage() {
   }, [mode]);
 
   const onSubmit = async () => {
+    if (!selectedDuration) return;
     try {
-      if (!selectedDuration) return;
+      setSubmitting(true);
       const booking = await bookingService.createBooking({
-        // TODO: userId
+        customerId: customerId ?? undefined,
         accountId: parseInt(id),
         priceListId: selectedDuration.value.id,
         quantity: qty,
@@ -89,6 +94,8 @@ export default function AccountDetailPage() {
         title: "Booking failed",
         description: message
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -547,21 +554,23 @@ export default function AccountDetailPage() {
 
               <button
                 onClick={onSubmit}
-                disabled={isDisabled}
+                disabled={isDisabled || submitting}
                 className={`w-full font-semibold py-3 rounded-md transition
                   ${
-                    isDisabled
+                    isDisabled || submitting
                       ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
                       : "bg-red-600 hover:bg-red-700 text-white"
                   }`}
               >
-                {mode === "RENT" && selectedDuration && (
+                {submitting && <>Loading...</>}
+
+                {mode === "RENT" && selectedDuration && !submitting && (
                   <>
                     IDR {calculateTotalPrice.toLocaleString("id-ID")} | Rent Now
                   </>
                 )}
 
-                {mode === "BOOK" && selectedDuration && (
+                {mode === "BOOK" && selectedDuration && !submitting && (
                   <>
                     IDR {calculateTotalPrice.toLocaleString("id-ID")} | Book Now
                   </>
