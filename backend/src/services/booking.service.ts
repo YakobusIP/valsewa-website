@@ -2,10 +2,12 @@ import {
   Account,
   Booking,
   BookingStatus,
+  ImageUpload,
   Payment,
   PaymentMethodType,
   PaymentStatus,
   PriceList,
+  PriceTier,
   Prisma,
   Provider,
   Type,
@@ -137,9 +139,7 @@ export class BookingService {
           account: {
             include: {
               priceTier: true,
-              thumbnail: true,
-              otherImages: true,
-              skinList: true
+              thumbnail: true
             }
           }
         }
@@ -148,7 +148,17 @@ export class BookingService {
       if (!booking) {
         throw new NotFoundError(`Booking with ID ${bookingId} not found.`);
       }
-      return this.mapBookingWithAccountDataToBookingResponse(booking);
+
+      const now = new Date();
+      const isActive =
+        booking.status === BookingStatus.RESERVED &&
+        booking.startAt! < now &&
+        booking.endAt! > now;
+
+      return this.mapBookingWithAccountDataToBookingWithAccountResponse(
+        booking,
+        isActive
+      );
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
@@ -627,8 +637,7 @@ export class BookingService {
 
         await tx.booking.updateMany({
           where: {
-            id: { in: bookingIds },
-            status: BookingStatus.HOLD
+            id: { in: bookingIds }
           },
           data: {
             status: BookingStatus.EXPIRED
@@ -642,6 +651,41 @@ export class BookingService {
           },
           data: {
             status: PaymentStatus.EXPIRED
+          }
+        });
+
+        return bookingIds.length;
+      });
+
+      return { count };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  syncCompletedBookings = async () => {
+    try {
+      const count = await prisma.$transaction(async (tx) => {
+        const completedBookings = await tx.booking.findMany({
+          where: {
+            status: BookingStatus.RESERVED,
+            endAt: { lte: new Date() }
+          },
+          select: {
+            id: true
+          }
+        });
+
+        if (completedBookings.length === 0) return 0;
+
+        const bookingIds = completedBookings.map((b) => b.id);
+
+        await tx.booking.updateMany({
+          where: {
+            id: { in: bookingIds }
+          },
+          data: {
+            status: BookingStatus.COMPLETED
           }
         });
 
@@ -837,12 +881,19 @@ export class BookingService {
       mainValue: booking.mainValue,
       othersValue: booking.othersValue,
       discount: booking.discount,
-      totalValue: booking.totalValue
+      totalValue: booking.totalValue,
+      active: null
     };
   };
 
-  private mapBookingWithAccountDataToBookingResponse = (
-    booking: Booking & { account: Account }
+  private mapBookingWithAccountDataToBookingWithAccountResponse = (
+    booking: Booking & {
+      account: Account & {
+        priceTier: PriceTier;
+        thumbnail: ImageUpload | null;
+      };
+    },
+    active?: boolean
   ): BookingResponse => {
     return {
       id: booking.id,
@@ -864,7 +915,15 @@ export class BookingService {
       othersValue: booking.othersValue,
       discount: booking.discount,
       totalValue: booking.totalValue,
-      account: booking.account
+      active: active ?? false,
+      account: {
+        accountRank: booking.account.accountRank,
+        accountCode: booking.account.accountCode,
+        priceTierCode: booking.account.priceTier.code,
+        thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
+        username: active ? booking.account.username : undefined,
+        password: active ? booking.account.password : undefined
+      }
     };
   };
 
@@ -881,6 +940,9 @@ export class BookingService {
       providerPaymentId: payment.providerPaymentId,
       paymentMethod: payment.paymentMethod,
       qrUrl: payment.qrUrl,
+      bankCode: payment.bankCode,
+      bankAccountNo: payment.bankAccountNo,
+      bankAccountName: payment.bankAccountName,
       paidAt: payment.paidAt,
       refundedAt: payment.refundedAt
     };
@@ -899,6 +961,9 @@ export class BookingService {
       providerPaymentId: payment.providerPaymentId,
       paymentMethod: payment.paymentMethod,
       qrUrl: payment.qrUrl,
+      bankCode: payment.bankCode,
+      bankAccountNo: payment.bankAccountNo,
+      bankAccountName: payment.bankAccountName,
       paidAt: payment.paidAt,
       refundedAt: payment.refundedAt,
       booking: payment.booking

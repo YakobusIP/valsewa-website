@@ -71,8 +71,11 @@ class BookingRouter {
     );
     this.router.post(
       "/sync-expired",
-      authMiddleware,
       this.bookingController.syncExpiredBookings
+    );
+    this.router.post(
+      "/sync-completed",
+      this.bookingController.syncCompletedBookings
     );
     this.router.post(
       "/faspay/callback",

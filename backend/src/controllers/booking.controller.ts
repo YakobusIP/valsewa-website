@@ -215,6 +215,20 @@ export class BookingController {
     }
   };
 
+  syncCompletedBookings = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await this.bookingService.syncCompletedBookings();
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   callbackFaspayPayment = async (
     req: Request,
     res: Response,
