@@ -207,9 +207,15 @@ export default function Dashboard() {
   }, []);
 
   const resetParent = useCallback(async () => {
+    const scrollPosition = window.scrollY || document.documentElement.scrollTop;
+
     await fetchAllAccounts();
     await fetchStatistics();
     await fetchResetLogs();
+
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollPosition);
+    });
   }, [fetchAllAccounts, fetchStatistics, fetchResetLogs]);
 
   useEffect(() => {
