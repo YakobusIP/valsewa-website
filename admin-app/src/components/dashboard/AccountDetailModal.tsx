@@ -18,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
@@ -526,6 +527,11 @@ export default function AccountDetailModal({
           <DialogTitle>
             {mode === "add" ? "Add New Account" : "Edit Account"}
           </DialogTitle>
+          <DialogDescription>
+            {mode === "add"
+              ? "Create a new account with all required details"
+              : "Edit account information and settings"}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

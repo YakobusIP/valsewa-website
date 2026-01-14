@@ -14,6 +14,7 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
@@ -265,6 +266,9 @@ export default function AccountCurrentBookModal({
       <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
           <DialogTitle>Current Booking</DialogTitle>
+          <DialogDescription>
+            View and manage the current booking details for this account
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
