@@ -95,7 +95,7 @@ const formSchema = z.object({
       ])
     )
     .optional(),
-    isLowRank: z.boolean().optional().default(false)
+  isLowRank: z.boolean().optional().default(false)
 });
 
 type Props = {
@@ -610,73 +610,75 @@ export default function AccountDetailModal({
 
             <div className="col-span-1 flex items-end gap-3">
               <FormField
-              control={form.control}
-              name="priceTier"
-              render={({ field }) => (
-                <FormItem className="flex-1 min-w-0">
-                  <FormLabel>
-                    Price Tier <span className="text-destructive">*</span>
-                  </FormLabel>
-                  <Select
-                    onValueChange={(value) => handlePriceTierChange(value)}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a price tier" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {priceTierList.length > 0 ? (
-                        priceTierList.map((tier) => {
-                          return (
-                            <SelectItem
-                              key={tier.id}
-                              value={tier.id.toString()}
-                            >
-                              {tier.code}
-                            </SelectItem>
-                          );
-                        })
-                      ) : (
-                        <SelectItem value="no_price_tier" disabled>
-                          No price tier available
-                        </SelectItem>
-                      )}
-                      {isLoadingPriceTierList && (
-                        <SelectItem value="Loading">
-                          Fetching price tier...
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="ml-auto">
-              <FormField
                 control={form.control}
-                name="isLowRank"
+                name="priceTier"
                 render={({ field }) => (
-                  <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
-                    <FormControl>
-                      <Checkbox
-                        checked={!!field.value}
-                        onCheckedChange={(checked) => field.onChange(checked === true)}
-                      />
-                    </FormControl>
-                
-                    <FormLabel className="font-normal cursor-pointer">
-                      Low Rank Price
+                  <FormItem className="flex-1 min-w-0">
+                    <FormLabel>
+                      Price Tier <span className="text-destructive">*</span>
                     </FormLabel>
+                    <Select
+                      onValueChange={(value) => handlePriceTierChange(value)}
+                      value={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a price tier" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {priceTierList.length > 0 ? (
+                          priceTierList.map((tier) => {
+                            return (
+                              <SelectItem
+                                key={tier.id}
+                                value={tier.id.toString()}
+                              >
+                                {tier.code}
+                              </SelectItem>
+                            );
+                          })
+                        ) : (
+                          <SelectItem value="no_price_tier" disabled>
+                            No price tier available
+                          </SelectItem>
+                        )}
+                        {isLoadingPriceTierList && (
+                          <SelectItem value="Loading">
+                            Fetching price tier...
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <div className="ml-auto">
+                <FormField
+                  control={form.control}
+                  name="isLowRank"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <FormControl>
+                        <Checkbox
+                          checked={!!field.value}
+                          onCheckedChange={(checked) =>
+                            field.onChange(checked === true)
+                          }
+                        />
+                      </FormControl>
+
+                      <FormLabel className="font-normal cursor-pointer">
+                        Low Rank Price
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
-            </div>
-          
+
             <FormField
               control={form.control}
               name="accountRank"
@@ -789,6 +791,7 @@ export default function AccountDetailModal({
                       </FormLabel>
                       <FormControl>
                         <MultiSelect
+                          modalPopover={true}
                           options={skinOptions}
                           value={selectedValue}
                           onValueChange={(value: string[]) => {
@@ -804,7 +807,7 @@ export default function AccountDetailModal({
                                 : "Select one or more skins"
                           }
                           searchable={true}
-                          maxCount={100}
+                          maxCount={25}
                           className="w-full"
                           animationConfig={{
                             badgeAnimation: "slide",
