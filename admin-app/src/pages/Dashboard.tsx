@@ -1,6 +1,13 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 
-import { accountService } from "@/services/account.service";
+import { accountService, isCanceledError } from "@/services/account.service";
 import { statisticService } from "@/services/statistic.service";
 
 import CarouselManagementModal from "@/components/carousel-management/CarouselManagementModal";
@@ -59,6 +66,8 @@ export default function Dashboard() {
   const [sortBy, setSortBy] = useState("id_tier");
   const [sortOrder, setSortOrder] = useState(SORT_ORDER.ASCENDING);
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const handleSort = (key: string) => {
     setSortBy(key);
     setSortOrder((prev) =>
@@ -90,6 +99,13 @@ export default function Dashboard() {
   }, []);
 
   const fetchAllAccounts = useCallback(async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setIsLoadingAccount(true);
     try {
       const response = await accountService.fetchAll(
@@ -97,11 +113,19 @@ export default function Dashboard() {
         PAGINATION_SIZE,
         searchAccount,
         sortBy,
-        sortOrder
+        sortOrder,
+        abortController.signal
       );
-      setAccountList(response.data);
-      setAccountMetadata(response.metadata);
+
+      if (!abortController.signal.aborted) {
+        setAccountList(response.data);
+        setAccountMetadata(response.metadata);
+      }
     } catch (error) {
+      if (isCanceledError(error)) {
+        return;
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occured";
 
@@ -111,7 +135,9 @@ export default function Dashboard() {
         description: errorMessage
       });
     } finally {
-      setIsLoadingAccount(false);
+      if (!abortController.signal.aborted) {
+        setIsLoadingAccount(false);
+      }
     }
   }, [accountListPage, searchAccount, sortBy, sortOrder]);
 
@@ -203,13 +229,21 @@ export default function Dashboard() {
     document.title = "Dashboard | Valsewa Admin";
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   const columns = useMemo(() => accountColumns(resetParent), [resetParent]);
 
   return (
     <Fragment>
       <main className="min-h-[100dvh]">
         <Navbar
-          onDebounced={(q) => setSearchAccount(q)}
+          onDebounced={setSearchAccount}
           failedJobs={failedJobs}
           resetLogs={resetLogs}
           resetParent={resetParent}
