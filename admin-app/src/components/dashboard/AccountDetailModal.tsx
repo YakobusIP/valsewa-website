@@ -775,14 +775,6 @@ export default function AccountDetailModal({
               </p>
             )}
 
-            <div className="flex flex-col col-span-1 xl:col-span-3 gap-2">
-              <p className="font-semibold">Skins</p>
-              <hr />
-              <p className="text-sm">
-                3 entri pertama akan ditampilkan di halaman utama
-              </p>
-            </div>
-
             <div className="relative col-span-1 xl:col-span-3 gap-2">
               <FormField
                 control={form.control}
