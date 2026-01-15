@@ -1,4 +1,4 @@
-import { PaymentStatus } from "@prisma/client";
+import { PaymentStatus, Prisma } from "@prisma/client";
 import { parseFaspayLocalDate } from "../faspay/faspay.client";
 import { NotFoundError } from "../lib/error";
 import { prisma } from "../lib/prisma";
@@ -31,6 +31,9 @@ export class FaspayService {
       if (!payment) {
         throw new NotFoundError("Payment not found");
       }
+      if (!payment.bankAccountName) {
+        throw new NotFoundError("Payment bank account name not found");
+      }
       return {
         responseCode: "2002400",
         responseMessage: "success",
@@ -38,7 +41,7 @@ export class FaspayService {
           partnerServiceId,
           customerNo,
           virtualAccountNo: virtualAccountNo,
-          virtualAccountName: payment.bankAccountName!,
+          virtualAccountName: payment.bankAccountName,
           virtualAccountEmail: "",
           virtualAccountPhone: "",
           inquiryRequestId
@@ -78,6 +81,10 @@ export class FaspayService {
       if (!payment || !payment.booking)
         throw new NotFoundError("Record not found!");
 
+      if (!payment.bankAccountName) {
+        throw new NotFoundError("Payment bank account name not found");
+      }
+
       if (this.bookingService.isPaymentFinal(payment.status)) {
         return {
           responseCode: "2002600",
@@ -86,23 +93,25 @@ export class FaspayService {
             partnerServiceId,
             customerNo,
             virtualAccountNo: virtualAccountNo,
-            virtualAccountName: payment.bankAccountName!,
+            virtualAccountName: payment.bankAccountName,
             paymentRequestId,
             paidAmount
           }
         };
       }
 
-      const updatedPayment = await prisma.$transaction(async (tx) => {
-        return await this.bookingService.finalizeStatus(
-          tx,
-          payment,
-          payment.booking!,
-          PaymentStatus.SUCCESS,
-          parseFaspayLocalDate(trxDateTime),
-          referenceNo
-        );
-      });
+      const updatedPayment = await prisma.$transaction(
+        async (tx: Prisma.TransactionClient) => {
+          return await this.bookingService.finalizeStatus(
+            tx,
+            payment,
+            payment.booking!,
+            PaymentStatus.SUCCESS,
+            parseFaspayLocalDate(trxDateTime),
+            referenceNo
+          );
+        }
+      );
 
       return {
         responseCode: "2002600",

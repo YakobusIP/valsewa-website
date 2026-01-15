@@ -2,6 +2,7 @@ import { Router } from "express";
 import { BookingService } from "../services/booking.service";
 import { BookingController } from "../controllers/booking.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 import { FaspayClient } from "../faspay/faspay.client";
 
 class BookingRouter {
@@ -71,11 +72,18 @@ class BookingRouter {
     );
     this.router.post(
       "/sync-expired",
+      schedulerMiddleware,
       this.bookingController.syncExpiredBookings
     );
     this.router.post(
       "/sync-completed",
+      schedulerMiddleware,
       this.bookingController.syncCompletedBookings
+    );
+    this.router.get(
+      "/sync-status",
+      schedulerMiddleware,
+      this.bookingController.getSyncStatus
     );
     this.router.post(
       "/faspay/callback",

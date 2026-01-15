@@ -83,7 +83,6 @@ export class BookingService {
     query?: string
   ): Promise<[BookingResponse[], Metadata]> => {
     try {
-      const trimmed = (query ?? "").trim();
       const whereCriteria: Prisma.BookingWhereInput | undefined = undefined;
 
       let data: Booking[];
@@ -422,8 +421,12 @@ export class BookingService {
         );
       }
 
+      if (!booking.expiredAt) {
+        throw new BadRequestError("Booking expiredAt is missing!");
+      }
+
       if (
-        booking.expiredAt! < new Date(Date.now() - this.gracePeriodInMillis)
+        booking.expiredAt < new Date(Date.now() - this.gracePeriodInMillis)
       ) {
         await prisma.booking.update({
           where: { id: booking.id },
@@ -505,12 +508,17 @@ export class BookingService {
         return this.mapPaymentDataToPaymentResponse(payment);
       }
 
+      const bankAccountName =
+        paymentMethodType === PaymentMethodType.VIRTUAL_ACCOUNT
+          ? booking.customer?.username ?? undefined
+          : undefined;
+
       const updatedPayment = await this.processPaymentProvider(
         booking,
         payment,
         paymentMethodType,
         bankCode,
-        booking.customer?.username
+        bankAccountName
       );
       return this.mapPaymentDataToPaymentResponse(updatedPayment);
     } catch (error) {
@@ -759,12 +767,16 @@ export class BookingService {
     bankAccountName?: string
   ): Promise<Payment> => {
     try {
+      if (!booking.expiredAt) {
+        throw new BadRequestError("Booking expiredAt is missing!");
+      }
+
       if (paymentMethod === PaymentMethodType.QRIS) {
         const providerResponse = await this.faspayClient.createQrisPayment({
           bookingId: booking.id,
           paymentId: payment.id,
           amount: payment.value,
-          expiredAt: booking.expiredAt!
+          expiredAt: booking.expiredAt
         });
 
         return await prisma.payment.update({
@@ -777,21 +789,31 @@ export class BookingService {
       }
 
       if (paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT) {
+        if (!booking.customerId) {
+          throw new BadRequestError("Customer ID is required for Virtual Account payment!");
+        }
+        if (!bankCode) {
+          throw new BadRequestError("Bank code is required for Virtual Account payment!");
+        }
+        if (!bankAccountName) {
+          throw new BadRequestError("Bank account name is required for Virtual Account payment!");
+        }
+
         const providerResponse = await this.faspayClient.createVaPayment({
           bookingId: booking.id,
           paymentId: payment.id,
-          customerId: booking.customerId!,
+          customerId: booking.customerId,
           amount: payment.value,
-          bankCode: bankCode!,
-          bankAccountName: bankAccountName!,
-          expiredAt: booking.expiredAt!
+          bankCode,
+          bankAccountName,
+          expiredAt: booking.expiredAt
         });
 
         return await prisma.payment.update({
           where: { id: payment.id },
           data: {
             providerPaymentId: providerResponse.providerPaymentId,
-            bankCode: bankCode!,
+            bankCode,
             bankAccountNo: providerResponse.bankAccountNo,
             bankAccountName: providerResponse.bankAccountName
           }
@@ -818,37 +840,36 @@ export class BookingService {
   };
 
   finalizeStatus = async (
-    tx: any,
+    tx: Prisma.TransactionClient,
     payment: Payment,
     booking: Booking,
     paymentStatus: PaymentStatus,
     paidAt: Date | null,
     providerPaymentId?: string
   ): Promise<PaymentResponse> => {
-    const paymentUpdate = {
+    const paymentUpdate: Prisma.PaymentUpdateInput = {
       status: paymentStatus,
       paidAt: paidAt,
-      providerPaymentId
+      ...(providerPaymentId && { providerPaymentId })
     };
 
     const bookingStatus = PAYMENT_TO_BOOKING_STATUS_MAP[paymentStatus];
-    let bookingUpdate: any = {
+    const actualStart =
+      paymentStatus === PaymentStatus.SUCCESS && booking.immediate
+        ? new Date()
+        : undefined;
+    const bookingUpdate: Prisma.BookingUpdateInput = {
       status: bookingStatus,
       expiredAt: null,
-      version: { increment: 1 }
+      version: { increment: 1 },
+      ...(actualStart && {
+        startAt: actualStart,
+        endAt: addHours(
+          actualStart,
+          this.parseDurationToHours(booking.duration) * booking.quantity
+        )
+      })
     };
-
-    if (paymentStatus === PaymentStatus.SUCCESS && booking.immediate) {
-      const actualStart = new Date();
-      const durationInHours = this.parseDurationToHours(booking.duration);
-      const actualEnd = addHours(
-        actualStart,
-        durationInHours * booking.quantity
-      );
-
-      bookingUpdate.startAt = actualStart;
-      bookingUpdate.endAt = actualEnd;
-    }
 
     const updatedPayment = await tx.payment.update({
       where: { id: payment.id },
