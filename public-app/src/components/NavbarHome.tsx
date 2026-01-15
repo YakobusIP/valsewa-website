@@ -1,17 +1,10 @@
 "use client";
 
-import { Goldman } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import LoginPage from "./LoginPage";
 import { useAuth } from "@/hooks/useAuth";
-
-const goldman = Goldman({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  display: "swap"
-});
 
 const Navbar = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
@@ -36,14 +29,13 @@ const Navbar = () => {
 
 
   return (
-    <div className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
-        isScrolled
-          ? "bg-black shadow-md shadow-black/20"
-          : "bg-transparent"
+    <div className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${isScrolled
+      ? "bg-black shadow-md shadow-black/20"
+      : "bg-transparent"
       }`}>
-      <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between px-5 md:px-14">
+      <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between px-4 sm:px-6 lg:px-12">
         <div className="flex items-center gap-16">
-          <div className="relative md:pl-14">
+          <div className="relative md:pl-0 lg:pl-0">
             {!isScrolled && (
               <figure className="relative top-0 lg:max-w-[130px] sm:max-w-[130px] max-w-[130px] ">
                 <Image
@@ -69,22 +61,20 @@ const Navbar = () => {
           </div>
           {/* BRAND SWITCHER */}
           <div
-            className={`relative ml-6 transition-all duration-300 ${
-              isScrolled
-                ? "opacity-0 translate-y-[-10px] pointer-events-none"
-                : "opacity-100 translate-y-0"
-            }`}
+            className={`relative ml-6 transition-all duration-300 ${isScrolled
+              ? "opacity-0 translate-y-[-10px] pointer-events-none"
+              : "opacity-100 translate-y-0"
+              }`}
           >
             <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
 
               {/* VALSEWA */}
               <div
                 onClick={() => setActiveBrand("valsewa")}
-                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valsewa"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
+                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valsewa"
+                  ? "bg-black shadow-md"
+                  : "hover:bg-white/10"
+                  }`}
               >
                 <Image
                   src="/header/VALSEWA.png"
@@ -98,11 +88,10 @@ const Navbar = () => {
               {/* VALJUBEL */}
               <div
                 onClick={() => setActiveBrand("valjubel")}
-                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valjubel"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
+                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjubel"
+                  ? "bg-black shadow-md"
+                  : "hover:bg-white/10"
+                  }`}
               >
                 <Image
                   src="/header/VALJUBEL.png"
@@ -116,11 +105,10 @@ const Navbar = () => {
               {/* VALJOKI */}
               <div
                 onClick={() => setActiveBrand("valjoki")}
-                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valjoki"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
+                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjoki"
+                  ? "bg-black shadow-md"
+                  : "hover:bg-white/10"
+                  }`}
               >
                 <Image
                   src="/header/VALJOKI.png"
@@ -135,10 +123,10 @@ const Navbar = () => {
           </div>
 
 
-          
+
         </div>
         {/* NAV RIGHT SIDE */}
-        <div className="md:pr-14 pr-7 flex items-center gap-4">
+        <div className="flex items-center gap-4">
 
           {/* SEARCH */}
           <Link href="https://valforum.com/top-up">
@@ -151,11 +139,11 @@ const Navbar = () => {
           <Link href="https://valforum.com/top-up">
             <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl hover:border-white transition cursor-pointer">
               <Image src="/header/Diamond.svg" alt="Top Up" width={18} height={18} />
-              <span className={`text-white text-sm font-bold ${goldman.className}`}>Top Up</span>
+              <span className="text-white text-xs md:text-sm font-bold font-instrumentSans">Top Up</span>
             </div>
           </Link>
 
-          
+
           {/* SIGN IN */}
           {!isAuthenticated && (
             <button
@@ -169,7 +157,7 @@ const Navbar = () => {
                 height={18}
                 className="filter invert"
               />
-              <span className="text-black text-sm font-semibold">Login/Sign Up</span>
+              <span className="text-black text-xs md:text-sm font-semibold">Login/Sign Up</span>
             </button>
           )}
 
@@ -182,7 +170,7 @@ const Navbar = () => {
                 width={18}
                 height={18}
               />
-              <span className="text-white text-sm font-semibold">
+              <span className="text-white text-xs md:text-sm font-semibold">
                 {username}
               </span>
             </div>

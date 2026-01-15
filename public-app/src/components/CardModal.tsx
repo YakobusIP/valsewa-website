@@ -168,7 +168,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                 </span>
               </div>
 
-              <div className="flex sm:flex-row flex-col mb-5 gap-2 sm:items-center max-sm:justify-center text-roseWhite text-sm  mt-2  font-sans">
+              <div className="flex sm:flex-row flex-col mb-5 gap-2 sm:items-center max-sm:justify-center text-roseWhite text-sm  mt-2  font-instrumentSans">
                 <span className="flex gap-2 items-center">
                   <figure className="w-5 h-5 relative">
                     <Image
@@ -199,7 +199,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
               </div>
 
               <div className="h-[2px] w-full bg-[#484C57] my-6"></div>
-              <div className="mb-3 font-sans text-white font-bold">
+              <div className="mb-3 font-instrumentSans text-white font-bold">
                 Total Skin <span>{selectedCard.skinList.length}</span>
               </div>
               <div>
@@ -208,7 +208,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
                     <Badge
                       variant="secondary"
                       key={index}
-                      className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
+                      className="bg-[#4b4f5e] font-normal font-instrumentSans text-[#E6E6E6] text-sm max-sm:text-xs hover:bg-[#4b4f5e]"
                     >
                       {skin}
                     </Badge>
@@ -244,7 +244,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
               )} */}
 
               <div>
-                <p className="mb-3 font-sans text-white font-bold">
+                <p className="mb-3 font-instrumentSans text-white font-bold">
                   Price List
                 </p>
               </div>

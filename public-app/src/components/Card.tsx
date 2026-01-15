@@ -47,13 +47,13 @@ const Card: React.FC<CardProps> = ({ data }) => {
   //     setSelectedCard(item);
   //   }
   // };
-  const handleCardClick = (id: string, availabilityStatus: string, accountCode: string ) => {
+  const handleCardClick = (id: string, availabilityStatus: string, accountCode: string) => {
     const isMobile = window.innerWidth < 640;
 
     if (isMobile && availabilityStatus === "IN_USE") {
       if (hoveredCardId !== accountCode) {
         setHoveredCardId(accountCode);
-      }else {
+      } else {
         setHoveredCardId(null);
       }
     } else {
@@ -62,10 +62,6 @@ const Card: React.FC<CardProps> = ({ data }) => {
 
     router.push(`/details/${id}`);
   };
-
-  // function debug (item){
-  //   console.log(item);
-  // }
 
   function getRankImage(rank: string): string {
     if (!rank) return "/rank/default.svg";
@@ -77,7 +73,16 @@ const Card: React.FC<CardProps> = ({ data }) => {
     <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
 
       <section className="w-full flex justify-center">
-        <div className="w-full max-w-[1920px] px-3 md:px-6 lg:px-10">
+        <div className="w-full max-w-[1920px] px-4 sm:px-6 lg:px-12">
+          <div className="flex flex-col mb-8">
+            <div className="flex items-center gap-2 mb-2">
+              <h2 className="text-2xl md:text-5xl font-antonio font-black text-white tracking-tighter uppercase relative">
+                FULL INVENTORY
+
+              </h2>
+            </div>
+            <p className="text-white/70 text-xs md:text-lg">Explore 100+ Premium Accounts today!</p>
+          </div>
           <div
             ref={ref}
             className="
@@ -86,7 +91,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
               sm:gap-x-6 sm:gap-y-6
               lg:gap-x-8 lg:gap-y-10
               justify-items-center
-              font-sans
+              font-instrumentSans
             "
           >
             {processedData?.map((item) => {
@@ -98,72 +103,92 @@ const Card: React.FC<CardProps> = ({ data }) => {
                   key={item.id}
                   onClick={() => handleCardClick(String(item.id), item.availabilityStatus, item.accountCode)}
                   className={`
-                    col-span-6 sm:col-span-4 lg:col-span-4
-                    w-full cursor-pointer
+                    col-span-6 sm:col-span-6 lg:col-span-4 xl:col-span-4
+                    w-full h-full cursor-pointer
                     transition-all duration-300
-                    ${inUse ? "opacity-80" : "hover:scale-[1.02]"}
+                    ${inUse ? "" : "hover:scale-[1.02]"}
                   `}
                 >
                   {/* CARD FRAME */}
-                  <div className="rounded-2xl p-[1px] bg-gradient-to-b from-white/40 via-black to-white/40">
-                    <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-black to-[#7A0610]">
+                  <div className="rounded-sm h-full p-[1px] bg-gradient-to-b from-white/40 via-black to-white/40">
+                    <div className="relative h-full rounded-sm overflow-hidden bg-gradient-to-b from-black to-[#7A0610] flex flex-col justify-between">
+                      {inUse && <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />}
 
                       {/* HEADER */}
-                      <div className="flex items-start justify-between px-4 pt-4">
-                        <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between px-2 sm:px-4 pt-4">
+                        <div className="flex items-center gap-1 sm:gap-2">
                           <Image
                             src={getRankImage(item.accountRank)}
-                            width={42}
-                            height={42}
+                            width={0}
+                            height={0}
+                            sizes="100vw"
+                            className="w-7 h-7 sm:w-[42px] sm:h-[42px]"
                             alt="Rank"
                           />
-                          <div>
-                            <p className="text-white font-semibold text-sm">
+                          <div className="flex flex-col gap-0">
+                            <p className="text-white font-semibold text-[0.4rem] sm:text-sm">
                               {item.accountRank} | {item.accountCode}
                             </p>
-                            <span className="inline-flex items-center justify-center
-                              text-xs font-bold text-white bg-red-600
-                              h-5 rounded pl-2 pr-2">
-                              {item.priceTier.code}
+                            <span className="flex items-top justify-top">
+                              <span className="inline-flex items-center justify-center text-center
+                              text-[0.4rem] sm:text-xs font-bold text-white bg-red-600
+                              sm:h-5 h-auto py-0.1 rounded pl-1 pr-1 sm:pl-2 sm:pr-2">
+                                {item.priceTier.code}
+                              </span>
                             </span>
+
                           </div>
                         </div>
 
-                        <span className="flex items-center gap-1 text-blue-400 text-xs cursor-pointer hover:text-blue-300">
+                        <div className="flex items-center justify-center gap-1 text-blue-400 text-[0.4rem] sm:text-xs cursor-pointer hover:text-blue-300">
                           Account Info
-                          <span className="flex items-center justify-center w-3 h-3 rounded-full bg-blue-400 text-black text-[10px] font-bold no-underline">
+                          <span className="flex items-center justify-center w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-400 text-black text-[0.4rem] sm:text-[10px] font-bold no-underline">
                             ?
                           </span>
-                        </span>
+                        </div>
                       </div>
 
                       {/* IMAGE */}
-                      <div className="relative px-4 pt-4">
-                        <AspectRatio ratio={16 / 9}>
-                          <Image
-                            src={item.thumbnail?.imageUrl ?? "/defaultPicture/default.jpg"}
-                            fill
-                            alt="Thumbnail"
-                            className="object-cover rounded-xl"
-                            unoptimized
-                          />
-                        </AspectRatio>
+                      <div className="relative px-2 sm:px-4 pt-4">
+                        <div className="sm:hidden">
+                          <AspectRatio ratio={1 / 1}>
+                            <Image
+                              src={item.thumbnail?.imageUrl ?? "/defaultPicture/default.jpg"}
+                              fill
+                              alt="Thumbnail"
+                              className="object-cover rounded-sm"
+                              unoptimized
+                            />
+                          </AspectRatio>
+                        </div>
+                        <div className="hidden sm:block">
+                          <AspectRatio ratio={16 / 9}>
+                            <Image
+                              src={item.thumbnail?.imageUrl ?? "/defaultPicture/default.jpg"}
+                              fill
+                              alt="Thumbnail"
+                              className="object-cover rounded-sm"
+                              unoptimized
+                            />
+                          </AspectRatio>
+                        </div>
 
                         {/* AVAILABLE BADGE */}
                         {!inUse && (
-                          <div className="absolute top-6 left-6
-                            bg-green-400 text-black
-                            text-xs font-bold px-3 py-1 rounded-md">
+                          <div className="absolute sm:top-6 sm:left-6 top-5 left-4
+                            bg-gradient-to-r from-[#4FDF6D] to-[#BBFD7B] text-black
+                            text-[0.4rem] sm:text-xs px-3 py-1 rounded-sm">
                             Available
                           </div>
+
                         )}
 
                         {/* IN USE OVERLAY */}
                         {inUse && (
-                          <div className="absolute top-6 left-6 flex items-center justify-center
-                            bg-black/70 rounded-xl">
+                          <div className="absolute sm:top-6 sm:left-6 top-5 left-4 flex items-center justify-center z-20
+                            bg-black/70 rounded-sm">
                             <div className="bg-white text-black
-                              px-4 py-2 rounded-md text-sm font-semibold">
+                              sm:px-3 sm:py-1 px-2 py-1 rounded-sm text-[0.4rem] sm:text-xs lg:text-sm">
                               Time Left{" "}
                               {item.currentExpireAt && (
                                 <CountdownTimer
@@ -176,12 +201,12 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       </div>
 
                       {/* FOOTER */}
-                      <div className="px-4 py-4">
+                      <div className="px-2 sm:px-4 sm:py-4 py-1">
                         <div className="inline-flex items-center
-                          bg-black/40 text-white
-                          text-xs px-3 py-1 rounded-md">
+                          bg-white/10 text-white
+                          text-[0.4rem] sm:text-xs px-3 py-1 rounded-sm">
                           Skins Amount |{" "}
-                          <span className="ml-1 font-bold">
+                          <span className="ml-1">
                             {item.skinList.length}
                           </span>
                         </div>
@@ -196,10 +221,10 @@ const Card: React.FC<CardProps> = ({ data }) => {
         </div>
       </section>
 
-      <CardModal
+      {/* <CardModal
         selectedCard={selectedCard}
         onClose={() => setSelectedCard(null)}
-      />
+      /> */}
     </Dialog>
   );
 };

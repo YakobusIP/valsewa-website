@@ -21,6 +21,7 @@ type AccountEntityRequest = {
   priceTier: number;
   skinList: number[];
   isLowRank: boolean;
+  isRecommended: boolean;
 };
 
 type AccountWithSkins = Prisma.AccountGetPayload<{
@@ -41,6 +42,7 @@ type PublicAccount = Prisma.AccountGetPayload<{
     thumbnail: true;
     otherImages: true;
     isLowRank: true;
+    isRecommended: true;
   };
 }>;
 

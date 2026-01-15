@@ -47,6 +47,7 @@ type AccountEntity = {
   priceTier: PriceTier;
   nickname: string;
   isLowRank: boolean;
+  isRecommended: boolean;
 };
 
 export type CarouselSlide = {

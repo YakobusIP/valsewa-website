@@ -36,6 +36,7 @@ model Account {
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   isLowRank              Boolean   @default(false)
+  isRecommended          Boolean @default(false)
 
   priceTier   PriceTier @relation(fields: [priceTierId], references: [id])
   priceTierId Int

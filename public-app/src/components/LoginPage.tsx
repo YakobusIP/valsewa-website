@@ -35,12 +35,12 @@ export default function LoginPage({ onClose }: LoginPageProps) {
 
   return (
     <div
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm lg:px-4"
       onClick={onClose} // click outside to close
     >
       <div
         onClick={handleInnerClick}
-        className="w-full max-w-5xl h-[75vh]"
+        className="w-full max-w-5xl h-[100vh] lg:h-[75vh]"
       >
         <LoginForm onClose={onClose} />
       </div>

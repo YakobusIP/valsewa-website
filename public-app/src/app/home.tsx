@@ -1,19 +1,18 @@
 "use client";
 
 
+import RecommendedSection from "@/components/RecommendedSection";
 import DiscoverSection from "@/components/DiscoverSection";
 import Card from "@/components/Card";
 import Navbar1 from "@/components/Navbar1";
-
 import { AccountEntity, CarouselSlide } from "@/types/account.type";
-
 import { useAccountController } from "@/controllers/useAccountController";
 import Image from "next/image";
 import { FaArrowUp } from "react-icons/fa";
 import NavbarHome from "@/components/NavbarHome";
 import Hero from "@/components/Hero";
-// import Navbar3 from "@/components/Navbar3";
-// import Hero from "@/components/Hero";
+import HowToOrder from "@/components/HowToOrder";
+import NavbarHomeMobile from "@/components/NavbarHomeMobile";
 
 interface Props {
   initialAccount: AccountEntity[];
@@ -38,9 +37,9 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
         <NavbarHome />
       </div>
       <div className="lg:hidden">
-        <Navbar1 />
+        <NavbarHomeMobile />
       </div>
-      <a
+      {/* <a
         href="https://wa.me/6285175343447?text=Halo admin VALSEWA aku butuh bantuan dong"
         target="_blank"
         rel="noopener noreferrer"
@@ -49,22 +48,25 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
         <figure className="w-[120px] h-[120px] fixed bottom-4 right-4 z-50">
           <Image src="/home/kananbawah.png" fill alt="Iconic" />
         </figure>
-      </a>
-      <div
+      </a> */}
+      {/* <div
         className="fixed bottom-4 left-4 z-50 cursor-pointer text-[#DDDDDD] bg-[#A6A6A6B2] p-3 rounded-full"
         onClick={scrollToTop}
       >
         <FaArrowUp size={30} />
-      </div>
+      </div> */}
       <div>
 
         <div className="lg:mx-14 sm:mx-7 mx-2 pt-10 ">
-
           <div className="mt-20">
+            <HowToOrder />
+            <RecommendedSection />
+          </div>
+          <div className="mt-32">
             <DiscoverSection />
           </div>
           {accountList.length > 0 ? (
-            <div className="mt-9 mx-0 pt-10">
+            <div id="card-section" className="mt-9 mx-0 pt-10">
               <Card data={accountList} />
             </div>
           ) : (

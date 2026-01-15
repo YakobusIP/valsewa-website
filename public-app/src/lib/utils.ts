@@ -6,6 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function getRankImageUrl(rank: string): string {
+  if (!rank) return "/rank/unranked.webp";
   const r = rank.toLowerCase();
 
   if (r.includes("iron")) return "/rank/Iron 3.svg";
@@ -16,7 +17,15 @@ export function getRankImageUrl(rank: string): string {
   if (r.includes("diamond")) return "/rank/Diamond 3.svg";
   if (r.includes("ascendant")) return "/rank/Ascendant 3.svg";
   if (r.includes("immortal")) return "/rank/Immortal 3.svg";
-  if (r.includes("radiant")) return "/rank/Radiant 3.svg";
+  if (r.includes("radiant")) return "/rank/Radiant.svg";
 
-  return "/ranks/Unranked.svg";
+  return "/rank/unranked.webp";
+}
+
+export function convertHoursToDays(hours?: number | string | null) {
+  if (!hours || typeof hours !== "number") return undefined;
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+
+  return `${days}d:${remainingHours}h`;
 }

@@ -24,6 +24,7 @@ type AccountEntity = {
   priceTier: PriceTier;
   skinList: Skin[];
   isLowRank: boolean;
+  isRecommended: boolean;
 };
 
 type AccountEntityRequest = Omit<

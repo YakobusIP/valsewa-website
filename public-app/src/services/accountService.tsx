@@ -7,13 +7,12 @@ export async function fetchAccounts(
   sortBy: string
 ) {
   try {
-    const url = `${
-      process.env.NEXT_PUBLIC_AXIOS_BASE_URL
-    }/api/accounts/public?page=1&limit=1000&q=${encodeURIComponent(
-      search
-    )}&sortBy=${encodeURIComponent(sortBy)}&direction=${encodeURIComponent(
-      direction
-    )}`;
+    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL
+      }/api/accounts/public?page=1&limit=1000&q=${encodeURIComponent(
+        search
+      )}&sortBy=${encodeURIComponent(sortBy)}&direction=${encodeURIComponent(
+        direction
+      )}`;
     const response = await axios.get(url);
     return response.data.data;
   } catch (error) {
@@ -34,15 +33,24 @@ export async function fetchCarousel() {
 }
 
 export async function fetchAccountById(
-  id: string 
+  id: string
 ): Promise<AccountEntity | null> {
   try {
     const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/${id}`;
     const response = await axios.get(url);
-    console.log("a",response.data)
     return response.data;
   } catch (error) {
-    console.error("Error fetching account detail:", error);
     return null;
+  }
+}
+
+export async function fetchRecommendedAccounts(): Promise<AccountEntity[]> {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/recommended`;
+    const response = await axios.get(url);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching recommended accounts:", error);
+    return [];
   }
 }

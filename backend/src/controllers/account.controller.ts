@@ -67,6 +67,20 @@ export class AccountController {
     }
   };
 
+  
+  getRecommendedAccounts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const data = await this.accountService.getRecommendedAccounts();
+      return res.json({ data });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getAccountById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const account = await this.accountService.getAccountById(

@@ -27,6 +27,7 @@ import { CirclePlusIcon } from "lucide-react";
 import CreateUserPage from "../components/dashboard/CreateUserModal";
 import UserListModal from "@/components/dashboard/UserListModal";
 import VoucherModal from "@/components/dashboard/VoucherModal";
+import TransactionListModal from "@/components/dashboard/TransactionListModal";
 
 const PAGINATION_SIZE = 100;
 
@@ -34,7 +35,8 @@ export default function Dashboard() {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
   const [openCreateUserAccount, setOpenCreateUserAccount] = useState(false);
   const [openUserList, setOpenUserList] = useState(false);
-  const [openVoucherModal, setopenVoucherModal] = useState(false);
+  const [openVoucherModal, setOpenVoucherModal] = useState(false);
+  const [openTransactionModal, setOpenTransactionModal] = useState(false);
 
 
   const [isLoadingStatistics, setIsLoadingStatistics] = useState(false);
@@ -248,17 +250,24 @@ export default function Dashboard() {
                   Add New Account
                 </Button>
                 <Button
-                className="w-full xl:w-fit"
+                  className="w-full xl:w-fit"
                   onClick={() => setOpenUserList(true)}
                 >
                   User Account List
                 </Button>
 
                 <Button
-                className="w-full xl:w-fit"
-                  onClick={() => setopenVoucherModal(true)}
+                  className="w-full xl:w-fit"
+                  onClick={() => setOpenVoucherModal(true)}
                 >
                   Vouchers
+                </Button>
+
+                <Button
+                  className="w-full xl:w-fit"
+                  onClick={() => setOpenTransactionModal(true)}
+                >
+                  See Transactions
                 </Button>
               </Fragment>
             }
@@ -283,9 +292,12 @@ export default function Dashboard() {
           setOpenCreateUserAccount(true);
         }}
       />
-      <VoucherModal open={openVoucherModal} 
-      onOpenChange={setopenVoucherModal}/>
-      
+      <VoucherModal open={openVoucherModal}
+        onOpenChange={setOpenVoucherModal} />
+
+      <TransactionListModal open={openTransactionModal}
+        onOpenChange={setOpenTransactionModal} />
+
 
     </Fragment>
   );
