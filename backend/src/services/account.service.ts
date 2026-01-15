@@ -10,6 +10,7 @@ import {
 import { prisma } from "../lib/prisma";
 import {
   AccountEntityRequest,
+  AccountSearchFilters,
   AccountWithSkins,
   GetAvailableAccountsRequest,
   PublicAccount,
@@ -262,6 +263,148 @@ export class AccountService {
     }
   }
 
+  private bucketToRange(bucket?: string) {
+    if (!bucket) return undefined;
+    const [min, max] = bucket.split("-").map(Number);
+    return { min, max };
+  }
+
+  private filterAccounts(filters: AccountSearchFilters): Prisma.AccountWhereInput {
+    const {ranks, minPrice, maxPrice, lowTierOnly, priceTierCode, query, totalSkin} = filters;
+
+    const where: Prisma.AccountWhereInput = {
+      availabilityStatus: { in: ["AVAILABLE", "IN_USE"]},
+    };
+
+    where.priceTier = {
+      is: {
+        code: filters.priceTierCode
+      }
+    };
+
+    if (ranks?.length) {
+      where.accountRank = {in: ranks};
+    }
+
+    if (typeof lowTierOnly === "boolean") {
+      where.isLowRank = lowTierOnly;
+    }
+
+    const minPrices = Number.isFinite(filters.minPrice as number) ? filters.minPrice : undefined;
+    const maxPrices = Number.isFinite(filters.maxPrice as number) ? filters.maxPrice : undefined;
+
+    const hasPrice = minPrices != undefined || maxPrices != undefined;
+    if (hasPrice) {
+      const min = minPrice ?? 0;
+      const max = maxPrice ?? 99999999999;
+
+      if (lowTierOnly) {
+        where.priceTier = {
+          priceList: {some: {lowPrice: {gte: min, lte: max}}}
+        };
+      } else if (!lowTierOnly) {
+        where.priceTier = {
+          priceList: {some: {normalPrice: {gte: min, lte: max}}}
+        };
+      } else {
+        where.OR = [
+          {
+            isLowRank: false,
+            priceTier: { priceList: { some: { normalPrice: { gte: min, lte: max } } } },
+          },
+          {
+            isLowRank: true,
+            priceTier: { priceList: { some: { lowPrice: { gte: min, lte: max } } } },
+          },
+        ]
+      }
+    }
+
+    const range = this.bucketToRange(totalSkin);
+    if (range) {
+      (where as any).skinCount = {gte: range.min, lte: range.max}
+    }
+
+    if (query && query.trim().length > 0) {
+      where.skinList = {
+        some: {
+          OR: [
+            { name: { contains: query, mode: "insensitive" } },
+            { keyword: { contains: query, mode: "insensitive" } },
+          ]
+        }
+      }
+    }
+
+    return where;
+  };
+
+  searchPublicAccounts = async (
+    page: number,
+    limit: number,
+    filters: AccountSearchFilters
+  ): Promise<[any[], any]> => {
+    try {
+      const { sortBy, direction = "asc" } = filters;
+
+      const where = this.filterAccounts(filters);
+
+      const skip = (page - 1) * limit;
+      const take = limit;
+
+      const orderBy: Prisma.AccountOrderByWithRelationInput =
+        sortBy === "availability"
+          ? { availabilityStatus: direction }
+          : { createdAt: "desc" };
+      
+      const [total, items] = await Promise.all([
+        prisma.account.count({ where }),
+        prisma.account.findMany({
+          where,
+          orderBy,
+          skip,
+          take,
+          select: {
+            id: true,
+            nickname: true,
+            accountCode: true,
+            description: true,
+            accountRank: true,
+            availabilityStatus: true,
+            currentExpireAt: true,
+            totalRentHour: true,
+            skinList: true,
+            priceTier: { include: { priceList: true } },
+            thumbnail: true,
+            otherImages: true,
+            isLowRank: true,
+          },
+        }),
+      ]);
+
+      let sortedItems: any[] = items;
+
+      if (sortBy === "rank") {
+        sortedItems = this.sortAccountsByRank(sortedItems as any, direction);
+      } else if (sortBy === "price_tier") {
+        sortedItems = this.sortAccountsByPriceTier(sortedItems as any, direction);
+      } else if (sortBy === "id_tier") {
+        sortedItems = this.sortAccountsByIdTierPublic(sortedItems as any);
+      }
+
+      const metadata = {
+        page,
+        limit,
+        pageCount: Math.ceil(total / limit),
+        total,
+      };
+
+      return [sortedItems, metadata];
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   getAllAccounts = async (
     page: number,
     limit: number,
@@ -351,6 +494,7 @@ export class AccountService {
           availabilityStatus: true,
           currentExpireAt: true,
           totalRentHour: true,
+          skinCount: true,
           skinList: true,
           priceTier: true,
           thumbnail: true,
@@ -527,6 +671,7 @@ export class AccountService {
 
   createAccount = async (data: AccountEntityRequest) => {
     try {
+      const skinCount = data.skinList.length;
       const skinConnect =
         Array.isArray(data.skinList) && data.skinList.length > 0
           ? { connect: data.skinList.map((id) => ({ id })) }
@@ -535,6 +680,7 @@ export class AccountService {
       return await prisma.account.create({
         data: {
           ...data,
+          skinCount,
           skinList: skinConnect,
           thumbnail: { connect: { id: data.thumbnail } },
           availabilityStatus: data.availabilityStatus as Status,
@@ -780,6 +926,43 @@ export class AccountService {
     }
   };
 
+  
+
+private async refreshSkinCount(
+  tx: Prisma.TransactionClient,
+  accountId: number
+): Promise<Account & { skinList: Skin[] }> {
+
+  const result = await tx.account.findUnique({
+    where: { id: accountId },
+    select: { _count: { select: { skinList: true } } }
+  });
+
+  const skinCount = result?._count.skinList ?? 0;
+
+  
+  const after = await tx.account.findUnique({
+    where: { id: accountId },
+    select: {
+      skinCount: true,
+      _count: { select: { skinList: true } },
+      skinList: { select: { id: true } }
+    }
+  });
+
+  console.log("DEBUG skins:", after?.skinList.length);
+  console.log("DEBUG _count:", after?._count.skinList);
+
+
+  return tx.account.update({
+    where: { id: accountId },
+    data: { skinCount },
+    include: { skinList: true }
+  });
+}
+
+
+
   async addSkinsToAccount(
     accountId: number,
     skinIds: number[]
@@ -795,15 +978,18 @@ export class AccountService {
 
       await this.ensureSkinsExist(skinIds);
 
-      const updated = await prisma.account.update({
-        where: { id: accountId },
-        data: {
-          skinList: {
-            connect: skinIds.map((id) => ({ id }))
+      const updated = await prisma.$transaction(async (tx) => {
+        await tx.account.update({
+          where: {id: accountId},
+          data: {
+            skinList: {
+              connect: skinIds.map((id) => ({id}))
+            }
           }
-        },
-        include: { skinList: true }
-      });
+        })
+
+        return this.refreshSkinCount(tx, accountId);
+      })
 
       return updated;
     } catch (error) {
@@ -834,15 +1020,18 @@ export class AccountService {
 
       await this.getAccountById(accountId);
 
-      const updated = await prisma.account.update({
-        where: { id: accountId },
-        data: {
-          skinList: {
-            disconnect: skinIds.map((id) => ({ id }))
+      const updated = await prisma.$transaction(async (tx) => {
+        await tx.account.update({
+          where: {id: accountId},
+          data: {
+            skinList: {
+              disconnect: skinIds.map((id) => ({id}))
+            }
           }
-        },
-        include: { skinList: true }
-      });
+        })
+
+        return this.refreshSkinCount(tx, accountId);
+      })
 
       return updated;
     } catch (error) {

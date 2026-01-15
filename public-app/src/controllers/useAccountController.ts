@@ -9,6 +9,7 @@ import { useDebounce } from "use-debounce";
 export function useAccountController(initialAccount: AccountEntity[]) {
   const [accountList, setAccountList] = useState(initialAccount);
   const [searchAccount, setSearchAccount] = useState("");
+  const [priceTierAccount, setPriceTierAccount] = useState("");
   const [sortAccount, setSortAccount] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
   const [debouncedSearch] = useDebounce(searchAccount, 1000);

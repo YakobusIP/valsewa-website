@@ -42,6 +42,7 @@ type AccountEntity = {
   totalRentHour: number;
   password: string;
   skinList: Skin[];
+  skinCount: number;
   stale_password: boolean;
   thumbnail: UploadResponse;
   otherImages: UploadResponse[] | null;
