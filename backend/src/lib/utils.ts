@@ -70,3 +70,26 @@ export const parseToLocalDate = (dateStr?: string): Date | null => {
 export const parseToLocalDateStr = (date: Date): string => {
   return dayjs(date).tz(WIB_TZ).format(DATE_FORMAT_WITH_TIMEZONE);
 };
+export const parseBooleanOptional = (value: unknown) => {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (value === "true" || value === true) return true;
+  if (value === "false" || value === false) return false;
+  return undefined;
+}
+
+
+export const parseStringArray = (value: unknown) => {
+  if (value === undefined || value === null) return undefined;
+
+  const arr =
+    Array.isArray(value) ? value :
+    typeof value === "string" ? [value] :
+    [];
+
+  const cleaned = arr
+    .filter((v): v is string => typeof v === "string")
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+  return cleaned.length ? cleaned : undefined;
+}

@@ -4,6 +4,7 @@ import { BadRequestError, UnprocessableEntityError } from "../lib/error";
 import { RankService } from "../services/rank.service";
 import { Prisma } from "@prisma/client";
 import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
+import { parseBooleanOptional, parseStringArray } from "../lib/utils";
 
 export class AccountController {
   constructor(
@@ -324,4 +325,59 @@ export class AccountController {
       return next(error);
     }
   };
+ 
+  searchPublicAccounts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const pageRaw = req.query.page as string;
+      const limitRaw = req.query.limit as string;
+
+      if (pageRaw == null || limitRaw == null) {
+        throw new UnprocessableEntityError("Pagination query params missing!");
+      }
+
+      const page = parseInt(pageRaw);
+      const limit = parseInt(limitRaw);
+
+      const ranks = parseStringArray(req.query.ranks)
+
+      const q = req.query.q as string;
+      const minPrice = parseInt(req.query.minPrice as string);
+      const maxPrice = parseInt(req.query.maxPrice as string);
+      const totalSkin = req.query.totalSkin as string;
+      const lowTierOnly = parseBooleanOptional(req.query.lowTierOnly);
+      const priceTierId = parseInt(req.query.priceTierId as string);
+      
+      const sortBy = req.query.sortBy as string;
+      const direction = req.query.direction as Prisma.SortOrder;
+
+      const filters = {
+        ranks,
+        minPrice,
+        maxPrice,
+        totalSkin,
+        lowTierOnly,
+        priceTierId,
+        query: q,
+        sortBy,
+        direction,
+      };
+
+      const [data, metadata] = await this.accountService.searchPublicAccounts(
+        page,
+        limit,
+        filters
+      );
+
+
+
+      return res.json({ data, metadata });
+    } catch (error) {
+      return next(error);
+    }
+  };
+  
 }

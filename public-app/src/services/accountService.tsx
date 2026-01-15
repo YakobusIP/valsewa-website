@@ -56,3 +56,18 @@ export async function fetchRecommendedAccounts(): Promise<AccountEntity[]> {
     return [];
   }
 }
+
+export async function fetchAccountByTier(
+  id: string,
+  isLowTier: string
+): Promise<AccountEntity | null> {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/search?page=1&limit=1000&priceTierCode=${id}&isLowRank=${isLowTier}`;
+    const response = await axios.get(url);
+    console.log("Fetch Account By Tier",response.data)
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+    return null;
+  }
+}

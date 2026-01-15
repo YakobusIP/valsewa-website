@@ -664,6 +664,140 @@ paths:
                   metadata:
                     $ref: "#/components/schemas/Metadata"
 
+  /api/accounts/public/search:
+    get:
+      tags:
+        - Accounts
+      summary: "Search public accounts with filters (rank, price, skins, tier flag) and pagination."
+      description: >
+        Retrieves a paginated list of public accounts (AVAILABLE / IN_USE) with optional filters.
+        Supports rank filtering via query array, optional price range, total skin bucket, and a search query.
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+          description: "The page number (1-based)."
+
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 12
+          description: "The number of accounts per page."
+
+        - in: query
+          name: ranks
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+          examples:
+            singleRank:
+              summary: "Single rank"
+              value: ["gold 1"]
+            multipleRanks:
+              summary: "Multiple ranks"
+              value: ["gold 1", "gold 2", "platinum 1"]
+          description: >
+            Filter accounts by rank. Send as query array.
+            Example: ?ranks=gold%201&ranks=gold%202
+
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+          example: "reaver"
+          description: >
+            Optional search query. 
+
+        - in: query
+          name: minPrice
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          example: 0
+          description: "Minimum price (IDR)."
+
+        - in: query
+          name: maxPrice
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          example: 50000
+          description: "Maximum price (IDR)."
+
+        - in: query
+          name: totalSkin
+          required: false
+          schema:
+            type: string
+            enum: ["0-5","6-10", "11-15", "16-20"]
+          example: "10-15"
+          description: >
+            Total skins bucket. Users cannot customize min/max; must be one of the predefined ranges.
+
+        - in: query
+          name: lowTierOnly
+          required: false
+          schema:
+            type: boolean
+          example: false
+          description: >
+            Boolean flag filter.
+
+        - in: query
+          name: priceTierId
+          required: false
+          schema:
+            type: string
+          example: "A"
+          description: "Price Tier Id."
+
+        - in: query
+          name: sortBy
+          required: false
+          schema:
+            type: string
+            enum: ["availability", "rank", "price_tier", "id_tier"]
+          example: "availability"
+          description: "Field name to sort by."
+
+        - in: query
+          name: direction
+          required: false
+          schema:
+            type: string
+            enum: ["asc", "desc"]
+          example: "asc"
+          description: "Sort order (asc or desc)."
+
+      responses:
+        "200":
+          description: "A list of public accounts with pagination metadata."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicAccount"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+
   /api/accounts/{id}:
     get:
       tags:
