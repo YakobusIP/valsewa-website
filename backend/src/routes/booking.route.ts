@@ -80,6 +80,11 @@ class BookingRouter {
       schedulerMiddleware,
       this.bookingController.syncCompletedBookings
     );
+    this.router.post(
+      "/sync-account-availability",
+      schedulerMiddleware,
+      this.bookingController.syncAccountAvailability
+    );
     this.router.get(
       "/sync-status",
       schedulerMiddleware,

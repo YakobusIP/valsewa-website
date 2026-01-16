@@ -10,6 +10,7 @@ import {
   PriceTier,
   Prisma,
   Provider,
+  Status,
   Type,
   Voucher
 } from "@prisma/client";
@@ -33,6 +34,7 @@ import {
 } from "../types/booking.type";
 import { FaspayClient } from "../faspay/faspay.client";
 import { Metadata } from "../types/metadata.type";
+import { env } from "../lib/env";
 
 export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<
   PaymentStatus,
@@ -72,9 +74,6 @@ export const PAYMENT_METHODS_MAP: Record<
 };
 
 export class BookingService {
-  private readonly holdBookingTimeInMinutes: number = 15;
-  private readonly gracePeriodInMillis: number = 30000;
-
   constructor(private readonly faspayClient: FaspayClient) {}
 
   getAllBookings = async (
@@ -316,9 +315,12 @@ export class BookingService {
       }
 
       const account = await prisma.account.findUnique({
-        where: { id: accountId }
+        where: { 
+          id: accountId,
+          availabilityStatus: { not: Status.NOT_AVAILABLE }
+        }
       });
-      if (!account) throw new NotFoundError("Account not found!");
+      if (!account) throw new NotFoundError("Account not found or not available!");
 
       const priceList = await prisma.priceList.findUnique({
         where: { id: priceListId }
@@ -341,7 +343,7 @@ export class BookingService {
       const immediate = !startAt;
 
       const now = new Date();
-      const bookingExpiredAt = addMinutes(now, this.holdBookingTimeInMinutes);
+      const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
       const bookingStartAt = immediate ? bookingExpiredAt : startAt;
       const bookingEndAt = addHours(
         bookingStartAt,
@@ -426,7 +428,7 @@ export class BookingService {
       }
 
       if (
-        booking.expiredAt < new Date(Date.now() - this.gracePeriodInMillis)
+        booking.expiredAt < new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS)
       ) {
         await prisma.booking.update({
           where: { id: booking.id },
@@ -624,7 +626,7 @@ export class BookingService {
 
   syncExpiredBookings = async () => {
     try {
-      const nowWithGrace = new Date(Date.now() - this.gracePeriodInMillis);
+      const nowWithGrace = new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS);
 
       const count = await prisma.$transaction(async (tx) => {
         const expiredBookings = await tx.booking.findMany({
@@ -701,6 +703,54 @@ export class BookingService {
       });
 
       return { count };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  syncAccountAvailability = async () => {
+    try {
+      const now = new Date();
+
+      const reservedAccountIds = await prisma.booking.findMany({
+        where: {
+          status: BookingStatus.RESERVED,
+          startAt: { lt: now },
+          endAt: { gt: now },
+        },
+        distinct: ['accountId'],
+        select: { accountId: true },
+      });
+
+      const activeAccountIds = reservedAccountIds.map(v => v.accountId);
+
+      // Mark reserved accounts as IN_USE (only if not already)
+      const markedInUse = activeAccountIds.length > 0
+        ? (await prisma.account.updateMany({
+            where: {
+              id: { in: activeAccountIds },
+              availabilityStatus: { not: Status.IN_USE },
+            },
+            data: {
+              availabilityStatus: Status.IN_USE,
+            },
+          })).count
+        : 0;
+
+      // Mark accounts as AVAILABLE if they are IN_USE but no longer reserved
+      const markedAvailable = (await prisma.account.updateMany({
+        where: {
+          availabilityStatus: Status.IN_USE,
+          ...(activeAccountIds.length > 0 && {
+            id: { notIn: activeAccountIds },
+          }),
+        },
+        data: {
+          availabilityStatus: Status.AVAILABLE,
+        },
+      })).count;
+
+      return { markedInUse, markedAvailable }
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -876,6 +926,20 @@ export class BookingService {
       data: paymentUpdate
     });
     await tx.booking.update({ where: { id: booking.id }, data: bookingUpdate });
+
+    if (paymentStatus === PaymentStatus.SUCCESS) {
+      await tx.account.update({
+        where: {
+          id: booking.accountId,
+        },
+        data: {
+          totalRentHour: { 
+            increment: this.parseDurationToHours(booking.duration) * booking.quantity 
+          },
+          rentHourUpdated: true,
+        }
+      })
+    }
 
     return this.mapPaymentDataToPaymentResponse(updatedPayment);
   };

@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction, response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { Provider, PaymentMethodType } from "@prisma/client";
 import { BookingService } from "../services/booking.service";
 import { BadRequestError, ForbiddenError } from "../lib/error";
@@ -9,6 +9,7 @@ import {
   toFaspayDate
 } from "../faspay/faspay.client";
 import { PaymentMethodRequest } from "../types/booking.type";
+import { bookingSyncScheduler } from "../lib/schedulers/booking-sync.scheduler";
 
 export class BookingController {
   constructor(
@@ -224,6 +225,34 @@ export class BookingController {
       const result = await this.bookingService.syncCompletedBookings();
 
       return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+  
+  syncAccountAvailability = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await this.bookingService.syncAccountAvailability();
+  
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  getSyncStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const status = await bookingSyncScheduler.getStatus();
+
+      return res.status(200).json(status);
     } catch (error) {
       return next(error);
     }
