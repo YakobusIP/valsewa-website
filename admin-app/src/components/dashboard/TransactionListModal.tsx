@@ -1,16 +1,28 @@
+import { useEffect, useMemo, useState } from "react";
+
+import { bookingService } from "@/services/transaction.service";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useEffect, useMemo, useState } from "react";
-import { bookingService } from "@/services/transaction.service";
-import { BookingEntity, BOOKING_STATUS, CreateBookingRequest, UpdateBookingRequest, PAYMENT_STATUS, PaymentEntity } from "@/types/booking.type";
-import TransactionStatisticsGrid from "./TransactionStatisticGrid";
+
+import {
+  BOOKING_STATUS,
+  BookingEntity,
+  CreateBookingRequest,
+  PAYMENT_STATUS,
+  PaymentEntity,
+  UpdateBookingRequest
+} from "@/types/booking.type";
+
 import { format } from "date-fns";
+
+import TransactionStatisticsGrid from "./TransactionStatisticGrid";
 
 type Props = {
   open: boolean;
@@ -32,13 +44,15 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<BookingEntity | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<BookingEntity | null>(
+    null
+  );
 
   const [editTotalValue, setEditTotalValue] = useState<number>(0);
 
   const [createForm, setCreateForm] = useState<CreateBookingRequest>({
     accountCode: "",
-    totalValue: 0,
+    totalValue: 0
   });
 
   useEffect(() => {
@@ -72,7 +86,10 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
         if (datePreset === "1D") from.setDate(now.getDate() - 1);
         if (datePreset === "7D") from.setDate(now.getDate() - 7);
         if (datePreset === "30D") from.setDate(now.getDate() - 30);
-        const res = await bookingService.getAccountRented(formatDateOnly(from), formatDateOnly(now));
+        const res = await bookingService.getAccountRented(
+          formatDateOnly(from),
+          formatDateOnly(now)
+        );
         setStatistics(res.data);
         return;
       }
@@ -80,7 +97,10 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       if (dateFrom && dateTo) {
         const from = new Date(dateFrom);
         const to = new Date(dateTo);
-        const res = await bookingService.getAccountRented(formatDateOnly(from), formatDateOnly(to));
+        const res = await bookingService.getAccountRented(
+          formatDateOnly(from),
+          formatDateOnly(to)
+        );
         setStatistics(res.data);
         return;
       }
@@ -88,7 +108,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       const res = await bookingService.getAccountRented();
       setStatistics(res.data);
       return;
-
     } catch (err) {
       console.error(err);
       setError("Failed to load transactions");
@@ -149,10 +168,13 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     if (!selectedBooking) return;
 
     try {
-      await bookingService.update(selectedBooking.id, { totalValue: editTotalValue }), {
-        // backend will only update what you send
-        totalValue: editTotalValue,
-      } as UpdateBookingRequest;
+      await bookingService.update(selectedBooking.id, {
+        totalValue: editTotalValue
+      }),
+        {
+          // backend will only update what you send
+          totalValue: editTotalValue
+        } as UpdateBookingRequest;
 
       setIsEditOpen(false);
       setSelectedBooking(null);
@@ -169,7 +191,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       setIsCreateOpen(false);
       setCreateForm({
         accountCode: "",
-        totalValue: 0,
+        totalValue: 0
       });
       fetchBookings();
     } catch (err) {
@@ -186,7 +208,12 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   };
 
   const formatCurrency = (v: number | null) =>
-    v == null ? "-" : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(v);
+    v == null
+      ? "-"
+      : new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR"
+        }).format(v);
 
   const formatDateTime = (d: Date | string | null) =>
     d ? new Date(d).toLocaleString("id-ID") : "-";
@@ -198,9 +225,13 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       EXPIRED: "bg-gray-500/10 text-gray-500",
       FAILED: "bg-red-500/10 text-red-500",
       CANCELLED: "bg-red-500/10 text-red-500",
-      COMPLETED: "bg-green-500/10 text-green-600",
+      COMPLETED: "bg-green-500/10 text-green-600"
     };
-    return <span className={`px-2 py-0.5 rounded text-xs ${map[status]}`}>{status}</span>;
+    return (
+      <span className={`px-2 py-0.5 rounded text-xs ${map[status]}`}>
+        {status}
+      </span>
+    );
   };
   const renderPaymentStatus = (status?: string | null) => {
     if (!status) return "-";
@@ -213,7 +244,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       PENDING: "bg-yellow-500/10 text-yellow-600",
       FAILED: "bg-red-500/10 text-red-500",
       REFUNDED: "bg-purple-500/10 text-purple-600",
-      EXPIRED: "bg-gray-500/10 text-gray-500",
+      EXPIRED: "bg-gray-500/10 text-gray-500"
     };
     return (
       <span
@@ -233,7 +264,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       return bTime - aTime;
     })[0];
   };
-
 
   return (
     <>
@@ -257,17 +287,49 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
               onChange={(e) => setSearch(e.target.value)}
               className="w-[240px]"
             />
-            <Button size="sm" variant={datePreset === "1D" ? "default" : "outline"} onClick={() => setDatePreset("1D")}>1 Day</Button>
-            <Button size="sm" variant={datePreset === "7D" ? "default" : "outline"} onClick={() => setDatePreset("7D")}>7 Days</Button>
-            <Button size="sm" variant={datePreset === "30D" ? "default" : "outline"} onClick={() => setDatePreset("30D")}>30 Days</Button>
+            <Button
+              size="sm"
+              variant={datePreset === "1D" ? "default" : "outline"}
+              onClick={() => setDatePreset("1D")}
+            >
+              1 Day
+            </Button>
+            <Button
+              size="sm"
+              variant={datePreset === "7D" ? "default" : "outline"}
+              onClick={() => setDatePreset("7D")}
+            >
+              7 Days
+            </Button>
+            <Button
+              size="sm"
+              variant={datePreset === "30D" ? "default" : "outline"}
+              onClick={() => setDatePreset("30D")}
+            >
+              30 Days
+            </Button>
 
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border rounded px-2 h-9" />
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border rounded px-2 h-9" />
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="border rounded px-2 h-9"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="border rounded px-2 h-9"
+            />
 
-            <Button size="sm" variant="ghost" onClick={resetFilter}>Reset</Button>
+            <Button size="sm" variant="ghost" onClick={resetFilter}>
+              Reset
+            </Button>
 
             <div className="ml-auto">
-              <Button onClick={() => setIsCreateOpen(true)}>+ Create Booking</Button>
+              <Button onClick={() => setIsCreateOpen(true)}>
+                + Create Booking
+              </Button>
             </div>
           </div>
 
@@ -297,17 +359,31 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                     <td className="px-3 py-2">{b.customerId ?? "-"}</td>
                     <td className="px-3 py-2">{b.accountId ?? "-"}</td>
                     <td className="px-3 py-2">{formatCurrency(b.mainValue)}</td>
-                    <td className="px-3 py-2">{formatCurrency(b.othersValue)}</td>
-                    <td className="px-3 py-2 font-semibold">{formatCurrency(b.totalValue)}</td>
-                    <td className="px-3 py-2 font-semibold">{b.duration ?? "-"}</td>
-                    <td className="px-3 py-2">{renderBookingStatus(b.status)}</td>
+                    <td className="px-3 py-2">
+                      {formatCurrency(b.othersValue)}
+                    </td>
+                    <td className="px-3 py-2 font-semibold">
+                      {formatCurrency(b.totalValue)}
+                    </td>
+                    <td className="px-3 py-2 font-semibold">
+                      {b.duration ?? "-"}
+                    </td>
+                    <td className="px-3 py-2">
+                      {renderBookingStatus(b.status)}
+                    </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">
                       {getLatestPayment(b.payments)?.paidAt
-                        ? renderPaymentStatus(getLatestPayment(b.payments)!.status)
+                        ? renderPaymentStatus(
+                            getLatestPayment(b.payments)!.status
+                          )
                         : "-"}
                     </td>
                     <td className="px-3 py-2">
-                      <Button size="sm" variant="outline" onClick={() => handleOpenEdit(b)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleOpenEdit(b)}
+                      >
                         Edit Total
                       </Button>
                     </td>
@@ -335,7 +411,9 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
             />
 
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" onClick={() => setIsEditOpen(false)}>Cancel</Button>
+              <Button variant="ghost" onClick={() => setIsEditOpen(false)}>
+                Cancel
+              </Button>
               <Button onClick={handleUpdateTotalValue}>Save</Button>
             </div>
           </div>
@@ -350,7 +428,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
           </DialogHeader>
 
           <div className="space-y-4">
-
             {/* Account Code */}
             <div className="space-y-1">
               <label className="text-sm font-medium">Account Code</label>
@@ -385,22 +462,15 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
 
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="ghost"
-                onClick={() => setIsCreateOpen(false)}
-              >
+              <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>
                 Cancel
               </Button>
 
-              <Button onClick={handleCreateBooking}>
-                Create Booking
-              </Button>
+              <Button onClick={handleCreateBooking}>Create Booking</Button>
             </div>
-
           </div>
         </DialogContent>
       </Dialog>
-
     </>
   );
 }

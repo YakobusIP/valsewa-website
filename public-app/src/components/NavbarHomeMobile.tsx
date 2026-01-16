@@ -1,15 +1,19 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
+import { useAuth } from "@/hooks/useAuth";
+
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+
 import LoginPage from "./LoginPage";
-import { useAuth } from "@/hooks/useAuth";
 
 const NavbarHomeMobile = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
-  const [activeBrand, setActiveBrand] = useState<"valsewa" | "valjubel" | "valjoki">("valsewa");
-
+  const [activeBrand, setActiveBrand] = useState<
+    "valsewa" | "valjubel" | "valjoki"
+  >("valsewa");
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
@@ -26,20 +30,23 @@ const NavbarHomeMobile = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-
-
   return (
-    <div className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${isScrolled
-      ? "bg-black shadow-md shadow-black/20"
-      : "bg-transparent"
-      }`}>
+    <div
+      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
+        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+      }`}
+    >
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-3 sm:px-6 lg:px-12">
-
         {/* LEFT */}
         <div className="flex items-center flex-1">
           <Link href="#">
             <div className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/10 transition">
-              <Image src="/header/Frame.svg" alt="Search" width={18} height={18} />
+              <Image
+                src="/header/Frame.svg"
+                alt="Search"
+                width={18}
+                height={18}
+              />
             </div>
           </Link>
         </div>
@@ -60,11 +67,15 @@ const NavbarHomeMobile = () => {
 
         {/* RIGHT */}
         <div className="flex items-center justify-end gap-2 flex-1">
-
           {/* TOP UP */}
           <Link href="https://valforum.com/top-up">
             <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
-              <Image src="/header/Diamond.svg" alt="Top Up" width={18} height={18} />
+              <Image
+                src="/header/Diamond.svg"
+                alt="Top Up"
+                width={18}
+                height={18}
+              />
             </div>
           </Link>
 
@@ -95,7 +106,6 @@ const NavbarHomeMobile = () => {
             </button>
           )}
         </div>
-
 
         {/* LOGIN POPUP */}
         {isComponentOpen && (

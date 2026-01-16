@@ -2,20 +2,22 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { VoucherEntity, voucherService } from "@/services/voucher.service";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, Plus } from "lucide-react";
 
-import { voucherService, VoucherEntity } from "@/services/voucher.service";
-import VoucherCreateModal from "./VoucherCreateModal";
 import { toast } from "@/hooks/useToast";
-import { formatNumeric } from "@/utils/formatCurrency";
 
+import { formatNumeric } from "@/utils/formatCurrency";
+import { Loader2, Plus, Trash2 } from "lucide-react";
+
+import VoucherCreateModal from "./VoucherCreateModal";
 
 type VoucherModalProps = {
   open: boolean;
@@ -35,10 +37,9 @@ export default function VoucherModal({
       setLoading(true);
       const res = await voucherService.fetchAll(1, 100);
       setVouchers(res.data);
-
     } catch (error) {
       const errorMessage =
-            error instanceof Error ? error.message : "Failed to load vouchers";
+        error instanceof Error ? error.message : "Failed to load vouchers";
       toast({
         variant: "destructive",
         title: "Failed to load vouchers",
@@ -65,10 +66,9 @@ export default function VoucherModal({
         title: "Deleted",
         description: "Voucher removed successfully"
       });
-    
     } catch (error) {
       const errorMessage =
-            error instanceof Error ? error.message : "Failed to remove voucher";
+        error instanceof Error ? error.message : "Failed to remove voucher";
       toast({
         variant: "destructive",
         title: "Delete failed",
@@ -78,58 +78,52 @@ export default function VoucherModal({
   };
 
   const handleToggle = async (id: number) => {
-  try {
-    await voucherService.toggleStatus(id);
+    try {
+      await voucherService.toggleStatus(id);
 
-    // Update UI instantly (no need refetch)
-    setVouchers((prev) =>
-      prev.map((v) =>
-        v.id === id ? { ...v, isValid: !v.isValid } : v
-      )
-    );
+      // Update UI instantly (no need refetch)
+      setVouchers((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, isValid: !v.isValid } : v))
+      );
 
-    toast({
-      title: "Updated",
-      description: "Voucher status changed"
-    });
-    
-  } catch (error) {
-    const errorMessage =
-            error instanceof Error ? error.message : "Failed to update voucher";
+      toast({
+        title: "Updated",
+        description: "Voucher status changed"
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update voucher";
       toast({
         variant: "destructive",
         title: "Failed",
         description: errorMessage || "Unknown error"
       });
-  }
-};
+    }
+  };
 
-const handleToggleVisibility = async (id: number) => {
-  try {
-    await voucherService.toggleStatusVisibility(id);
+  const handleToggleVisibility = async (id: number) => {
+    try {
+      await voucherService.toggleStatusVisibility(id);
 
-    // Update UI instantly (no need refetch)
-    setVouchers((prev) =>
-      prev.map((v) =>
-        v.id === id ? { ...v, isVisible: !v.isVisible } : v
-      )
-    );
+      // Update UI instantly (no need refetch)
+      setVouchers((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, isVisible: !v.isVisible } : v))
+      );
 
-    toast({
-      title: "Updated",
-      description: "Voucher visibility changed"
-    });
-    
-  } catch (error) {
-    const errorMessage =
-            error instanceof Error ? error.message : "Failed to update voucher";
+      toast({
+        title: "Updated",
+        description: "Voucher visibility changed"
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update voucher";
       toast({
         variant: "destructive",
         title: "Failed",
         description: errorMessage || "Unknown error"
       });
-  }
-};
+    }
+  };
 
   const handleCreated = () => {
     setOpenCreate(false);
@@ -181,7 +175,8 @@ const handleToggleVisibility = async (id: number) => {
                           voucher.isVisible ? "text-green-600" : "text-red-600"
                         }`}
                       >
-                        Visibility: {voucher.isVisible ? "VISIBLE" : "INVISIBLE"}
+                        Visibility:{" "}
+                        {voucher.isVisible ? "VISIBLE" : "INVISIBLE"}
                       </p>
 
                       <p className="text-sm text-muted-foreground">
@@ -199,10 +194,7 @@ const handleToggleVisibility = async (id: number) => {
                       )}
 
                       <p className="text-xs text-muted-foreground">
-                        {new Date(
-                          voucher.dateStart
-                        ).toLocaleDateString()}{" "}
-                        –{" "}
+                        {new Date(voucher.dateStart).toLocaleDateString()} –{" "}
                         {new Date(voucher.dateEnd).toLocaleDateString()}
                       </p>
                     </div>
@@ -240,9 +232,9 @@ const handleToggleVisibility = async (id: number) => {
             )}
           </div>
           <Button size="sm" onClick={() => setOpenCreate(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Voucher
-            </Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Create Voucher
+          </Button>
         </DialogContent>
       </Dialog>
 

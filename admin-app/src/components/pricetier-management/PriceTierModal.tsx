@@ -33,7 +33,7 @@ export default function PriceTierModal() {
     refetchPriceTier
   } = usePriceTier();
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   const [isLoadingDeletePriceTier, setIsLoadingDeletePriceTier] =
     useState(false);
@@ -48,18 +48,16 @@ export default function PriceTierModal() {
     setPriceTierListPage(1);
   }, [debouncedSearch, setPriceTierSearch, setPriceTierListPage, open]);
 
-  
   const handleOpenChange = (nextOpen: boolean) => {
-      setOpen(nextOpen);
-  
-      if (!nextOpen) {
-        setLocalSearch("");
-        setPriceTierSearch("");
-        setPriceTierListPage(1);
-        setSelectedPriceTierRows({});
-      }
-    };
+    setOpen(nextOpen);
 
+    if (!nextOpen) {
+      setLocalSearch("");
+      setPriceTierSearch("");
+      setPriceTierListPage(1);
+      setSelectedPriceTierRows({});
+    }
+  };
 
   const deleteManyPriceTiers = async () => {
     setIsLoadingDeletePriceTier(true);

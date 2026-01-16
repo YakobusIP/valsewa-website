@@ -67,7 +67,6 @@ export class AccountController {
     }
   };
 
-  
   getRecommendedAccounts = async (
     req: Request,
     res: Response,

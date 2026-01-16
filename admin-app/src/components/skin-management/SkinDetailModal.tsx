@@ -1,9 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { skinService } from "@/services/skin.service";
 
@@ -112,23 +107,22 @@ export default function SkinDetailModal({ mode, data }: Props) {
     if (nameValue && nameValue.trim() !== "") {
       debouncedNameHandler(nameValue);
     }
-  }, [ nameValue, debouncedNameHandler, open]);
+  }, [nameValue, debouncedNameHandler, open]);
 
-  
   useEffect(() => {
     if (!open) return;
-  
+
     isFirstRenderRank.current = true;
-  
+
     if (mode === "edit" && data) {
       const initialImageUrl = data.imageUrl ?? "";
-    
+
       form.reset({
         name: data.name ?? "",
         keyword: data.keyword ?? "",
         imageUrl: initialImageUrl
       });
-    
+
       setImageUrl(initialImageUrl);
     } else {
       form.reset({
@@ -136,7 +130,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
         keyword: "",
         imageUrl: ""
       });
-    
+
       setImageUrl("");
     }
   }, [open, mode, data, form]);
@@ -286,7 +280,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
               />
             </div>
 
-            <div className='flex flex-col'>
+            <div className="flex flex-col">
               <div className="text-sm font-medium text-muted-foreground">
                 Preview
               </div>
@@ -300,7 +294,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
                   </div>
                 )}
 
-                {!isLoadingFetchImage && imageUrl != "" &&(
+                {!isLoadingFetchImage && imageUrl != "" && (
                   <img
                     src={imageUrl}
                     alt={form.getValues("name") || "Image preview"}

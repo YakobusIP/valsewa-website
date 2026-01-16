@@ -6,6 +6,7 @@ import { fetchAccountById } from "@/services/accountService";
 import { bookingService } from "@/services/booking.service";
 
 import Navbar from "@/components/Navbar";
+import NavbarMobile from "@/components/NavbarMobile";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -13,10 +14,8 @@ import {
   CarouselContent,
   CarouselItem,
   CarouselNext,
-  CarouselPrevious,
+  CarouselPrevious
 } from "@/components/ui/carousel";
-
-import { ChevronDown, Search } from "lucide-react";
 
 import { toast } from "@/hooks/useToast";
 
@@ -25,9 +24,9 @@ import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
 import { getRankImageUrl } from "@/lib/utils";
 
 import { isAxiosError } from "axios";
+import { ChevronDown, Search } from "lucide-react";
 import Image from "next/image";
 import { notFound, useParams, useRouter } from "next/navigation";
-import NavbarMobile from "@/components/NavbarMobile";
 
 export default function AccountDetailPage() {
   const router = useRouter();
@@ -230,10 +229,7 @@ export default function AccountDetailPage() {
             {/* DESKTOP GRID (>= sm) */}
             <div className="hidden lg:grid grid-cols-2 gap-1 max-h-[100vh] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {images.map((img: UploadResponse, i: number) => (
-                <div
-                  key={i}
-                  className="relative aspect-video"
-                >
+                <div key={i} className="relative aspect-video">
                   <Image
                     src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
                     alt="Account Image"
@@ -313,8 +309,9 @@ export default function AccountDetailPage() {
                     <p className="font-semibold">Skin List</p>
 
                     <div
-                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${showSkins ? "rotate-180" : "rotate-0"
-                        }`}
+                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${
+                        showSkins ? "rotate-180" : "rotate-0"
+                      }`}
                     >
                       <ChevronDown className="w-3 h-3 text-white" />
                     </div>
@@ -323,14 +320,10 @@ export default function AccountDetailPage() {
 
                 <p>{account.skinList.length} Skins</p>
               </div>
-
-
             </div>
 
             {/* SKIN LIST */}
             <div className="space-y-3">
-
-
               {showSkins && (
                 <div className="space-y-3">
                   {/* SEARCH */}
@@ -347,21 +340,18 @@ export default function AccountDetailPage() {
 
                   {/* LIST */}
                   <div className="flex flex-wrap gap-2 max-h-[240px] overflow-y-auto pr-1">
-                    {
-                      filteredSkins.length === 0 ? (
-                        <p className="text-sm text-neutral-500">
-                          No skins found
-                        </p>
-                      ) : (
-                        filteredSkins.map((skin, i) => (
-                          <Badge
-                            key={skin.id ?? i}
-                            className="bg-neutral-800 text-neutral-200 hover:bg-red-600 transition"
-                          >
-                            {skin.name}
-                          </Badge>
-                        ))
-                      )}
+                    {filteredSkins.length === 0 ? (
+                      <p className="text-sm text-neutral-500">No skins found</p>
+                    ) : (
+                      filteredSkins.map((skin, i) => (
+                        <Badge
+                          key={skin.id ?? i}
+                          className="bg-neutral-800 text-neutral-200 hover:bg-red-600 transition"
+                        >
+                          {skin.name}
+                        </Badge>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -374,9 +364,10 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("RENT")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${mode === "RENT"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${
+                      mode === "RENT"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   RENT NOW
@@ -385,9 +376,10 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("BOOK")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${mode === "BOOK"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${
+                      mode === "BOOK"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   BOOK FOR LATER
@@ -410,9 +402,10 @@ export default function AccountDetailPage() {
                           })
                         }
                         className={`border rounded-md py-2 cursor-pointer transition
-                          ${isActive
-                            ? "border-red-600 bg-red-600/10"
-                            : "border-neutral-700 hover:border-red-600"
+                          ${
+                            isActive
+                              ? "border-red-600 bg-red-600/10"
+                              : "border-neutral-700 hover:border-red-600"
                           }`}
                       >
                         <p className="text-xs font-semibold uppercase">
@@ -445,9 +438,10 @@ export default function AccountDetailPage() {
                             })
                           }
                           className={`border rounded-md py-2 cursor-pointer transition
-                            ${isActive
-                              ? "border-red-600 bg-red-600/10"
-                              : "border-neutral-700 hover:border-red-600"
+                            ${
+                              isActive
+                                ? "border-red-600 bg-red-600/10"
+                                : "border-neutral-700 hover:border-red-600"
                             }`}
                         >
                           <p className="text-xs font-semibold uppercase">
@@ -470,7 +464,9 @@ export default function AccountDetailPage() {
                         mode="single"
                         selected={bookDate ?? undefined}
                         onSelect={(date) => setBookDate(date ?? null)}
-                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        disabled={(date) =>
+                          date < new Date(new Date().setHours(0, 0, 0, 0))
+                        }
                         className="rounded-md border border-neutral-800 bg-black text-white p-2 max-sm:scale-75 origin-top -mt-2 -mb-16
                           [&_.rdp-day]:text-white [&_.rdp-day]:h-7 [&_.rdp-day]:w-7 [&_.rdp-day]:text-xs
                           [&_.rdp-head_cell]:text-neutral-400 [&_.rdp-head_cell]:text-[0.65rem] [&_.rdp-head_cell]:font-normal
@@ -553,9 +549,10 @@ export default function AccountDetailPage() {
                 onClick={onSubmit}
                 disabled={isDisabled}
                 className={`w-full font-semibold py-3 rounded-md transition
-                  ${isDisabled
-                    ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-                    : "bg-red-600 hover:bg-red-700 text-white"
+                  ${
+                    isDisabled
+                      ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700 text-white"
                   }`}
               >
                 {mode === "RENT" && selectedDuration && (

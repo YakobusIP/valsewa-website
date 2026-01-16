@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { voucherService } from "@/services/voucher.service";
-import { VoucherType, CreateVoucherPayload } from "@/types/voucher.type";
 
+import { voucherService } from "@/services/voucher.service";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 
-import { Button } from "@/components/ui/button";
+import { CreateVoucherPayload, VoucherType } from "@/types/voucher.type";
 
 type VoucherForm = {
   voucherName: string;
@@ -31,10 +32,10 @@ type VoucherCreateModalProps = {
   onSuccess: () => void;
 };
 
-
 export default function VoucherCreateModal({
   open,
-  onOpenChange, onSuccess
+  onOpenChange,
+  onSuccess
 }: VoucherCreateModalProps) {
   const [loading, setLoading] = useState(false);
 
@@ -97,20 +98,11 @@ export default function VoucherCreateModal({
       isVisble: form.isVisible,
       type: form.type,
 
-      percentage:
-        form.type === "PERSENTASE"
-          ? Number(form.percentage)
-          : null,
+      percentage: form.type === "PERSENTASE" ? Number(form.percentage) : null,
 
-      nominal:
-        form.type === "NOMINAL"
-          ? Number(form.nominal)
-          : null,
+      nominal: form.type === "NOMINAL" ? Number(form.nominal) : null,
 
-      maxDiscount:
-        form.type === "PERSENTASE"
-          ? Number(form.maxDiscount)
-          : null,
+      maxDiscount: form.type === "PERSENTASE" ? Number(form.maxDiscount) : null,
 
       dateStart: new Date(form.dateStart),
       dateEnd: new Date(form.dateEnd)
@@ -147,7 +139,6 @@ export default function VoucherCreateModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-
           {/* Voucher Name */}
           <div>
             <label className="block mb-1 text-sm font-medium">
@@ -213,9 +204,7 @@ export default function VoucherCreateModal({
 
           {form.type === "NOMINAL" && (
             <div>
-              <label className="block mb-1 text-sm font-medium">
-                Nominal
-              </label>
+              <label className="block mb-1 text-sm font-medium">Nominal</label>
               <input
                 type="number"
                 name="nominal"
@@ -243,9 +232,7 @@ export default function VoucherCreateModal({
             </div>
 
             <div>
-              <label className="block mb-1 text-sm font-medium">
-                End Date
-              </label>
+              <label className="block mb-1 text-sm font-medium">End Date</label>
               <input
                 type="datetime-local"
                 name="dateEnd"

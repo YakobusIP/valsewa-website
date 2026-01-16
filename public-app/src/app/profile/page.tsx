@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext, useEffect } from "react";
+
 import { AuthContext } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -27,9 +28,7 @@ export default function ProfilePage() {
 
         <div className="space-y-2">
           <p className="text-zinc-400">Username</p>
-          <p className="text-lg font-semibold">
-            {auth.username ?? "-"}
-          </p>
+          <p className="text-lg font-semibold">{auth.username ?? "-"}</p>
         </div>
 
         <button

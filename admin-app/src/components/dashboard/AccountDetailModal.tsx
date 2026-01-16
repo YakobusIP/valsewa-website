@@ -169,35 +169,35 @@ export default function AccountDetailModal({
     defaultValues:
       mode === "edit" && data
         ? {
-          username: data.username,
-          nickname: data.nickname,
-          accountCode: data.accountCode,
-          description: data.description ?? undefined,
-          priceTier: data.priceTier.id,
-          accountRank: data.accountRank,
-          password: data.password,
-          passwordResetRequired: data.passwordResetRequired,
-          skinList: data.skinList.map((skin) => skin.id),
-          thumbnail: data.thumbnail,
-          otherImages: data.otherImages ? data.otherImages : [],
-          isLowRank: data.isLowRank,
-          isRecommended: data.isRecommended
-        }
+            username: data.username,
+            nickname: data.nickname,
+            accountCode: data.accountCode,
+            description: data.description ?? undefined,
+            priceTier: data.priceTier.id,
+            accountRank: data.accountRank,
+            password: data.password,
+            passwordResetRequired: data.passwordResetRequired,
+            skinList: data.skinList.map((skin) => skin.id),
+            thumbnail: data.thumbnail,
+            otherImages: data.otherImages ? data.otherImages : [],
+            isLowRank: data.isLowRank,
+            isRecommended: data.isRecommended
+          }
         : {
-          username: "",
-          nickname: "",
-          accountCode: "",
-          description: "",
-          priceTier: undefined,
-          accountRank: "",
-          password: "",
-          passwordResetRequired: false,
-          skinList: [],
-          thumbnail: undefined,
-          otherImages: [],
-          isLowRank: false,
-          isRecommended: false
-        },
+            username: "",
+            nickname: "",
+            accountCode: "",
+            description: "",
+            priceTier: undefined,
+            accountRank: "",
+            password: "",
+            passwordResetRequired: false,
+            skinList: [],
+            thumbnail: undefined,
+            otherImages: [],
+            isLowRank: false,
+            isRecommended: false
+          },
     mode: "onSubmit",
     reValidateMode: "onChange"
   });
@@ -669,7 +669,9 @@ export default function AccountDetailModal({
                       <FormControl>
                         <Checkbox
                           checked={!!field.value}
-                          onCheckedChange={(checked) => field.onChange(checked === true)}
+                          onCheckedChange={(checked) =>
+                            field.onChange(checked === true)
+                          }
                         />
                       </FormControl>
 

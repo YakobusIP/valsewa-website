@@ -355,7 +355,7 @@ export class AccountService {
           thumbnail: true,
           otherImages: true,
           isLowRank: true,
-          isRecommended: true,
+          isRecommended: true
         }
       });
 
@@ -420,23 +420,23 @@ export class AccountService {
         },
         take: 3,
         select: {
-            id: true,
-            nickname: true,
-            accountCode: true,
-            description: true,
-            accountRank: true,
-            availabilityStatus: true,
-            currentExpireAt: true,
-            totalRentHour: true,
-            skinList: true,
-            priceTier: true,
-            thumbnail: true,
-            otherImages: true,
-            isLowRank: true,
-            isRecommended: true,
+          id: true,
+          nickname: true,
+          accountCode: true,
+          description: true,
+          accountRank: true,
+          availabilityStatus: true,
+          currentExpireAt: true,
+          totalRentHour: true,
+          skinList: true,
+          priceTier: true,
+          thumbnail: true,
+          otherImages: true,
+          isLowRank: true,
+          isRecommended: true
         }
       });
-      
+
       return accounts;
     } catch (error) {
       throw new InternalServerError((error as Error).message);
@@ -472,9 +472,6 @@ export class AccountService {
       throw new InternalServerError((error as Error).message);
     }
   };
-
-  
-
 
   getAccountDuplicate = async (nickname: string, accountCode: string) => {
     try {

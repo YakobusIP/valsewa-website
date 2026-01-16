@@ -116,7 +116,7 @@ export class BookingService {
         data = await prisma.booking.findMany({
           where: whereCriteria,
           include: {
-            payments: true,
+            payments: true
           }
         });
         metadata = {
@@ -177,31 +177,31 @@ export class BookingService {
   };
 
   getAccountRented = async (startDate?: Date, endDate?: Date) => {
-  try {
-    const stats = await prisma.booking.aggregate({
-      where: {
-        status: "COMPLETED",
-        createdAt: {
-          gte: startDate,
-          lte: endDate
+    try {
+      const stats = await prisma.booking.aggregate({
+        where: {
+          status: "COMPLETED",
+          createdAt: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+        _count: {
+          id: true
+        },
+        _sum: {
+          totalValue: true
         }
-      },
-      _count: {
-        id: true
-      },
-      _sum: {
-        totalValue: true
-      }
-    });
+      });
 
-    return {
-      completedBookingCount: stats._count.id,
-      totalIncome: stats._sum.totalValue ?? 0
-    };
-  } catch (error) {
-    throw new InternalServerError((error as Error).message);
-  }
-};
+      return {
+        completedBookingCount: stats._count.id,
+        totalIncome: stats._sum.totalValue ?? 0
+      };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
   getBookingsByCustomerId = async (
     customerId: number
   ): Promise<BookingResponse[]> => {
@@ -445,11 +445,7 @@ export class BookingService {
     data: CreateManualBookingRequest
   ): Promise<BookingResponse> => {
     try {
-      const {
-        accountCode,
-        totalValue,
-        startAt
-      } = data;
+      const { accountCode, totalValue, startAt } = data;
 
       const account = await prisma.account.findUnique({
         where: { accountCode: accountCode }
@@ -464,22 +460,22 @@ export class BookingService {
       const bookingEndAt = new Date();
 
       const booking = await prisma.booking.create({
-          data: {
-            accountId: account.id,
-            status: BookingStatus.COMPLETED,
-            duration: '-',
-            quantity: 1,
-            immediate,
-            startAt: bookingStartAt,
-            endAt: bookingEndAt,
-            expiredAt: bookingExpiredAt,
-            mainValuePerUnit: totalValue,
-            othersValuePerUnit: 0,
-            mainValue: totalValue,
-            totalValue: totalValue,
-            version: 1
-          }
-        });
+        data: {
+          accountId: account.id,
+          status: BookingStatus.COMPLETED,
+          duration: "-",
+          quantity: 1,
+          immediate,
+          startAt: bookingStartAt,
+          endAt: bookingEndAt,
+          expiredAt: bookingExpiredAt,
+          mainValuePerUnit: totalValue,
+          othersValuePerUnit: 0,
+          mainValue: totalValue,
+          totalValue: totalValue,
+          version: 1
+        }
+      });
 
       return this.mapBookingDataToBookingResponse(booking);
     } catch (error) {

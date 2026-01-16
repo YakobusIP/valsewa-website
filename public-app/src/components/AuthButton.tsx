@@ -1,7 +1,9 @@
 "use client";
 
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+
+import { useAuth } from "@/hooks/useAuth";
+
 import { useRouter } from "next/navigation";
 
 export function AuthButton() {
@@ -9,11 +11,7 @@ export function AuthButton() {
   const router = useRouter();
 
   if (!isAuthenticated) {
-    return (
-      <Button onClick={() => router.push("/")}>
-        Login
-      </Button>
-    );
+    return <Button onClick={() => router.push("/")}>Login</Button>;
   }
 
   return (

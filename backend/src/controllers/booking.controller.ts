@@ -1,7 +1,11 @@
 import { Request, Response, NextFunction, response } from "express";
 import { Provider, PaymentMethodType } from "@prisma/client";
 import { BookingService } from "../services/booking.service";
-import { BadRequestError, ForbiddenError, UnprocessableEntityError } from "../lib/error";
+import {
+  BadRequestError,
+  ForbiddenError,
+  UnprocessableEntityError
+} from "../lib/error";
 import {
   FASPAY_STATUS_MAP,
   FaspayClient,
@@ -44,27 +48,40 @@ export class BookingController {
       return next(error);
     }
   };
-  
-  getAccountRented = async (req: Request, res: Response, next: NextFunction) => {
+
+  getAccountRented = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
+      const startDate = req.query.start_date
+        ? new Date(req.query.start_date as string)
+        : undefined;
+      const endDate = req.query.end_date
+        ? new Date(req.query.end_date as string)
+        : undefined;
 
-      const startDate = req.query.start_date ? new Date(req.query.start_date as string) : undefined;
-      const endDate = req.query.end_date ? new Date(req.query.end_date as string) : undefined;
-
-      const data = await this.bookingService.getAccountRented(startDate, endDate);
+      const data = await this.bookingService.getAccountRented(
+        startDate,
+        endDate
+      );
       return res.json({ data });
     } catch (error) {
       return next(error);
     }
   };
-  
+
   updateBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const bookingId = req.params.id;
       const totalValue = req.body.totalValue;
       if (!bookingId) throw new BadRequestError("Booking ID is required.");
 
-      const result = await this.bookingService.updateBooking(bookingId, totalValue);
+      const result = await this.bookingService.updateBooking(
+        bookingId,
+        totalValue
+      );
 
       return res.status(200).json(result);
     } catch (error) {
@@ -170,14 +187,15 @@ export class BookingController {
     }
   };
 
-  createManualBooking = async (req: Request, res: Response, next: NextFunction) => {
+  createManualBooking = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
-      const {
-        accountCode,
-        totalValue
-      } = req.body;
+      const { accountCode, totalValue } = req.body;
 
-      if (!accountCode || !totalValue ) {
+      if (!accountCode || !totalValue) {
         throw new BadRequestError("Missing required fields.");
       }
       const result = await this.bookingService.createManualBooking({

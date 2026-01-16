@@ -9,13 +9,16 @@ import {
 } from "react";
 
 import { authService } from "@/services/auth.service";
+
 import { toast } from "@/hooks/useToast";
+
+import { AuthContextType } from "@/types/auth-context.type";
 import { loginFormSchema } from "@/types/zod.type";
+
 import { setAccessToken } from "@/lib/axios";
 
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { z } from "zod";
-import { AuthContextType } from "@/types/auth-context.type";
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -55,8 +58,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       router.push("/");
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Login failed";
+      const message = error instanceof Error ? error.message : "Login failed";
 
       toast({
         variant: "destructive",

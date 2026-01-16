@@ -1,32 +1,30 @@
-"use client"
+"use client";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useEffect, useState } from "react";
 
-import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-import { loginFormSchema } from "@/types/zod.type"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/hooks/useAuth";
 
-import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react"
-import Image from "next/image"
+import { loginFormSchema } from "@/types/zod.type";
+
+import { cn } from "@/lib/utils";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
+import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 type LoginFormProps = React.ComponentProps<"div"> & {
-  onClose?: () => void
-}
+  onClose?: () => void;
+};
 
-export function LoginForm({
-  className,
-  onClose,
-  ...props
-}: LoginFormProps) {
-  const [passwordVisible, setPasswordVisible] = useState(false)
-  const { isLoadingLogin, login } = useAuth()
+export function LoginForm({ className, onClose, ...props }: LoginFormProps) {
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const { isLoadingLogin, login } = useAuth();
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -34,15 +32,15 @@ export function LoginForm({
       username: "",
       password: ""
     }
-  })
+  });
 
   const onSubmit = async (values: z.infer<typeof loginFormSchema>) => {
-    await login(values)
-  }
+    await login(values);
+  };
 
   useEffect(() => {
-    document.title = "Login | Valsewa"
-  }, [])
+    document.title = "Login | Valsewa";
+  }, []);
 
   return (
     <div
@@ -87,15 +85,12 @@ export function LoginForm({
             md:min-h-full
           "
         >
-
           <div className="w-full max-w-sm space-y-6 text-center">
             {/* Header */}
             <div className="space-y-2">
               <p className="text-sm text-yellow-400">
                 First Time Here?{" "}
-                <span className="underline cursor-pointer">
-                  Sign Up
-                </span>
+                <span className="underline cursor-pointer">Sign Up</span>
               </p>
 
               <h1 className="text-3xl font-semibold text-white">
@@ -180,5 +175,5 @@ export function LoginForm({
         </form>
       </div>
     </div>
-  )
+  );
 }

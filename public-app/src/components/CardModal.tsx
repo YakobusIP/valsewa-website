@@ -142,7 +142,10 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
               <figure className="absolute top-0 right-0 h-[120px] w-[120px]">
                 <Image
                   loading="lazy"
-                  src={getTier(selectedCard.priceTier.code) ?? "/defaultPicture/default.jpg"}
+                  src={
+                    getTier(selectedCard.priceTier.code) ??
+                    "/defaultPicture/default.jpg"
+                  }
                   alt="Price Tier"
                   fill
                 />

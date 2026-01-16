@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 
 const NavbarMobile = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -17,11 +18,12 @@ const NavbarMobile = () => {
   }, []);
 
   return (
-    <div className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 
+    <div
+      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 
       bg-black shadow-md shadow-black/20
-      `}>
+      `}
+    >
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center justify-between px-4 sm:px-6">
-
         {/* LEFT - Back Button */}
         <Link
           href="/"
@@ -55,7 +57,6 @@ const NavbarMobile = () => {
             priority
           />
         </figure>
-
       </div>
     </div>
   );

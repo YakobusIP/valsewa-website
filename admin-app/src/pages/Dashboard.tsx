@@ -8,6 +8,9 @@ import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
 import Navbar from "@/components/dashboard/Navbar";
 import SortComponent from "@/components/dashboard/SortComponent";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
+import TransactionListModal from "@/components/dashboard/TransactionListModal";
+import UserListModal from "@/components/dashboard/UserListModal";
+import VoucherModal from "@/components/dashboard/VoucherModal";
 import DataTable from "@/components/data-table/DataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
 import PriceTierModal from "@/components/pricetier-management/PriceTierModal";
@@ -24,10 +27,8 @@ import { SORT_ORDER } from "@/lib/enums";
 
 import { SkinProvider } from "@/contexts/SkinContext";
 import { CirclePlusIcon } from "lucide-react";
+
 import CreateUserPage from "../components/dashboard/CreateUserModal";
-import UserListModal from "@/components/dashboard/UserListModal";
-import VoucherModal from "@/components/dashboard/VoucherModal";
-import TransactionListModal from "@/components/dashboard/TransactionListModal";
 
 const PAGINATION_SIZE = 100;
 
@@ -37,7 +38,6 @@ export default function Dashboard() {
   const [openUserList, setOpenUserList] = useState(false);
   const [openVoucherModal, setOpenVoucherModal] = useState(false);
   const [openTransactionModal, setOpenTransactionModal] = useState(false);
-
 
   const [isLoadingStatistics, setIsLoadingStatistics] = useState(false);
   const [statistics, setStatistics] = useState<StatisticResponse>();
@@ -292,13 +292,15 @@ export default function Dashboard() {
           setOpenCreateUserAccount(true);
         }}
       />
-      <VoucherModal open={openVoucherModal}
-        onOpenChange={setOpenVoucherModal} />
+      <VoucherModal
+        open={openVoucherModal}
+        onOpenChange={setOpenVoucherModal}
+      />
 
-      <TransactionListModal open={openTransactionModal}
-        onOpenChange={setOpenTransactionModal} />
-
-
+      <TransactionListModal
+        open={openTransactionModal}
+        onOpenChange={setOpenTransactionModal}
+      />
     </Fragment>
   );
 }
