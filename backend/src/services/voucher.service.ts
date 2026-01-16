@@ -158,4 +158,15 @@ export class VoucherService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  toggleVoucherValidity = async (id: number, isValid: boolean) => {
+    try {
+      return await prisma.voucher.update({
+        where: { id },
+        data: { isValid }
+      });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
 }

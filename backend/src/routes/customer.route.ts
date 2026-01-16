@@ -33,6 +33,11 @@ class CustomerRouter {
       authMiddleware,
       this.customerController.createCustomer
     );
+    this.router.patch(
+      "/:id/active-status",
+      authMiddleware,
+      this.customerController.toggleActiveStatus
+    );
   }
 }
 

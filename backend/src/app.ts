@@ -22,6 +22,7 @@ import { serve, setup } from "swagger-ui-express";
 import SkinRouter from "./routes/skin.route";
 import CustomerRouter from "./routes/customer.route";
 import SnapBiConfig from "./lib/snapbi/snapbi.config";
+import { cronService } from "./services/cron.service";
 
 const app: Express = express();
 
@@ -90,5 +91,6 @@ app.use("/docs", serve, setup(swaggerSpec));
 app.use(errorMiddleware);
 
 SnapBiConfig.init();
+cronService.init();
 
 export default app;
