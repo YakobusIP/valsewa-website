@@ -112,4 +112,36 @@ export class VoucherController {
       });
     }
   };
+
+  toggleValidity = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { isValid } = req.body;
+
+      await this.voucherService.toggleVoucherValidity(
+        Number(id),
+        Boolean(isValid)
+      );
+
+      res.status(200).json({
+        message: "Voucher validity updated"
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: "Failed to update voucher validity"
+      });
+    }
+  };
+
+  checkExpiration = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.voucherService.checkVoucherExpiration();
+      return res.json({
+        message: "Voucher expiration check completed",
+        ...result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
 }

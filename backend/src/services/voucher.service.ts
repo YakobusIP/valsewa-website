@@ -158,4 +158,43 @@ export class VoucherService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  toggleVoucherValidity = async (id: number, isValid: boolean) => {
+    try {
+      return await prisma.voucher.update({
+        where: { id },
+        data: { isValid }
+      });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  checkVoucherExpiration = async () => {
+    try {
+      const today = new Date();
+
+      const expiredVouchers = await prisma.voucher.findMany({
+        where: {
+          isValid: true,
+          dateEnd: {
+            lt: today
+          }
+        }
+      });
+
+      console.log(`Found ${expiredVouchers.length} expired vouchers.`);
+
+      const updatePromises = expiredVouchers.map((voucher) => {
+        console.log(`Deactivating voucher: ${voucher.voucherName}`);
+        return this.toggleVoucherValidity(voucher.id, false);
+      });
+
+      await Promise.all(updatePromises);
+
+      return { count: expiredVouchers.length };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
 }

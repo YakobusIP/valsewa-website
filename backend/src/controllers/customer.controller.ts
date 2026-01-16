@@ -55,4 +55,40 @@ export class CustomerController {
       });
     }
   };
+
+  toggleActiveStatus = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { isActive } = req.body;
+
+      await this.customerService.toggleCustomerActiveStatus(
+        Number(id),
+        Boolean(isActive)
+      );
+
+      res.status(200).json({
+        message: "Customer active status updated"
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: "Failed to update customer active status"
+      });
+    }
+  };
+
+  checkPasswordExpiration = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await this.customerService.checkPasswordExpiration();
+      return res.json({
+        message: "Customer password expiration check completed",
+        ...result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
 }
