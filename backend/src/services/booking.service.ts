@@ -991,6 +991,12 @@ export class BookingService {
       throw new BadRequestError("Payment method is not supported!");
     } catch (error) {
       console.error("Process payment to provider failed:", error);
+      await prisma.booking.update({
+        where: { id: payment.bookingId },
+        data: {
+          status: PaymentStatus.FAILED
+        }
+      })
       return await prisma.payment.update({
         where: { id: payment.id },
         data: {
