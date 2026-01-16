@@ -91,11 +91,27 @@ const createBookingService = () => {
     }
   };
 
+  const overrideBooking = async (id: string, newAccountId: number) => {
+    try {
+      const response = await interceptedAxios.post<ApiResponseList<BookingEntity>>(
+        `${BASE_BOOKING_URL}/override`,
+        {
+          bookingId: id,
+          accountId: newAccountId
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  }
+
   return {
     fetchAll,
     create,
     update,
-    getAccountRented
+    getAccountRented,
+    overrideBooking
   };
 };
 

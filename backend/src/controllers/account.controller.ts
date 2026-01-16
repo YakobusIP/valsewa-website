@@ -178,6 +178,22 @@ export class AccountController {
     }
   };
 
+  getAvailableAccounts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {      
+      const startAt = new Date(req.query.startAt as string);
+      const endAt = new Date(req.query.endAt as string);
+      const accounts = await this.accountService.getAvailableAccounts({ startAt, endAt });
+
+      return res.json(accounts);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   createAccount = async (req: Request, res: Response, next: NextFunction) => {
     try {
       await this.accountService.createAccount(req.body);

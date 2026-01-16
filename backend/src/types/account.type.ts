@@ -52,9 +52,15 @@ type UpdateResetLogRequest = {
   passwordResetRequired: boolean;
 };
 
+type GetAvailableAccountsRequest = {
+  startAt: Date;
+  endAt: Date;
+}
+
 export type {
   AccountEntityRequest,
   AccountWithSkins,
   PublicAccount,
-  UpdateResetLogRequest
+  UpdateResetLogRequest,
+  GetAvailableAccountsRequest,
 };
