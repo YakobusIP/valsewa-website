@@ -166,7 +166,7 @@ export default function DiscoverSection() {
 
   return (
     <section className="w-full relative z-10 -mt-8 mb-12">
-      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12">
+      <div className="w-full max-w-[1920px] mx-auto lg:px-12">
         <div className="sm:bg-gradient-to-r sm:from-black sm:via-[#5e0000] sm:to-[#C70515] sm:rounded-3xl 2xl:p-8 sm:p-8 md:p-8 relative overflow-hidden sm:bg-clip-padding sm:border sm:border-transparent sm:ring-1 sm:ring-white/10 sm:shadow-2xl">
           {/* Header Section */}
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">

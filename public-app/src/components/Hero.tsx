@@ -93,7 +93,7 @@ export default function Hero({ initialCarousel }: HeroProps) {
         <div className="xl:hidden absolute inset-0 bg-[radial-gradient(circle_at_left,#210004_0%,#000_60%)] rounded-2xl border border-white/10" />
 
         {/* Content layer - positioned inside the main area (below notch on desktop) */}
-        <div className="relative z-10 flex h-full max-w-[1920px] mx-auto items-center justify-between px-6 xl:px-12 large:px-0 min-h-[550px] md:min-h-[620px] xl:pt-20">
+        <div className="relative z-10 flex h-full max-w-[1920px] mx-auto items-center justify-between xl:px-12 large:px-0 min-h-[550px] md:min-h-[620px] xl:pt-20">
           {/* LEFT – TEXT + AGENT */}
           <div className="relative z-20 flex flex-col justify-center w-full xl:w-[55%] pt-8 xl:pt-0 sm:px-4 xl:px-8">
             {/* Logo */}
@@ -169,7 +169,7 @@ export default function Hero({ initialCarousel }: HeroProps) {
         </div>
 
         {/* Red Glow overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-red-900/10 via-transparent to-transparent pointer-events-none rounded-2xl xl:rounded-none sm:mx-6 xl:mx-12 large:mx-0" />
+        <div className="absolute inset-0 bg-gradient-to-r from-red-900/10 via-transparent to-transparent pointer-events-none rounded-2xl xl:rounded-none xl:mx-12 large:mx-0" />
       </div>
     </section>
   );

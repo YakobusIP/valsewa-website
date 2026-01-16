@@ -35,7 +35,7 @@ export default function RecommendedSection() {
 
   return (
     <section className="w-full relative z-10 mb-12">
-      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12">
+      <div className="w-full max-w-[1920px] mx-auto lg:px-12">
         {/* Header */}
         <div className="flex flex-col mb-8">
           <div className="flex items-center gap-2 mb-2">
