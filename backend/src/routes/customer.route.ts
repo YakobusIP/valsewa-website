@@ -2,6 +2,7 @@ import { Router } from "express";
 import { CustomerService } from "../services/customer.service";
 import { CustomerController } from "../controllers/customer.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 
 class CustomerRouter {
   public router: Router;
@@ -40,7 +41,7 @@ class CustomerRouter {
     );
     this.router.post(
       "/check-password-expiration",
-      authMiddleware,
+      schedulerMiddleware,
       this.customerController.checkPasswordExpiration
     );
   }

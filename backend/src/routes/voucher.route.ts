@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { VoucherController } from "../controllers/voucher.controller";
 import { VoucherService } from "../services/voucher.service";
+import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 
 const router = Router();
 
@@ -13,7 +14,7 @@ router.post("/", controller.createVoucher);
 router.patch("/:id/toggle", controller.toggleVoucherStatus);
 router.patch("/:id/toggleVisibility", controller.toggleVoucherVisible);
 router.patch("/:id/validity", controller.toggleValidity);
-router.post("/check-expiration", controller.checkExpiration);
+router.post("/check-expiration", schedulerMiddleware, controller.checkExpiration);
 router.delete("/:id", controller.deleteVoucher);
 
 export default router;
