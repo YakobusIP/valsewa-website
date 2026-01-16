@@ -60,17 +60,16 @@ type GetAvailableAccountsRequest = {
 };
 
 type AccountSearchFilters = {
+  query?: string;
+  lowTierOnly?: boolean;
+  tiers?: string[];
+  skinCounts?: string[];
   ranks?: string[];
   minPrice?: number;
   maxPrice?: number;
-  totalSkin?: string;
-  lowTierOnly?: boolean;
-  priceTierCode?: string;
-  query?: string;
-  
   sortBy?: string;
   direction?: Prisma.SortOrder;
-}
+};
 
 export type {
   AccountEntityRequest,
