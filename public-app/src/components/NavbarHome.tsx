@@ -36,22 +36,23 @@ const Navbar = () => {
         isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
       }`}
     >
-      <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between px-4 sm:px-6 lg:px-12">
-        <div className="flex items-center gap-16">
-          <div className="relative md:pl-0 lg:pl-0">
+      <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between px-8 sm:px-12 xl:px-24 large:px-16">
+        <div className="flex items-center gap-4 lg:gap-6 xl:gap-10 pl-4 lg:pl-6 xl:pl-8">
+          {/* Logo wrapper - positioned to align with hero notch on desktop, scales down on lg */}
+          <div className="relative">
             {!isScrolled && (
-              <figure className="relative top-0 lg:max-w-[130px] sm:max-w-[130px] max-w-[130px] ">
+              <figure className="relative w-[70px] xl:w-[80px] 2xl:w-[130px]">
                 <Image
                   src="/header/Logo Header Valforum.png"
                   alt="logo"
                   height={50}
                   width={130}
-                  className="object-contain"
+                  className="object-contain w-full h-auto"
                 />
               </figure>
             )}
             {isScrolled && (
-              <figure className="relative top-0 lg:max-w-[130px] sm:max-w-[130px] max-w-[130px] ">
+              <figure className="relative xl:max-w-[130px] sm:max-w-[130px] max-w-[130px]">
                 <Image
                   src="/header/VALSEWA.png"
                   alt="logo"
@@ -62,19 +63,19 @@ const Navbar = () => {
               </figure>
             )}
           </div>
-          {/* BRAND SWITCHER */}
+          {/* BRAND SWITCHER - scales down on lg, full size on xl+ */}
           <div
-            className={`relative ml-6 transition-all duration-300 ${
+            className={`relative transition-all duration-300 ${
               isScrolled
                 ? "opacity-0 translate-y-[-10px] pointer-events-none"
                 : "opacity-100 translate-y-0"
             }`}
           >
-            <div className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
+            <div className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
               {/* VALSEWA */}
               <div
                 onClick={() => setActiveBrand("valsewa")}
-                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${
+                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
                   activeBrand === "valsewa"
                     ? "bg-black shadow-md"
                     : "hover:bg-white/10"
@@ -85,14 +86,14 @@ const Navbar = () => {
                   alt="VALSEWA"
                   width={130}
                   height={28}
-                  className="object-contain"
+                  className="object-contain w-[80px] xl:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
 
               {/* VALJUBEL */}
               <div
                 onClick={() => setActiveBrand("valjubel")}
-                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${
+                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
                   activeBrand === "valjubel"
                     ? "bg-black shadow-md"
                     : "hover:bg-white/10"
@@ -103,14 +104,14 @@ const Navbar = () => {
                   alt="VALJUBEL"
                   width={130}
                   height={28}
-                  className="object-contain"
+                  className="object-contain w-[80px] xl:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
 
               {/* VALJOKI */}
               <div
                 onClick={() => setActiveBrand("valjoki")}
-                className={`flex items-center justify-center px-6 py-2 rounded-xl cursor-pointer transition ${
+                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
                   activeBrand === "valjoki"
                     ? "bg-black shadow-md"
                     : "hover:bg-white/10"
@@ -121,7 +122,7 @@ const Navbar = () => {
                   alt="VALJOKI"
                   width={130}
                   height={28}
-                  className="object-contain"
+                  className="object-contain w-[80px] xl:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
             </div>

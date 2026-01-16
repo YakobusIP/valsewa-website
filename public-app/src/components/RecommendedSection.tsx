@@ -98,7 +98,7 @@ export default function RecommendedSection() {
                 key={account.id}
                 className={cn(
                   "group relative h-[360px] rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.02]",
-                  "border-white/10 hover:border-white/30 bg-[#111]",
+                  "border-white/10 hover:border-white/30 bg-[#111] border-[#E8C545]",
                   // Mobile horizontal sizing
                   "min-w-[75%] snap-start sm:min-w-[320px] xl:min-w-0"
                 )}
@@ -155,20 +155,20 @@ export default function RecommendedSection() {
                       {letterGrade}
                     </span>
 
-                    <div className="flex flex-col gap-2 mb-1">
-                      <span className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-2">
+                    <div className="flex flex-col gap-2 mb-1 font-instrumentSans">
+                      <span className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1">
                         <span className="text-white/70 text-[10px]">
                           Skins Amount
                         </span>
-                        <span className="text-white font-bold text-[10px] sm:text-xs">
+                        <span className="text-white/70 text-[10px]">
                           | {account.skinList?.length || 0}
                         </span>
                       </span>
-                      <span className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-2">
+                      <span className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1">
                         <span className="text-white/70 text-[10px]">
                           Rent Count
                         </span>
-                        <span className="text-white font-bold text-[10px] sm:text-xs">
+                        <span className="text-white/70 text-[10px]">
                           | {convertHoursToDays(account.totalRentHour)}
                         </span>
                       </span>

@@ -27,5 +27,5 @@ export function convertHoursToDays(hours?: number | string | null) {
   const days = Math.floor(hours / 24);
   const remainingHours = hours % 24;
 
-  return `${days}d:${remainingHours}h`;
+  return `${days}d ${remainingHours}h`;
 }

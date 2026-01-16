@@ -27,13 +27,14 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
   };
   return (
     <section className="bg-[#0F0F0F] md:pb-64 pb-32 relative ">
-      <div className="relative w-full max-w-[1920px] h-auto min-h-[720px] rounded-2xl bg-[#0F0F0F] overflow-hidden px-4 sm:px-6 lg:px-12 py-8">
+      {/* Hero wrapper - overflow-visible to allow notch to show, pt for navbar space */}
+      <div className="relative w-full max-w-[1920px] mx-auto h-auto min-h-[720px] bg-[#0F0F0F] overflow-visible px-4 sm:px-6 xl:px-12 pt-4">
         <Hero initialCarousel={initialCarousel} />
       </div>
-      <div className="relative max-lg:hidden pt-4">
+      <div className="relative max-xl:hidden pt-4">
         <NavbarHome />
       </div>
-      <div className="lg:hidden">
+      <div className="xl:hidden">
         <NavbarHomeMobile />
       </div>
       {/* <a
@@ -53,8 +54,8 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
         <FaArrowUp size={30} />
       </div> */}
       <div>
-        <div className="lg:mx-14 sm:mx-7 mx-2 pt-10 ">
-          <div className="mt-20">
+        <div className="xl:mx-12 sm:mx-6 mx-4 pt-4">
+          <div>
             <HowToOrder />
             <RecommendedSection />
           </div>
