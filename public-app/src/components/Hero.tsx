@@ -85,10 +85,20 @@ function MobileBrandSwitcher({
   activeBrand: "valsewa" | "valjubel" | "valjoki";
   setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
 }) {
+  const baseButtonClass =
+    "flex-1 flex items-center justify-center py-3 rounded-md transition";
+  const activeClass = "bg-[#C70515]";
+  const inactiveClass = "bg-white/10 hover:bg-white/20";
+
   return (
     <div className="flex items-stretch w-full pt-[4.5rem] gap-6 px-2">
       {/* VALSEWA - sits in the notch area */}
-      <button className="flex-1 flex items-center justify-center py-3 rounded-md transition bg-[#C70515]">
+      <button
+        className={`${baseButtonClass} ${
+          activeBrand === "valsewa" ? activeClass : inactiveClass
+        }`}
+        onClick={() => setActiveBrand("valsewa")}
+      >
         <Image
           src="/header/VALSEWA.png"
           alt="VALSEWA"
@@ -99,7 +109,12 @@ function MobileBrandSwitcher({
       </button>
 
       {/* VALJUBEL */}
-      <button className="flex-1 flex items-center justify-center py-3 rounded-md transition bg-white/10">
+      <button
+        className={`${baseButtonClass} ${
+          activeBrand === "valjubel" ? activeClass : inactiveClass
+        }`}
+        onClick={() => setActiveBrand("valjubel")}
+      >
         <Image
           src="/header/VALJUBEL.png"
           alt="VALJUBEL"
@@ -110,7 +125,12 @@ function MobileBrandSwitcher({
       </button>
 
       {/* VALJOKI */}
-      <button className="flex-1 flex items-center justify-center py-3 rounded-md transition bg-white/10">
+      <button
+        className={`${baseButtonClass} ${
+          activeBrand === "valjoki" ? activeClass : inactiveClass
+        }`}
+        onClick={() => setActiveBrand("valjoki")}
+      >
         <Image
           src="/header/VALJOKI.png"
           alt="VALJOKI"
@@ -182,6 +202,71 @@ function HeroNotchShape() {
   );
 }
 
+function HeroTextBlock({ className = "" }: { className?: string }) {
+  return (
+    <div
+      className={`relative z-20 flex flex-col justify-center pt-16 sm:pt-20 xl:pt-0 px-4 sm:px-6 xl:px-8 ${className}`}
+    >
+      {/* Logo - Desktop only */}
+      <div className="hidden xl:flex items-center gap-3 mb-4">
+        <Image
+          src="/header/VALSEWA.png"
+          alt="VALSEWA"
+          width={200}
+          height={70}
+          className="object-contain"
+        />
+      </div>
+
+      {/* Headline */}
+      <h1 className="text-white text-4xl md:text-6xl xl:text-4xl font-extrabold leading-tight font-antonio">
+        WORLD&apos;S #1 <br />
+        <span className="text-white text-5xl md:text-8xl xl:text-8xl font-extrabold leading-tight font-antonio">
+          VALORANT ACCOUNT
+        </span>{" "}
+        <br />
+        <span className="text-white text-5xl md:text-8xl xl:text-8xl font-extrabold leading-tight font-antonio">
+          RENTAL SITE
+        </span>
+      </h1>
+
+      {/* MOBILE: Powered By */}
+      <div className="xl:hidden flex items-center gap-2 mt-4">
+        <span className="text-[#F9FAFB] text-xl font-semibold tracking-wider font-antonio">
+          POWERED BY
+        </span>
+        <Image
+          src="/header/Logo Header Valforum.png"
+          alt="VALFORUM"
+          width={100}
+          height={24}
+          className="object-contain w-[80px] sm:w-[100px] h-auto"
+        />
+      </div>
+    </div>
+  );
+}
+
+function HeroAgentLayer() {
+  return (
+    <div
+      className="absolute inset-0 pointer-events-none"
+      style={{ clipPath: "inset(-50% 0 0 0)" }}
+    >
+      <div className="absolute left-[10%] sm:left-[20%] xl:left-1/2 top-[110%] sm:top-[95%] md:top-[80%] xl:top-[100%] xl:-translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[800px] md:w-[1000px] xl:w-[880px] select-none opacity-100">
+        <Image
+          src="/NewHero/Agent Neon.png"
+          alt="Neon Agent"
+          width={900}
+          height={900}
+          className="object-top drop-shadow-[0_0_40px_rgba(0,200,255,0.35)]"
+          priority
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function Hero({ initialCarousel }: HeroProps) {
   const autoplay = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
   const [activeBrand, setActiveBrand] = useState<
@@ -206,68 +291,54 @@ export default function Hero({ initialCarousel }: HeroProps) {
           />
         </div>
 
+        {/* MOBILE: Hero carousel (includes hardcoded design as slide 1) */}
+        <div className="relative z-10 xl:hidden pt-16">
+          <div className="w-full pt-12">
+            <div className="w-full rounded-lg overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
+              <Carousel
+                className="w-full"
+                plugins={[autoplay.current]}
+                opts={{ loop: true }}
+              >
+                <CarouselContent>
+                  <CarouselItem>
+                    <AspectRatio ratio={4 / 5}>
+                      <div className="relative w-full h-full">
+                        <HeroTextBlock className="w-full" />
+                        <HeroAgentLayer />
+                      </div>
+                    </AspectRatio>
+                  </CarouselItem>
+                  {initialCarousel?.map((item, index) => (
+                    <CarouselItem key={index}>
+                      <AspectRatio ratio={4 / 5}>
+                        <Image
+                          src={item.image123.imageUrl}
+                          alt="Featured Account"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </AspectRatio>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+
+                <CarouselPrevious className="left-2 bg-black/60 text-white hover:bg-black" />
+                <CarouselNext className="right-2 bg-black/60 text-white hover:bg-black" />
+              </Carousel>
+            </div>
+          </div>
+        </div>
+
         {/* Content layer - positioned inside the main area (below notch on desktop) */}
-        <div className="relative z-10 flex flex-col xl:flex-row h-full max-w-[1920px] mx-auto xl:items-center justify-between xl:px-12 large:px-0 min-h-[550px] md:min-h-[620px] pt-16 xl:pt-20">
-          {/* LEFT – TEXT + AGENT */}
-          <div className="relative z-20 flex flex-col justify-center w-full xl:w-[55%] pt-16 sm:pt-20 xl:pt-0 px-4 sm:px-6 xl:px-8">
-            {/* Logo - Desktop only */}
-            <div className="hidden xl:flex items-center gap-3 mb-4">
-              <Image
-                src="/header/VALSEWA.png"
-                alt="VALSEWA"
-                width={200}
-                height={70}
-                className="object-contain"
-              />
-            </div>
-
-            {/* Headline */}
-            <h1 className="text-white text-4xl md:text-5xl xl:text-4xl font-extrabold leading-tight font-antonio">
-              WORLD&apos;S #1 <br />
-              <span className="text-white text-5xl md:text-6xl xl:text-8xl font-extrabold leading-tight font-antonio">
-                VALORANT ACCOUNT
-              </span>{" "}
-              <br />
-              <span className="text-white text-5xl md:text-6xl xl:text-8xl font-extrabold leading-tight font-antonio">
-                RENTAL SITE
-              </span>
-            </h1>
-
-            {/* MOBILE: Powered By */}
-            <div className="xl:hidden flex items-center gap-2 mt-4">
-              <span className="text-[#F9FAFB] text-xl font-semibold tracking-wider font-antonio">
-                POWERED BY
-              </span>
-              <Image
-                src="/header/Logo Header Valforum.png"
-                alt="VALFORUM"
-                width={100}
-                height={24}
-                className="object-contain w-[80px] sm:w-[100px] h-auto"
-              />
-            </div>
-          </div>
-
-          {/* Agent image wrapper - allows overflow at top, clips at bottom */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ clipPath: "inset(-50% 0 0 0)" }}
-          >
-            <div className="absolute left-[10%] sm:left-[30%] xl:left-1/2 top-[110%] xl:top-[100%] xl:-translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[650px] md:w-[750px] xl:w-[880px] select-none opacity-100">
-              <Image
-                src="/NewHero/Agent Neon.png"
-                alt="Neon Agent"
-                width={900}
-                height={900}
-                className="object-top drop-shadow-[0_0_40px_rgba(0,200,255,0.35)]"
-                priority
-              />
-            </div>
-          </div>
+        <div className="relative z-10 hidden xl:flex flex-col xl:flex-row h-full max-w-[1920px] mx-auto xl:items-center justify-between xl:px-12 large:px-0 min-h-[550px] md:min-h-[620px] pt-16 xl:pt-20">
+          <HeroAgentLayer />
+          <HeroTextBlock className="w-full xl:w-[55%]" />
 
           {/* RIGHT – CAROUSEL (Desktop only) */}
           <div className="relative w-full xl:w-[30%] hidden xl:flex justify-end aspect-[4/5] h-full">
-            <div className="w-full max-w-[380px] rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
+            <div className="w-full rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
               <Carousel
                 className="w-full"
                 plugins={[autoplay.current]}
