@@ -13,7 +13,11 @@ router.get("/active/:voucherName", controller.getActiveVoucherByVoucherName);
 router.post("/", controller.createVoucher);
 router.patch("/:id/toggle", controller.toggleVoucherStatus);
 router.patch("/:id/toggleVisibility", controller.toggleVoucherVisible);
-router.post("/check-expiration", schedulerMiddleware, controller.checkExpiration);
+router.post(
+  "/check-expiration",
+  schedulerMiddleware,
+  controller.checkExpiration
+);
 router.delete("/:id", controller.deleteVoucher);
 
 export default router;

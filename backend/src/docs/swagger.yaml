@@ -472,7 +472,16 @@ components:
         mainValue: { type: integer }
         othersValue: { type: integer }
         totalValue: { type: integer }
-        account: { type: integer, nullable: true }
+        account:
+          type: pbject
+          nullable: true
+          properties:
+            accountCode: { type: string }
+            accountRank: { type: string }
+            priceTierCode: { type: string }
+            thumbnailImageUrl: { type: string }
+            username: { type: string, nullable: true }
+            password: { type: string, nullable: true }
 
     PaymentResponse:
       type: object
@@ -2050,8 +2059,6 @@ paths:
     post:
       tags: [Bookings]
       summary: Sync expired bookings
-      security:
-        - bearerAuth: []
       responses:
         "200":
           content:
@@ -2061,10 +2068,40 @@ paths:
                 properties:
                   count: { type: integer }
 
+  /api/bookings/sync-completed:
+    post:
+      tags: [Bookings]
+      summary: Sync completed bookings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+
+  /api/bookings/sync-account-availability:
+    post:
+      tags: [Bookings]
+      summary: Sync account availabilities
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  markedInUse: { type: integer }
+                  markedAvailable: { type: integer }
+
   /api/bookings/faspay/callback:
     post:
       tags: [Webhooks]
       summary: Faspay Payment Notification Webhook
+      requestBody:
+        required: true
+        content: application/json
       responses:
         "200":
           description: Acknowledged

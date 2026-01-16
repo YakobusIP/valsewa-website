@@ -279,6 +279,33 @@ export class BookingController {
       return next(error);
     }
   };
+  syncCompletedBookings = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await this.bookingService.syncCompletedBookings();
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  syncAccountAvailability = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await this.bookingService.syncAccountAvailability();
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
 
   callbackFaspayPayment = async (
     req: Request,

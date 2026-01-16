@@ -221,7 +221,7 @@ export class AuthController {
 
         const payload = decoded as PubTokenPayload;
 
-        return res.json({ username: payload.username });
+        return res.json({ id: payload.id, username: payload.username });
       });
     } catch (error) {
       if (error instanceof UnauthorizedError) {

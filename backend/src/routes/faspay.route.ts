@@ -4,7 +4,7 @@ import { FaspayController } from "../controllers/faspay.controller";
 import { FaspayClient } from "../faspay/faspay.client";
 import { BookingService } from "../services/booking.service";
 
-class PriceTierRouter {
+class faspayServiceRouter {
   public router: Router;
   private bookingService: BookingService;
   private faspayClient: FaspayClient;
@@ -32,4 +32,4 @@ class PriceTierRouter {
   }
 }
 
-export default new PriceTierRouter().router;
+export default new faspayServiceRouter().router;
