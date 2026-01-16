@@ -354,7 +354,8 @@ export class AccountService {
           priceTier: true,
           thumbnail: true,
           otherImages: true,
-          isLowRank: true
+          isLowRank: true,
+          isRecommended: true,
         }
       });
 
@@ -407,6 +408,41 @@ export class AccountService {
     }
   };
 
+  getRecommendedAccounts = async (): Promise<PublicAccount[]> => {
+    try {
+      const accounts = await prisma.account.findMany({
+        where: {
+          isRecommended: true,
+          availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
+        },
+        orderBy: {
+          totalRentHour: "desc"
+        },
+        take: 3,
+        select: {
+            id: true,
+            nickname: true,
+            accountCode: true,
+            description: true,
+            accountRank: true,
+            availabilityStatus: true,
+            currentExpireAt: true,
+            totalRentHour: true,
+            skinList: true,
+            priceTier: true,
+            thumbnail: true,
+            otherImages: true,
+            isLowRank: true,
+            isRecommended: true,
+        }
+      });
+      
+      return accounts;
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   getAccountById = async (id: number) => {
     try {
       const account = await prisma.account.findUnique({
@@ -436,6 +472,9 @@ export class AccountService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  
+
 
   getAccountDuplicate = async (nickname: string, accountCode: string) => {
     try {

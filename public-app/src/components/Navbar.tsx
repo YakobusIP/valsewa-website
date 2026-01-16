@@ -1,17 +1,10 @@
 "use client";
 
-import { Goldman } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import LoginPage from "./LoginPage";
 import { useAuth } from "@/hooks/useAuth";
-
-const goldman = Goldman({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  display: "swap"
-});
 
 const Navbar = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
@@ -52,11 +45,11 @@ const Navbar = () => {
           <Link href="https://valforum.com/top-up">
             <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl hover:border-white transition cursor-pointer">
               <Image src="/header/Diamond.svg" alt="Top Up" width={18} height={18} />
-              <span className={`text-white text-sm font-bold ${goldman.className}`}>Top Up</span>
+              <span className="text-white text-sm font-bold font-instrumentSans">Top Up</span>
             </div>
           </Link>
 
-          
+
           {/* SIGN IN */}
           {!isAuthenticated && (
             <button

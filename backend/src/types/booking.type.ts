@@ -1,5 +1,6 @@
 import {
   BookingStatus,
+  Payment,
   PaymentMethodType,
   PaymentStatus,
   Provider,
@@ -29,6 +30,12 @@ export type CreateBookingRequest = {
   startAt?: Date;
 };
 
+export type CreateManualBookingRequest = {
+  accountCode: string;
+  totalValue: number;
+  startAt?: Date;
+};
+
 export type PayBookingRequest = {
   bookingId: string;
   voucherId?: number;
@@ -45,6 +52,7 @@ export type BookingResponse = {
   quantity: number;
   startAt: Date | null;
   endAt: Date | null;
+  createdAt: Date | null;
   expiredAt: Date | null;
   mainValuePerUnit: number;
   othersValuePerUnit: number | null;
@@ -57,6 +65,11 @@ export type BookingResponse = {
   discount: number | null;
   totalValue: number;
   account?: any;
+  payments?: Payment[];
+};
+
+export type UpdateBookingRequest = {
+  totalValue: number;
 };
 
 export type PaymentResponse = {

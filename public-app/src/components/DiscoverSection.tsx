@@ -165,22 +165,22 @@ export default function DiscoverSection() {
     return (
         <section className="w-full relative z-10 -mt-8 mb-12">
             <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-12">
-                <div className="bg-gradient-to-r from-black via-[#5e0000] to-[#C70515] rounded-3xl p-8 md:p-12 relative overflow-hidden border border-white/10 shadow-2xl">
+                <div className="sm:bg-gradient-to-r sm:from-black sm:via-[#5e0000] sm:to-[#C70515] sm:rounded-3xl 2xl:p-8 sm:p-8 md:p-8 relative overflow-hidden sm:border sm:border-white/10 sm:shadow-2xl">
 
                     {/* Header Section */}
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                         <div>
                             <div className="flex items-center gap-4 mb-2">
-                                <h2 className="text-4xl md:text-5xl font-mona font-black text-white tracking-tighter">
+                                <h2 className="text-2xl sm:text-4xl md:text-5xl font-antonio font-black text-white tracking-tighter">
                                     DISCOVER BY
                                 </h2>
 
                                 {/* Filter Tabs */}
-                                <div className="flex items-center bg-black/40 rounded-lg p-1 border border-white/10">
+                                <div className="flex items-center bg-black/40 rounded-lg p-1 border border-white/10 overflow-x-auto scrollbar-hide max-w-full">
                                     <button
                                         onClick={() => setActiveFilter("LR-TIER")}
                                         className={cn(
-                                            "px-4 py-1.5 rounded-md text-xs font-bold transition-all uppercase",
+                                            "px-4 py-1.5 rounded-md text-[0.5rem] sm:text-xs font-bold transition-all uppercase",
                                             activeFilter === "LR-TIER"
                                                 ? "bg-white/10 text-white"
                                                 : "text-white/40 hover:text-white/70"
@@ -191,7 +191,7 @@ export default function DiscoverSection() {
                                     <button
                                         onClick={() => setActiveFilter("TIER")}
                                         className={cn(
-                                            "px-4 py-1.5 rounded-md text-xs font-bold transition-all uppercase",
+                                            "px-4 py-1.5 rounded-md text-[0.5rem] sm:text-xs font-bold transition-all uppercase",
                                             activeFilter === "TIER"
                                                 ? "bg-white/10 text-white"
                                                 : "text-white/40 hover:text-white/70"
@@ -202,7 +202,7 @@ export default function DiscoverSection() {
                                     <button
                                         onClick={() => setActiveFilter("RANK")}
                                         className={cn(
-                                            "px-4 py-1.5 rounded-md text-xs font-bold transition-all uppercase",
+                                            "px-4 py-1.5 rounded-md text-[0.5rem] sm:text-xs font-bold transition-all uppercase",
                                             activeFilter === "RANK"
                                                 ? "bg-white/10 text-white"
                                                 : "text-white/40 hover:text-white/70"
@@ -212,18 +212,29 @@ export default function DiscoverSection() {
                                     </button>
                                 </div>
                             </div>
-                            <p className="text-white/70 text-lg">
+                            <p className="text-white/70 text-xs md:text-lg">
                                 Choose accounts that fit your needs
                             </p>
                         </div>
                     </div>
 
                     {activeFilter === "LR-TIER" && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div
+                            className="
+                                flex gap-4 overflow-x-auto pb-2
+                                snap-x snap-mandatory
+                                xl:grid xl:grid-cols-5
+                                xl:overflow-visible
+                            "
+                        >
                             {lrtiers.map((lrtiers) => (
                                 <div
                                     key={lrtiers.id}
-                                    className="group relative bg-[#111] rounded-2xl border border-[#787878] p-5 h-[240px] flex flex-col justify-between overflow-hidden"
+                                    className="
+                                        group relative bg-[#111] rounded-2xl border border-[#787878]
+                                        p-5 h-[220px] flex flex-col justify-between overflow-hidden
+                                        min-w-[48%] sm:min-w-[260px] xl:min-w-0 snap-start
+                                    "
                                 >
                                     {/* Available Badge */}
                                     <span className="absolute top-4 left-4 bg-[#4ade80] text-black text-[10px] font-bold px-2 py-1 rounded">
@@ -231,18 +242,16 @@ export default function DiscoverSection() {
                                     </span>
 
                                     {/* Main Content */}
-                                    <div className="flex items-baseline justify-center mt-8 relative z-10">
-                                        <span className="text-5xl font-black italic text-white mr-2 tracking-tighter">
+                                    <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
+                                        <span className="2xl:text-6xl sm:text-6xl text-2xl font-black italic text-white mr-2 tracking-tighter font-antonio">
                                             LR
                                         </span>
                                         <span
                                             className={cn(
-                                                "text-8xl font-black italic tracking-tighter leading-none transform translate-y-2",
+                                                "text-5xl 2xl:text-8xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
                                                 lrtiers.color
                                             )}
-                                            style={{
-                                                textShadow: "0 0 20px currentColor"
-                                            }}
+
                                         >
                                             {lrtiers.rankLetter}
                                         </span>
@@ -262,13 +271,13 @@ export default function DiscoverSection() {
                                             <span className="text-white/50 text-[10px] font-medium border-none underline-offset-auto">
                                                 Starts From
                                             </span>
-                                            <span className="text-white font-bold text-lg leading-tight">
+                                            <span className="text-white font-bold text-sm sm:text-lg leading-tight">
                                                 {lrtiers.price}
                                             </span>
                                         </div>
 
                                         <Link
-                                            href={`/search?q=${lrtiers.rankLetter}`} // Assuming search implementation
+                                            href="#" // Assuming search implementation
                                             className="bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors"
                                         >
                                             See More
@@ -279,28 +288,39 @@ export default function DiscoverSection() {
                         </div>
                     )}
                     {activeFilter === "TIER" && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div
+                            className="
+                                flex gap-4 overflow-x-auto pb-2
+                                snap-x snap-mandatory
+                                xl:grid xl:grid-cols-5
+                                xl:overflow-visible
+                            "
+                        >
+
                             {tiers.map((tier) => (
                                 <div
                                     key={tier.id}
-                                    className="group relative bg-[#111] rounded-2xl border border-[#787878] p-5 h-[240px] flex flex-col justify-between overflow-hidden"
+                                    className="
+                                        group relative bg-[#111] rounded-2xl border border-[#787878]
+                                        p-5 h-[220px] flex flex-col justify-between overflow-hidden
+                                        min-w-[48%] sm:min-w-[260px] xl:min-w-0 snap-start
+                                    "
                                 >
+
                                     {/* Available Badge */}
                                     <span className="absolute top-4 left-4 bg-[#4ade80] text-black text-[10px] font-bold px-2 py-1 rounded">
                                         Available
                                     </span>
 
                                     {/* Main Content */}
-                                    <div className="flex items-baseline justify-center mt-8 relative z-10">
+                                    <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
 
                                         <span
                                             className={cn(
-                                                "text-8xl font-black italic tracking-tighter leading-none transform translate-y-2",
+                                                "text-5xl 2xl:text-8xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
                                                 tier.color
                                             )}
-                                            style={{
-                                                textShadow: "0 0 20px currentColor"
-                                            }}
+
                                         >
                                             {tier.rankLetter}
                                         </span>
@@ -320,13 +340,13 @@ export default function DiscoverSection() {
                                             <span className="text-white/50 text-[10px] font-medium border-none underline-offset-auto">
                                                 Starts From
                                             </span>
-                                            <span className="text-white font-bold text-lg leading-tight">
+                                            <span className="text-white font-bold text-sm sm:text-lg leading-tight">
                                                 {tier.price}
                                             </span>
                                         </div>
 
                                         <Link
-                                            href={`/search?q=${tier.rankLetter}`} // Assuming search implementation
+                                            href="#" // Assuming search implementation
                                             className="bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors"
                                         >
                                             See More
@@ -337,14 +357,18 @@ export default function DiscoverSection() {
                         </div>
                     )}
                     {activeFilter === "RANK" && (
-                        <div className="flex gap-5 overflow-x-auto pb-4">
+                        <div
+                            className="
+                                flex gap-4 overflow-x-auto pb-2
+                                snap-x snap-mandatory
+                            "
+                        >
                             {ranks.map((rank) => (
                                 <div
                                     key={rank.id}
                                     className={cn(
-                                        "relative w-[260px] h-[240px] flex-shrink-0 rounded-2xl border border-white/10 overflow-hidden",
-                                        "bg-gradient-to-b from-[#3a0f0f] via-[#1a0505] to-black",
-                                        "shadow-[0_0_40px_rgba(255,0,0,0.15)]"
+                                        "relative w-[70%] sm:w-[260px] h-[220px] flex-shrink-0 rounded-2xl border border-white/10 overflow-hidden snap-start",
+                                        "sm:bg-gradient-to-b sm:from-[#3a0f0f] sm:via-[#1a0505] sm:to-black"
                                     )}
                                 >
                                     {/* Rank Title */}
@@ -361,7 +385,7 @@ export default function DiscoverSection() {
 
 
                                     {/* Rank Image */}
-                                    <div className="relative z-10 flex items-center justify-center h-[180px] mt-10">
+                                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
                                         <Image
                                             src={rank.image}
                                             alt={rank.name}
@@ -385,7 +409,7 @@ export default function DiscoverSection() {
                                             <span className="text-white/50 text-[10px] font-medium">
                                                 Starts From
                                             </span>
-                                            <span className="text-white font-bold text-lg leading-tight">
+                                            <span className="text-white font-bold text-sm sm:text-lg leading-tight">
                                                 {rank.price}
                                             </span>
                                         </div>

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction, response } from "express";
 import { Provider, PaymentMethodType } from "@prisma/client";
 import { BookingService } from "../services/booking.service";
-import { BadRequestError, ForbiddenError } from "../lib/error";
+import { BadRequestError, ForbiddenError, UnprocessableEntityError } from "../lib/error";
 import {
   FASPAY_STATUS_MAP,
   FaspayClient,
@@ -44,7 +44,33 @@ export class BookingController {
       return next(error);
     }
   };
+  
+  getAccountRented = async (req: Request, res: Response, next: NextFunction) => {
+    try {
 
+      const startDate = req.query.start_date ? new Date(req.query.start_date as string) : undefined;
+      const endDate = req.query.end_date ? new Date(req.query.end_date as string) : undefined;
+
+      const data = await this.bookingService.getAccountRented(startDate, endDate);
+      return res.json({ data });
+    } catch (error) {
+      return next(error);
+    }
+  };
+  
+  updateBooking = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const bookingId = req.params.id;
+      const totalValue = req.body.totalValue;
+      if (!bookingId) throw new BadRequestError("Booking ID is required.");
+
+      const result = await this.bookingService.updateBooking(bookingId, totalValue);
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
   getBookingsByCustomerId = async (
     req: Request,
     res: Response,
@@ -136,6 +162,27 @@ export class BookingController {
         quantity,
         voucherId,
         startAt: startAt ? new Date(startAt) : undefined
+      });
+
+      return res.status(201).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  createManualBooking = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const {
+        accountCode,
+        totalValue
+      } = req.body;
+
+      if (!accountCode || !totalValue ) {
+        throw new BadRequestError("Missing required fields.");
+      }
+      const result = await this.bookingService.createManualBooking({
+        accountCode,
+        totalValue
       });
 
       return res.status(201).json(result);

@@ -23,6 +23,9 @@ class BookingRouter {
 
   private initializeRoutes() {
     this.router.get("/", authMiddleware, this.bookingController.getAllBookings);
+    this.router.put("/update/:id", authMiddleware, this.bookingController.updateBooking);
+    this.router.post("/create", authMiddleware, this.bookingController.createManualBooking);
+    this.router.get("/rented", authMiddleware, this.bookingController.getAccountRented);
     this.router.get(
       "/:id",
       authMiddleware,

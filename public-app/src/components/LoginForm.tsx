@@ -47,7 +47,7 @@ export function LoginForm({
   return (
     <div
       className={cn(
-        "relative w-full h-full bg-black rounded-2xl overflow-hidden",
+        "relative w-full h-full bg-black overflow-hidden",
         className
       )}
       {...props}
@@ -56,15 +56,15 @@ export function LoginForm({
       {onClose && (
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 text-neutral-400 hover:text-white text-xl"
+          className="absolute z-[999] right-6 top-6 text-neutral-400 hover:text-white text-xl"
         >
           —
         </button>
       )}
 
-      <div className="grid h-full grid-cols-1 md:grid-cols-2">
+      <div className="relative h-full md:grid md:grid-cols-2">
         {/* LEFT IMAGE */}
-        <div className="relative hidden md:block">
+        <div className="absolute top-0 left-0 w-full h-[35vh] md:relative md:h-full">
           <Image
             src="/login/Login Page Interface.png"
             fill
@@ -72,13 +72,22 @@ export function LoginForm({
             className="object-cover"
             priority
           />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black md:hidden" />
         </div>
 
         {/* RIGHT FORM */}
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex items-center justify-center px-10"
+          className="
+    relative z-10
+            flex items-center justify-center
+            min-h-screen
+            px-6
+            md:px-10
+            md:min-h-full
+          "
         >
+
           <div className="w-full max-w-sm space-y-6 text-center">
             {/* Header */}
             <div className="space-y-2">

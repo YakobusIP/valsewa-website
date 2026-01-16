@@ -8,6 +8,15 @@ import { bookingService } from "@/services/booking.service";
 import Navbar from "@/components/Navbar";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
+import { ChevronDown, Search } from "lucide-react";
 
 import { toast } from "@/hooks/useToast";
 
@@ -18,6 +27,7 @@ import { getRankImageUrl } from "@/lib/utils";
 import { isAxiosError } from "axios";
 import Image from "next/image";
 import { notFound, useParams, useRouter } from "next/navigation";
+import NavbarMobile from "@/components/NavbarMobile";
 
 export default function AccountDetailPage() {
   const router = useRouter();
@@ -183,26 +193,57 @@ export default function AccountDetailPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <Navbar />
+      <div className="relative max-lg:hidden">
+        <Navbar />
+      </div>
+      <div className="lg:hidden">
+        <NavbarMobile />
+      </div>
 
       <div className="pt-[110px] px-4 lg:px-10">
         <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8">
           {/* LEFT — GALLERY */}
-          <div className="col-span-12 lg:col-span-7 grid grid-cols-2 gap-1 max-h-[100vh] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {images.map((img: UploadResponse, i: number) => (
-              <div
-                key={i}
-                className="relative aspect-video"
-              >
-                <Image
-                  src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
-                  alt="Account Image"
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              </div>
-            ))}
+          <div className="col-span-12 lg:col-span-7">
+            {/* MOBILE CAROUSEL (< sm) */}
+            <div className="lg:hidden">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {images.map((img: UploadResponse, i: number) => (
+                    <CarouselItem key={i}>
+                      <div className="relative aspect-video w-full">
+                        <Image
+                          src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
+                          alt="Account Image"
+                          fill
+                          className="object-cover rounded-md"
+                          unoptimized
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </Carousel>
+            </div>
+
+            {/* DESKTOP GRID (>= sm) */}
+            <div className="hidden lg:grid grid-cols-2 gap-1 max-h-[100vh] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {images.map((img: UploadResponse, i: number) => (
+                <div
+                  key={i}
+                  className="relative aspect-video"
+                >
+                  <Image
+                    src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
+                    alt="Account Image"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* RIGHT — DETAILS */}
@@ -222,7 +263,7 @@ export default function AccountDetailPage() {
               </div>
 
               {/* COL 2 ROW 1 — TITLE */}
-              <h1 className="text-3xl font-bold text-white tracking-wide leading-tight">
+              <h1 className="sm:text-3xl text-xl font-bold text-white tracking-wide leading-tight">
                 <span className="uppercase">{account.accountRank}</span>
                 <span className="text-neutral-400"> | </span>
                 <span>{account.accountCode}</span>
@@ -271,12 +312,12 @@ export default function AccountDetailPage() {
                   >
                     <p className="font-semibold">Skin List</p>
 
-                    <span
-                      className={`transition-transform duration-200 text-white bg-neutral-600 ml-2 p-0.5 ${showSkins ? "rotate-180" : "rotate-0"
+                    <div
+                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${showSkins ? "rotate-180" : "rotate-0"
                         }`}
                     >
-                      ▲
-                    </span>
+                      <ChevronDown className="w-3 h-3 text-white" />
+                    </div>
                   </div>
                 </span>
 
@@ -293,13 +334,16 @@ export default function AccountDetailPage() {
               {showSkins && (
                 <div className="space-y-3">
                   {/* SEARCH */}
-                  <input
-                    type="text"
-                    placeholder="Search Valorant skin..."
-                    value={skinSearch}
-                    onChange={(e) => setSkinSearch(e.target.value)}
-                    className="w-full rounded-md bg-neutral-900 border border-neutral-700 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-red-500"
-                  />
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                    <input
+                      type="text"
+                      placeholder="Search Valorant skin..."
+                      value={skinSearch}
+                      onChange={(e) => setSkinSearch(e.target.value)}
+                      className="w-full rounded-md bg-neutral-900 border border-neutral-700 pl-9 pr-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-red-500"
+                    />
+                  </div>
 
                   {/* LIST */}
                   <div className="flex flex-wrap gap-2 max-h-[240px] overflow-y-auto pr-1">
@@ -324,16 +368,15 @@ export default function AccountDetailPage() {
             </div>
 
             {/* RENT / BOOK SECTION */}
-            <div className="bg-neutral-900 rounded-xl p-4 space-y-4">
+            <div className="bg-neutral-900 rounded-xl xl:p-4 p-2 space-y-4">
               {/* MODE TOGGLE */}
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setMode("RENT")}
-                  className={`text-sm font-semibold py-2 rounded-md transition
-                    ${
-                      mode === "RENT"
-                        ? "bg-red-600 text-white"
-                        : "bg-neutral-800 text-white hover:bg-neutral-700"
+                  className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
+                    ${mode === "RENT"
+                      ? "bg-red-600 text-white"
+                      : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   RENT NOW
@@ -341,11 +384,10 @@ export default function AccountDetailPage() {
 
                 <button
                   onClick={() => setMode("BOOK")}
-                  className={`text-sm font-semibold py-2 rounded-md transition
-                    ${
-                      mode === "BOOK"
-                        ? "bg-red-600 text-white"
-                        : "bg-neutral-800 text-white hover:bg-neutral-700"
+                  className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
+                    ${mode === "BOOK"
+                      ? "bg-red-600 text-white"
+                      : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   BOOK FOR LATER
@@ -376,7 +418,7 @@ export default function AccountDetailPage() {
                         <p className="text-xs font-semibold uppercase">
                           {item.duration}
                         </p>
-                        <p className="text-[11px] text-neutral-400">
+                        <p className="sm:text-[11px] text-xs text-neutral-400">
                           IDR {calculateBasePrice(item).toLocaleString("id-ID")}
                         </p>
                       </div>
@@ -421,16 +463,19 @@ export default function AccountDetailPage() {
                   </div>
 
                   {/* DATE + TIME */}
-                  <div className="bg-neutral-900 rounded-xl p-4 grid grid-cols-2 gap-4">
+                  <div className="bg-neutral-900 rounded-xl sm:p-4 grid grid-cols-2 gap-4 pt-5 sm:pt-0">
                     {/* DATE */}
-                    <div>
+                    <div className="flex h-auto justify-center sm:mb-10">
                       <Calendar
                         mode="single"
                         selected={bookDate ?? undefined}
                         onSelect={(date) => setBookDate(date ?? null)}
-                        disabled={(date) => date < new Date()}
-                        className="rounded-md border border-neutral-800 bg-black text-white
-                          [&_.rdp-day]:text-white
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                        className="rounded-md border border-neutral-800 bg-black text-white p-2 max-sm:scale-75 origin-top -mt-2 -mb-16
+                          [&_.rdp-day]:text-white [&_.rdp-day]:h-7 [&_.rdp-day]:w-7 [&_.rdp-day]:text-xs
+                          [&_.rdp-head_cell]:text-neutral-400 [&_.rdp-head_cell]:text-[0.65rem] [&_.rdp-head_cell]:font-normal
+                          [&_.rdp-caption_label]:text-white [&_.rdp-caption_label]:text-sm
+                          [&_.rdp-nav_button]:text-white [&_.rdp-nav_button]:h-6 [&_.rdp-nav_button]:w-6
 
                           [&_.rdp-day[aria-selected=true]]:bg-red-500
                           [&_.rdp-day[aria-selected=true]]:text-white
@@ -438,23 +483,13 @@ export default function AccountDetailPage() {
 
                           [&_.rdp-day_today]:border
                           [&_.rdp-day_today]:border-red-500
-
-                          [&_.rdp-nav_button]:text-white
-                          [&_.rdp-caption_label]:text-white
-                          [&_.rdp-head_cell]:text-neutral-400
                         "
                       />
-
-                      <p className="mt-2 text-xs text-neutral-400">
-                        {bookDate
-                          ? `Selected: ${bookDate.toLocaleDateString("id-ID")}`
-                          : "Select a date"}
-                      </p>
                     </div>
 
                     {/* TIME */}
                     <div className="flex flex-col gap-3">
-                      <p className="text-white text-sm font-semibold">
+                      <p className="text-white sm:text-sm text-xs font-semibold">
                         Rental Time
                       </p>
 
@@ -481,6 +516,11 @@ export default function AccountDetailPage() {
                           className="bg-neutral-700 text-neutral-400 rounded-md px-2 py-1 cursor-not-allowed"
                         />
                       </div>
+                      <p className="mt-2 text-xs text-neutral-400">
+                        {bookDate
+                          ? `Selected: ${bookDate.toLocaleDateString("id-ID")}`
+                          : "Select a date"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -488,21 +528,21 @@ export default function AccountDetailPage() {
 
               {/* QTY */}
               <div className="flex items-center justify-between">
-                <span className="text-sm">Qty</span>
+                <span className="sm:text-sm text-xs">Qty</span>
 
                 <div className="flex items-center bg-neutral-800 rounded-md overflow-hidden">
                   <button
                     onClick={() => setQty((prev) => Math.max(1, prev - 1))}
-                    className="px-3 py-1 text-lg hover:bg-neutral-700"
+                    className="px-3 py-1 sm:text-lg text-md hover:bg-neutral-700"
                   >
                     −
                   </button>
 
-                  <span className="px-4 text-sm">{qty}</span>
+                  <span className="px-4 sm:text-sm text-xs">{qty}</span>
 
                   <button
                     onClick={() => setQty((prev) => prev + 1)}
-                    className="px-3 py-1 text-lg hover:bg-neutral-700"
+                    className="px-3 py-1 sm:text-lg text-md hover:bg-neutral-700"
                   >
                     +
                   </button>
