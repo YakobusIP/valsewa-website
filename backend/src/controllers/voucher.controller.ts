@@ -132,4 +132,16 @@ export class VoucherController {
       });
     }
   };
+
+  checkExpiration = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const result = await this.voucherService.checkVoucherExpiration();
+      return res.json({
+        message: "Voucher expiration check completed",
+        ...result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
 }

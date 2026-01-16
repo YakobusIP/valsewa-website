@@ -75,4 +75,20 @@ export class CustomerController {
       });
     }
   };
+
+  checkPasswordExpiration = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result = await this.customerService.checkPasswordExpiration();
+      return res.json({
+        message: "Customer password expiration check completed",
+        ...result
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
 }

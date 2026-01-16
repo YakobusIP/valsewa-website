@@ -38,6 +38,11 @@ class CustomerRouter {
       authMiddleware,
       this.customerController.toggleActiveStatus
     );
+    this.router.post(
+      "/check-password-expiration",
+      authMiddleware,
+      this.customerController.checkPasswordExpiration
+    );
   }
 }
 

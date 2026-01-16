@@ -130,6 +130,35 @@ export class CustomerService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  checkPasswordExpiration = async () => {
+    try {
+      const today = new Date();
+
+      // Find all active customers whose password has expired
+      const expiredCustomers = await prisma.customer.findMany({
+        where: {
+          isActive: true,
+          passwordExpireAt: {
+            lt: today
+          }
+        }
+      });
+
+      console.log(`Found ${expiredCustomers.length} expired customers.`);
+
+      const updatePromises = expiredCustomers.map((customer) => {
+        console.log(`Deactivating customer: ${customer.username}`);
+        return this.toggleCustomerActiveStatus(customer.id, false);
+      });
+
+      await Promise.all(updatePromises);
+
+      return { count: expiredCustomers.length };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
 }
 const addDays = (date: Date, days: number) => {
   const result = new Date(date);
