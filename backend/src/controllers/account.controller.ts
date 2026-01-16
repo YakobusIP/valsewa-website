@@ -4,7 +4,7 @@ import { BadRequestError, UnprocessableEntityError } from "../lib/error";
 import { RankService } from "../services/rank.service";
 import { Prisma } from "@prisma/client";
 import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
-import { parseBooleanOptional, parseStringArray } from "../lib/utils";
+import { parseStringArray, parseBooleanOptional } from "../lib/utils";
 
 export class AccountController {
   constructor(
@@ -44,22 +44,53 @@ export class AccountController {
     next: NextFunction
   ) => {
     try {
-      const page = req.query.page as string;
-      const limit = req.query.limit as string;
-      const query = req.query.q as string;
-      const sortBy = req.query.sortBy as string;
-      const direction = req.query.direction as Prisma.SortOrder;
+      // Optional pagination - if not sent, no pagination
+      const pageRaw = req.query.page as string | undefined;
+      const limitRaw = req.query.limit as string | undefined;
+      const page = pageRaw ? parseInt(pageRaw) : undefined;
+      const limit = limitRaw ? parseInt(limitRaw) : undefined;
 
-      if (!page || !limit) {
-        throw new UnprocessableEntityError("Pagination query params missing!");
-      }
+      // Search query
+      const query = (req.query.q as string) || undefined;
 
-      const [data, metadata] = await this.accountService.getAllPublicAccounts(
-        parseInt(page),
-        parseInt(limit),
+      // Sorting
+      const sortBy = req.query.sortBy as string | undefined;
+      const direction = req.query.direction as Prisma.SortOrder | undefined;
+
+      // Low rank tier filter: true = LR only, false = normal only, undefined = all
+      const lowTierOnly = parseBooleanOptional(req.query.low_tier_only);
+
+      // Tier filters - e.g. ["S", "V", "B"] - just the tier code
+      const tiers = parseStringArray(req.query.tiers);
+
+      // Skin count filters - e.g. ["0-5", "6-10"]
+      const skinCounts = parseStringArray(req.query.skin_counts);
+
+      // Rank filters - e.g. ["Gold", "Iron", "Radiant"]
+      const ranks = parseStringArray(req.query.ranks);
+
+      // Price range filter
+      const minPriceRaw = req.query.min_price as string | undefined;
+      const maxPriceRaw = req.query.max_price as string | undefined;
+      const minPrice = minPriceRaw ? parseInt(minPriceRaw) : undefined;
+      const maxPrice = maxPriceRaw ? parseInt(maxPriceRaw) : undefined;
+
+      const filters = {
         query,
+        lowTierOnly,
+        tiers,
+        skinCounts,
+        ranks,
+        minPrice,
+        maxPrice,
         sortBy,
         direction
+      };
+
+      const [data, metadata] = await this.accountService.getAllPublicAccounts(
+        filters,
+        page,
+        limit
       );
 
       return res.json({ data, metadata });
@@ -291,93 +322,4 @@ export class AccountController {
       return next(error);
     }
   };
-
-  addSkinsToAccount = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const updated = await this.accountService.addSkinsToAccount(
-        parseInt(req.params.id),
-        req.body.skinList as number[]
-      );
-
-      return res.status(200).json({ data: updated });
-    } catch (error) {
-      return next(error);
-    }
-  };
-
-  removeSkinsFromAccount = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const updated = await this.accountService.removeSkinsFromAccount(
-        parseInt(req.params.id),
-        req.body.skinList as number[]
-      );
-
-      return res.status(200).json({ data: updated });
-    } catch (error) {
-      return next(error);
-    }
-  };
- 
-  searchPublicAccounts = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    try {
-      const pageRaw = req.query.page as string;
-      const limitRaw = req.query.limit as string;
-
-      if (pageRaw == null || limitRaw == null) {
-        throw new UnprocessableEntityError("Pagination query params missing!");
-      }
-
-      const page = parseInt(pageRaw);
-      const limit = parseInt(limitRaw);
-
-      const ranks = parseStringArray(req.query.ranks)
-
-      const q = req.query.q as string;
-      const minPrice = parseInt(req.query.minPrice as string);
-      const maxPrice = parseInt(req.query.maxPrice as string);
-      const totalSkin = req.query.totalSkin as string;
-      const lowTierOnly = parseBooleanOptional(req.query.lowTierOnly);
-      const priceTierId = parseInt(req.query.priceTierId as string);
-      
-      const sortBy = req.query.sortBy as string;
-      const direction = req.query.direction as Prisma.SortOrder;
-
-      const filters = {
-        ranks,
-        minPrice,
-        maxPrice,
-        totalSkin,
-        lowTierOnly,
-        priceTierId,
-        query: q,
-        sortBy,
-        direction,
-      };
-
-      const [data, metadata] = await this.accountService.searchPublicAccounts(
-        page,
-        limit,
-        filters
-      );
-
-
-
-      return res.json({ data, metadata });
-    } catch (error) {
-      return next(error);
-    }
-  };
-  
 }
