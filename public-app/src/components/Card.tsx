@@ -38,10 +38,10 @@ const Card: React.FC<CardProps> = ({ data }) => {
 
   return (
     <section className="w-full flex justify-center">
-      <div className="w-full max-w-[1920px] lg:px-12">
+      <div className="w-full max-w-[1920px] xl:px-12">
         <div className="flex flex-col mb-8">
           <div className="flex items-center gap-2 mb-2">
-            <h2 className="text-2xl md:text-5xl font-antonio font-black text-white tracking-tighter uppercase relative">
+            <h2 className="text-3xl md:text-5xl font-antonio font-black text-white tracking-tighter uppercase relative">
               FULL INVENTORY
             </h2>
           </div>

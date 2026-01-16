@@ -35,11 +35,11 @@ export default function RecommendedSection() {
 
   return (
     <section className="w-full relative z-10 mb-12">
-      <div className="w-full max-w-[1920px] mx-auto lg:px-12">
+      <div className="w-full max-w-[1920px] mx-auto xl:px-12">
         {/* Header */}
         <div className="flex flex-col mb-8">
           <div className="flex items-center gap-2 mb-2">
-            <h2 className="text-2xl md:text-5xl font-antonio font-black text-white tracking-tighter uppercase relative">
+            <h2 className="text-3xl md:text-5xl font-antonio font-black text-white tracking-tighter uppercase relative">
               Trending Now
               <span className="inline-block ml-3 text-[#C70515] animate-pulse">
                 <FaFire />

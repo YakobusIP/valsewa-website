@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
@@ -18,6 +18,109 @@ import Image from "next/image";
 
 interface HeroProps {
   initialCarousel: CarouselSlide[];
+}
+
+// Mobile SVG Notch Shape Component (for screens below xl)
+// The notch covers ~1/3 of the width for the VALSEWA button
+function HeroNotchShapeMobile() {
+  // ViewBox: 400 wide x 600 tall (mobile proportions)
+  // Notch: ~130px wide (1/3 of width), 65px tall, at top-left
+  // This covers the VALSEWA button in the brand switcher
+  const notchPath = `
+    M 12 600
+    Q 0 600 0 588
+    L 0 12
+    Q 0 0 12 0
+    L 118 0
+    Q 130 0 130 12
+    L 130 43
+    Q 130 65 142 65
+    L 388 65
+    Q 400 65 400 67
+    L 400 588
+    Q 400 600 388 600
+    Z
+  `;
+
+  return (
+    <svg
+      className="absolute inset-0 w-full h-full pointer-events-none xl:hidden pt-16"
+      viewBox="0 0 400 600"
+      preserveAspectRatio="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <radialGradient
+          id="heroGradientMobile"
+          cx="0%"
+          cy="50%"
+          r="100%"
+          fx="0%"
+          fy="50%"
+        >
+          <stop offset="0%" stopColor="#210004" />
+          <stop offset="70%" stopColor="#000000" />
+        </radialGradient>
+      </defs>
+
+      {/* Background fill */}
+      <path d={notchPath} fill="url(#heroGradientMobile)" />
+
+      {/* Border stroke */}
+      <path
+        d={notchPath}
+        stroke="rgba(255,255,255,0.1)"
+        strokeWidth="1.5"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
+// Mobile Brand Switcher Component - Full width with equal buttons
+function MobileBrandSwitcher({
+  activeBrand,
+  setActiveBrand
+}: {
+  activeBrand: "valsewa" | "valjubel" | "valjoki";
+  setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
+}) {
+  return (
+    <div className="flex items-stretch w-full pt-[4.5rem] gap-6 px-2">
+      {/* VALSEWA - sits in the notch area */}
+      <button className="flex-1 flex items-center justify-center py-3 rounded-md transition bg-[#C70515]">
+        <Image
+          src="/header/VALSEWA.png"
+          alt="VALSEWA"
+          width={200}
+          height={70}
+          className="object-contain w-[70px] sm:w-[90px] h-auto"
+        />
+      </button>
+
+      {/* VALJUBEL */}
+      <button className="flex-1 flex items-center justify-center py-3 rounded-md transition bg-white/10">
+        <Image
+          src="/header/VALJUBEL.png"
+          alt="VALJUBEL"
+          width={200}
+          height={70}
+          className="object-contain w-[70px] sm:w-[90px] h-auto"
+        />
+      </button>
+
+      {/* VALJOKI */}
+      <button className="flex-1 flex items-center justify-center py-3 rounded-md transition bg-white/10">
+        <Image
+          src="/header/VALJOKI.png"
+          alt="VALJOKI"
+          width={200}
+          height={70}
+          className="object-contain w-[70px] sm:w-[90px] h-auto"
+        />
+      </button>
+    </div>
+  );
 }
 
 // SVG Notch Shape Component for the Hero container
@@ -81,23 +184,34 @@ function HeroNotchShape() {
 
 export default function Hero({ initialCarousel }: HeroProps) {
   const autoplay = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
+  const [activeBrand, setActiveBrand] = useState<
+    "valsewa" | "valjubel" | "valjoki"
+  >("valsewa");
 
   return (
     <section className="relative w-full">
       {/* Hero container with notch */}
-      <div className="relative w-full min-h-[550px] md:min-h-[620px] overflow-visible">
+      <div className="relative w-full min-h-[550px] md:min-h-[620px] overflow-x-hidden overflow-y-hidden xl:overflow-visible">
         {/* Desktop: SVG Notch Shape with fill and border */}
         <HeroNotchShape />
 
-        {/* Mobile/Tablet: simple rounded container */}
-        <div className="xl:hidden absolute inset-0 bg-[radial-gradient(circle_at_left,#210004_0%,#000_60%)] rounded-2xl border border-white/10" />
+        {/* Mobile/Tablet: SVG Notch Shape */}
+        <HeroNotchShapeMobile />
+
+        {/* MOBILE: Brand Switcher - absolutely positioned at top to align with notch */}
+        <div className="xl:hidden absolute top-0 left-0 right-0 z-20">
+          <MobileBrandSwitcher
+            activeBrand={activeBrand}
+            setActiveBrand={setActiveBrand}
+          />
+        </div>
 
         {/* Content layer - positioned inside the main area (below notch on desktop) */}
-        <div className="relative z-10 flex h-full max-w-[1920px] mx-auto items-center justify-between xl:px-12 large:px-0 min-h-[550px] md:min-h-[620px] xl:pt-20">
+        <div className="relative z-10 flex flex-col xl:flex-row h-full max-w-[1920px] mx-auto xl:items-center justify-between xl:px-12 large:px-0 min-h-[550px] md:min-h-[620px] pt-16 xl:pt-20">
           {/* LEFT – TEXT + AGENT */}
-          <div className="relative z-20 flex flex-col justify-center w-full xl:w-[55%] pt-8 xl:pt-0 sm:px-4 xl:px-8">
-            {/* Logo */}
-            <div className="flex items-center gap-3 mb-4">
+          <div className="relative z-20 flex flex-col justify-center w-full xl:w-[55%] pt-16 sm:pt-20 xl:pt-0 px-4 sm:px-6 xl:px-8">
+            {/* Logo - Desktop only */}
+            <div className="hidden xl:flex items-center gap-3 mb-4">
               <Image
                 src="/header/VALSEWA.png"
                 alt="VALSEWA"
@@ -108,16 +222,30 @@ export default function Hero({ initialCarousel }: HeroProps) {
             </div>
 
             {/* Headline */}
-            <h1 className="text-white text-xl sm:text-3xl md:text-5xl xl:text-4xl font-extrabold leading-tight font-antonio">
+            <h1 className="text-white text-4xl md:text-5xl xl:text-4xl font-extrabold leading-tight font-antonio">
               WORLD&apos;S #1 <br />
-              <span className="text-white text-2xl sm:text-4xl md:text-6xl xl:text-8xl font-extrabold leading-tight font-antonio">
+              <span className="text-white text-5xl md:text-6xl xl:text-8xl font-extrabold leading-tight font-antonio">
                 VALORANT ACCOUNT
               </span>{" "}
               <br />
-              <span className="text-white text-2xl sm:text-4xl md:text-6xl xl:text-8xl font-extrabold leading-tight font-antonio">
+              <span className="text-white text-5xl md:text-6xl xl:text-8xl font-extrabold leading-tight font-antonio">
                 RENTAL SITE
               </span>
             </h1>
+
+            {/* MOBILE: Powered By */}
+            <div className="xl:hidden flex items-center gap-2 mt-4">
+              <span className="text-[#F9FAFB] text-xl font-semibold tracking-wider font-antonio">
+                POWERED BY
+              </span>
+              <Image
+                src="/header/Logo Header Valforum.png"
+                alt="VALFORUM"
+                width={100}
+                height={24}
+                className="object-contain w-[80px] sm:w-[100px] h-auto"
+              />
+            </div>
           </div>
 
           {/* Agent image wrapper - allows overflow at top, clips at bottom */}
@@ -125,7 +253,7 @@ export default function Hero({ initialCarousel }: HeroProps) {
             className="absolute inset-0 pointer-events-none"
             style={{ clipPath: "inset(-50% 0 0 0)" }}
           >
-            <div className="absolute left-1/2 top-[95%] sm:top-[95%] xl:top-[100%] -translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[600px] md:w-[780px] xl:w-[880px] select-none opacity-50 xl:opacity-100">
+            <div className="absolute left-[10%] sm:left-[30%] xl:left-1/2 top-[110%] xl:top-[100%] xl:-translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[650px] md:w-[750px] xl:w-[880px] select-none opacity-100">
               <Image
                 src="/NewHero/Agent Neon.png"
                 alt="Neon Agent"
@@ -137,7 +265,7 @@ export default function Hero({ initialCarousel }: HeroProps) {
             </div>
           </div>
 
-          {/* RIGHT – CAROUSEL */}
+          {/* RIGHT – CAROUSEL (Desktop only) */}
           <div className="relative w-full xl:w-[30%] hidden xl:flex justify-end aspect-[4/5] h-full">
             <div className="w-full max-w-[380px] rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
               <Carousel
@@ -169,7 +297,7 @@ export default function Hero({ initialCarousel }: HeroProps) {
         </div>
 
         {/* Red Glow overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-red-900/10 via-transparent to-transparent pointer-events-none rounded-2xl xl:rounded-none xl:mx-12 large:mx-0" />
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#C70515] pointer-events-none rounded-2xl xl:rounded-none xl:mx-12 large:mx-0 mt-16" />
       </div>
     </section>
   );
