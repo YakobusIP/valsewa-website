@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { bookingService } from "@/services/booking.service";
 import { voucherService } from "@/services/voucher.service";
@@ -25,7 +25,7 @@ import { VoucherEntity } from "@/types/voucher.type";
 
 import { BOOKING_STATUS_MAP } from "@/lib/constants";
 import { instrumentSans, staatliches } from "@/lib/fonts";
-import { cn } from "@/lib/utils";
+import { calculateVoucherDiscount, cn } from "@/lib/utils";
 
 import { CheckIcon, XIcon } from "lucide-react";
 import { notFound, useParams, useRouter } from "next/navigation";
@@ -128,6 +128,18 @@ export default function BookingDetailPage() {
     }
   }, [booking, paymentMethod, voucher, id, router, handleAsyncError]);
 
+  const discount = useMemo(() => {
+    if (!booking) return 0;
+    return calculateVoucherDiscount(voucher, booking.mainValue);
+  }, [booking, voucher]
+  );
+
+  const totalPayment = useMemo(() => {
+    if (!booking) return 0;
+    return booking.totalValue - discount;
+  }, [booking, discount]
+  );
+
   useEffect(() => {
     if (!id) return;
 
@@ -169,7 +181,7 @@ export default function BookingDetailPage() {
           <PaymentCountdown expiredAt={booking.expiredAt} />
         )}
 
-        <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-32 mt-6 sm:mt-8 lg:mt-10">
+        <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-32 mt-6 sm:mt-8 lg:mt-10">
           <div className="w-full space-y-6 sm:space-y-8 lg:space-y-10">
             <BookingDetail booking={booking} />
             <PaymentMethods
@@ -186,6 +198,50 @@ export default function BookingDetailPage() {
             fetchVoucher={fetchVoucher}
             onSubmit={onSubmit}
           />
+        </div>
+
+        <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
+          <BookingDetail booking={booking} />
+          
+          <PaymentSummary
+            booking={booking}
+            paymentMethod={paymentMethod}
+            voucher={voucher}
+            setVoucher={setVoucher}
+            fetchVoucher={fetchVoucher}
+            onSubmit={onSubmit}
+          />
+          
+          <PaymentMethods
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+          />
+
+          <div className="flex flex-col gap-2 space-y-2 text-center text-white">
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={!booking || !paymentMethod || loading}
+              className={cn(
+                "w-full text-base sm:text-lg lg:text-xl transition py-2.5 sm:py-3 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black",
+                !booking || !paymentMethod || loading
+                  ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                  : "bg-red-600 hover:bg-red-700"
+              )}
+              aria-label={`Pay IDR ${totalPayment.toLocaleString()} and rent now`}
+            >
+              {loading
+                ? "Loading..."
+                : `IDR ${totalPayment.toLocaleString()} | Rent Now`}
+            </button>
+            <p className="text-xs sm:text-sm">Any Questions?</p>
+            <button
+              type="button"
+              className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
+            >
+              Ask Our Team
+            </button>
+          </div>
         </div>
       </div>
     </main>

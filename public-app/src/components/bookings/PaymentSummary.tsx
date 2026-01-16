@@ -4,11 +4,11 @@ import {
   BookingWithAccountEntity,
   PAYMENT_METHOD_REQUEST
 } from "@/types/booking.type";
-import { TYPE, VoucherEntity } from "@/types/voucher.type";
+import { VoucherEntity } from "@/types/voucher.type";
 
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { instrumentSans, staatliches } from "@/lib/fonts";
-import { cn } from "@/lib/utils";
+import { calculateVoucherDiscount, cn } from "@/lib/utils";
 
 type PaymentSummaryProps = {
   booking: BookingWithAccountEntity;
@@ -27,35 +27,20 @@ function PaymentSummary({
   fetchVoucher,
   onSubmit
 }: PaymentSummaryProps) {
-  const [loading, setLoading] = useState<boolean>(false);
-  const [voucherName, setVoucherName] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [voucherName, setVoucherName] = useState("");
   const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
 
   const isDisabled = !booking || !paymentMethod;
 
-  const calculateDiscount = useMemo(() => {
-    let discount = 0;
-    if (voucher) {
-      if (voucher.type === TYPE.PERSENTASE) {
-        const voucherAmount = voucher.percentage ?? 0;
-        discount = booking.mainValue * voucherAmount * 0.01;
-      } else {
-        const voucherAmount = voucher.nominal ?? 0;
-        discount = voucherAmount;
-      }
-
-      if (voucher.maxDiscount) {
-        discount = Math.min(discount, voucher.maxDiscount);
-      }
-
-      discount = Math.min(discount, booking.mainValue);
-    }
-    return discount;
-  }, [voucher, booking.mainValue]);
+  const discount = useMemo(
+    () => calculateVoucherDiscount(voucher, booking.mainValue),
+    [voucher, booking.mainValue]
+  );
 
   const totalPayment = useMemo(
-    () => booking.totalValue - calculateDiscount,
-    [booking.totalValue, calculateDiscount]
+    () => booking.totalValue - discount,
+    [booking.totalValue, discount]
   );
 
   const paymentMethodLabel = useMemo(() => {
@@ -155,7 +140,7 @@ function PaymentSummary({
         {voucher && (
           <div className="flex justify-between text-green-400">
             <span>Promo</span>
-            <span>-IDR {calculateDiscount.toLocaleString()}</span>
+            <span>-IDR {discount.toLocaleString()}</span>
           </div>
         )}
         <div className="flex justify-between">
@@ -177,7 +162,7 @@ function PaymentSummary({
         </span>
       </div>
 
-      <div className="flex flex-col gap-2 space-y-2 text-center text-white">
+      <div className="hidden lg:flex flex-col gap-2 space-y-2 text-center text-white">
         <button
           type="button"
           onClick={handleSubmit}
