@@ -100,20 +100,20 @@ function PaymentSummary({
   if (!booking) return null;
 
   return (
-    <div className={cn("w-3/4 space-y-6 rounded-lg", instrumentSans.className)}>
+    <div className={cn("w-full lg:w-3/4 space-y-4 sm:space-y-6 rounded-lg", instrumentSans.className)}>
       <div>
         <h1
-          className={`text-2xl font-semibold leading-[1.2] ${staatliches.className}`}
+          className={`text-xl sm:text-2xl font-semibold leading-[1.2] ${staatliches.className}`}
         >
           PROMO CODE
         </h1>
         <button
           type="button"
-          className="text-[#E8C545] mt-2 underline hover:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-[#E8C545] focus:ring-offset-2 focus:ring-offset-black rounded"
+          className="text-[#E8C545] mt-2 text-sm sm:text-base underline hover:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-[#E8C545] focus:ring-offset-2 focus:ring-offset-black rounded"
         >
           Explore Promo Codes
         </button>
-        <div className="flex gap-2 mt-2">
+        <div className="flex flex-col sm:flex-row gap-2 mt-2">
           <input
             type="text"
             value={voucherName}
@@ -129,7 +129,7 @@ function PaymentSummary({
             type="button"
             onClick={onApplyVoucher}
             disabled={!voucherName.trim() || isApplyingVoucher}
-            className="px-4 font-semibold text-black bg-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+            className="px-4 py-2 text-sm sm:text-base font-semibold text-black bg-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
             aria-label="Apply promo code"
           >
             {isApplyingVoucher ? "Applying..." : "Apply"}
@@ -138,16 +138,16 @@ function PaymentSummary({
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold leading-[1.2]">
+        <h2 className="text-base sm:text-lg font-semibold leading-[1.2]">
           Valorant Account
         </h2>
-        <span className="text-gray-300">
+        <span className="text-sm sm:text-base text-gray-300 break-words">
           {booking.account.priceTierCode} - {booking.account.accountCode} -{" "}
           {booking.account.accountRank}
         </span>
       </div>
 
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-xs sm:text-sm">
         <div className="flex justify-between">
           <span>Subtotal</span>
           <span>IDR {booking.mainValue.toLocaleString()}</span>
@@ -169,10 +169,10 @@ function PaymentSummary({
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-        <span className="text-lg font-semibold text-red-500">
+        <span className="text-base sm:text-lg font-semibold text-red-500">
           Total Payment
         </span>
-        <span className="text-lg font-bold text-red-500">
+        <span className="text-base sm:text-lg font-bold text-red-500 break-words">
           IDR {totalPayment.toLocaleString()}
         </span>
       </div>
@@ -183,7 +183,7 @@ function PaymentSummary({
           onClick={handleSubmit}
           disabled={isDisabled || loading}
           className={cn(
-            "w-full text-xl transition py-3 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black",
+            "w-full text-base sm:text-lg lg:text-xl transition py-2.5 sm:py-3 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black",
             isDisabled || loading
               ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
               : "bg-red-600 hover:bg-red-700"
@@ -194,10 +194,10 @@ function PaymentSummary({
             ? "Loading..."
             : `IDR ${totalPayment.toLocaleString()} | Rent Now`}
         </button>
-        <p className="text-xs">Any Questions?</p>
+        <p className="text-xs sm:text-sm">Any Questions?</p>
         <button
           type="button"
-          className="w-full py-2 text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
+          className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
         >
           Ask Our Team
         </button>

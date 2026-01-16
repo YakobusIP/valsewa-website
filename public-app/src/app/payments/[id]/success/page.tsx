@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { AlertTriangleIcon, CheckIcon, CopyIcon, HomeIcon } from "lucide-react";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { FaDiscord } from "react-icons/fa6";
+import NavbarMobile from "@/components/NavbarMobile";
 
 function LoadingState() {
   return (
@@ -104,21 +105,26 @@ export default function PaymentSuccessPage() {
 
   return (
     <main className="min-h-screen text-white bg-black">
-      <Navbar />
+      <div className="relative max-lg:hidden">
+        <Navbar />
+      </div>
+      <div className="lg:hidden">
+        <NavbarMobile />
+      </div>
 
       <div
         className={cn(
-          "py-[110px] px-4 lg:px-10 w-full max-w-7xl mx-auto",
+          "py-[90px] lg:py-[110px] px-4 lg:px-10 w-full max-w-7xl mx-auto",
           instrumentSans.className
         )}
       >
-        <div className="flex flex-col items-center gap-4 mb-12">
+        <div className="flex flex-col items-center gap-2 sm:gap-3 lg:gap-4 mb-12">
           <div className="flex items-center justify-center">
-            <CheckIcon className="w-20 h-20 p-3 text-white bg-red-600 rounded-full" />
+            <CheckIcon className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 p-1 sm:p-3 text-white bg-red-600 rounded-full" />
           </div>
           <h1
             className={cn(
-              "text-6xl text-center font-bold leading-[1.2] uppercase",
+              "text-4xl sm:text-5xl lg:text-6xl text-center font-bold leading-[1.2] uppercase",
               staatliches.className
             )}
           >
@@ -126,9 +132,9 @@ export default function PaymentSuccessPage() {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
           {/* Left Panel - Attention/Penalty Information */}
-          <div className="bg-red-600 rounded-lg p-16 space-y-4">
+          <div className="bg-red-600 rounded-lg p-8 sm:p-12 lg:p-16 space-y-4">
             <div className="flex items-center gap-4 mb-8">
               <AlertTriangleIcon className="w-12 h-12 text-white" />
               <h2 className={cn("text-3xl text-white", staatliches.className)}>
@@ -176,7 +182,7 @@ export default function PaymentSuccessPage() {
           </div>
 
           {/* Right Panel - Booking Details */}
-          <div className="flex flex-col bg-neutral-800 rounded-lg p-16 space-y-6 gap-2">
+          <div className="flex flex-col bg-neutral-800 rounded-lg p-8 sm:p-12 lg:p-16 space-y-6 gap-2">
             <h2 className="text-xl font-semibold text-white">
               You&apos;re all set! here&apos;s your booking details:
             </h2>

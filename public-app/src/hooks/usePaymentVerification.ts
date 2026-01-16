@@ -11,7 +11,7 @@ import { useErrorHandler } from "./useErrorHandler";
 type UsePaymentVerificationOptions = {
   payment: PaymentWithBookingEntity | null;
   paymentId: string | undefined;
-  onPaymentUpdate?: (payment: PaymentWithBookingEntity | null) => void;
+  onPaymentUpdate?: (payment: PaymentWithBookingEntity) => void;
 };
 
 export function usePaymentVerification({

@@ -6,6 +6,7 @@ import { bookingService } from "@/services/booking.service";
 import { voucherService } from "@/services/voucher.service";
 
 import Navbar from "@/components/Navbar";
+import NavbarMobile from "@/components/NavbarMobile";
 import BookingDetail from "@/components/bookings/BookingDetail";
 import PaymentCountdown from "@/components/bookings/PaymentCountdown";
 import PaymentMethods from "@/components/bookings/PaymentMethods";
@@ -49,7 +50,7 @@ function BookingStatusView({ booking }: { booking: BookingWithAccountEntity }) {
     <div className="flex items-center justify-center min-h-screen text-white bg-black">
       <div
         className={cn(
-          "py-[110px] items-center flex flex-col gap-4 px-4 lg:px-10 w-full",
+          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] items-center flex flex-col gap-4 px-4 lg:px-10 w-full",
           instrumentSans.className
         )}
       >
@@ -66,7 +67,7 @@ function BookingStatusView({ booking }: { booking: BookingWithAccountEntity }) {
         </div>
         <h1
           className={cn(
-            "text-6xl text-center font-bold mb-4 leading-[1.2] uppercase",
+            "text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-center font-bold mb-4 leading-[1.2] uppercase",
             staatliches.className
           )}
         >
@@ -154,17 +155,22 @@ export default function BookingDetailPage() {
 
   return (
     <main className="min-h-screen text-white bg-black">
-      <Navbar />
+      <div className="relative max-lg:hidden">
+        <Navbar />
+      </div>
+      <div className="lg:hidden">
+        <NavbarMobile />
+      </div>
 
-      <div className={cn("py-[110px] px-4 lg:px-10", instrumentSans.className)}>
+      <div className={cn("pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10", instrumentSans.className)}>
         <ProgressStepper bookingId={id!} stepIdx={1} onBack={onBack} />
 
         {booking.expiredAt && (
           <PaymentCountdown expiredAt={booking.expiredAt} />
         )}
 
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-32 mt-10">
-          <div className="w-full space-y-10">
+        <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:gap-32 mt-6 sm:mt-8 lg:mt-10">
+          <div className="w-full space-y-6 sm:space-y-8 lg:space-y-10">
             <BookingDetail booking={booking} />
             <PaymentMethods
               paymentMethod={paymentMethod}

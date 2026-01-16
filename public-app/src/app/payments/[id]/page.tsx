@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { bookingService } from "@/services/booking.service";
 
 import Navbar from "@/components/Navbar";
+import NavbarMobile from "@/components/NavbarMobile";
 import PaymentCountdown from "@/components/bookings/PaymentCountdown";
 import ProgressStepper from "@/components/bookings/ProgressStepper";
 
@@ -46,7 +47,7 @@ function PaymentStatusView({ payment }: { payment: PaymentWithBookingEntity }) {
     <div className="flex items-center justify-center min-h-screen text-white bg-black">
       <div
         className={cn(
-          "py-[110px] items-center flex flex-col gap-4 px-4 lg:px-10 w-full",
+          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] items-center flex flex-col gap-4 px-4 lg:px-10 w-full",
           instrumentSans.className
         )}
       >
@@ -63,7 +64,7 @@ function PaymentStatusView({ payment }: { payment: PaymentWithBookingEntity }) {
         </div>
         <h1
           className={cn(
-            "text-6xl text-center font-bold mb-4 leading-[1.2] uppercase",
+            "text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-center font-bold mb-4 leading-[1.2] uppercase",
             staatliches.className
           )}
         >
@@ -198,11 +199,16 @@ export default function PaymentDetailPage() {
 
   return (
     <main className="min-h-screen text-white bg-black">
-      <Navbar />
+      <div className="relative max-lg:hidden">
+        <Navbar />
+      </div>
+      <div className="lg:hidden">
+        <NavbarMobile />
+      </div>
 
       <div
         className={cn(
-          "py-[110px] items-center px-4 lg:px-10 w-full",
+          "py-[90px] lg:py-[110px] items-center px-4 lg:px-10 w-full",
           instrumentSans.className
         )}
       >
@@ -216,9 +222,9 @@ export default function PaymentDetailPage() {
           <PaymentCountdown expiredAt={payment.booking.expiredAt} />
         )}
 
-        <div className="flex flex-col items-center w-full gap-4 mx-auto mt-8 max-w-96">
+        <div className="flex flex-col items-center w-full gap-4 mx-auto mt-4 lg:mt-8 max-w-96">
           {payment.qrUrl && (
-            <div className="w-full p-4 overflow-hidden bg-white rounded-md max-w-72 max-h-72">
+            <div className="w-full p-3 sm:p-4 overflow-hidden bg-white rounded-md max-w-64 sm:max-w-72 max-h-64 sm:max-h-72">
               <Image
                 src={payment.qrUrl}
                 alt="QRIS payment code"
@@ -232,32 +238,32 @@ export default function PaymentDetailPage() {
 
           <h1
             className={cn(
-              "text-8xl text-center font-bold mb-4 leading-[1.2]",
+              "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl text-center font-bold mb-4 leading-[1.2]",
               staatliches.className
             )}
           >
             IDR {payment.value.toLocaleString()}
           </h1>
 
-          <div className="w-full mt-auto space-y-1">
-            <div className="flex justify-between">
-              <p className="font-semibold">Selected Payment Method</p>
-              <p>{paymentMethodLabel}</p>
+          <div className="w-full mt-auto space-y-2 sm:space-y-1">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+              <p className="font-semibold text-sm sm:text-base">Selected Payment Method</p>
+              <p className="text-sm sm:text-base">{paymentMethodLabel}</p>
             </div>
             {payment.bankAccountNo && (
-              <div className="flex justify-between">
-                <p className="font-semibold">VA Number</p>
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                <p className="font-semibold text-sm sm:text-base">VA Number</p>
                 <button
                   type="button"
                   onClick={() => handleCopyVaNo(payment.bankAccountNo!)}
-                  className="flex items-center gap-2 font-medium text-white hover:text-red-600"
+                  className="flex items-center gap-2 font-medium text-white hover:text-red-600 text-sm sm:text-base"
                 >
-                  <span className="select-text">{payment.bankAccountNo}</span>
+                  <span className="select-text break-all">{payment.bankAccountNo}</span>
 
                   {vaNoCopied ? (
-                    <CheckIcon className="w-4 h-4" />
+                    <CheckIcon className="w-4 h-4 flex-shrink-0" />
                   ) : (
-                    <CopyIcon className="w-4 h-4" />
+                    <CopyIcon className="w-4 h-4 flex-shrink-0" />
                   )}
                 </button>
               </div>
@@ -269,22 +275,22 @@ export default function PaymentDetailPage() {
               <button
                 type="button"
                 onClick={onDownloadQR}
-                className="flex items-center justify-center w-full gap-2 py-3 mb-4 text-xl font-semibold transition bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
+                className="flex items-center justify-center w-full gap-2 py-2.5 sm:py-3 mb-4 text-base sm:text-lg lg:text-xl font-semibold transition bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
                 aria-label="Download QR code"
               >
                 <p>Download QR</p>
                 <ArrowDownToLineIcon
-                  className="w-6 h-6 text-white"
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-white"
                   strokeWidth={3}
                 />
               </button>
             )}
-            <p className="text-xs">No payment confirmation received?</p>
+            <p className="text-xs sm:text-sm">No payment confirmation received?</p>
             <button
               type="button"
               onClick={onVerify}
               disabled={verifying}
-              className="w-full py-2 text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
+              className="w-full py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
             >
               {verifying ? "Verifying..." : "Confirm Payment Manually"}
             </button>

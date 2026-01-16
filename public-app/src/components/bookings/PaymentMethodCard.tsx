@@ -28,7 +28,7 @@ function PaymentMethodCard({
         active
           ? "bg-white border-red-500"
           : "border-white hover:border-red-500",
-        isQRIS ? "p-8" : "p-4 hover:bg-white"
+        isQRIS ? "p-4 sm:p-6 lg:p-8" : "p-3 sm:p-4 hover:bg-white"
       )}
     >
       <div
@@ -42,7 +42,7 @@ function PaymentMethodCard({
 
       <p
         className={cn(
-          "text-center mt-2 font-semibold transition-colors",
+          "text-center mt-1 sm:mt-2 text-xs sm:text-sm font-semibold transition-colors",
           active ? "text-red-500" : "text-white group-hover:text-red-400"
         )}
       >
