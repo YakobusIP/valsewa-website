@@ -100,24 +100,22 @@ type MetadataResponse = {
 
 type TierFilter = { id: string; isLowTier: string } | null;
 
-
 type AccountsPublicParams = {
   page?: number;
   limit?: number;
   q?: string;
 
-  low_tier_only?: boolean; 
-  tiers?: string[];        
-  skin_counts?: string[];  
-  ranks?: string[];        
+  low_tier_only?: boolean;
+  tiers?: string[];
+  skin_counts?: string[];
+  ranks?: string[];
 
   min_price?: number;
   max_price?: number;
 
-  sortBy?: string;         
+  sortBy?: string;
   direction?: "asc" | "desc";
 };
-
 
 export type {
   ApiResponseList,

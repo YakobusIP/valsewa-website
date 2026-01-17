@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+
 import Card from "@/components/Card";
 import DiscoverSection from "@/components/DiscoverSection";
 import Hero from "@/components/Hero";
@@ -11,7 +13,6 @@ import RecommendedSection from "@/components/RecommendedSection";
 import { AccountEntity, CarouselSlide } from "@/types/account.type";
 
 import { useAccountController } from "@/controllers/useAccountController";
-import { useRef } from "react";
 
 interface Props {
   initialAccount: AccountEntity[];
@@ -19,31 +20,25 @@ interface Props {
 }
 export default function Home({ initialAccount, initialCarousel }: Props) {
   const cardsRef = useRef<HTMLDivElement | null>(null);
-  const {
-    accountList,
-    loading,
-    selectTier,
-    selectRank,
-  } = useAccountController(initialAccount);
+  const { accountList, loading, selectTier, selectRank } =
+    useAccountController(initialAccount);
 
   const scrollToAccounts = () => {
     cardsRef.current?.scrollIntoView({
       behavior: "smooth",
-      block: "start",
-  });
-
+      block: "start"
+    });
   };
 
   const handleSelectTier = (tierId: string, isLowTier: string) => {
-    selectTier(tierId, isLowTier); 
+    selectTier(tierId, isLowTier);
     if (loading == false) scrollToAccounts();
   };
 
   const handleSelectRank = (rank: string) => {
-    selectRank(rank); 
+    selectRank(rank);
     if (loading == false) scrollToAccounts();
   };
-
 
   return (
     <section className="bg-[#0F0F0F] md:pb-64 pb-32 relative ">
@@ -80,7 +75,11 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
             <RecommendedSection />
           </div>
           <div className="mt-32">
-            <DiscoverSection onSelectTier={handleSelectTier} onSelectRank={handleSelectRank} loading={loading} />
+            <DiscoverSection
+              onSelectTier={handleSelectTier}
+              onSelectRank={handleSelectRank}
+              loading={loading}
+            />
           </div>
           {accountList.length > 0 ? (
             <div id="card-section" className="mt-9 mx-0 pt-10">

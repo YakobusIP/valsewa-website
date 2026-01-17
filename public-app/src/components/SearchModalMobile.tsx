@@ -2,17 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { fetchAccountsPublic } from "@/services/accountService";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
+import { AccountEntity } from "@/types/account.type";
+
 import { ChevronDown, ChevronUp, ListFilter, Search } from "lucide-react";
 import Image from "next/image";
-import { AccountEntity } from "@/types/account.type";
-import { fetchAccountsPublic } from "@/services/accountService";
+
 import { Slider } from "./ui/slider";
 
 type TierTab = "all" | "low" | "normal";
-
 
 const PRICE_MIN = 0;
 const PRICE_MAX = 1_000_000;
@@ -71,8 +73,22 @@ const RANKS = [
 ];
 
 const SKIN_COUNTS = ["0-5", "6-10", "11-15", "16-20"] as const;
-const TIER_CODES = ["c", "B", "V", "S", "SSS", "SSS⁺", "C - LR TIER", "B - LR TIER", "V - LR TIER", "S - LR TIER", "SSS - LR TIER", "SSS⁺ - LR TIER"] as const;
-const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max)
+const TIER_CODES = [
+  "c",
+  "B",
+  "V",
+  "S",
+  "SSS",
+  "SSS⁺",
+  "C - LR TIER",
+  "B - LR TIER",
+  "V - LR TIER",
+  "S - LR TIER",
+  "SSS - LR TIER",
+  "SSS⁺ - LR TIER"
+] as const;
+const clamp = (n: number, min: number, max: number) =>
+  Math.min(Math.max(n, min), max);
 
 function Section({
   title,
@@ -104,7 +120,6 @@ function Section({
     </div>
   );
 }
-
 
 function useDebouncedValue<T>(value: T, delay = 350) {
   const [debounced, setDebounced] = useState(value);
@@ -141,7 +156,6 @@ function CheckboxRow({
     </label>
   );
 }
-
 
 function FiltersPanel({
   onClose,
@@ -203,157 +217,184 @@ function FiltersPanel({
       {/* Title row */}
       <div className="px-4 py-3 shrink-0">
         <div className="flex items-center justify-between">
-            {/* Left */}
-            <div className="text-white font-semibold">FILTERS</div>
+          {/* Left */}
+          <div className="text-white font-semibold">FILTERS</div>
 
-            {/* Right */}
-            <button
-              type="button"
-              onClick={onClearFilters}
-              className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition"
-            >
-              {activeFilterCount > 0 && (
-                <span className="min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-xs grid place-items-center">
-                  {activeFilterCount}
-                </span>
-              )}
-              <span className="font-medium">Clear Filter</span>
-    </button>
-  </div>
-
+          {/* Right */}
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="flex items-center gap-2 text-sm text-white/80 hover:text-white transition"
+          >
+            {activeFilterCount > 0 && (
+              <span className="min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-xs grid place-items-center">
+                {activeFilterCount}
+              </span>
+            )}
+            <span className="font-medium">Clear Filter</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters content (scrolls) */}
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-6 space-y-3">
         {/* Price */}
-          <Section title="Price" open={openPrice} onToggle={() => setOpenPrice((v) => !v)}>
-            {(() => {
-              const [minVal, maxVal] = priceRange;
-              const setMin = (next: number) => {
-                // clamp min to [PRICE_MIN .. current maxVal]
-                const newMin = clamp(next, PRICE_MIN, maxVal);
-                setPriceRange([newMin, maxVal]);
-              };
-            
-              const setMax = (next: number) => {
-                // clamp max to [current minVal .. PRICE_MAX]
-                const newMax = clamp(next, minVal, PRICE_MAX);
-                setPriceRange([minVal, newMax]);
-              };
-            
-              return (
-                <div className="space-y-3">
-                  {/* Inputs on top */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <p className="text-[11px] text-neutral-400">Min</p>
-                      <Input
-                        type="number"
-                        inputMode="numeric"
-                        value={minVal}
-                        min={PRICE_MIN}
-                        max={maxVal}
-                        step={5000}
-                        onChange={(e) => setMin(Number(e.target.value || 0))}
-                        className="h-10 rounded-lg bg-neutral-900 border-neutral-800 text-white"
-                      />
-                    </div>
-              
-                    <div className="space-y-1">
-                      <p className="text-[11px] text-neutral-400">Max</p>
-                      <Input
-                        type="number"
-                        inputMode="numeric"
-                        value={maxVal}
-                        min={minVal}
-                        max={PRICE_MAX}
-                        step={5000}
-                        onChange={(e) => setMax(Number(e.target.value || 0))}
-                        className="h-10 rounded-lg bg-neutral-900 border-neutral-800 text-white"
-                      />
-                    </div>
+        <Section
+          title="Price"
+          open={openPrice}
+          onToggle={() => setOpenPrice((v) => !v)}
+        >
+          {(() => {
+            const [minVal, maxVal] = priceRange;
+            const setMin = (next: number) => {
+              // clamp min to [PRICE_MIN .. current maxVal]
+              const newMin = clamp(next, PRICE_MIN, maxVal);
+              setPriceRange([newMin, maxVal]);
+            };
+
+            const setMax = (next: number) => {
+              // clamp max to [current minVal .. PRICE_MAX]
+              const newMax = clamp(next, minVal, PRICE_MAX);
+              setPriceRange([minVal, newMax]);
+            };
+
+            return (
+              <div className="space-y-3">
+                {/* Inputs on top */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-neutral-400">Min</p>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      value={minVal}
+                      min={PRICE_MIN}
+                      max={maxVal}
+                      step={5000}
+                      onChange={(e) => setMin(Number(e.target.value || 0))}
+                      className="h-10 rounded-lg bg-neutral-900 border-neutral-800 text-white"
+                    />
                   </div>
-              
-                  {/* One slider with TWO thumbs */}
-                  <Slider
-                    value={[minVal, maxVal]}
-                    min={PRICE_MIN}
-                    max={PRICE_MAX}
-                    step={5000}
-                    onValueChange={(v) => {
-                      const a = v[0] ?? PRICE_MIN;
-                      const b = v[1] ?? PRICE_MAX;
-                      setPriceRange([Math.min(a, b), Math.max(a, b)]);
-                    }}
-                  />
-                  {/* Helper text */}
-                  <div className="flex items-center justify-between text-xs text-neutral-400">
-                    <span>Rp {minVal.toLocaleString("id-ID")}</span>
-                    <span>Rp {maxVal.toLocaleString("id-ID")}</span>
+
+                  <div className="space-y-1">
+                    <p className="text-[11px] text-neutral-400">Max</p>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      value={maxVal}
+                      min={minVal}
+                      max={PRICE_MAX}
+                      step={5000}
+                      onChange={(e) => setMax(Number(e.target.value || 0))}
+                      className="h-10 rounded-lg bg-neutral-900 border-neutral-800 text-white"
+                    />
                   </div>
                 </div>
-              );
-            })()}
-          </Section>
-          {/* Ranks */}
-          <Section title="Ranks" open={openRanks} onToggle={() => setOpenRanks((v) => !v)}>
-            <div className="space-y-2">
-              {RANKS.map((r) => {
-                const checked = selectedRanks.includes(r.id);
-                return (
-                  <CheckboxRow 
+
+                {/* One slider with TWO thumbs */}
+                <Slider
+                  value={[minVal, maxVal]}
+                  min={PRICE_MIN}
+                  max={PRICE_MAX}
+                  step={5000}
+                  onValueChange={(v) => {
+                    const a = v[0] ?? PRICE_MIN;
+                    const b = v[1] ?? PRICE_MAX;
+                    setPriceRange([Math.min(a, b), Math.max(a, b)]);
+                  }}
+                />
+                {/* Helper text */}
+                <div className="flex items-center justify-between text-xs text-neutral-400">
+                  <span>Rp {minVal.toLocaleString("id-ID")}</span>
+                  <span>Rp {maxVal.toLocaleString("id-ID")}</span>
+                </div>
+              </div>
+            );
+          })()}
+        </Section>
+        {/* Ranks */}
+        <Section
+          title="Ranks"
+          open={openRanks}
+          onToggle={() => setOpenRanks((v) => !v)}
+        >
+          <div className="space-y-2">
+            {RANKS.map((r) => {
+              const checked = selectedRanks.includes(r.id);
+              return (
+                <CheckboxRow
                   key={r.id}
                   checked={checked}
-                  onCheckedChange={() => toggle(selectedRanks, r.id, setSelectedRanks)}
-                  >
-                    <div className="relative w-6 h-6 shrink-0">
-                      <Image src={r.image} alt={r.id} fill className="object-contain" />
-                    </div>
-                    <span className="text-sm text-neutral-100 truncate">{r.id}</span>
-                  </CheckboxRow>
-                );
-              })}
-            </div>
-          </Section>
-          {/* Total Skin */}
-          <Section title="Skins" open={openSkins} onToggle={() => setOpenSkins((v) => !v)}>
-            <div className="space-y-2">
-              {SKIN_COUNTS.map((s) => {
-                const checked = selectedSkins.includes(s);
-                return (
-                  <CheckboxRow 
+                  onCheckedChange={() =>
+                    toggle(selectedRanks, r.id, setSelectedRanks)
+                  }
+                >
+                  <div className="relative w-6 h-6 shrink-0">
+                    <Image
+                      src={r.image}
+                      alt={r.id}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <span className="text-sm text-neutral-100 truncate">
+                    {r.id}
+                  </span>
+                </CheckboxRow>
+              );
+            })}
+          </div>
+        </Section>
+        {/* Total Skin */}
+        <Section
+          title="Skins"
+          open={openSkins}
+          onToggle={() => setOpenSkins((v) => !v)}
+        >
+          <div className="space-y-2">
+            {SKIN_COUNTS.map((s) => {
+              const checked = selectedSkins.includes(s);
+              return (
+                <CheckboxRow
                   key={s}
                   checked={checked}
-                  onCheckedChange={() => toggle(selectedSkins, s, setSelectedSkins)}
-                  >
-                    <span className="text-sm text-neutral-100 truncate">{s}</span>
-                  </CheckboxRow>
-                );
-              })}
-            </div>
-          </Section>
-          {/* Tier Code */}
-          <Section title="Tiers" open={openTier} onToggle={() => setOpenTier((v) => !v)}>
-            <div className="space-y-2">
-              {TIER_CODES.map((t) => {
-                const checked = selectedTiers.includes(t);
-                return (
-                  <CheckboxRow 
+                  onCheckedChange={() =>
+                    toggle(selectedSkins, s, setSelectedSkins)
+                  }
+                >
+                  <span className="text-sm text-neutral-100 truncate">{s}</span>
+                </CheckboxRow>
+              );
+            })}
+          </div>
+        </Section>
+        {/* Tier Code */}
+        <Section
+          title="Tiers"
+          open={openTier}
+          onToggle={() => setOpenTier((v) => !v)}
+        >
+          <div className="space-y-2">
+            {TIER_CODES.map((t) => {
+              const checked = selectedTiers.includes(t);
+              return (
+                <CheckboxRow
                   key={t}
                   checked={checked}
-                  onCheckedChange={() => toggle(selectedTiers, t, setSelectedTiers)}
-                  >
-                    <span className="text-sm text-neutral-100 truncate">{t}</span>
-                  </CheckboxRow>
-                );
-              })}
-            </div>
-          </Section>
+                  onCheckedChange={() =>
+                    toggle(selectedTiers, t, setSelectedTiers)
+                  }
+                >
+                  <span className="text-sm text-neutral-100 truncate">{t}</span>
+                </CheckboxRow>
+              );
+            })}
+          </div>
+        </Section>
       </div>
     </div>
   );
 }
-
 
 function ResultsPanel({
   q,
@@ -407,19 +448,19 @@ function ResultsPanel({
       {/* Search row */}
       <div className="px-4 pt-3 shrink-0">
         <div
-            className="
+          className="
               w-full h-12 flex items-center gap-2 rounded-2xl bg-neutral-700/80 px-3 shadow-[0_6px_18px_rgba(0,0,0,0.35)] ring-1 ring-white/10 focus-within:ring-2 focus-within:ring-red-600/40
             "
-          >
-            {/* Left icon */}
-            <Search className="h-5 w-5 text-white/80 shrink-0" />
-        
-            {/* Input (inside pill) */}
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search..."
-              className="
+        >
+          {/* Left icon */}
+          <Search className="h-5 w-5 text-white/80 shrink-0" />
+
+          {/* Input (inside pill) */}
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search..."
+            className="
                 flex-1
                 h-10
                 border-0 bg-transparent
@@ -427,13 +468,13 @@ function ResultsPanel({
                 text-white placeholder:text-white/70
                 focus-visible:ring-0 focus-visible:ring-offset-0
               "
-            />
-        
-            {/* Filter button (inside pill, at the end) */}
-            <button
-              type="button"
-              onClick={onOpenFilters}
-              className="
+          />
+
+          {/* Filter button (inside pill, at the end) */}
+          <button
+            type="button"
+            onClick={onOpenFilters}
+            className="
                 relative
                 h-9 w-9
                 rounded-xl
@@ -443,10 +484,9 @@ function ResultsPanel({
                 active:scale-[0.98]
                 transition
               "
-              aria-label="Open filters"
-            >
-              <ListFilter className="h-5 w-5 text-white/90" />
-
+            aria-label="Open filters"
+          >
+            <ListFilter className="h-5 w-5 text-white/90" />
           </button>
         </div>
       </div>
@@ -457,24 +497,33 @@ function ResultsPanel({
           <Button
             type="button"
             onClick={() => setTierTab("all")}
-            className={tierTab === "all" ? "bg-white hover:bg-white text-black"
-                        : "bg-black hover:bg-white hover:text-black text-neutral-200"}
+            className={
+              tierTab === "all"
+                ? "bg-white hover:bg-white text-black"
+                : "bg-black hover:bg-white hover:text-black text-neutral-200"
+            }
           >
             All
           </Button>
           <Button
             type="button"
             onClick={() => setTierTab("low")}
-            className={tierTab === "low" ? "bg-white hover:bg-white text-black"
-                        : "bg-black hover:bg-white hover:text-black text-neutral-200"}
+            className={
+              tierTab === "low"
+                ? "bg-white hover:bg-white text-black"
+                : "bg-black hover:bg-white hover:text-black text-neutral-200"
+            }
           >
             Low Rank
           </Button>
           <Button
             type="button"
             onClick={() => setTierTab("normal")}
-            className={tierTab === "normal" ? "bg-white hover:bg-white text-black"
-                        : "bg-black hover:bg-white hover:text-black text-neutral-200"}
+            className={
+              tierTab === "normal"
+                ? "bg-white hover:bg-white text-black"
+                : "bg-black hover:bg-white hover:text-black text-neutral-200"
+            }
           >
             Normal
           </Button>
@@ -484,9 +533,13 @@ function ResultsPanel({
       {/* List (scrolls) */}
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-3">
         {isLoading ? (
-          <div className="text-sm text-neutral-400 text-center py-10">Loading accounts...</div>
+          <div className="text-sm text-neutral-400 text-center py-10">
+            Loading accounts...
+          </div>
         ) : accounts.length === 0 ? (
-          <div className="text-sm text-neutral-400 text-center py-10">No accounts found.</div>
+          <div className="text-sm text-neutral-400 text-center py-10">
+            No accounts found.
+          </div>
         ) : (
           accounts.map((acc) => (
             <button
@@ -495,60 +548,63 @@ function ResultsPanel({
               className="w-full text-left rounded-xl bg-neutral-900/40 hover:bg-red-600 transition px-4 py-3"
             >
               <div className="flex items-center justify-between gap-3">
-                    {/* LEFT (new snippet style) */}
-                    <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
-                      <Image
-                        src={RANKS.find((i) => acc.accountRank.startsWith(i.id))?.image ?? "/rank/default.svg"}
-                        width={42}
-                        height={42}
-                        className="w-7 h-7 sm:w-[42px] sm:h-[42px] shrink-0"
-                        alt="Rank"
-                      />
-                      <div className="flex flex-col gap-0 min-w-0">
-                        {/* Title line */}
-                        <div className="flex items-center gap-2 min-w-0">
-                          <p className="text-white font-semibold text-[0.7rem] sm:text-sm truncate">
-                            {acc.accountRank} | {acc.accountCode}
-                          </p>
-                          {acc.isRecommended && (
-                            <span className="shrink-0 text-[11px] px-2 py-[2px] rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
-                              Recommended
-                            </span>
-                          )}
-                        </div>
-                        
-                        {/* Tier pill row (below) */}
-                        <span className="flex items-start justify-start mt-1">
-                          <span
-                            className="
+                {/* LEFT (new snippet style) */}
+                <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
+                  <Image
+                    src={
+                      RANKS.find((i) => acc.accountRank.startsWith(i.id))
+                        ?.image ?? "/rank/default.svg"
+                    }
+                    width={42}
+                    height={42}
+                    className="w-7 h-7 sm:w-[42px] sm:h-[42px] shrink-0"
+                    alt="Rank"
+                  />
+                  <div className="flex flex-col gap-0 min-w-0">
+                    {/* Title line */}
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p className="text-white font-semibold text-[0.7rem] sm:text-sm truncate">
+                        {acc.accountRank} | {acc.accountCode}
+                      </p>
+                      {acc.isRecommended && (
+                        <span className="shrink-0 text-[11px] px-2 py-[2px] rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+                          Recommended
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Tier pill row (below) */}
+                    <span className="flex items-start justify-start mt-1">
+                      <span
+                        className="
                               inline-flex items-center justify-center text-center
                               text-[0.6rem] sm:text-xs font-bold text-white bg-red-600
                               h-5 rounded px-2 shrink-0
                             "
-                          >
-                            {acc.priceTier?.code ?? "-"}
-                          </span>
-                        </span>
-                      </div>
-                    </div>
-                        
-                    {/* RIGHT thumbnail (unchanged positioning, far right) */}
-                    <div className="relative w-14 h-14 rounded-lg border border-neutral-800 bg-neutral-950 shrink-0">
-                      {acc.thumbnail.imageUrl ? (
-                        <Image
-                          src={acc.thumbnail.imageUrl}
-                          alt={`${acc.accountCode} thumbnail`}
-                          fill
-                          sizes="56px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[10px] text-neutral-500">
-                          No Image
-                        </div>
-                      )}
-                    </div>
+                      >
+                        {acc.priceTier?.code ?? "-"}
+                      </span>
+                    </span>
                   </div>
+                </div>
+
+                {/* RIGHT thumbnail (unchanged positioning, far right) */}
+                <div className="relative w-14 h-14 rounded-lg border border-neutral-800 bg-neutral-950 shrink-0">
+                  {acc.thumbnail.imageUrl ? (
+                    <Image
+                      src={acc.thumbnail.imageUrl}
+                      alt={`${acc.accountCode} thumbnail`}
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] text-neutral-500">
+                      No Image
+                    </div>
+                  )}
+                </div>
+              </div>
             </button>
           ))
         )}
@@ -556,8 +612,6 @@ function ResultsPanel({
     </div>
   );
 }
-
-
 
 function countActiveFilters({
   selectedRanks,
@@ -584,7 +638,6 @@ function countActiveFilters({
 
 type Panel = "results" | "filters";
 
-
 export function SearchModalMobile({
   open,
   onClose,
@@ -606,7 +659,10 @@ export function SearchModalMobile({
   const [openSkins, setOpenSkins] = useState(true);
   const [openTier, setOpenTier] = useState(true);
 
-  const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_MIN, PRICE_MAX]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    PRICE_MIN,
+    PRICE_MAX
+  ]);
   const [selectedRanks, setSelectedRanks] = useState<string[]>([]);
   const [selectedSkins, setSelectedSkins] = useState<string[]>([]);
   const [selectedTiers, setSelectedTiers] = useState<string[]>([]);
@@ -622,7 +678,8 @@ export function SearchModalMobile({
   }, [open]);
 
   const requestParams = useMemo(() => {
-    const lowTierOnly = tierTab === "all" ? undefined : tierTab === "low" ? true : false;
+    const lowTierOnly =
+      tierTab === "all" ? undefined : tierTab === "low" ? true : false;
 
     return {
       page,
@@ -631,7 +688,11 @@ export function SearchModalMobile({
       low_tier_only: lowTierOnly,
       tiers: selectedTiers.length
         ? selectedTiers.map((t) =>
-            t.toUpperCase().trim().replace(/\s*-\s*/g, "-").replace(/\s+/g, "")
+            t
+              .toUpperCase()
+              .trim()
+              .replace(/\s*-\s*/g, "-")
+              .replace(/\s+/g, "")
           )
         : undefined,
       skin_counts: selectedSkins.length ? selectedSkins : undefined,
@@ -641,7 +702,16 @@ export function SearchModalMobile({
       sortBy: "rank",
       direction: "desc" as const
     };
-  }, [page, limit, debouncedQ, tierTab, selectedTiers, selectedSkins, selectedRanks, priceRange]);
+  }, [
+    page,
+    limit,
+    debouncedQ,
+    tierTab,
+    selectedTiers,
+    selectedSkins,
+    selectedRanks,
+    priceRange
+  ]);
 
   useEffect(() => {
     if (!open) return;
@@ -668,21 +738,23 @@ export function SearchModalMobile({
         selectedRanks,
         selectedSkins,
         selectedTiers,
-        priceRange,
+        priceRange
       }),
     [selectedRanks, selectedSkins, selectedTiers, priceRange]
   );
 
-  
-const onClearFilters = () => {
+  const onClearFilters = () => {
     setSelectedRanks([]);
     setSelectedSkins([]);
     setSelectedTiers([]);
     setPriceRange([PRICE_MIN, PRICE_MAX]);
   };
 
-
-  const toggle = (arr: string[], value: string, setArr: (v: string[]) => void) => {
+  const toggle = (
+    arr: string[],
+    value: string,
+    setArr: (v: string[]) => void
+  ) => {
     if (arr.includes(value)) setArr(arr.filter((x) => x !== value));
     else setArr([...arr, value]);
   };
@@ -752,4 +824,3 @@ const onClearFilters = () => {
     </div>
   );
 }
-

@@ -215,10 +215,13 @@ export class AccountController {
     res: Response,
     next: NextFunction
   ) => {
-    try {      
+    try {
       const startAt = new Date(req.query.startAt as string);
       const endAt = new Date(req.query.endAt as string);
-      const accounts = await this.accountService.getAvailableAccounts({ startAt, endAt });
+      const accounts = await this.accountService.getAvailableAccounts({
+        startAt,
+        endAt
+      });
 
       return res.json(accounts);
     } catch (error) {
