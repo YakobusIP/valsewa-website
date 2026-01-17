@@ -1,22 +1,17 @@
 "use client";
 
 import Card from "@/components/Card";
-import Navbar from "@/components/Navbar";
+import DiscoverSection from "@/components/DiscoverSection";
+import Hero from "@/components/Hero";
+import HowToOrder from "@/components/HowToOrder";
 import Navbar1 from "@/components/Navbar1";
-import SearchBar from "@/components/SearchBar";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious
-} from "@/components/ui/carousel";
+import NavbarHome from "@/components/NavbarHome";
+import NavbarHomeMobile from "@/components/NavbarHomeMobile";
+import RecommendedSection from "@/components/RecommendedSection";
 
 import { AccountEntity, CarouselSlide } from "@/types/account.type";
 
 import { useAccountController } from "@/controllers/useAccountController";
-import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
 import { FaArrowUp } from "react-icons/fa";
 
@@ -25,30 +20,24 @@ interface Props {
   initialCarousel: CarouselSlide[];
 }
 export default function Home({ initialAccount, initialCarousel }: Props) {
-  const {
-    accountList,
-    setSearchAccount,
-    sortAccount,
-    sortDirection,
-    changeDirection,
-    getSortLabel
-  } = useAccountController(initialAccount);
-
-  console.log(initialCarousel);
+  const { accountList } = useAccountController(initialAccount);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 300, behavior: "smooth" });
   };
-  const autoplay = Autoplay({ delay: 5000, stopOnInteraction: false });
   return (
-    <section className="bg-[#101822] md:pb-64 pb-32 relative ">
-      <div className="relative max-lg:hidden">
-        <Navbar />
+    <section className="bg-[#0F0F0F] md:pb-64 pb-32 relative ">
+      {/* Hero wrapper - overflow-visible to allow notch to show, pt for navbar space */}
+      <div className="relative w-full max-w-[1920px] mx-auto h-auto xl:min-h-[720px] bg-[#0F0F0F] overflow-visible px-4 sm:px-6 xl:px-12 pt-4">
+        <Hero initialCarousel={initialCarousel} />
       </div>
-      <div className="lg:hidden">
-        <Navbar1 />
+      <div className="relative max-xl:hidden pt-4">
+        <NavbarHome />
       </div>
-      <a
+      <div className="xl:hidden">
+        <NavbarHomeMobile />
+      </div>
+      {/* <a
         href="https://wa.me/6285175343447?text=Halo admin VALSEWA aku butuh bantuan dong"
         target="_blank"
         rel="noopener noreferrer"
@@ -57,146 +46,24 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
         <figure className="w-[120px] h-[120px] fixed bottom-4 right-4 z-50">
           <Image src="/home/kananbawah.png" fill alt="Iconic" />
         </figure>
-      </a>
-      <div
+      </a> */}
+      {/* <div
         className="fixed bottom-4 left-4 z-50 cursor-pointer text-[#DDDDDD] bg-[#A6A6A6B2] p-3 rounded-full"
         onClick={scrollToTop}
       >
         <FaArrowUp size={30} />
-      </div>
+      </div> */}
       <div>
-        <div className="relative w-full h-screen flex flex-col">
-          {/* Hero Background with Breakpoints */}
-          <div className="absolute inset-0 w-full h-full">
-            {/* 2XL Screens */}
-            <figure className="absolute w-full h-full max-2xl:hidden">
-              <Image
-                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x560px.svg"
-                fill
-                alt="Hero"
-                className="object-cover object-center"
-              />
-            </figure>
-
-            {/* XL and Large Screens */}
-            <figure className="absolute w-full h-full max-lg:hidden 2xl:hidden">
-              <Image
-                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x720px.svg"
-                fill
-                alt="Hero"
-                className="object-cover object-center"
-              />
-            </figure>
-
-            {/* Medium Screens */}
-            <figure className="absolute w-full h-full max-md:hidden lg:hidden">
-              <Image
-                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x800px.svg"
-                fill
-                alt="Hero"
-                className="object-cover object-center"
-              />
-            </figure>
-
-            {/* Small Screens */}
-            <figure className="absolute w-full h-full">
-              <Image
-                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x1200px.svg"
-                fill
-                alt="Hero"
-                className="object-cover object-center"
-              />
-            </figure>
-
-            {/* Extra Small Screens */}
-            <figure className="absolute w-full h-full sm:hidden">
-              <Image
-                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x1760px.svg"
-                fill
-                alt="Hero"
-                className="object-cover object-center"
-              />
-            </figure>
-
-            {/* Dark Overlay for better readability */}
-            <div className="absolute inset-0 bg-black/50"></div>
+        <div className="xl:mx-12 sm:mx-6 mx-4 pt-4">
+          <div>
+            <HowToOrder />
+            <RecommendedSection />
           </div>
-
-          {/* Content Section */}
-          <div className="relative z-20 flex flex-col items-center justify-center flex-grow -translate-y-[50px]">
-            {/* Carousel */}
-            <div className="w-full md:px-14 px-7">
-              <Carousel
-                className="shadow-lg rounded-2xl overflow-hidden"
-                plugins={[autoplay]}
-                opts={{ loop: true }}
-              >
-                <CarouselContent>
-                  {initialCarousel?.map((image, index) => (
-                    <CarouselItem key={index}>
-                      <div className="h-full w-full relative max-lg:hidden">
-                        <AspectRatio ratio={12 / 3}>
-                          <Image
-                            loading="lazy"
-                            src={image.image123.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover rounded-2xl"
-                            unoptimized
-                          />
-                        </AspectRatio>
-                      </div>
-                      <div className="h-full w-full relative max-sm:hidden lg:hidden">
-                        <AspectRatio ratio={12 / 6}>
-                          <Image
-                            loading="lazy"
-                            src={image.image126.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover rounded-2xl"
-                            unoptimized
-                          />
-                        </AspectRatio>
-                      </div>
-                      <div className="h-full w-full relative sm:hidden">
-                        <AspectRatio ratio={12 / 9}>
-                          <Image
-                            loading="lazy"
-                            src={image.image129.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover rounded-2xl"
-                            unoptimized
-                          />
-                        </AspectRatio>
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-30" />
-                <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-30" />
-              </Carousel>
-            </div>
+          <div className="mt-32">
+            <DiscoverSection />
           </div>
-
-          {/* Search Bar Fixed at Bottom */}
-          <div className="absolute bottom-[-70px] w-full flex justify-center z-30 pb-4">
-            <div className="w-full">
-              <SearchBar
-                accountList={accountList || []}
-                setSearchAccount={setSearchAccount}
-                changeDirection={changeDirection}
-                getSortLabel={getSortLabel}
-                sortAccount={sortAccount}
-                sortDirection={sortDirection}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:mx-14 sm:mx-7 mx-2 pt-10 ">
           {accountList.length > 0 ? (
-            <div className="mt-9 mx-0 pt-10">
+            <div id="card-section" className="mt-9 mx-0 pt-10">
               <Card data={accountList} />
             </div>
           ) : (

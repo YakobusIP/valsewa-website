@@ -37,6 +37,7 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
   const [openCurrentBookingModal, setOpenCurrentBookingModal] = useState(false);
   const [openNextBookingModal, setOpenNextBookingModal] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const currentBookingExist =
     !!data.currentBookingDate &&
@@ -122,7 +123,7 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
             </Tooltip>
           </TooltipProvider>
         )}
-        <DropdownMenu>
+        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
@@ -131,13 +132,28 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Details</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => setOpenAccountDetail(true)}>
+            <DropdownMenuItem
+              onClick={() => {
+                setDropdownOpen(false);
+                setOpenAccountDetail(true);
+              }}
+            >
               View account details
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setOpenCurrentBookingModal(true)}>
+            <DropdownMenuItem
+              onClick={() => {
+                setDropdownOpen(false);
+                setOpenCurrentBookingModal(true);
+              }}
+            >
               View current booking
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setOpenNextBookingModal(true)}>
+            <DropdownMenuItem
+              onClick={() => {
+                setDropdownOpen(false);
+                setOpenNextBookingModal(true);
+              }}
+            >
               View next booking
             </DropdownMenuItem>
 

@@ -47,7 +47,7 @@ components:
         skinList:
           type: array
           items:
-            type: string
+            type: Skin
         createdAt:
           type: string
           format: date-time
@@ -156,14 +156,208 @@ components:
           type: number
         code:
           type: string
-        description:
-          type: string
+        priceList:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceList"
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
+
+    PriceList:
+      type: object
+      properties:
+      id:
+        type: number
+      duration:
+        type: string
+        pattern: '^(\d+d)?\s?(\d+h)?$'
+        example: "1d 2h"
+      normalPrice:
+        type: number
+      lowPrice:
+        type: number
+      tierId:
+        type: number
+
+    PriceTierCreateRequest:
+      type: object
+      description: "Create a price tier and optionally its price list items."
+      properties:
+        code:
+          type: string
+          example: "C"
+        priceList:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceListCreateWithoutTier"
+      required:
+        - code
+
+    PriceTierUpdateRequest:
+      type: object
+      description: "Update price tier. If replacePriceList is provided, replaces all existing items."
+      properties:
+        code:
+          type: string
+          example: "C"
+        replacePriceList:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceListCreateWithoutTier"
+      additionalProperties: false
+
+    PriceListCreateWithoutTier:
+      type: object
+      description: "Create a price list item when tierId is supplied via the path."
+      properties:
+        duration:
+          type: string
+          pattern: "^(\\d+d)?\\s?(\\d+h)?$"
+          example: "1d 0h"
+        normalPrice:
+          type: number
+          example: 99900
+        lowPrice:
+          type: number
+          example: 79900
+      required:
+        - duration
+        - normalPrice
+        - lowPrice
+
+    PriceListBulkCreateRequest:
+      type: object
+      description: "Bulk create price list items for a tier."
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceListCreateWithoutTier"
+      required:
+        - items
+      example:
+        items:
+          - { duration: "1d 2h", normalPrice: 99000, lowPrice: 79000 }
+          - { duration: "0d 12h", normalPrice: 54900, lowPrice: 44900 }
+
+    PriceListUpdate:
+      type: object
+      description: "Partial or full update for a price list item."
+      properties:
+        duration:
+          type: string
+          pattern: "^(\\d+d)?\\s?(\\d+h)?$"
+          example: "2d 0h"
+        normalPrice:
+          type: number
+          example: 102000
+        lowPrice:
+          type: number
+          example: 82000
+      additionalProperties: false
+
+    IdsDeleteRequest:
+      type: object
+      description: "IDs payload for delete-many operations."
+      properties:
+        ids:
+          type: array
+          items:
+            type: number
+          example: [1, 2, 3]
+      required:
+        - ids
+
+    PriceListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceList"
+        metadata:
+          type: object
+          description: "Extra metadata when listing items by tier."
+          properties:
+            tierId:
+              type: number
+              example: 10
+      required:
+        - data
+
+    PriceListBulkCreateResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PriceList"
+        message:
+          type: string
+          example: "Price list items created."
+      required:
+        - data
+        - message
+
+    PriceListUpdateResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/PriceList"
+        message:
+          type: string
+          example: "Price list item updated."
+      required:
+        - data
+        - message
+
+    Skin:
+      type: object
+      properties:
+      id:
+        type: number
+      name:
+        type: string
+      image:
+        type: string
+      keyword:
+        type: string
+        description: "Comma-separated keywords. Example: 'ion, vandal, zedd phantom'"
+
+    SkinCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Prime Vandal"
+        keyword:
+          type: string
+          example: "prime, vandal"
+        image:
+          type: string
+          example: "https://media.valorant-api.com/weaponskinlevels/c9678d8c-4327-f397-b0ec-dca3c3d6fb15/displayicon.png"
+      required:
+        - name
+        - keyword
+        - image
+
+    SkinUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Prime Vandal (Updated)"
+        image:
+          type: string
+          example: "https://cdn.example/prime-vandal-new.png"
+        keyword:
+          type: string
+          example: "prime"
+      description: All fields are optional; only provided properties will be updated.
 
     Statistic:
       type: object
@@ -210,6 +404,99 @@ components:
           type: number
         total:
           type: number
+
+    BookingStatus:
+      type: string
+      enum: [HOLD, RESERVED, EXPIRED, FAILED, CANCELLED, COMPLETED]
+
+    DurationType:
+      type: string
+      enum: [HOURLY, DAILY]
+
+    PaymentStatus:
+      type: string
+      enum: [PENDING, SUCCESS, EXPIRED, FAILED, CANCELLED, REFUNDED]
+
+    Provider:
+      type: string
+      enum: [FASPAY, MANUAL]
+
+    PaymentMethodType:
+      type: string
+      enum: [QRIS, VIRTUAL_ACCOUNT, MANUAL]
+
+    Type:
+      type: string
+      enum: [PERSENTASE, NOMINAL]
+
+    CreateBookingRequest:
+      type: object
+      required: [customerId, accountId, priceListId, quantity]
+      properties:
+        customerId: { type: integer }
+        accountId: { type: integer }
+        priceListId: { type: integer }
+        quantity: { type: integer }
+        voucherId: { type: integer }
+        startAt: { type: string, format: date-time }
+
+    PayBookingRequest:
+      type: object
+      required: [bookingId, provider, paymentMethod]
+      properties:
+        bookingId: { type: string, format: cuid }
+        voucherId: { type: integer }
+        provider: { $ref: "#/components/schemas/Provider" }
+        paymentMethod: { $ref: "#/components/schemas/PaymentMethodType" }
+        bankCode: { type: string }
+        bankAccountName: { type: string }
+
+    BookingResponse:
+      type: object
+      properties:
+        id: { type: string, format: cuid }
+        customerId: { type: integer, nullable: true }
+        accountId: { type: integer }
+        status: { $ref: "#/components/schemas/BookingStatus" }
+        duration: { type: string }
+        quantity: { type: integer }
+        startAt: { type: string, format: date-time, nullable: true }
+        endAt: { type: string, format: date-time, nullable: true }
+        expiredAt: { type: string, format: date-time, nullable: true }
+        mainValuePerUnit: { type: integer }
+        othersValuePerUnit: { type: integer, nullable: true }
+        voucherName: { type: string }
+        voucherType: { $ref: "#/components/schemas/Type" }
+        voucherAmount: { type: integer }
+        voucherMaxDiscount: { type: integer }
+        mainValue: { type: integer }
+        othersValue: { type: integer }
+        totalValue: { type: integer }
+        account:
+          type: pbject
+          nullable: true
+          properties:
+            accountCode: { type: string }
+            accountRank: { type: string }
+            priceTierCode: { type: string }
+            thumbnailImageUrl: { type: string }
+            username: { type: string, nullable: true }
+            password: { type: string, nullable: true }
+
+    PaymentResponse:
+      type: object
+      properties:
+        paymentId: { type: string, format: cuid }
+        bookingId: { type: string, format: cuid }
+        status: { $ref: "#/components/schemas/PaymentStatus" }
+        value: { type: integer }
+        currency: { type: string, example: "IDR" }
+        provider: { $ref: "#/components/schemas/Provider" }
+        providerPaymentId: { type: string }
+        paymentMethod: { $ref: "#/components/schemas/PaymentMethodType" }
+        qrUrl: { type: string, format: uri, nullable: true }
+        paidAt: { type: string, format: date-time, nullable: true }
+        refundedAt: { type: string, format: date-time, nullable: true }
 
     ErrorResponse:
       type: object
@@ -431,6 +718,77 @@ paths:
                 properties:
                   message:
                     type: string
+
+  /api/accounts/{id}/skins:
+    post:
+      tags: [Accounts]
+      summary: Add skins to an account (IDs only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+          description: Account ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                skinList:
+                  type: array
+                  items: { type: integer }
+              required: [skinList]
+            examples:
+              example:
+                value:
+                  skinList: [1, 2, 3]
+      responses:
+        "200":
+          description: Account with updated skin list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      id: { type: integer }
+                      skinList:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Skin"
+        "400": { description: Invalid payload }
+        "401": { description: Unauthorized }
+        "404": { description: Account not found }
+
+    delete:
+      tags: [Accounts]
+      summary: Remove skins from an account (IDs only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                skinList:
+                  type: array
+                  items: { type: integer }
+              required: [skinList]
+      responses:
+        "200": { description: Account with updated skin list }
 
   /api/accounts/{id}/finish-booking:
     post:
@@ -812,6 +1170,27 @@ paths:
                 properties:
                   message:
                     type: string
+    delete:
+      tags:
+        - Price Tiers
+      summary: "Delete multiple price tiers."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdsDeleteRequest"
+      responses:
+        "204":
+          description: "Price tiers deleted successfully."
+        "500":
+          description: "Server error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/price-tiers/{id}:
     get:
@@ -855,7 +1234,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PriceTier"
+              $ref: "#/components/schemas/PriceTierUpdateRequest"
       responses:
         "201":
           description: "Price tier updated successfully."
@@ -887,6 +1266,489 @@ paths:
       responses:
         "204":
           description: "Price tiers deleted successfully."
+
+  /api/price-tiers/{tierId}/price-list:
+    get:
+      tags:
+        - Price List
+      summary: "List price list items for a tier."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: tierId
+          required: true
+          schema:
+            type: string
+          description: "The ID of the price tier."
+      responses:
+        "200":
+          description: "Price list items for the tier."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceListResponse"
+        "404":
+          description: "Tier not found."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Server error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      tags:
+        - Price List
+      summary: "Bulk create price list items for a tier."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: tierId
+          required: true
+          schema:
+            type: string
+          description: "The ID of the price tier."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceListBulkCreateRequest"
+      responses:
+        "201":
+          description: "Price list items created."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceListBulkCreateResponse"
+        "400":
+          description: "Validation error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: "Tier not found."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Server error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/price-list/{id}:
+    put:
+      tags:
+        - Price List
+      summary: "Update a single price list item."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "The ID of the price list item."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PriceListUpdate"
+      responses:
+        "200":
+          description: "Price list item updated."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceListUpdateResponse"
+        "404":
+          description: "Item not found."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: "Server error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/price-list:
+    delete:
+      tags:
+        - Price List
+      summary: "Delete multiple price list items."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IdsDeleteRequest"
+      responses:
+        "204":
+          description: "Price list items deleted successfully."
+        "500":
+          description: "Server error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/skins:
+    get:
+      tags:
+        - Skins
+      summary: Retrieve a paginated list of Skins
+      description: Returns a list of skins with pagination metadata. Optionally filters by search query `q`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          required: false
+          schema:
+            type: string
+          description: The page number for pagination.
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: string
+          description: The number of items per page.
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+          description: Optional search query.
+      responses:
+        "200":
+          description: A list of skins with pagination metadata.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Skin"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+              examples:
+                example:
+                  value:
+                    data:
+                      - id: 1
+                        name: "Prime Vandal"
+                        image: "https://media.valorant-api.com/weaponskins/prime-vandal.png"
+                        keyword: "prime"
+                      - id: 2
+                        name: "Nebula Phantom"
+                        image: "https://media.valorant-api.com/weaponskins/nebula-phantom.png"
+                        keyword: "nebula"
+                    metadata:
+                      page: 1
+                      limit: 10
+                      totalItems: 2
+                      totalPages: 1
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      tags:
+        - Skins
+      summary: Create a new skin (name & keyword). Image is enriched server-side.
+      description: >
+        Creates a skin using `name` and `keyword`.  
+        The server will call the Valorant weapons endpoint to find a matching skin and store the image URL.  
+        If the image is not found, the record is **still created** and a **warning** is returned with `201`.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkinCreate"
+            examples:
+              example:
+                value:
+                  name: "Prime Vandal"
+                  keyword: "prime"
+                  image: "https://media.valorant-api.com/weaponskinlevels/c9678d8c-4327-f397-b0ec-dca3c3d6fb15/displayicon.png"
+      responses:
+        "201":
+          description: Skin created.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  # Your controller returns a message in the normal success path
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Skin created successfully!"
+                  # Partial success (image not found): controller returns data + warning
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 10
+                          name:
+                            type: string
+                            example: "MadeUp Skin"
+                          keyword:
+                            type: string
+                            example: "kw"
+                          image:
+                            type: string
+                            description: Empty string when image not found.
+                            example: ""
+                      warning:
+                        type: string
+                        example: "Image for skin MadeUp Skin not found. Record saved."
+        "400":
+          description: Bad Request (validation error)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict (duplicate name)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      tags:
+        - Skins
+      summary: Delete multiple skins.
+      description: Accepts a list of skin IDs to delete in one request.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: number
+              required:
+                - ids
+            examples:
+              example:
+                value:
+                  ids: [1, 2, 3]
+      responses:
+        "204":
+          description: Skins deleted successfully (no response body).
+        "400":
+          description: Bad Request (missing or invalid ids)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/skins/{id}:
+    get:
+      tags:
+        - Skins
+      summary: Retrieve a skin by ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The unique identifier of the skin.
+      responses:
+        "200":
+          description: The details of the skin.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/Skin"
+              examples:
+                example:
+                  value:
+                    data:
+                      id: 1
+                      name: "Prime Vandal"
+                      image: "https://media.valorant-api.com/weaponskins/prime-vandal.png"
+                      keyword: "prime"
+        "404":
+          description: Skin not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      tags:
+        - Skins
+      summary: Update an existing skin.
+      description: Updates a skin’s fields. Your controller responds with a message.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The ID of the skin to update.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SkinUpdate"
+            examples:
+              example:
+                value:
+                  name: "Prime Vandal (Updated)"
+                  keyword: "prime"
+                  image: "https://cdn.example/prime-vandal-new.png"
+      responses:
+        "201":
+          description: Skin updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Skin updated successfully!"
+        "400":
+          description: Bad Request (validation error)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Skin not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Conflict (duplicate name)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/skins/image:
+    get:
+      tags:
+        - Skins
+      summary: Get a skin's image URL by name (query parameter).
+      description: >
+        Resolves the image URL for a given skin name (case-insensitive).  
+        Prefers `levels.displayIcon`; falls back to `chromas.fullRender`.  
+        Returns 404 if the skin (or image) could not be found.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+          description: Skin name to look up, e.g. "Prime Vandal".
+      responses:
+        "200":
+          description: Skin image URL resolved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: Prime Vandal
+                      imageUrl:
+                        type: string
+                        example: https://media.valorant-api.com/.../displayicon.png
+        "404":
+          description: Skin or image not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Validation or upstream unavailability/rate-limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/statistics:
     get:
@@ -939,3 +1801,314 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  # --- Booking Endpoints ---
+  /api/bookings:
+    get:
+      tags: [Bookings]
+      summary: Retrieve a paginated list of bookings
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: string
+          description: "The page number."
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: string
+          description: "The number of accounts per page."
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+          description: "Optional search query."
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BookingResponse"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+
+  /api/bookings/{id}:
+    get:
+      tags: [Bookings]
+      summary: Get booking by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingResponse"
+
+  /api/bookings/customers/{customerId}:
+    get:
+      tags: [Bookings]
+      summary: Get all bookings for a customer
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BookingResponse"
+
+  /api/bookings/customers/hold-bookings/{customerId}:
+    get:
+      tags: [Bookings]
+      summary: Get only bookings with HOLD status for a customer
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BookingResponse"
+
+  /api/bookings/book:
+    post:
+      tags: [Bookings]
+      summary: Create a new booking
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingRequest"
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingResponse"
+
+  /api/bookings/cancel:
+    post:
+      tags: [Bookings]
+      summary: Cancel booking
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [bookingId]
+              properties:
+                bookingId:
+                  type: string
+                  format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingResponse"
+
+  # --- Payment Endpoints ---
+  /api/bookings/payments/{id}:
+    get:
+      tags: [Payments]
+      summary: Get payment by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /api/bookings/active-payments/{bookingId}:
+    get:
+      tags: [Payments]
+      summary: Get active payment by booking ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /api/bookings/pay:
+    post:
+      tags: [Payments]
+      summary: Initiate payment for a booking
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayBookingRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /api/bookings/verify-payment:
+    post:
+      tags: [Payments]
+      summary: Manually verify payment status
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentId]
+              properties:
+                paymentId:
+                  type: string
+                  format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /api/bookings/force-pay:
+    post:
+      tags: [Payments]
+      summary: Manually verify payment status
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentId]
+              properties:
+                paymentId:
+                  type: string
+                  format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /api/bookings/sync-expired:
+    post:
+      tags: [Bookings]
+      summary: Sync expired bookings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+
+  /api/bookings/sync-completed:
+    post:
+      tags: [Bookings]
+      summary: Sync completed bookings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+
+  /api/bookings/sync-account-availability:
+    post:
+      tags: [Bookings]
+      summary: Sync account availabilities
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  markedInUse: { type: integer }
+                  markedAvailable: { type: integer }
+
+  /api/bookings/faspay/callback:
+    post:
+      tags: [Webhooks]
+      summary: Faspay Payment Notification Webhook
+      requestBody:
+        required: true
+        content: application/json
+      responses:
+        "200":
+          description: Acknowledged
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response: { type: string }
+                  response_code: { type: string }

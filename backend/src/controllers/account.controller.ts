@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AccountService } from "../services/account.service";
-import { UnprocessableEntityError } from "../lib/error";
+import { BadRequestError, UnprocessableEntityError } from "../lib/error";
 import { RankService } from "../services/rank.service";
 import { Prisma } from "@prisma/client";
 import { updateAllAccountRankQueue } from "../lib/queues/accountrank.queue";
@@ -62,6 +62,19 @@ export class AccountController {
       );
 
       return res.json({ data, metadata });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getRecommendedAccounts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const data = await this.accountService.getRecommendedAccounts();
+      return res.json({ data });
     } catch (error) {
       return next(error);
     }
@@ -158,6 +171,22 @@ export class AccountController {
   ) => {
     try {
       const accounts = await this.accountService.getAccountResetLogs();
+
+      return res.json(accounts);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getAvailableAccounts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {      
+      const startAt = new Date(req.query.startAt as string);
+      const endAt = new Date(req.query.endAt as string);
+      const accounts = await this.accountService.getAvailableAccounts({ startAt, endAt });
 
       return res.json(accounts);
     } catch (error) {
@@ -267,6 +296,40 @@ export class AccountController {
       await this.accountService.deleteManyAccounts(req.body.ids);
 
       return res.status(204).end();
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  addSkinsToAccount = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const updated = await this.accountService.addSkinsToAccount(
+        parseInt(req.params.id),
+        req.body.skinList as number[]
+      );
+
+      return res.status(200).json({ data: updated });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  removeSkinsFromAccount = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const updated = await this.accountService.removeSkinsFromAccount(
+        parseInt(req.params.id),
+        req.body.skinList as number[]
+      );
+
+      return res.status(200).json({ data: updated });
     } catch (error) {
       return next(error);
     }

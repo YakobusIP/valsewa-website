@@ -1,4 +1,4 @@
-import { Account, AccountResetLog, Prisma, Status } from "@prisma/client";
+import { Account, AccountResetLog, BookingStatus, Prisma, Skin, Status } from "@prisma/client";
 import { addHours, subDays } from "date-fns";
 import Fuse, { IFuseOptions } from "fuse.js";
 import {
@@ -10,6 +10,8 @@ import {
 import { prisma } from "../lib/prisma";
 import {
   AccountEntityRequest,
+  AccountWithSkins,
+  GetAvailableAccountsRequest,
   PublicAccount,
   UpdateResetLogRequest
 } from "../types/account.type";
@@ -246,19 +248,38 @@ export class AccountService {
     });
   };
 
+  private async ensureSkinsExist(skinIds: number[]): Promise<void> {
+    const found = await prisma.skin.findMany({
+      where: { id: { in: skinIds } },
+      select: { id: true }
+    });
+    const foundIds = new Set(found.map((s) => s.id));
+    const missing = skinIds.filter((id) => !foundIds.has(id));
+    if (missing.length) {
+      throw new BadRequestError(
+        `Some skin IDs do not exist: ${missing.join(", ")}`
+      );
+    }
+  }
+
   getAllAccounts = async (
     page: number,
     limit: number,
     query?: string,
     sortBy?: string,
     direction?: Prisma.SortOrder
-  ): Promise<[Account[], Metadata]> => {
+  ): Promise<[AccountWithSkins[], Metadata]> => {
     try {
       let data = await prisma.account.findMany({
         orderBy: {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
-        include: { priceTier: true, thumbnail: true, otherImages: true }
+        include: {
+          priceTier: true,
+          thumbnail: true,
+          otherImages: true,
+          skinList: true
+        }
       });
 
       if (sortBy === "rank") {
@@ -269,10 +290,16 @@ export class AccountService {
         data = this.sortAccountsByIdTier(data);
       }
 
-      let filteredData: Account[] = data;
+      let filteredData: AccountWithSkins[] = data;
       if (query && query.trim().length > 0) {
-        const fuseOptions: IFuseOptions<Account> = {
-          keys: ["nickname", "accountCode", "accountRank", "skinList"],
+        const fuseOptions: IFuseOptions<AccountWithSkins> = {
+          keys: [
+            "nickname",
+            "accountCode",
+            "accountRank",
+            "skinList.name",
+            "skinList.keyword"
+          ],
           threshold: 0.3
         };
 
@@ -316,6 +343,7 @@ export class AccountService {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
         select: {
+          id: true,
           nickname: true,
           accountCode: true,
           description: true,
@@ -326,7 +354,9 @@ export class AccountService {
           skinList: true,
           priceTier: true,
           thumbnail: true,
-          otherImages: true
+          otherImages: true,
+          isLowRank: true,
+          isRecommended: true
         }
       });
 
@@ -379,11 +409,60 @@ export class AccountService {
     }
   };
 
+  getRecommendedAccounts = async (): Promise<PublicAccount[]> => {
+    try {
+      const accounts = await prisma.account.findMany({
+        where: {
+          isRecommended: true,
+          availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
+        },
+        orderBy: {
+          totalRentHour: "desc"
+        },
+        take: 3,
+        select: {
+          id: true,
+          nickname: true,
+          accountCode: true,
+          description: true,
+          accountRank: true,
+          availabilityStatus: true,
+          currentExpireAt: true,
+          totalRentHour: true,
+          skinList: true,
+          priceTier: true,
+          thumbnail: true,
+          otherImages: true,
+          isLowRank: true,
+          isRecommended: true
+        }
+      });
+
+      return accounts;
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   getAccountById = async (id: number) => {
     try {
-      const account = await prisma.account.findFirst({ where: { id } });
+      const account = await prisma.account.findUnique({
+        where: { id },
+        include: {
+          priceTier: {
+            include: {
+              priceList: true
+            }
+          },
+          skinList: true,
+          thumbnail: true,
+          otherImages: true
+        }
+      });
 
-      if (!account) throw new NotFoundError("Account not found!");
+      if (!account) {
+        throw new NotFoundError("Account not found!");
+      }
 
       return account;
     } catch (error) {
@@ -421,11 +500,42 @@ export class AccountService {
     }
   };
 
+  getAvailableAccounts = async (data: GetAvailableAccountsRequest) => {
+    try {
+      const unavailableAccounts = await prisma.booking.findMany({
+        where: {
+          status: { in: [BookingStatus.HOLD, BookingStatus.RESERVED] },
+          startAt: { lt: data.endAt ?? new Date() },
+          endAt: { gt: data.startAt ?? new Date() }
+        },
+        distinct: ["accountId"],
+        select: { accountId: true }
+      })
+
+      const availableAccounts = await prisma.account.findMany({
+        where: {
+          availabilityStatus: { not: Status.NOT_AVAILABLE },
+          id: { notIn: unavailableAccounts.map(v => v.accountId) }
+        }
+      });
+
+      return availableAccounts;
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  }
+
   createAccount = async (data: AccountEntityRequest) => {
     try {
+      const skinConnect =
+        Array.isArray(data.skinList) && data.skinList.length > 0
+          ? { connect: data.skinList.map((id) => ({ id })) }
+          : undefined;
+
       return await prisma.account.create({
         data: {
           ...data,
+          skinList: skinConnect,
           thumbnail: { connect: { id: data.thumbnail } },
           availabilityStatus: data.availabilityStatus as Status,
           otherImages: { connect: data.otherImages?.map((id) => ({ id })) },
@@ -495,7 +605,7 @@ export class AccountService {
 
       if (!currentAccount) throw new NotFoundError("Account not found!");
 
-      const { thumbnail, otherImages, priceTier, ...scalars } = data;
+      const { thumbnail, otherImages, priceTier, skinList, ...scalars } = data;
 
       const updateData: Prisma.AccountUpdateInput = { ...scalars };
 
@@ -540,6 +650,12 @@ export class AccountService {
 
       if (priceTier !== undefined) {
         updateData.priceTier = { connect: { id: priceTier } };
+      }
+
+      if (skinList !== undefined) {
+        updateData.skinList = {
+          set: skinList.map((id) => ({ id }))
+        };
       }
 
       return await prisma.account.update({
@@ -663,4 +779,84 @@ export class AccountService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  async addSkinsToAccount(
+    accountId: number,
+    skinIds: number[]
+  ): Promise<Account & { skinList: Skin[] }> {
+    try {
+      if (!Array.isArray(skinIds) || skinIds.length === 0) {
+        throw new BadRequestError(
+          'Provide "skinIds" as a non-empty array of integers.'
+        );
+      }
+
+      await this.getAccountById(accountId);
+
+      await this.ensureSkinsExist(skinIds);
+
+      const updated = await prisma.account.update({
+        where: { id: accountId },
+        data: {
+          skinList: {
+            connect: skinIds.map((id) => ({ id }))
+          }
+        },
+        include: { skinList: true }
+      });
+
+      return updated;
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof BadRequestError)
+        throw error;
+
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundError(`Account ${accountId} not found.`);
+      }
+
+      throw new InternalServerError((error as Error).message);
+    }
+  }
+
+  async removeSkinsFromAccount(
+    accountId: number,
+    skinIds: number[]
+  ): Promise<Account & { skinList: Skin[] }> {
+    try {
+      if (!Array.isArray(skinIds) || skinIds.length === 0) {
+        throw new BadRequestError(
+          'Provide "skinIds" as a non-empty array of integers.'
+        );
+      }
+
+      await this.getAccountById(accountId);
+
+      const updated = await prisma.account.update({
+        where: { id: accountId },
+        data: {
+          skinList: {
+            disconnect: skinIds.map((id) => ({ id }))
+          }
+        },
+        include: { skinList: true }
+      });
+
+      return updated;
+    } catch (error) {
+      if (error instanceof NotFoundError || error instanceof BadRequestError)
+        throw error;
+
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2025"
+      ) {
+        throw new NotFoundError(`Account ${accountId} not found.`);
+      }
+
+      throw new InternalServerError((error as Error).message);
+    }
+  }
 }

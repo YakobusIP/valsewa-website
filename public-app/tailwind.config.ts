@@ -12,7 +12,10 @@ export default {
       fontFamily: {
         sans: ["Helvetica", "Arial", "sans-serif"],
         valorant: ["Valorant", "sans-serif"],
-        pressure: ["fpdPressure", "sans-serif"]
+        pressure: ["fpdPressure", "sans-serif"],
+        antonio: ["antonio", "sans-serif"],
+        instrumentSans: ["instrumentSans", "sans-serif"],
+        instrumentSansItalic: ["instrumentSansItalic", "sans-serif"]
       },
       colors: {
         background: "hsl(var(--background))",

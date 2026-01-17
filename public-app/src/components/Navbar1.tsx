@@ -2,12 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 
-import { Goldman } from "next/font/google";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaX } from "react-icons/fa6";
 import { HiOutlineMenuAlt3 } from "react-icons/hi";
+
+import LoginPage from "./LoginPage";
+import { Button } from "./ui/button";
 
 export interface NavbarItem {
   name: string;
@@ -19,12 +21,6 @@ export interface NavbarItem {
     href: string;
   }[];
 }
-
-const goldman = Goldman({
-  subsets: ["latin"],
-  weight: ["400", "700"], // or just "400" if only regular
-  display: "swap"
-});
 
 export const navbarItem: NavbarItem[] = [
   {
@@ -70,6 +66,11 @@ const Navbar1 = () => {
   const pathname = usePathname();
 
   const [isNavMobileOpen, setIsNavMobileOpen] = useState(false);
+  const [isComponentOpen, setIsComponentOpen] = useState(false);
+
+  const handleOnClick = () => {
+    setIsComponentOpen(!isComponentOpen);
+  };
   const [openDropdownIndex, setOpenDropdownIndex] = useState<number | null>(
     null
   );
@@ -83,7 +84,7 @@ const Navbar1 = () => {
   }, []);
 
   return (
-    <div className="font-pressure">
+    <div className="font-instrumentSans">
       {/* Mobile Navbar */}
       <div
         className={`fixed top-0 w-full flex flex-col lg:hidden z-50 ${
@@ -102,9 +103,7 @@ const Navbar1 = () => {
             />
           </Link>
           <Link href="https://valforum.com/top-up">
-            <button
-              className={`group border border-[#FFC200] w-fit px-4 py-1 rounded-xl cursor-pointer text-[#8C421D] ${goldman.className} flex items-center space-x-1 bg-[#FFC200] hover:bg-transparent font-bold hover:text-white`}
-            >
+            <button className="group border border-[#FFC200] w-fit px-4 py-1 rounded-xl cursor-pointer text-[#8C421D] font-instrumentSans flex items-center space-x-1 bg-[#FFC200] hover:bg-transparent font-bold hover:text-white">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 16 15"
@@ -183,9 +182,23 @@ const Navbar1 = () => {
                 ) : null}
               </div>
             ))}
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+              onClick={() => {
+                handleOnClick();
+                setIsNavMobileOpen(false);
+              }}
+            >
+              Sign In
+            </Button>
           </div>
         )}
       </div>
+      {isComponentOpen && (
+        <LoginPage onClose={() => setIsComponentOpen(false)} />
+      )}
     </div>
   );
 };

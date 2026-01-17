@@ -16,11 +16,17 @@ type AccountEntityRequest = {
   totalRentHour: number;
   password: string;
   passwordResetRequired: boolean;
-  skins: string[];
   thumbnail: number;
   otherImages: number[] | null;
   priceTier: number;
+  skinList: number[];
+  isLowRank: boolean;
+  isRecommended: boolean;
 };
+
+type AccountWithSkins = Prisma.AccountGetPayload<{
+  include: { skinList: true };
+}>;
 
 type PublicAccount = Prisma.AccountGetPayload<{
   select: {
@@ -35,6 +41,8 @@ type PublicAccount = Prisma.AccountGetPayload<{
     priceTier: true;
     thumbnail: true;
     otherImages: true;
+    isLowRank: true;
+    isRecommended: true;
   };
 }>;
 
@@ -44,4 +52,15 @@ type UpdateResetLogRequest = {
   passwordResetRequired: boolean;
 };
 
-export type { AccountEntityRequest, PublicAccount, UpdateResetLogRequest };
+type GetAvailableAccountsRequest = {
+  startAt: Date;
+  endAt: Date;
+}
+
+export type {
+  AccountEntityRequest,
+  AccountWithSkins,
+  PublicAccount,
+  UpdateResetLogRequest,
+  GetAvailableAccountsRequest,
+};

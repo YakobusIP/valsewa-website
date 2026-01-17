@@ -82,4 +82,91 @@ export class PriceTierController {
       return next(error);
     }
   };
+
+  getPriceListByTierId = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const tierId = parseInt(req.params.tierId);
+      const tier = await this.priceTierService.getPriceTierById(tierId);
+
+      return res.json({ data: tier.priceList, metadata: { tierId } });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  addPriceListItems = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const tierId = parseInt(req.params.tierId, 10);
+      const { items } = req.body as {
+        items: { duration: string; normalPrice: number; lowPrice: number }[];
+      };
+
+      if (!Array.isArray(items) || items.length === 0) {
+        return res
+          .status(400)
+          .json({ message: "Body.items must be a non-empty array." });
+      }
+
+      const created = await this.priceTierService.addPriceListItems(
+        tierId,
+        items
+      );
+      return res
+        .status(201)
+        .json({ data: created, message: "Price list items created." });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  updatePriceListItem = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const itemId = parseInt(req.params.itemId, 10);
+      const data = req.body as Partial<{
+        duration: string;
+        normalPrice: number;
+        lowPrice: number;
+      }>;
+
+      const updated = await this.priceTierService.updatePriceListItem(
+        itemId,
+        data
+      );
+      return res.json({ data: updated, message: "Price list item updated." });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  deletePriceListItems = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { ids } = req.body as { ids: number[] };
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res
+          .status(400)
+          .json({ message: "Body.ids must be a non-empty array." });
+      }
+
+      await this.priceTierService.deletePriceListItems(ids);
+      return res.status(204).end();
+    } catch (error) {
+      return next(error);
+    }
+  };
 }
