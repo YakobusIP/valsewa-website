@@ -85,84 +85,91 @@ const tiers = [
 ];
 
 const ranks = [
-    {
-        id: "iron",
-        name: "IRON",
-        color: "text-[#7A7A7A]",
-        bgGradient: "from-[#7A7A7A]/30 to-transparent",
-        price: "Rp 25k",
-        image: "/rank/Iron 3.svg",
-    },
-    {
-        id: "bronze",
-        name: "BRONZE",
-        color: "text-[#C69C6D]",
-        bgGradient: "from-[#C69C6D]/30 to-transparent",
-        price: "Rp 25k",
-        image: "/rank/Bronze 3.svg",
-    },
-    {
-        id: "silver",
-        name: "SILVER",
-        color: "text-[#A6A6A6]",
-        bgGradient: "from-[#A6A6A6]/30 to-transparent",
-        price: "Rp 25k",
-        image: "/rank/Silver 3.svg",
-    },
-    {
-        id: "gold",
-        name: "GOLD",
-        color: "text-[#FFD166]",
-        bgGradient: "from-[#FFD166]/30 to-transparent",
-        price: "Rp 25k",
-        image: "/rank/Gold 3.svg",
-    },
-    {
-        id: "platinum",
-        name: "PLATINUM",
-        color: "text-[#3CCFCF]",
-        bgGradient: "from-[#3CCFCF]/30 to-transparent",
-        price: "Rp 25k",
-        image: "/rank/Platinum 3.svg",
-    },
-    {
-        id: "diamond",
-        name: "DIAMOND",
-        color: "text-[#B983FF]",
-        bgGradient: "from-[#B983FF]/30 to-transparent",
-        price: "Rp 25k",
-        image: "/rank/Diamond 3.svg",
-    },
-    {
-        id: "ascendant",
-        name: "ASCENDANT",
-        color: "text-[#2EE59D]",
-        bgGradient: "from-[#2EE59D]/30 to-transparent",
-        price: "Rp 25k",
-        image: "/rank/Ascendant 3.svg",
-    },
-    {
-        id: "immortal",
-        name: "IMMORTAL",
-        color: "text-[#FF4D6D]",
-        bgGradient: "from-[#FF4D6D]/30 to-transparent",
-        price: "Rp 25k",
-        image: "/rank/Immortal 3.svg",
-    },
-    {
-        id: "radiant",
-        name: "RADIANT",
-        color: "text-[#FFD700]",
-        bgGradient: "from-[#FFD700]/30 to-transparent",
-        price: "Rp 25k",
-        image: "/rank/Radiant.svg",
-    },
+  {
+    id: "Iron",
+    name: "IRON",
+    color: "text-[#7A7A7A]",
+    bgGradient: "from-[#7A7A7A]/30 to-transparent",
+    price: "Rp 25k",
+    image: "/rank/iron 3.svg"
+  },
+  {
+    id: "Bronze",
+    name: "BRONZE",
+    color: "text-[#C69C6D]",
+    bgGradient: "from-[#C69C6D]/30 to-transparent",
+    price: "Rp 25k",
+    image: "/rank/bronze 3.svg"
+  },
+  {
+    id: "Silver",
+    name: "SILVER",
+    color: "text-[#A6A6A6]",
+    bgGradient: "from-[#A6A6A6]/30 to-transparent",
+    price: "Rp 25k",
+    image: "/rank/silver 3.svg"
+  },
+  {
+    id: "Gold",
+    name: "GOLD",
+    color: "text-[#FFD166]",
+    bgGradient: "from-[#FFD166]/30 to-transparent",
+    price: "Rp 25k",
+    image: "/rank/gold 3.svg"
+  },
+  {
+    id: "Platinum",
+    name: "PLATINUM",
+    color: "text-[#3CCFCF]",
+    bgGradient: "from-[#3CCFCF]/30 to-transparent",
+    price: "Rp 25k",
+    image: "/rank/platinum 3.svg"
+  },
+  {
+    id: "Diamond",
+    name: "DIAMOND",
+    color: "text-[#B983FF]",
+    bgGradient: "from-[#B983FF]/30 to-transparent",
+    price: "Rp 25k",
+    image: "/rank/diamond 3.svg"
+  },
+  {
+    id: "Ascendant",
+    name: "ASCENDANT",
+    color: "text-[#2EE59D]",
+    bgGradient: "from-[#2EE59D]/30 to-transparent",
+    price: "Rp 25k",
+    image: "/rank/ascendant 3.svg"
+  },
+  {
+    id: "Immortal",
+    name: "IMMORTAL",
+    color: "text-[#FF4D6D]",
+    bgGradient: "from-[#FF4D6D]/30 to-transparent",
+    price: "Rp 25k",
+    image: "/rank/immortal 3.svg"
+  },
+  {
+    id: "Radiant",
+    name: "RADIANT",
+    color: "text-[#FFD700]",
+    bgGradient: "from-[#FFD700]/30 to-transparent",
+    price: "Rp 25k",
+    image: "/rank/radiant.svg"
+  }
 ];
+
+
+type DiscoverSectionProps = {
+  onSelectTier: (id: string, isLowTier: string) => void;
+  onSelectRank: (rank: string) => void;
+  loading?: boolean;
+};
 
 type FilterType = "LR-TIER" | "TIER" | "RANK";
 
-export default function DiscoverSection() {
-  const [activeFilter, setActiveFilter] = useState<FilterType>("LR-TIER");
+export default function DiscoverSection({onSelectTier, onSelectRank, loading} : DiscoverSectionProps) {
+    const [activeFilter, setActiveFilter] = useState<FilterType>("LR-TIER");
 
   return (
     <section className="w-full relative z-10 -mt-8 mb-12">
@@ -276,12 +283,17 @@ export default function DiscoverSection() {
                       </span>
                     </div>
 
-                    <Link
-                      href="#" // Assuming search implementation
-                      className="bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors"
-                    >
-                      See More
-                    </Link>
+                     <button
+                                            type="button"
+                                            disabled={loading}
+                                            onClick={() => onSelectTier(lrtiers.id.toUpperCase(), "true")} 
+                                            className={cn(
+                                                "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                                            loading && "opacity-60 cursor-not-allowed"
+                                            )}
+                                        >
+                                            {loading ? "Loading..." : "See More"}
+                                        </button>
                   </div>
                 </div>
               ))}
@@ -341,12 +353,17 @@ export default function DiscoverSection() {
                       </span>
                     </div>
 
-                    <Link
-                      href="#" // Assuming search implementation
-                      className="bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors"
+                    <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => onSelectTier(tier.id.toUpperCase(), "false")} 
+                        className={cn(
+                            "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                            loading && "opacity-60 cursor-not-allowed"
+                        )}
                     >
-                      See More
-                    </Link>
+                            {loading ? "Loading..." : "See More"}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -409,12 +426,17 @@ export default function DiscoverSection() {
                       </span>
                     </div>
 
-                    <Link
-                      href="#"
-                      className="bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[11px] font-bold px-4 py-2 rounded-lg transition-all"
+                    <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => onSelectRank(rank.id)} 
+                        className={cn(
+                            "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                            loading && "opacity-60 cursor-not-allowed"
+                        )}
                     >
-                      See More
-                    </Link>
+                            {loading ? "Loading..." : "See More"}
+                    </button>
                   </div>
 
                   {/* Subtle border glow */}
