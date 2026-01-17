@@ -278,7 +278,7 @@ export class AccountService {
           priceTier: true,
           thumbnail: true,
           otherImages: true,
-          skinList: true
+          skins: true
         }
       });
 
@@ -297,8 +297,8 @@ export class AccountService {
             "nickname",
             "accountCode",
             "accountRank",
-            "skinList.name",
-            "skinList.keyword"
+            "skins.name",
+            "skins.keyword"
           ],
           threshold: 0.3
         };
@@ -351,7 +351,7 @@ export class AccountService {
           availabilityStatus: true,
           currentExpireAt: true,
           totalRentHour: true,
-          skinList: true,
+          skins: true,
           priceTier: true,
           thumbnail: true,
           otherImages: true,
@@ -371,7 +371,7 @@ export class AccountService {
       let filteredData: PublicAccount[] = data;
       if (query && query.trim().length > 0) {
         const fuseOptions: IFuseOptions<PublicAccount> = {
-          keys: ["nickname", "accountCode", "accountRank", "skinList"],
+          keys: ["nickname", "accountCode", "accountRank", "skins"],
           threshold: 0.3
         };
 
@@ -429,7 +429,7 @@ export class AccountService {
           availabilityStatus: true,
           currentExpireAt: true,
           totalRentHour: true,
-          skinList: true,
+          skins: true,
           priceTier: true,
           thumbnail: true,
           otherImages: true,
@@ -454,7 +454,7 @@ export class AccountService {
               priceList: true
             }
           },
-          skinList: true,
+          skins: true,
           thumbnail: true,
           otherImages: true
         }
@@ -527,19 +527,21 @@ export class AccountService {
 
   createAccount = async (data: AccountEntityRequest) => {
     try {
+      const { skinList, thumbnail, otherImages, priceTier, ...scalars } = data;
+
       const skinConnect =
-        Array.isArray(data.skinList) && data.skinList.length > 0
-          ? { connect: data.skinList.map((id) => ({ id })) }
+        Array.isArray(skinList) && skinList.length > 0
+          ? { connect: skinList.map((id) => ({ id })) }
           : undefined;
 
       return await prisma.account.create({
         data: {
-          ...data,
-          skinList: skinConnect,
-          thumbnail: { connect: { id: data.thumbnail } },
-          availabilityStatus: data.availabilityStatus as Status,
-          otherImages: { connect: data.otherImages?.map((id) => ({ id })) },
-          priceTier: { connect: { id: data.priceTier } }
+          ...scalars,
+          skins: skinConnect,
+          thumbnail: { connect: { id: thumbnail } },
+          availabilityStatus: scalars.availabilityStatus as Status,
+          otherImages: { connect: otherImages?.map((id) => ({ id })) },
+          priceTier: { connect: { id: priceTier } }
         }
       });
     } catch (error) {
@@ -653,7 +655,7 @@ export class AccountService {
       }
 
       if (skinList !== undefined) {
-        updateData.skinList = {
+        updateData.skins = {
           set: skinList.map((id) => ({ id }))
         };
       }
@@ -783,7 +785,7 @@ export class AccountService {
   async addSkinsToAccount(
     accountId: number,
     skinIds: number[]
-  ): Promise<Account & { skinList: Skin[] }> {
+  ): Promise<Account & { skins: Skin[] }> {
     try {
       if (!Array.isArray(skinIds) || skinIds.length === 0) {
         throw new BadRequestError(
@@ -798,11 +800,11 @@ export class AccountService {
       const updated = await prisma.account.update({
         where: { id: accountId },
         data: {
-          skinList: {
+          skins: {
             connect: skinIds.map((id) => ({ id }))
           }
         },
-        include: { skinList: true }
+        include: { skins: true }
       });
 
       return updated;
@@ -824,7 +826,7 @@ export class AccountService {
   async removeSkinsFromAccount(
     accountId: number,
     skinIds: number[]
-  ): Promise<Account & { skinList: Skin[] }> {
+  ): Promise<Account & { skins: Skin[] }> {
     try {
       if (!Array.isArray(skinIds) || skinIds.length === 0) {
         throw new BadRequestError(
@@ -837,11 +839,11 @@ export class AccountService {
       const updated = await prisma.account.update({
         where: { id: accountId },
         data: {
-          skinList: {
+          skins: {
             disconnect: skinIds.map((id) => ({ id }))
           }
         },
-        include: { skinList: true }
+        include: { skins: true }
       });
 
       return updated;
