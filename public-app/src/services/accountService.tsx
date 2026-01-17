@@ -64,7 +64,7 @@ export async function fetchAccountByTier(
   try {
     const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public?page=1&limit=1000&tiers=${id}&low_tier_only=${isLowTier}`;
     const response = await axios.get(url);
-    console.log("Fetch Account By Tier",response.data)
+    console.log("Fetch Account By Tier", response.data);
     return response.data.data;
   } catch (error) {
     console.error("Error fetching data:", error);
@@ -73,19 +73,18 @@ export async function fetchAccountByTier(
 }
 
 export async function fetchAccountByRank(
-  rank: string,
+  rank: string
 ): Promise<AccountEntity[] | null> {
   try {
     const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public?page=1&limit=1000&ranks=${rank}`;
     const response = await axios.get(url);
-    console.log("Fetch Account By Rank",response.data)
+    console.log("Fetch Account By Rank", response.data);
     return response.data.data;
   } catch (error) {
     console.error("Error fetching data:", error);
     return null;
   }
 }
-
 
 function buildAccountsPublicQuery(params: AccountsPublicParams) {
   const sp = new URLSearchParams();
@@ -114,7 +113,6 @@ function buildAccountsPublicQuery(params: AccountsPublicParams) {
   return sp;
 }
 
-
 export async function fetchAccountsPublic(
   params: AccountsPublicParams
 ): Promise<AccountEntity[] | null> {
@@ -124,7 +122,7 @@ export async function fetchAccountsPublic(
 
     const url = `${base}/api/accounts/public?${sp.toString()}`;
     const res = await axios.get(url);
-    
+
     const payload = res.data;
 
     return payload.data;
@@ -133,4 +131,3 @@ export async function fetchAccountsPublic(
     return null;
   }
 }
-

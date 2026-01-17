@@ -286,15 +286,16 @@ export class AccountService {
       availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
     };
 
-    
     const LR_LABEL = "-LRTIER";
-    
+
     const normalizeCode = (s: string) => s.trim().toUpperCase();
     const normalTierCodes =
       tiers?.filter((t) => !t.endsWith(LR_LABEL)).map(normalizeCode) ?? [];
 
     const lowTierCodes =
-      tiers?.filter((t) => t.endsWith(LR_LABEL)).map((t) => normalizeCode(t.replace(LR_LABEL, ""))) ?? [];
+      tiers
+        ?.filter((t) => t.endsWith(LR_LABEL))
+        .map((t) => normalizeCode(t.replace(LR_LABEL, ""))) ?? [];
 
     if (typeof lowTierOnly === "boolean") {
       where.isLowRank = lowTierOnly;
@@ -344,7 +345,7 @@ export class AccountService {
 
     if (tiers?.length) {
       const or: Prisma.AccountWhereInput[] = [];
-      
+
       if (normalTierCodes.length) {
         or.push({
           priceTier: { code: { in: normalTierCodes } },

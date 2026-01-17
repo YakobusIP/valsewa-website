@@ -61,16 +61,16 @@ export const parseBooleanOptional = (value: unknown) => {
   if (value === "true" || value === true) return true;
   if (value === "false" || value === false) return false;
   return undefined;
-}
-
+};
 
 export const parseStringArray = (value: unknown) => {
   if (value === undefined || value === null) return undefined;
 
-  const arr =
-    Array.isArray(value) ? value :
-    typeof value === "string" ? [value] :
-    [];
+  const arr = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? [value]
+      : [];
 
   const cleaned = arr
     .filter((v): v is string => typeof v === "string")
@@ -78,4 +78,4 @@ export const parseStringArray = (value: unknown) => {
     .filter(Boolean);
 
   return cleaned.length ? cleaned : undefined;
-}
+};

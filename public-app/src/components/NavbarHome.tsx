@@ -21,7 +21,7 @@ const Navbar = () => {
     setIsComponentOpen(true); // open login modal
   };
   const handleSearchClick = () => {
-    setIsSearchOpen(true); 
+    setIsSearchOpen(true);
   };
   const { isAuthenticated, username } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -136,8 +136,7 @@ const Navbar = () => {
         {/* NAV RIGHT SIDE */}
         <div className="flex items-center gap-4">
           {/* SEARCH */}
-          <button
-          onClick={handleSearchClick}>
+          <button onClick={handleSearchClick}>
             <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
               <Image
                 src="/header/Search Icon.svg"
@@ -203,7 +202,11 @@ const Navbar = () => {
         )}
 
         {isSearchOpen && (
-          <SearchPage onClose={() => {setIsSearchOpen(false)}}/>
+          <SearchPage
+            onClose={() => {
+              setIsSearchOpen(false);
+            }}
+          />
         )}
       </div>
     </div>
