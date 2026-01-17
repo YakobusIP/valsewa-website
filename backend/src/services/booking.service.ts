@@ -2,12 +2,12 @@ import {
   Account,
   Booking,
   BookingStatus,
+  ImageUpload,
   Payment,
   PaymentMethodType,
   PaymentStatus,
-  PriceList,
+  PriceTier,
   Prisma,
-  Provider,
   Status,
   Type,
   Voucher
@@ -18,7 +18,7 @@ import {
   NotFoundError,
   PrismaUniqueError
 } from "../lib/error";
-import { addDays, addHours, addMinutes } from "../lib/utils";
+import { addHours, addMinutes } from "../lib/utils";
 import { prisma } from "../lib/prisma";
 import {
   BankCodes,
@@ -30,11 +30,11 @@ import {
   PayBookingRequest,
   PaymentMethodRequest,
   PaymentResponse,
-  UpdateBookingRequest,
   VoucherResponse
 } from "../types/booking.type";
 import { FaspayClient } from "../faspay/faspay.client";
 import { Metadata } from "../types/metadata.type";
+import { env } from "../lib/env";
 
 export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<
   PaymentStatus,
@@ -74,9 +74,6 @@ export const PAYMENT_METHODS_MAP: Record<
 };
 
 export class BookingService {
-  private readonly holdBookingTimeInMinutes: number = 15;
-  private readonly gracePeriodInMillis: number = 30000;
-
   constructor(private readonly faspayClient: FaspayClient) {}
 
   getAllBookings = async (
@@ -147,9 +144,7 @@ export class BookingService {
           account: {
             include: {
               priceTier: true,
-              thumbnail: true,
-              otherImages: true,
-              skinList: true
+              thumbnail: true
             }
           }
         }
@@ -158,7 +153,17 @@ export class BookingService {
       if (!booking) {
         throw new NotFoundError(`Booking with ID ${bookingId} not found.`);
       }
-      return this.mapBookingWithAccountDataToBookingResponse(booking);
+
+      const now = new Date();
+      const isActive =
+        booking.status === BookingStatus.RESERVED &&
+        booking.startAt! < now &&
+        booking.endAt! > now;
+
+      return this.mapBookingWithAccountDataToBookingWithAccountResponse(
+        booking,
+        isActive
+      );
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
@@ -352,13 +357,26 @@ export class BookingService {
         const customer = await prisma.customer.findUnique({
           where: { id: customerId }
         });
-        if (!customer) throw new NotFoundError("Customer not found!");
+        if (!customer) throw new NotFoundError("Customer not found");
+
+        const ongoingHoldBooking = prisma.booking.findFirst({
+          where: {
+            customerId,
+            status: BookingStatus.HOLD
+          }
+        });
+        if (!ongoingHoldBooking)
+          throw new PrismaUniqueError("Customer has ongoing hold booking.");
       }
 
       const account = await prisma.account.findUnique({
-        where: { id: accountId }
+        where: {
+          id: accountId,
+          availabilityStatus: { not: Status.NOT_AVAILABLE }
+        }
       });
-      if (!account) throw new NotFoundError("Account not found!");
+      if (!account)
+        throw new NotFoundError("Account not found or not available!");
 
       const priceList = await prisma.priceList.findUnique({
         where: { id: priceListId }
@@ -381,7 +399,7 @@ export class BookingService {
       const immediate = !startAt;
 
       const now = new Date();
-      const bookingExpiredAt = addMinutes(now, this.holdBookingTimeInMinutes);
+      const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
       const bookingStartAt = immediate ? bookingExpiredAt : startAt;
       const bookingEndAt = addHours(
         bookingStartAt,
@@ -457,7 +475,7 @@ export class BookingService {
       const immediate = !startAt;
 
       const now = new Date();
-      const bookingExpiredAt = addMinutes(now, this.holdBookingTimeInMinutes);
+      const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
       const bookingStartAt = immediate ? bookingExpiredAt : startAt;
       const bookingEndAt = new Date();
 
@@ -538,8 +556,12 @@ export class BookingService {
         );
       }
 
+      if (!booking.expiredAt) {
+        throw new BadRequestError("Booking expiredAt is missing!");
+      }
+
       if (
-        booking.expiredAt! < new Date(Date.now() - this.gracePeriodInMillis)
+        booking.expiredAt < new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS)
       ) {
         await prisma.booking.update({
           where: { id: booking.id },
@@ -621,12 +643,17 @@ export class BookingService {
         return this.mapPaymentDataToPaymentResponse(payment);
       }
 
+      const bankAccountName =
+        paymentMethodType === PaymentMethodType.VIRTUAL_ACCOUNT
+          ? (booking.customer?.username ?? undefined)
+          : undefined;
+
       const updatedPayment = await this.processPaymentProvider(
         booking,
         payment,
         paymentMethodType,
         bankCode,
-        booking.customer?.username
+        bankAccountName
       );
       return this.mapPaymentDataToPaymentResponse(updatedPayment);
     } catch (error) {
@@ -732,7 +759,7 @@ export class BookingService {
 
   syncExpiredBookings = async () => {
     try {
-      const nowWithGrace = new Date(Date.now() - this.gracePeriodInMillis);
+      const nowWithGrace = new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS);
 
       const count = await prisma.$transaction(async (tx) => {
         const expiredBookings = await tx.booking.findMany({
@@ -775,6 +802,94 @@ export class BookingService {
       });
 
       return { count };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  syncCompletedBookings = async () => {
+    try {
+      const count = await prisma.$transaction(async (tx) => {
+        const completedBookings = await tx.booking.findMany({
+          where: {
+            status: BookingStatus.RESERVED,
+            endAt: { lte: new Date() }
+          },
+          select: {
+            id: true
+          }
+        });
+
+        if (completedBookings.length === 0) return 0;
+
+        const bookingIds = completedBookings.map((b) => b.id);
+
+        await tx.booking.updateMany({
+          where: {
+            id: { in: bookingIds }
+          },
+          data: {
+            status: BookingStatus.COMPLETED
+          }
+        });
+
+        return bookingIds.length;
+      });
+
+      return { count };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  syncAccountAvailability = async () => {
+    try {
+      const now = new Date();
+
+      const reservedAccountIds = await prisma.booking.findMany({
+        where: {
+          status: BookingStatus.RESERVED,
+          startAt: { lt: now },
+          endAt: { gt: now }
+        },
+        distinct: ["accountId"],
+        select: { accountId: true }
+      });
+
+      const activeAccountIds = reservedAccountIds.map((v) => v.accountId);
+
+      // Mark reserved accounts as IN_USE (only if not already)
+      const markedInUse =
+        activeAccountIds.length > 0
+          ? (
+              await prisma.account.updateMany({
+                where: {
+                  id: { in: activeAccountIds },
+                  availabilityStatus: { not: Status.IN_USE }
+                },
+                data: {
+                  availabilityStatus: Status.IN_USE
+                }
+              })
+            ).count
+          : 0;
+
+      // Mark accounts as AVAILABLE if they are IN_USE but no longer reserved
+      const markedAvailable = (
+        await prisma.account.updateMany({
+          where: {
+            availabilityStatus: Status.IN_USE,
+            ...(activeAccountIds.length > 0 && {
+              id: { notIn: activeAccountIds }
+            })
+          },
+          data: {
+            availabilityStatus: Status.AVAILABLE
+          }
+        })
+      ).count;
+
+      return { markedInUse, markedAvailable };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -841,12 +956,16 @@ export class BookingService {
     bankAccountName?: string
   ): Promise<Payment> => {
     try {
+      if (!booking.expiredAt) {
+        throw new BadRequestError("Booking expiredAt is missing!");
+      }
+
       if (paymentMethod === PaymentMethodType.QRIS) {
         const providerResponse = await this.faspayClient.createQrisPayment({
           bookingId: booking.id,
           paymentId: payment.id,
           amount: payment.value,
-          expiredAt: booking.expiredAt!
+          expiredAt: booking.expiredAt
         });
 
         return await prisma.payment.update({
@@ -859,21 +978,37 @@ export class BookingService {
       }
 
       if (paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT) {
+        if (!booking.customerId) {
+          throw new BadRequestError(
+            "Customer ID is required for Virtual Account payment!"
+          );
+        }
+        if (!bankCode) {
+          throw new BadRequestError(
+            "Bank code is required for Virtual Account payment!"
+          );
+        }
+        if (!bankAccountName) {
+          throw new BadRequestError(
+            "Bank account name is required for Virtual Account payment!"
+          );
+        }
+
         const providerResponse = await this.faspayClient.createVaPayment({
           bookingId: booking.id,
           paymentId: payment.id,
-          customerId: booking.customerId!,
+          customerId: booking.customerId,
           amount: payment.value,
-          bankCode: bankCode!,
-          bankAccountName: bankAccountName!,
-          expiredAt: booking.expiredAt!
+          bankCode,
+          bankAccountName,
+          expiredAt: booking.expiredAt
         });
 
         return await prisma.payment.update({
           where: { id: payment.id },
           data: {
             providerPaymentId: providerResponse.providerPaymentId,
-            bankCode: bankCode!,
+            bankCode,
             bankAccountNo: providerResponse.bankAccountNo,
             bankAccountName: providerResponse.bankAccountName
           }
@@ -890,6 +1025,12 @@ export class BookingService {
       throw new BadRequestError("Payment method is not supported!");
     } catch (error) {
       console.error("Process payment to provider failed:", error);
+      await prisma.booking.update({
+        where: { id: payment.bookingId },
+        data: {
+          status: PaymentStatus.FAILED
+        }
+      })
       return await prisma.payment.update({
         where: { id: payment.id },
         data: {
@@ -900,43 +1041,57 @@ export class BookingService {
   };
 
   finalizeStatus = async (
-    tx: any,
+    tx: Prisma.TransactionClient,
     payment: Payment,
     booking: Booking,
     paymentStatus: PaymentStatus,
     paidAt: Date | null,
     providerPaymentId?: string
   ): Promise<PaymentResponse> => {
-    const paymentUpdate = {
+    const paymentUpdate: Prisma.PaymentUpdateInput = {
       status: paymentStatus,
       paidAt: paidAt,
-      providerPaymentId
+      ...(providerPaymentId && { providerPaymentId })
     };
 
     const bookingStatus = PAYMENT_TO_BOOKING_STATUS_MAP[paymentStatus];
-    let bookingUpdate: any = {
+    const actualStart =
+      paymentStatus === PaymentStatus.SUCCESS && booking.immediate
+        ? new Date()
+        : undefined;
+    const bookingUpdate: Prisma.BookingUpdateInput = {
       status: bookingStatus,
       expiredAt: null,
-      version: { increment: 1 }
+      version: { increment: 1 },
+      ...(actualStart && {
+        startAt: actualStart,
+        endAt: addHours(
+          actualStart,
+          this.parseDurationToHours(booking.duration) * booking.quantity
+        )
+      })
     };
-
-    if (paymentStatus === PaymentStatus.SUCCESS && booking.immediate) {
-      const actualStart = new Date();
-      const durationInHours = this.parseDurationToHours(booking.duration);
-      const actualEnd = addHours(
-        actualStart,
-        durationInHours * booking.quantity
-      );
-
-      bookingUpdate.startAt = actualStart;
-      bookingUpdate.endAt = actualEnd;
-    }
 
     const updatedPayment = await tx.payment.update({
       where: { id: payment.id },
       data: paymentUpdate
     });
     await tx.booking.update({ where: { id: booking.id }, data: bookingUpdate });
+
+    if (paymentStatus === PaymentStatus.SUCCESS) {
+      await tx.account.update({
+        where: {
+          id: booking.accountId
+        },
+        data: {
+          totalRentHour: {
+            increment:
+              this.parseDurationToHours(booking.duration) * booking.quantity
+          },
+          rentHourUpdated: true
+        }
+      });
+    }
 
     return this.mapPaymentDataToPaymentResponse(updatedPayment);
   };
@@ -965,12 +1120,19 @@ export class BookingService {
       othersValue: booking.othersValue,
       discount: booking.discount,
       totalValue: booking.totalValue,
+      active: null,
       payments: booking.payments
     };
   };
 
-  private mapBookingWithAccountDataToBookingResponse = (
-    booking: Booking & { account: Account }
+  private mapBookingWithAccountDataToBookingWithAccountResponse = (
+    booking: Booking & {
+      account: Account & {
+        priceTier: PriceTier;
+        thumbnail: ImageUpload | null;
+      };
+    },
+    active?: boolean
   ): BookingResponse => {
     return {
       id: booking.id,
@@ -993,7 +1155,15 @@ export class BookingService {
       othersValue: booking.othersValue,
       discount: booking.discount,
       totalValue: booking.totalValue,
-      account: booking.account
+      active: active ?? false,
+      account: {
+        accountRank: booking.account.accountRank,
+        accountCode: booking.account.accountCode,
+        priceTierCode: booking.account.priceTier.code,
+        thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
+        username: active ? booking.account.username : undefined,
+        password: active ? booking.account.password : undefined
+      }
     };
   };
 
@@ -1010,6 +1180,9 @@ export class BookingService {
       providerPaymentId: payment.providerPaymentId,
       paymentMethod: payment.paymentMethod,
       qrUrl: payment.qrUrl,
+      bankCode: payment.bankCode,
+      bankAccountNo: payment.bankAccountNo,
+      bankAccountName: payment.bankAccountName,
       paidAt: payment.paidAt,
       refundedAt: payment.refundedAt
     };
@@ -1028,6 +1201,9 @@ export class BookingService {
       providerPaymentId: payment.providerPaymentId,
       paymentMethod: payment.paymentMethod,
       qrUrl: payment.qrUrl,
+      bankCode: payment.bankCode,
+      bankAccountNo: payment.bankAccountNo,
+      bankAccountName: payment.bankAccountName,
       paidAt: payment.paidAt,
       refundedAt: payment.refundedAt,
       booking: payment.booking

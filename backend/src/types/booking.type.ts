@@ -69,7 +69,15 @@ export type BookingResponse = {
   othersValue: number | null;
   discount: number | null;
   totalValue: number;
-  account?: any;
+  active: boolean | null;
+  account?: {
+    accountRank: string;
+    accountCode: string;
+    priceTierCode: string;
+    thumbnailImageUrl: string;
+    username?: string;
+    password?: string;
+  };
   payments?: Payment[];
 };
 
@@ -87,9 +95,9 @@ export type PaymentResponse = {
   providerPaymentId: string | null;
   paymentMethod: PaymentMethodType | null;
   qrUrl: string | null;
-  bankCode?: BankCodes | null;
-  bankAccountNo?: string | null;
-  bankAccountName?: string | null;
+  bankCode: BankCodes | string | null;
+  bankAccountNo: string | null;
+  bankAccountName: string | null;
   paidAt: Date | null;
   refundedAt: Date | null;
   booking?: any;
