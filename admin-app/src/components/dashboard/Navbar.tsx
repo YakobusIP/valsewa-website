@@ -23,6 +23,7 @@ import useWideScreen from "@/hooks/useWideScreen";
 import { FailedJobs, ResetLogs } from "@/types/account.type";
 
 import {
+  ChartNoAxesCombinedIcon,
   CircleDollarSignIcon,
   CirclePlusIcon,
   CoinsIcon,
@@ -50,6 +51,7 @@ type Props = {
   onOpenCarouselManagement: () => void;
   onOpenVouchers: () => void;
   onOpenUserList: () => void;
+  onOpenTransactionList: () => void;
   onOpenSettings: () => void;
 };
 
@@ -82,6 +84,7 @@ export default function Navbar({
   onOpenCarouselManagement,
   onOpenVouchers,
   onOpenUserList,
+  onOpenTransactionList,
   onOpenSettings
 }: Props) {
   const [raw, setRaw] = useState("");
@@ -137,21 +140,6 @@ export default function Navbar({
                     <NavigationMenuLink asChild>
                       <a
                         className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
-                        onClick={() => onOpenCarouselManagement()}
-                      >
-                        <div className="text-sm font-medium leading-none">
-                          Carousel Management
-                        </div>
-                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          Manage carousel slides.
-                        </p>
-                      </a>
-                    </NavigationMenuLink>
-                  </li>
-                  <li>
-                    <NavigationMenuLink asChild>
-                      <a
-                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
                         onClick={() => onOpenPriceTiers()}
                       >
                         <div className="text-sm font-medium leading-none">
@@ -189,6 +177,21 @@ export default function Navbar({
                     <NavigationMenuLink asChild>
                       <a
                         className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
+                        onClick={() => onOpenCarouselManagement()}
+                      >
+                        <div className="text-sm font-medium leading-none">
+                          Carousel Management
+                        </div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          Manage carousel slides.
+                        </p>
+                      </a>
+                    </NavigationMenuLink>
+                  </li>
+                  <li>
+                    <NavigationMenuLink asChild>
+                      <a
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
                         onClick={() => onOpenUserList()}
                       >
                         <div className="text-sm font-medium leading-none">
@@ -196,6 +199,21 @@ export default function Navbar({
                         </div>
                         <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                           View and manage user accounts.
+                        </p>
+                      </a>
+                    </NavigationMenuLink>
+                  </li>
+                  <li>
+                    <NavigationMenuLink asChild>
+                      <a
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
+                        onClick={() => onOpenTransactionList()}
+                      >
+                        <div className="text-sm font-medium leading-none">
+                          Transaction List
+                        </div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          View and manage transactions.
                         </p>
                       </a>
                     </NavigationMenuLink>
@@ -267,16 +285,6 @@ export default function Navbar({
                     <Button
                       variant="ghost"
                       className="justify-start px-2 w-full hover:text-foreground"
-                      onClick={onOpenCarouselManagement}
-                    >
-                      <ImageIcon />
-                      Carousel Management
-                    </Button>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Button
-                      variant="ghost"
-                      className="justify-start px-2 w-full hover:text-foreground"
                       onClick={onOpenPriceTiers}
                     >
                       <CircleDollarSignIcon />
@@ -303,10 +311,30 @@ export default function Navbar({
                     <Button
                       variant="ghost"
                       className="justify-start px-2 w-full hover:text-foreground"
+                      onClick={onOpenCarouselManagement}
+                    >
+                      <ImageIcon />
+                      Carousel Management
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start px-2 w-full hover:text-foreground"
                       onClick={onOpenUserList}
                     >
                       <UserRoundCogIcon />
                       User Account List
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start px-2 w-full hover:text-foreground"
+                      onClick={onOpenTransactionList}
+                    >
+                      <ChartNoAxesCombinedIcon />
+                      Transaction List
                     </Button>
                   </SheetClose>
                 </div>

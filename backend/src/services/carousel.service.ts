@@ -13,7 +13,7 @@ export class CarouselSlideService {
   getAllSlides = async () => {
     try {
       return await prisma.carouselSlide.findMany({
-        include: { image123: true, image126: true, image129: true }
+        include: { image: true }
       });
     } catch (error) {
       throw new InternalServerError((error as Error).message);
@@ -31,48 +31,32 @@ export class CarouselSlideService {
   updateSlide = async (
     id: number,
     data: Partial<{
-      image123Id: number;
-      image126Id: number;
-      image129Id: number;
+      imageId: number;
       duration: number;
     }>
   ) => {
     try {
       const currentSlide = await prisma.carouselSlide.findFirst({
         where: { id },
-        select: { image123Id: true, image126Id: true, image129Id: true }
+        select: { imageId: true }
       });
 
       if (!currentSlide) throw new NotFoundError("Carousel not found!");
 
       const updateData: {
-        image123Id?: number;
-        image126Id?: number;
-        image129Id?: number;
+        imageId?: number;
         duration?: number;
       } = {};
-      const toDelete: number[] = [];
+      let toDelete: number | null = null;
 
       if (data.duration !== undefined) {
         updateData.duration = data.duration;
       }
 
-      if (data.image123Id !== undefined) {
-        updateData.image123Id = data.image123Id;
-        if (currentSlide.image123Id !== data.image123Id)
-          toDelete.push(currentSlide.image123Id);
-      }
-
-      if (data.image126Id !== undefined) {
-        updateData.image126Id = data.image126Id;
-        if (currentSlide.image126Id !== data.image126Id)
-          toDelete.push(currentSlide.image126Id);
-      }
-
-      if (data.image129Id !== undefined) {
-        updateData.image129Id = data.image129Id;
-        if (currentSlide.image129Id !== data.image129Id)
-          toDelete.push(currentSlide.image129Id);
+      if (data.imageId !== undefined) {
+        updateData.imageId = data.imageId;
+        if (currentSlide.imageId !== data.imageId)
+          toDelete = currentSlide.imageId;
       }
 
       const result = await prisma.carouselSlide.update({
@@ -80,12 +64,8 @@ export class CarouselSlideService {
         data: updateData
       });
 
-      if (toDelete.length) {
-        await Promise.all(
-          toDelete.map((oldId) =>
-            this.uploadService.deleteImage(oldId, "carousel-images")
-          )
-        );
+      if (toDelete !== null) {
+        await this.uploadService.deleteImage(toDelete, "carousel-images");
       }
 
       return result;
@@ -109,27 +89,17 @@ export class CarouselSlideService {
     try {
       const currentSlide = await prisma.carouselSlide.findFirst({
         where: { id },
-        select: { image123Id: true, image126Id: true, image129Id: true }
+        select: { imageId: true }
       });
 
       if (!currentSlide) throw new NotFoundError("Carousel not found!");
 
       const result = await prisma.carouselSlide.deleteMany({ where: { id } });
 
-      await Promise.all([
-        this.uploadService.deleteImage(
-          currentSlide.image123Id,
-          "carousel-images"
-        ),
-        this.uploadService.deleteImage(
-          currentSlide.image126Id,
-          "carousel-images"
-        ),
-        this.uploadService.deleteImage(
-          currentSlide.image129Id,
-          "carousel-images"
-        )
-      ]);
+      await this.uploadService.deleteImage(
+        currentSlide.imageId,
+        "carousel-images"
+      );
 
       return result;
     } catch (error) {

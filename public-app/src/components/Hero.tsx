@@ -25,8 +25,25 @@ interface HeroProps {
   initialCarousel: CarouselSlide[];
 }
 
+const HERO_SLIDE_DURATION = 5000;
+
 export default function Hero({ initialCarousel }: HeroProps) {
-  const autoplay = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
+  const mobileAutoplay = useRef(
+    Autoplay({
+      delay: () => [
+        HERO_SLIDE_DURATION,
+        ...initialCarousel.map((slide) => slide.duration * 1000)
+      ],
+      stopOnInteraction: false
+    })
+  ).current;
+
+  const desktopAutoplay = useRef(
+    Autoplay({
+      delay: () => initialCarousel.map((slide) => slide.duration * 1000),
+      stopOnInteraction: false
+    })
+  ).current;
 
   return (
     <section className="relative w-full">
@@ -49,7 +66,7 @@ export default function Hero({ initialCarousel }: HeroProps) {
             <div className="w-full rounded-lg overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
               <Carousel
                 className="w-full"
-                plugins={[autoplay.current]}
+                plugins={[mobileAutoplay]}
                 opts={{ loop: true }}
               >
                 <CarouselContent>
@@ -61,16 +78,28 @@ export default function Hero({ initialCarousel }: HeroProps) {
                       </div>
                     </AspectRatio>
                   </CarouselItem>
-                  {initialCarousel?.map((item, index) => (
+                  {initialCarousel?.map((slide, index) => (
                     <CarouselItem key={index}>
                       <AspectRatio ratio={4 / 5}>
-                        <Image
-                          src={item.image123.imageUrl}
-                          alt="Featured Account"
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
+                        {slide.image.type === "VIDEO" ? (
+                          <video
+                            src={slide.image.imageUrl}
+                            className="object-cover rounded-2xl w-full h-full"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                          />
+                        ) : (
+                          <Image
+                            loading="lazy"
+                            src={slide.image.imageUrl}
+                            alt="Carousel Image"
+                            fill
+                            className="object-cover rounded-2xl"
+                            unoptimized
+                          />
+                        )}
                       </AspectRatio>
                     </CarouselItem>
                   ))}
@@ -93,20 +122,32 @@ export default function Hero({ initialCarousel }: HeroProps) {
             <div className="w-full rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
               <Carousel
                 className="w-full"
-                plugins={[autoplay.current]}
+                plugins={[desktopAutoplay]}
                 opts={{ loop: true }}
               >
                 <CarouselContent>
                   {initialCarousel?.map((item, index) => (
                     <CarouselItem key={index}>
                       <AspectRatio ratio={4 / 5}>
-                        <Image
-                          src={item.image123.imageUrl}
-                          alt="Featured Account"
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
+                        {item.image.type === "VIDEO" ? (
+                          <video
+                            src={item.image.imageUrl}
+                            className="object-cover rounded-2xl w-full h-full"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                          />
+                        ) : (
+                          <Image
+                            loading="lazy"
+                            src={item.image.imageUrl}
+                            alt="Carousel Image"
+                            fill
+                            className="object-cover rounded-2xl"
+                            unoptimized
+                          />
+                        )}
                       </AspectRatio>
                     </CarouselItem>
                   ))}

@@ -86,17 +86,17 @@ export default function CarouselManagementModal({
               {slides.map((slide) => (
                 <CarouselItem key={slide.id}>
                   <Card>
-                    <CardContent className="flex aspect-video items-center justify-center p-6 relative">
-                      {slide.image126.type === "VIDEO" ? (
+                    <CardContent className="flex aspect-[4/5] items-center justify-center p-6 relative">
+                      {slide.image.type === "VIDEO" ? (
                         <video
-                          src={slide.image126.imageUrl}
+                          src={slide.image.imageUrl}
                           className="rounded-md object-cover w-full h-full"
                           muted
                           playsInline
                         />
                       ) : (
                         <img
-                          src={slide.image126.imageUrl || "/1200x600.svg"}
+                          src={slide.image.imageUrl || "/1200x600.svg"}
                           alt={`Slide ${slide.id}`}
                           className="rounded-md object-cover w-full h-full"
                         />

@@ -131,14 +131,12 @@ export default function BookingDetailPage() {
   const discount = useMemo(() => {
     if (!booking) return 0;
     return calculateVoucherDiscount(voucher, booking.mainValue);
-  }, [booking, voucher]
-  );
+  }, [booking, voucher]);
 
   const totalPayment = useMemo(() => {
     if (!booking) return 0;
     return booking.totalValue - discount;
-  }, [booking, discount]
-  );
+  }, [booking, discount]);
 
   useEffect(() => {
     if (!id) return;
@@ -174,7 +172,12 @@ export default function BookingDetailPage() {
         <NavbarMobile />
       </div>
 
-      <div className={cn("pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10", instrumentSans.className)}>
+      <div
+        className={cn(
+          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10",
+          instrumentSans.className
+        )}
+      >
         <ProgressStepper bookingId={id!} stepIdx={1} onBack={onBack} />
 
         {booking.expiredAt && (
@@ -202,7 +205,7 @@ export default function BookingDetailPage() {
 
         <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
           <BookingDetail booking={booking} />
-          
+
           <PaymentSummary
             booking={booking}
             paymentMethod={paymentMethod}
@@ -211,7 +214,7 @@ export default function BookingDetailPage() {
             fetchVoucher={fetchVoucher}
             onSubmit={onSubmit}
           />
-          
+
           <PaymentMethods
             paymentMethod={paymentMethod}
             setPaymentMethod={setPaymentMethod}

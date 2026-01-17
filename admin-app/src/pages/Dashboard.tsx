@@ -258,8 +258,9 @@ export default function Dashboard() {
           onOpenSkinManagement={() => setOpenSkinManagement(true)}
           onOpenPriceTiers={() => setOpenPriceTier(true)}
           onOpenCarouselManagement={() => setOpenCarouselManagement(true)}
-          onOpenVouchers={() => setopenVoucherModal(true)}
+          onOpenVouchers={() => setOpenVoucherModal(true)}
           onOpenUserList={() => setOpenUserList(true)}
+          onOpenTransactionList={() => setOpenTransactionModal(true)}
           onOpenSettings={() => setOpenSettings(true)}
         />
         <div className="container flex flex-col mx-auto p-4 xl:p-8 gap-4">
@@ -308,6 +309,10 @@ export default function Dashboard() {
           setOpenUserList(false);
           setOpenCreateUserAccount(true);
         }}
+      />
+      <TransactionListModal
+        open={openTransactionModal}
+        onOpenChange={setOpenTransactionModal}
       />
       <VoucherModal
         open={openVoucherModal}

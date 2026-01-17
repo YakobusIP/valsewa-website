@@ -518,7 +518,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Create Booking</DialogTitle>
+            <DialogTitle>Create Transaction</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -560,7 +560,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                 Cancel
               </Button>
 
-              <Button onClick={handleCreateBooking}>Create Booking</Button>
+              <Button onClick={handleCreateBooking}>Create Transaction</Button>
             </div>
           </div>
         </DialogContent>

@@ -98,7 +98,9 @@ function BookingDetail({ booking }: BookingDetailProps) {
             </div>
 
             <div className="flex justify-between flex-wrap gap-1">
-              <p className="break-words">IDR {booking.mainValuePerUnit.toLocaleString()}</p>
+              <p className="break-words">
+                IDR {booking.mainValuePerUnit.toLocaleString()}
+              </p>
               <p>× {booking.quantity}</p>
             </div>
           </div>
