@@ -3,17 +3,27 @@
 import { useEffect, useState } from "react";
 
 import { SearchModal } from "./SearchModal";
+import { useRouter } from "next/navigation";
+import { SearchModalMobile } from "./SearchModalMobile";
 
 type SearchPageProps = {
   onClose: () => void;
 };
 
 export default function SearchPage({ onClose }: SearchPageProps) {
+  
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleCardClick = (
+    id: string
+  ) => {
+    router?.push(`/details/${id}`);
+  };
 
   // Close on ESC key
   useEffect(() => {
@@ -47,22 +57,25 @@ export default function SearchPage({ onClose }: SearchPageProps) {
     >
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
       />
-
       
-      <div className="absolute inset-0 flex items-center justify-center p-3 lg:p-4">
+      <div className="absolute inset-0 flex items-center justify-center p-3 lg:p-4"
+        onClick={onClose}>
         <div
           role="dialog"
           aria-modal="true"
           onClick={(e) => e.stopPropagation()}
           className="
             w-full max-w-screen-2xl
-            h-dvh lg:h-[75vh]
-            overflow-hidden
+            h-dvh lg:h-[75vh] overflow-y-auto
           "
         >
-        <SearchModal className="h-full w-full"/>
+        <div className="relative pt-4">
+          <SearchModal onSelectAccount={handleCardClick} className="h-full w-full"/>
+        </div>
+        <div className="lg:hidden">
+          <SearchModalMobile onSelectAccount={handleCardClick} onClose={onClose} open></SearchModalMobile>
+        </div>
         </div>
       </div>
     </div>

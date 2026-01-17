@@ -203,7 +203,7 @@ const Navbar = () => {
         )}
 
         {isSearchOpen && (
-          <SearchPage onClose={() => setIsSearchOpen(false)}/>
+          <SearchPage onClose={() => {setIsSearchOpen(false)}}/>
         )}
       </div>
     </div>
