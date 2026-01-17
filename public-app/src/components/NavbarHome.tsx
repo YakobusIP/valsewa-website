@@ -8,15 +8,20 @@ import Image from "next/image";
 import Link from "next/link";
 
 import LoginPage from "./LoginPage";
+import SearchPage from "./SearchPage";
 
 const Navbar = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeBrand, setActiveBrand] = useState<
     "valsewa" | "valjubel" | "valjoki"
   >("valsewa");
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
+  };
+  const handleSearchClick = () => {
+    setIsSearchOpen(true); 
   };
   const { isAuthenticated, username } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -131,7 +136,8 @@ const Navbar = () => {
         {/* NAV RIGHT SIDE */}
         <div className="flex items-center gap-4">
           {/* SEARCH */}
-          <Link href="https://valforum.com/top-up">
+          <button
+          onClick={handleSearchClick}>
             <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
               <Image
                 src="/header/Search Icon.svg"
@@ -140,7 +146,7 @@ const Navbar = () => {
                 height={16}
               />
             </div>
-          </Link>
+          </button>
 
           {/* TOP UP */}
           <Link href="https://valforum.com/top-up">
@@ -194,6 +200,10 @@ const Navbar = () => {
         {/* LOGIN POPUP */}
         {isComponentOpen && (
           <LoginPage onClose={() => setIsComponentOpen(false)} />
+        )}
+
+        {isSearchOpen && (
+          <SearchPage onClose={() => setIsSearchOpen(false)}/>
         )}
       </div>
     </div>

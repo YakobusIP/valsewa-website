@@ -86,7 +86,7 @@ const tiers = [
 
 const ranks = [
   {
-    id: "iron",
+    id: "Iron",
     name: "IRON",
     color: "text-[#7A7A7A]",
     bgGradient: "from-[#7A7A7A]/30 to-transparent",
@@ -94,7 +94,7 @@ const ranks = [
     image: "/rank/iron 3.svg"
   },
   {
-    id: "bronze",
+    id: "Bronze",
     name: "BRONZE",
     color: "text-[#C69C6D]",
     bgGradient: "from-[#C69C6D]/30 to-transparent",
@@ -102,7 +102,7 @@ const ranks = [
     image: "/rank/bronze 3.svg"
   },
   {
-    id: "silver",
+    id: "Silver",
     name: "SILVER",
     color: "text-[#A6A6A6]",
     bgGradient: "from-[#A6A6A6]/30 to-transparent",
@@ -110,7 +110,7 @@ const ranks = [
     image: "/rank/silver 3.svg"
   },
   {
-    id: "gold",
+    id: "Gold",
     name: "GOLD",
     color: "text-[#FFD166]",
     bgGradient: "from-[#FFD166]/30 to-transparent",
@@ -118,7 +118,7 @@ const ranks = [
     image: "/rank/gold 3.svg"
   },
   {
-    id: "platinum",
+    id: "Platinum",
     name: "PLATINUM",
     color: "text-[#3CCFCF]",
     bgGradient: "from-[#3CCFCF]/30 to-transparent",
@@ -126,7 +126,7 @@ const ranks = [
     image: "/rank/platinum 3.svg"
   },
   {
-    id: "diamond",
+    id: "Diamond",
     name: "DIAMOND",
     color: "text-[#B983FF]",
     bgGradient: "from-[#B983FF]/30 to-transparent",
@@ -134,7 +134,7 @@ const ranks = [
     image: "/rank/diamond 3.svg"
   },
   {
-    id: "ascendant",
+    id: "Ascendant",
     name: "ASCENDANT",
     color: "text-[#2EE59D]",
     bgGradient: "from-[#2EE59D]/30 to-transparent",
@@ -142,7 +142,7 @@ const ranks = [
     image: "/rank/ascendant 3.svg"
   },
   {
-    id: "immortal",
+    id: "Immortal",
     name: "IMMORTAL",
     color: "text-[#FF4D6D]",
     bgGradient: "from-[#FF4D6D]/30 to-transparent",
@@ -150,7 +150,7 @@ const ranks = [
     image: "/rank/immortal 3.svg"
   },
   {
-    id: "radiant",
+    id: "Radiant",
     name: "RADIANT",
     color: "text-[#FFD700]",
     bgGradient: "from-[#FFD700]/30 to-transparent",
@@ -159,10 +159,17 @@ const ranks = [
   }
 ];
 
+
+type DiscoverSectionProps = {
+  onSelectTier: (id: string, isLowTier: string) => void;
+  onSelectRank: (rank: string) => void;
+  loading?: boolean;
+};
+
 type FilterType = "LR-TIER" | "TIER" | "RANK";
 
-export default function DiscoverSection() {
-  const [activeFilter, setActiveFilter] = useState<FilterType>("LR-TIER");
+export default function DiscoverSection({onSelectTier, onSelectRank, loading} : DiscoverSectionProps) {
+    const [activeFilter, setActiveFilter] = useState<FilterType>("LR-TIER");
 
   return (
     <section className="w-full relative z-10 -mt-8 mb-12">
@@ -276,12 +283,17 @@ export default function DiscoverSection() {
                       </span>
                     </div>
 
-                    <Link
-                      href="#" // Assuming search implementation
-                      className="bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors"
-                    >
-                      See More
-                    </Link>
+                     <button
+                                            type="button"
+                                            disabled={loading}
+                                            onClick={() => onSelectTier(lrtiers.id.toUpperCase(), "true")} 
+                                            className={cn(
+                                                "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                                            loading && "opacity-60 cursor-not-allowed"
+                                            )}
+                                        >
+                                            {loading ? "Loading..." : "See More"}
+                                        </button>
                   </div>
                 </div>
               ))}
@@ -341,12 +353,17 @@ export default function DiscoverSection() {
                       </span>
                     </div>
 
-                    <Link
-                      href="#" // Assuming search implementation
-                      className="bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors"
+                    <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => onSelectTier(tier.id.toUpperCase(), "false")} 
+                        className={cn(
+                            "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                            loading && "opacity-60 cursor-not-allowed"
+                        )}
                     >
-                      See More
-                    </Link>
+                            {loading ? "Loading..." : "See More"}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -409,12 +426,17 @@ export default function DiscoverSection() {
                       </span>
                     </div>
 
-                    <Link
-                      href="#"
-                      className="bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[11px] font-bold px-4 py-2 rounded-lg transition-all"
+                    <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => onSelectRank(rank.id)} 
+                        className={cn(
+                            "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                            loading && "opacity-60 cursor-not-allowed"
+                        )}
                     >
-                      See More
-                    </Link>
+                            {loading ? "Loading..." : "See More"}
+                    </button>
                   </div>
 
                   {/* Subtle border glow */}
