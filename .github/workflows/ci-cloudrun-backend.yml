@@ -70,17 +70,17 @@ jobs:
                   --set-env-vars=PUBLIC_APP_URL=${{ vars.PUBLIC_APP_URL }} \
                   --set-env-vars=HENRIKDEV_API_KEY=${{ secrets.HENRIKDEV_API_KEY }} \
                   --set-env-vars=SCHEDULER_API_KEY=${{ secrets.SCHEDULER_API_KEY }} \
-                  --set-env-vars=BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}
-                  --set-env-vars=PUB_ACCESS_TOKEN_SECRET=${{ secrets.PUB_ACCESS_TOKEN_SECRET }}
-                  --set-env-vars=PUB_REFRESH_TOKEN_SECRET=${{ secrets.PUB_REFRESH_TOKEN_SECRET }}
-                  --set-env-vars=PUB_ACCESS_TOKEN_DURATION=${{ vars.PUB_ACCESS_TOKEN_DURATION }}
-                  --set-env-vars=PUB_REFRESH_TOKEN_DURATION=${{ vars.PUB_REFRESH_TOKEN_DURATION }}
-                  --set-env-vars=SNAP_BI_MERCHANT_ID=${{ secrets.SNAP_BI_MERCHANT_ID }}
-                  --set-env-vars=SNAP_BI_CLIENT_ID=${{ secrets.SNAP_BI_CLIENT_ID }}
-                  --set-env-vars=SNAP_BI_PRIVATE_KEY=${{ secrets.SNAP_BI_PRIVATE_KEY }}
-                  --set-env-vars=SNAP_BI_CLIENT_SECRET=${{ secrets.SNAP_BI_CLIENT_SECRET }}
-                  --set-env-vars=SNAP_BI_PARTNER_ID=${{ secrets.SNAP_BI_PARTNER_ID }}
-                  --set-env-vars=SNAP_BI_CHANNEL_ID=${{ secrets.SNAP_BI_CHANNEL_ID }}
-                  --set-env-vars=SNAP_BI_PUBLIC_KEY=${{ secrets.SNAP_BI_PUBLIC_KEY }}
-                  --set-env-vars=BOOKING_HOLD_TIME_MINUTES=${{ vars.BOOKING_HOLD_TIME_MINUTES }}
+                  --set-env-vars=BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }} \
+                  --set-env-vars=PUB_ACCESS_TOKEN_SECRET=${{ secrets.PUB_ACCESS_TOKEN_SECRET }} \
+                  --set-env-vars=PUB_REFRESH_TOKEN_SECRET=${{ secrets.PUB_REFRESH_TOKEN_SECRET }} \
+                  --set-env-vars=PUB_ACCESS_TOKEN_DURATION=${{ vars.PUB_ACCESS_TOKEN_DURATION }} \
+                  --set-env-vars=PUB_REFRESH_TOKEN_DURATION=${{ vars.PUB_REFRESH_TOKEN_DURATION }} \
+                  --set-env-vars=SNAP_BI_MERCHANT_ID=${{ secrets.SNAP_BI_MERCHANT_ID }} \
+                  --set-env-vars=SNAP_BI_CLIENT_ID=${{ secrets.SNAP_BI_CLIENT_ID }} \
+                  --set-env-vars=SNAP_BI_PRIVATE_KEY=${{ secrets.SNAP_BI_PRIVATE_KEY }} \
+                  --set-env-vars=SNAP_BI_CLIENT_SECRET=${{ secrets.SNAP_BI_CLIENT_SECRET }} \
+                  --set-env-vars=SNAP_BI_PARTNER_ID=${{ secrets.SNAP_BI_PARTNER_ID }} \
+                  --set-env-vars=SNAP_BI_CHANNEL_ID=${{ secrets.SNAP_BI_CHANNEL_ID }} \
+                  --set-env-vars=SNAP_BI_PUBLIC_KEY=${{ secrets.SNAP_BI_PUBLIC_KEY }} \
+                  --set-env-vars=BOOKING_HOLD_TIME_MINUTES=${{ vars.BOOKING_HOLD_TIME_MINUTES }} \
                   --set-env-vars=BOOKING_GRACE_TIME_MILLIS=${{ vars.BOOKING_GRACE_TIME_MILLIS }}
