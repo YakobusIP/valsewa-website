@@ -23,6 +23,11 @@ import {
 import { format } from "date-fns";
 
 import TransactionStatisticsGrid from "./TransactionStatisticGrid";
+import { accountService } from "@/services/account.service";
+import { AccountEntity } from "@/types/account.type";
+import { Select, SelectContent, SelectItem, SelectValue } from "../ui/select";
+import { SelectTrigger } from "@radix-ui/react-select";
+import { Label } from "../ui/label";
 
 type Props = {
   open: boolean;
@@ -44,11 +49,14 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isOverrideBookingOpen, setIsOverrideBookingOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<BookingEntity | null>(
     null
   );
 
   const [editTotalValue, setEditTotalValue] = useState<number>(0);
+  const [accountOverrideValue, setAccountOverrideValue] = useState<number>(0);
+  const [availableAccounts, setAvailableAccounts] = useState<AccountEntity[]>([]);
 
   const [createForm, setCreateForm] = useState<CreateBookingRequest>({
     accountCode: "",
@@ -184,6 +192,35 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       alert("Failed to update total value");
     }
   };
+
+  const handleOpenOverrideBooking = async (booking: BookingEntity) => {
+    try {
+      setSelectedBooking(booking);
+      setAccountOverrideValue(0);
+
+      const accounts = await accountService.fetchAvailableAccounts(booking.startAt!, booking.endAt!);
+      setAvailableAccounts(accounts);
+      setIsOverrideBookingOpen(true);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to open override booking");
+    }
+  }
+
+  const handleOverrideBooking = async () => {
+    if (!selectedBooking || !accountOverrideValue) return;
+
+    try {
+      await bookingService.overrideBooking(selectedBooking.id, accountOverrideValue);
+
+      setIsOverrideBookingOpen(false);
+      setSelectedBooking(null);
+      fetchBookings();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to override booking");
+    }
+  }
 
   const handleCreateBooking = async () => {
     try {
@@ -334,7 +371,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
           </div>
 
           {/* TABLE */}
-          <div className="mt-4 border rounded-lg overflow-hidden">
+          <div className="mt-4 border rounded-lg overflow-y-hidden">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 border-b">
                 <tr>
@@ -379,13 +416,24 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                         : "-"}
                     </td>
                     <td className="px-3 py-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleOpenEdit(b)}
-                      >
-                        Edit Total
-                      </Button>
+                      <div className="flex flex-row gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleOpenEdit(b)}
+                        >
+                          Edit Total
+                        </Button>
+                        {b.status === "RESERVED" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenOverrideBooking(b)}
+                          >
+                            Override Account
+                          </Button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -415,6 +463,52 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                 Cancel
               </Button>
               <Button onClick={handleUpdateTotalValue}>Save</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* OVERRIDE BOOKING MODAL */}
+      <Dialog open={isOverrideBookingOpen} onOpenChange={setIsOverrideBookingOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Override booking</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <Label>Override booking to account</Label>
+              <Select
+                value={accountOverrideValue ? String(accountOverrideValue) : ""}
+                onValueChange={(value) => setAccountOverrideValue(Number(value))}
+              >
+                <SelectTrigger className="text-left border border-gray-300 px-2 py-1">
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {availableAccounts.map((acc) => (
+                    <SelectItem key={acc.id} value={String(acc.id)}>
+                      {acc.accountCode}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setIsOverrideBookingOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleOverrideBooking}
+                disabled={!accountOverrideValue}
+              >
+                Save
+              </Button>
             </div>
           </div>
         </DialogContent>

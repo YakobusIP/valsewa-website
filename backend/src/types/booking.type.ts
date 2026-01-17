@@ -36,6 +36,11 @@ export type CreateManualBookingRequest = {
   startAt?: Date;
 };
 
+export type OverrideBookingRequest = {
+  bookingId: string;
+  accountId: number;
+};
+
 export type PayBookingRequest = {
   bookingId: string;
   voucherId?: number;

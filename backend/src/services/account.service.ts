@@ -1,4 +1,4 @@
-import { Account, AccountResetLog, Prisma, Skin, Status } from "@prisma/client";
+import { Account, AccountResetLog, BookingStatus, Prisma, Skin, Status } from "@prisma/client";
 import { addHours, subDays } from "date-fns";
 import Fuse, { IFuseOptions } from "fuse.js";
 import {
@@ -11,6 +11,7 @@ import { prisma } from "../lib/prisma";
 import {
   AccountEntityRequest,
   AccountWithSkins,
+  GetAvailableAccountsRequest,
   PublicAccount,
   UpdateResetLogRequest
 } from "../types/account.type";
@@ -498,6 +499,31 @@ export class AccountService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  getAvailableAccounts = async (data: GetAvailableAccountsRequest) => {
+    try {
+      const unavailableAccounts = await prisma.booking.findMany({
+        where: {
+          status: { in: [BookingStatus.HOLD, BookingStatus.RESERVED] },
+          startAt: { lt: data.endAt ?? new Date() },
+          endAt: { gt: data.startAt ?? new Date() }
+        },
+        distinct: ["accountId"],
+        select: { accountId: true }
+      })
+
+      const availableAccounts = await prisma.account.findMany({
+        where: {
+          availabilityStatus: { not: Status.NOT_AVAILABLE },
+          id: { notIn: unavailableAccounts.map(v => v.accountId) }
+        }
+      });
+
+      return availableAccounts;
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  }
 
   createAccount = async (data: AccountEntityRequest) => {
     try {
