@@ -286,16 +286,82 @@ export class AccountService {
       availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
     };
 
+    
+    const LR_LABEL = "-LRTIER";
+    
+    const normalizeCode = (s: string) => s.trim().toUpperCase();
+    const normalTierCodes =
+      tiers?.filter((t) => !t.endsWith(LR_LABEL)).map(normalizeCode) ?? [];
+
+    const lowTierCodes =
+      tiers?.filter((t) => t.endsWith(LR_LABEL)).map((t) => normalizeCode(t.replace(LR_LABEL, ""))) ?? [];
+
     if (typeof lowTierOnly === "boolean") {
       where.isLowRank = lowTierOnly;
     }
 
     const andConditions: Prisma.AccountWhereInput[] = [];
 
+    const minPrices = Number.isFinite(minPrice) ? minPrice : undefined;
+    const maxPrices = Number.isFinite(maxPrice) ? maxPrice : undefined;
+    const hasPrice = minPrices != undefined || maxPrices != undefined;
+
+    if (hasPrice) {
+      const min = minPrice ?? 0;
+      const max = maxPrice ?? 99999999999;
+
+      if (lowTierOnly === true) {
+        where.priceTier = {
+          ...(where.priceTier || {}),
+          priceList: { some: { lowPrice: { gte: min, lte: max } } }
+        } as any;
+      } else if (lowTierOnly === false) {
+        where.priceTier = {
+          ...(where.priceTier || {}),
+          priceList: { some: { normalPrice: { gte: min, lte: max } } }
+        } as any;
+      } else {
+        andConditions.push({
+          OR: [
+            {
+              isLowRank: false,
+              priceTier: {
+                ...(tiers?.length ? { code: { in: normalTierCodes } } : {}),
+                priceList: { some: { normalPrice: { gte: min, lte: max } } }
+              }
+            },
+            {
+              isLowRank: true,
+              priceTier: {
+                ...(tiers?.length ? { code: { in: lowTierCodes } } : {}),
+                priceList: { some: { lowPrice: { gte: min, lte: max } } }
+              }
+            }
+          ]
+        });
+      }
+    }
+
     if (tiers?.length) {
-      where.priceTier = {
-        code: { in: tiers }
-      };
+      const or: Prisma.AccountWhereInput[] = [];
+      
+      if (normalTierCodes.length) {
+        or.push({
+          priceTier: { code: { in: normalTierCodes } },
+          isLowRank: false
+        });
+      }
+
+      if (lowTierCodes.length) {
+        or.push({
+          priceTier: { code: { in: lowTierCodes } },
+          isLowRank: true
+        });
+      }
+
+      if (or.length) {
+        andConditions.push({ OR: or });
+      }
     }
 
     if (ranks?.length) {
@@ -324,46 +390,6 @@ export class AccountService {
       }
       if (skinCountConditions.length > 0) {
         andConditions.push({ OR: skinCountConditions });
-      }
-    }
-
-    const minPrices = Number.isFinite(minPrice) ? minPrice : undefined;
-    const maxPrices = Number.isFinite(maxPrice) ? maxPrice : undefined;
-    const hasPrice = minPrices != undefined || maxPrices != undefined;
-
-    if (hasPrice) {
-      const min = minPrice ?? 0;
-      const max = maxPrice ?? 99999999999;
-
-      if (lowTierOnly === true) {
-        where.priceTier = {
-          ...(where.priceTier || {}),
-          priceList: { some: { lowPrice: { gte: min, lte: max } } }
-        } as any;
-      } else if (lowTierOnly === false) {
-        where.priceTier = {
-          ...(where.priceTier || {}),
-          priceList: { some: { normalPrice: { gte: min, lte: max } } }
-        } as any;
-      } else {
-        andConditions.push({
-          OR: [
-            {
-              isLowRank: false,
-              priceTier: {
-                ...(tiers?.length ? { code: { in: tiers } } : {}),
-                priceList: { some: { normalPrice: { gte: min, lte: max } } }
-              }
-            },
-            {
-              isLowRank: true,
-              priceTier: {
-                ...(tiers?.length ? { code: { in: tiers } } : {}),
-                priceList: { some: { lowPrice: { gte: min, lte: max } } }
-              }
-            }
-          ]
-        });
       }
     }
 
