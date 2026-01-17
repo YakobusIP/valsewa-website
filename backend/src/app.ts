@@ -89,7 +89,9 @@ const options: Options = {
 
 const swaggerSpec = swaggerJSDoc(options);
 
-app.use("/docs", serve, setup(swaggerSpec));
+if (env.NODE_ENV !== 'production') {
+  app.use("/docs", serve, setup(swaggerSpec));
+}
 
 app.use(errorMiddleware);
 
