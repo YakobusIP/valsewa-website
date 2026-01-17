@@ -13,6 +13,7 @@ import CountdownTimer from "./CountdownTimer";
 
 interface CardProps {
   data?: AccountEntity[];
+  gridRef?: React.RefObject<HTMLDivElement | null>
 }
 
 const Card: React.FC<CardProps> = ({ data }) => {
@@ -63,7 +64,6 @@ const Card: React.FC<CardProps> = ({ data }) => {
             "
         >
           {processedData?.map((item) => {
-            // {debug(item)}
             const inUse = item.availabilityStatus === "IN_USE";
 
             return (

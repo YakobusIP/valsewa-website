@@ -11,13 +11,40 @@ import RecommendedSection from "@/components/RecommendedSection";
 import { AccountEntity, CarouselSlide } from "@/types/account.type";
 
 import { useAccountController } from "@/controllers/useAccountController";
+import { useRef } from "react";
 
 interface Props {
   initialAccount: AccountEntity[];
   initialCarousel: CarouselSlide[];
 }
 export default function Home({ initialAccount, initialCarousel }: Props) {
-  const { accountList } = useAccountController(initialAccount);
+  const cardsRef = useRef<HTMLDivElement | null>(null);
+  const {
+    accountList,
+    loading,
+    selectTier,
+    selectRank,
+  } = useAccountController(initialAccount);
+
+  const scrollToAccounts = () => {
+    cardsRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+  });
+
+  };
+
+  const handleSelectTier = (tierId: string, isLowTier: string) => {
+    selectTier(tierId, isLowTier); 
+    if (loading == false) scrollToAccounts();
+  };
+
+  const handleSelectRank = (rank: string) => {
+    selectRank(rank); 
+    if (loading == false) scrollToAccounts();
+  };
+
+
   return (
     <section className="bg-[#0F0F0F] md:pb-64 pb-32 relative ">
       {/* Hero wrapper - overflow-visible to allow notch to show, pt for navbar space */}
@@ -53,14 +80,14 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
             <RecommendedSection />
           </div>
           <div className="mt-32">
-            <DiscoverSection />
+            <DiscoverSection onSelectTier={handleSelectTier} onSelectRank={handleSelectRank} loading={loading} />
           </div>
           {accountList.length > 0 ? (
             <div id="card-section" className="mt-9 mx-0 pt-10">
-              <Card data={accountList} />
+              <Card data={accountList} gridRef={cardsRef} />
             </div>
           ) : (
-            <div className=" mt-48">
+            <div id="results-section" className=" mt-48">
               <div className="flex items-center ps-3 pointer-events-none justify-center">
                 <svg
                   className="w-16 h-16 text-roseWhite font-bold  dark:text-gray-400 p-2"
