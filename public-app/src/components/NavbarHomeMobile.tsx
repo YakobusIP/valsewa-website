@@ -11,14 +11,11 @@ import LoginPage from "./LoginPage";
 
 const NavbarHomeMobile = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
-  const [activeBrand, setActiveBrand] = useState<
-    "valsewa" | "valjubel" | "valjoki"
-  >("valsewa");
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
   };
-  const { isAuthenticated, username } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
