@@ -3,21 +3,37 @@ import { VoucherController } from "../controllers/voucher.controller";
 import { VoucherService } from "../services/voucher.service";
 import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 
-const router = Router();
+class VoucherRouter {
+  public router: Router;
+  private voucherService: VoucherService;
+  private voucherController: VoucherController;
 
-const service = new VoucherService();
-const controller = new VoucherController(service);
+  constructor() {
+    this.router = Router();
+    this.voucherService = new VoucherService();
+    this.voucherController = new VoucherController(this.voucherService);
+    this.initializeRoutes();
+  }
 
-router.get("/", controller.getAllVouchers);
-router.get("/active/:voucherName", controller.getActiveVoucherByVoucherName);
-router.post("/", controller.createVoucher);
-router.patch("/:id/toggle", controller.toggleVoucherStatus);
-router.patch("/:id/toggleVisibility", controller.toggleVoucherVisible);
-router.post(
-  "/check-expiration",
-  schedulerMiddleware,
-  controller.checkExpiration
-);
-router.delete("/:id", controller.deleteVoucher);
+  private initializeRoutes() {
+    this.router.get("/", this.voucherController.getAllVouchers);
+    this.router.get(
+      "/active/:voucherName",
+      this.voucherController.getActiveVoucherByVoucherName
+    );
+    this.router.post("/", this.voucherController.createVoucher);
+    this.router.patch("/:id/toggle", this.voucherController.toggleVoucherStatus);
+    this.router.patch(
+      "/:id/toggleVisibility",
+      this.voucherController.toggleVoucherVisible
+    );
+    this.router.post(
+      "/check-expiration",
+      schedulerMiddleware,
+      this.voucherController.checkExpiration
+    );
+    this.router.delete("/:id", this.voucherController.deleteVoucher);
+  }
+}
 
-export default router;
+export default new VoucherRouter().router;
