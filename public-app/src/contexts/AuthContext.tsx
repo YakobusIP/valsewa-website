@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const pathname = usePathname();
 
   const [isLoadingLogin, setIsLoadingLogin] = useState(false);
+  const [customerId, setCustomerId] = useState<number | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
@@ -48,6 +49,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setAccessToken(response.pubAccessToken);
       localStorage.setItem("refreshToken", response.pubRefreshToken);
 
+      setCustomerId(response.id);
       setUsername(response.username);
       setIsAuthenticated(true);
 
@@ -79,6 +81,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem("refreshToken");
     setAccessToken(null);
 
+    setCustomerId(null);
     setUsername(null);
     setIsAuthenticated(false);
     setIsAuthChecked(true);
@@ -130,6 +133,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isLoadingLogin,
         isAuthenticated,
         isAuthChecked,
+        customerId,
         username,
         login,
         logout

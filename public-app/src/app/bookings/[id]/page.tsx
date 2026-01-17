@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { bookingService } from "@/services/booking.service";
 import { voucherService } from "@/services/voucher.service";
 
 import Navbar from "@/components/Navbar";
+import NavbarMobile from "@/components/NavbarMobile";
 import BookingDetail from "@/components/bookings/BookingDetail";
 import PaymentCountdown from "@/components/bookings/PaymentCountdown";
 import PaymentMethods from "@/components/bookings/PaymentMethods";
 import PaymentSummary from "@/components/bookings/PaymentSummary";
 import ProgressStepper from "@/components/bookings/ProgressStepper";
 
-import { toast } from "@/hooks/useToast";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
-import { AccountEntity } from "@/types/account.type";
 import {
   BOOKING_STATUS,
   BookingWithAccountEntity,
@@ -23,72 +23,99 @@ import {
 } from "@/types/booking.type";
 import { VoucherEntity } from "@/types/voucher.type";
 
-import { isAxiosError } from "axios";
+import { BOOKING_STATUS_MAP } from "@/lib/constants";
+import { instrumentSans, staatliches } from "@/lib/fonts";
+import { calculateVoucherDiscount, cn } from "@/lib/utils";
+
 import { CheckIcon, XIcon } from "lucide-react";
-import { Instrument_Sans, Staatliches } from "next/font/google";
 import { notFound, useParams, useRouter } from "next/navigation";
 
-const staatliches = Staatliches({
-  subsets: ["latin"],
-  weight: ["400"],
-  display: "swap"
-});
+function LoadingState() {
+  return (
+    <div className="flex items-center justify-center min-h-screen text-white bg-black">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-lg">Loading booking details...</p>
+      </div>
+    </div>
+  );
+}
 
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap"
-});
+function BookingStatusView({ booking }: { booking: BookingWithAccountEntity }) {
+  const statusLabel =
+    BOOKING_STATUS_MAP[booking.status] || booking.status.toLowerCase();
+  const isReserved = booking.status === BOOKING_STATUS.RESERVED;
+
+  return (
+    <div className="flex items-center justify-center min-h-screen text-white bg-black">
+      <div
+        className={cn(
+          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] items-center flex flex-col gap-4 px-4 lg:px-10 w-full",
+          instrumentSans.className
+        )}
+      >
+        <div
+          className="flex items-center justify-center"
+          role="img"
+          aria-label={isReserved ? "Reserved" : "Failed"}
+        >
+          {isReserved ? (
+            <CheckIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
+          ) : (
+            <XIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
+          )}
+        </div>
+        <h1
+          className={cn(
+            "text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-center font-bold mb-4 leading-[1.2] uppercase",
+            staatliches.className
+          )}
+        >
+          Order {statusLabel}!
+        </h1>
+      </div>
+    </div>
+  );
+}
 
 export default function BookingDetailPage() {
   const router = useRouter();
-
   const params = useParams<{ id: string }>();
   const id = params?.id;
 
-  const [account, setAccount] = useState<AccountEntity | null>(null);
   const [booking, setBooking] = useState<BookingWithAccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [paymentMethod, setPaymentMethod] =
     useState<PAYMENT_METHOD_REQUEST | null>(null);
   const [voucher, setVoucher] = useState<VoucherEntity | null>(null);
+  const { handleAsyncError } = useErrorHandler();
 
-  const fetchVoucher = async (
-    voucherName: string
-  ): Promise<VoucherEntity | null> => {
-    try {
-      if (!voucherName) return null;
-      return await voucherService.fetchActiveVoucherByVoucherName(voucherName);
-    } catch (error) {
-      let message = "Apply voucher failed";
-
-      if (isAxiosError(error)) {
-        message = error.response?.data?.error || error.message || message;
-      } else if (error instanceof Error) {
-        message = error.message;
+  const fetchVoucher = useCallback(
+    async (voucherName: string): Promise<VoucherEntity | null> => {
+      try {
+        if (!voucherName.trim()) return null;
+        return await voucherService.fetchActiveVoucherByVoucherName(
+          voucherName
+        );
+      } catch (error) {
+        handleAsyncError(error, "Apply voucher failed", "Apply voucher failed");
+        return null;
       }
+    },
+    [handleAsyncError]
+  );
 
-      toast({
-        variant: "destructive",
-        title: "Apply voucher failed",
-        description: message
-      });
-
-      return null;
-    }
-  };
-
-  const onBack = () => {
+  const onBack = useCallback(() => {
     router.push("/");
-  };
+  }, [router]);
 
-  const onSubmit = async () => {
+  const onSubmit = useCallback(async () => {
+    if (!booking || !paymentMethod) return;
+
     try {
-      if (!booking || !paymentMethod) return;
       const payment = await bookingService.payBooking({
-        bookingId: id,
-        voucherId: voucher ? voucher.id : undefined,
+        bookingId: id!,
+        voucherId: voucher?.id,
         provider: PROVIDER.FASPAY,
         paymentMethod: paymentMethod
       });
@@ -97,102 +124,65 @@ export default function BookingDetailPage() {
         router.push(`/payments/${payment.paymentId}`);
       }
     } catch (error) {
-      let message = "Payment failed";
-
-      if (isAxiosError(error)) {
-        message = error.response?.data?.error || error.message || message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
-
-      toast({
-        variant: "destructive",
-        title: "Payment failed",
-        description: message
-      });
+      handleAsyncError(error, "Payment failed", "Payment failed");
     }
-  };
+  }, [booking, paymentMethod, voucher, id, router, handleAsyncError]);
+
+  const discount = useMemo(() => {
+    if (!booking) return 0;
+    return calculateVoucherDiscount(voucher, booking.mainValue);
+  }, [booking, voucher]
+  );
+
+  const totalPayment = useMemo(() => {
+    if (!booking) return 0;
+    return booking.totalValue - discount;
+  }, [booking, discount]
+  );
 
   useEffect(() => {
+    if (!id) return;
+
     bookingService
       .fetchBookingById(id)
       .then((res) => {
         setBooking(res);
-        setAccount(res?.account ?? null);
       })
       .catch((error) => {
-        let message = "Fetch booking failed";
-
-        if (isAxiosError(error)) {
-          message = error.response?.data?.error || error.message || message;
-        } else if (error instanceof Error) {
-          message = error.message;
-        }
-
+        handleAsyncError(error, "Fetch booking failed", "Fetch booking failed");
         setBooking(null);
-        setAccount(null);
-        toast({
-          variant: "destructive",
-          title: "Fetch booking failed",
-          description: message
-        });
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, handleAsyncError]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-white bg-black">
-        Loading...
-      </div>
-    );
+    return <LoadingState />;
   }
 
-  if (!booking || !account) return notFound();
+  if (!booking || !booking.account) return notFound();
 
   if (booking.status !== BOOKING_STATUS.HOLD) {
-    const statusMap = {
-      [BOOKING_STATUS.RESERVED]: "reserved",
-      [BOOKING_STATUS.EXPIRED]: "expired",
-      [BOOKING_STATUS.FAILED]: "failed",
-      [BOOKING_STATUS.CANCELLED]: "cancelled",
-      [BOOKING_STATUS.COMPLETED]: "completed"
-    };
-    return (
-      <div className="flex items-center justify-center min-h-screen text-white bg-black">
-        <div
-          className={`py-[110px] items-center flex flex-col gap-4 px-4 lg:px-10 w-full ${instrumentSans.className}`}
-        >
-          <div className="flex items-center justify-center">
-            {booking.status === BOOKING_STATUS.RESERVED ? (
-              <CheckIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
-            ) : (
-              <XIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
-            )}
-          </div>
-          <h1
-            className={`text-6xl text-center font-bold mb-4 leading-[1.2] uppercase ${staatliches.className}`}
-          >
-            Order {statusMap[booking.status]}!
-          </h1>
-        </div>
-      </div>
-    );
+    return <BookingStatusView booking={booking} />;
   }
 
   return (
     <main className="min-h-screen text-white bg-black">
-      <Navbar />
+      <div className="relative max-lg:hidden">
+        <Navbar />
+      </div>
+      <div className="lg:hidden">
+        <NavbarMobile />
+      </div>
 
-      <div className={`py-[110px] px-4 lg:px-10 ${instrumentSans.className}`}>
-        <ProgressStepper bookingId={id} stepIdx={1} onBack={onBack} />
+      <div className={cn("pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10", instrumentSans.className)}>
+        <ProgressStepper bookingId={id!} stepIdx={1} onBack={onBack} />
 
         {booking.expiredAt && (
           <PaymentCountdown expiredAt={booking.expiredAt} />
         )}
 
-        <div className="flex flex-row gap-32 mt-10">
-          <div className="w-full space-y-10">
+        <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-32 mt-6 sm:mt-8 lg:mt-10">
+          <div className="w-full space-y-6 sm:space-y-8 lg:space-y-10">
             <BookingDetail booking={booking} />
             <PaymentMethods
               paymentMethod={paymentMethod}
@@ -208,6 +198,50 @@ export default function BookingDetailPage() {
             fetchVoucher={fetchVoucher}
             onSubmit={onSubmit}
           />
+        </div>
+
+        <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
+          <BookingDetail booking={booking} />
+          
+          <PaymentSummary
+            booking={booking}
+            paymentMethod={paymentMethod}
+            voucher={voucher}
+            setVoucher={setVoucher}
+            fetchVoucher={fetchVoucher}
+            onSubmit={onSubmit}
+          />
+          
+          <PaymentMethods
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+          />
+
+          <div className="flex flex-col gap-2 space-y-2 text-center text-white">
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={!booking || !paymentMethod || loading}
+              className={cn(
+                "w-full text-base sm:text-lg lg:text-xl transition py-2.5 sm:py-3 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black",
+                !booking || !paymentMethod || loading
+                  ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                  : "bg-red-600 hover:bg-red-700"
+              )}
+              aria-label={`Pay IDR ${totalPayment.toLocaleString()} and rent now`}
+            >
+              {loading
+                ? "Loading..."
+                : `IDR ${totalPayment.toLocaleString()} | Rent Now`}
+            </button>
+            <p className="text-xs sm:text-sm">Any Questions?</p>
+            <button
+              type="button"
+              className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
+            >
+              Ask Our Team
+            </button>
+          </div>
         </div>
       </div>
     </main>

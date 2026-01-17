@@ -1,24 +1,14 @@
-import { useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 
 import {
   BookingWithAccountEntity,
   PAYMENT_METHOD_REQUEST
 } from "@/types/booking.type";
-import { TYPE, VoucherEntity } from "@/types/voucher.type";
+import { VoucherEntity } from "@/types/voucher.type";
 
-import { Instrument_Sans, Staatliches } from "next/font/google";
-
-const staatliches = Staatliches({
-  subsets: ["latin"],
-  weight: ["400"],
-  display: "swap"
-});
-
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap"
-});
+import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
+import { instrumentSans, staatliches } from "@/lib/fonts";
+import { calculateVoucherDiscount, cn } from "@/lib/utils";
 
 type PaymentSummaryProps = {
   booking: BookingWithAccountEntity;
@@ -26,10 +16,10 @@ type PaymentSummaryProps = {
   voucher: VoucherEntity | null;
   setVoucher: (value: VoucherEntity | null) => void;
   fetchVoucher: (voucherName: string) => Promise<VoucherEntity | null>;
-  onSubmit: () => void;
+  onSubmit: () => Promise<void>;
 };
 
-export default function PaymentSummary({
+function PaymentSummary({
   booking,
   paymentMethod,
   voucher,
@@ -37,85 +27,112 @@ export default function PaymentSummary({
   fetchVoucher,
   onSubmit
 }: PaymentSummaryProps) {
+  const [loading, setLoading] = useState(false);
+  const [voucherName, setVoucherName] = useState("");
+  const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
+
   const isDisabled = !booking || !paymentMethod;
-  const [voucherName, setVoucherName] = useState<string>("");
+
+  const discount = useMemo(
+    () => calculateVoucherDiscount(voucher, booking.mainValue),
+    [voucher, booking.mainValue]
+  );
+
+  const totalPayment = useMemo(
+    () => booking.totalValue - discount,
+    [booking.totalValue, discount]
+  );
+
+  const paymentMethodLabel = useMemo(() => {
+    if (!paymentMethod) return "-";
+    return (
+      PAYMENT_METHOD_LABELS[paymentMethod] || paymentMethod.replace("_", " ")
+    );
+  }, [paymentMethod]);
+
+  const onApplyVoucher = useCallback(async () => {
+    if (!voucherName.trim() || isApplyingVoucher) return;
+
+    try {
+      setIsApplyingVoucher(true);
+      const result = await fetchVoucher(voucherName);
+      setVoucher(result);
+      if (!result) {
+        setVoucherName("");
+      }
+    } catch (err) {
+      console.error("Failed to apply voucher", err);
+    } finally {
+      setIsApplyingVoucher(false);
+    }
+  }, [voucherName, isApplyingVoucher, fetchVoucher, setVoucher]);
+
+  const handleVoucherKeyPress = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" && voucherName.trim()) {
+        onApplyVoucher();
+      }
+    },
+    [voucherName, onApplyVoucher]
+  );
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    await onSubmit();
+    setLoading(false);
+  };
 
   if (!booking) return null;
 
-  const calculateDiscount = () => {
-    let discount = 0;
-    if (voucher) {
-      if (voucher.type === TYPE.PERSENTASE) {
-        const voucherAmount = voucher.percentage ?? 0;
-        discount = booking.mainValue * voucherAmount * 0.01;
-      } else {
-        const voucherAmount = voucher.nominal ?? 0;
-        discount = voucherAmount;
-      }
-
-      if (voucher.maxDiscount) {
-        const voucherMaxDiscount = voucher.maxDiscount;
-        discount = Math.min(discount, voucherMaxDiscount);
-      }
-
-      discount = Math.min(discount, booking.mainValue);
-    }
-
-    return discount;
-  };
-
-  const onApplyVoucher = async () => {
-    if (!voucherName.trim()) return;
-
-    try {
-      const result = await fetchVoucher(voucherName);
-      setVoucher(result);
-    } catch (err) {
-      console.error("Failed to apply voucher", err);
-    }
-  };
-
-  if (!booking) return;
   return (
-    <div className={`w-3/4 space-y-6 rounded-lg ${instrumentSans.className}`}>
+    <div className={cn("w-full lg:w-3/4 space-y-4 sm:space-y-6 rounded-lg", instrumentSans.className)}>
       <div>
         <h1
-          className={`text-2xl font-semibold leading-[1.2] ${staatliches.className}`}
+          className={`text-xl sm:text-2xl font-semibold leading-[1.2] ${staatliches.className}`}
         >
           PROMO CODE
         </h1>
-        <button className="text text-[#E8C545] mt-2 underline">
+        <button
+          type="button"
+          className="text-[#E8C545] mt-2 text-sm sm:text-base underline hover:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-[#E8C545] focus:ring-offset-2 focus:ring-offset-black rounded"
+        >
           Explore Promo Codes
         </button>
-        <div className="flex gap-2 mt-2">
+        <div className="flex flex-col sm:flex-row gap-2 mt-2">
           <input
+            type="text"
             value={voucherName}
             onChange={(e) => setVoucherName(e.target.value)}
+            onKeyPress={handleVoucherKeyPress}
             placeholder="Enter Promo Code"
-            className="flex-1 px-3 py-2 text-sm bg-gray-800 rounded outline-none"
+            className="flex-1 px-3 py-2 text-sm bg-gray-800 rounded outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
+            aria-label="Promo code input"
+            disabled={isApplyingVoucher}
           />
 
           <button
+            type="button"
             onClick={onApplyVoucher}
-            disabled={!voucherName.trim()}
-            className="px-4 font-semibold text-black bg-white rounded disabled:opacity-50"
+            disabled={!voucherName.trim() || isApplyingVoucher}
+            className="px-4 py-2 text-sm sm:text-base font-semibold text-black bg-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+            aria-label="Apply promo code"
           >
-            Apply
+            {isApplyingVoucher ? "Applying..." : "Apply"}
           </button>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className={`text-lg font-semibold leading-[1.2]`}>
+        <h2 className="text-base sm:text-lg font-semibold leading-[1.2]">
           Valorant Account
         </h2>
-        <span className="">
-          {booking.account.priceTier.code} - {booking.account.accountCode} -{" "}
+        <span className="text-sm sm:text-base text-gray-300 break-words">
+          {booking.account.priceTierCode} - {booking.account.accountCode} -{" "}
           {booking.account.accountRank}
         </span>
       </div>
 
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-xs sm:text-sm">
         <div className="flex justify-between">
           <span>Subtotal</span>
           <span>IDR {booking.mainValue.toLocaleString()}</span>
@@ -123,48 +140,55 @@ export default function PaymentSummary({
         {voucher && (
           <div className="flex justify-between text-green-400">
             <span>Promo</span>
-            <span>-IDR {calculateDiscount().toLocaleString()}</span>
+            <span>-IDR {discount.toLocaleString()}</span>
           </div>
         )}
         <div className="flex justify-between">
           <span>Other Fee</span>
-          <span>IDR {booking.othersValue?.toLocaleString()}</span>
+          <span>IDR {booking.othersValue?.toLocaleString() ?? "0"}</span>
         </div>
         <div className="flex justify-between">
           <span>Payment Method</span>
-          <span>{paymentMethod ?? "-"}</span>
+          <span>{paymentMethodLabel}</span>
         </div>
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-        <span className="text-lg font-semibold text-red-500">
+        <span className="text-base sm:text-lg font-semibold text-red-500">
           Total Payment
         </span>
-        <span className="text-lg font-bold text-red-500">
-          IDR {(booking.totalValue - calculateDiscount()).toLocaleString()}
+        <span className="text-base sm:text-lg font-bold text-red-500 break-words">
+          IDR {totalPayment.toLocaleString()}
         </span>
       </div>
 
-      <div className="flex flex-col gap-2 space-y-2 text-center text-white">
+      <div className="hidden lg:flex flex-col gap-2 space-y-2 text-center text-white">
         <button
-          onClick={onSubmit}
-          disabled={isDisabled}
-          className={`w-full text-xl transition py-3 rounded font-semibold
-            ${
-              isDisabled
-                ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-                : "bg-red-600 hover:bg-red-700"
-            }
-          `}
+          type="button"
+          onClick={handleSubmit}
+          disabled={isDisabled || loading}
+          className={cn(
+            "w-full text-base sm:text-lg lg:text-xl transition py-2.5 sm:py-3 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black",
+            isDisabled || loading
+              ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+              : "bg-red-600 hover:bg-red-700"
+          )}
+          aria-label={`Pay IDR ${totalPayment.toLocaleString()} and rent now`}
         >
-          IDR {(booking.totalValue - calculateDiscount()).toLocaleString()} |
-          Rent Now
+          {loading
+            ? "Loading..."
+            : `IDR ${totalPayment.toLocaleString()} | Rent Now`}
         </button>
-        <p className="text-xs">Any Questions?</p>
-        <button className="w-full py-2 text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600">
+        <p className="text-xs sm:text-sm">Any Questions?</p>
+        <button
+          type="button"
+          className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
+        >
           Ask Our Team
         </button>
       </div>
     </div>
   );
 }
+
+export default memo(PaymentSummary);

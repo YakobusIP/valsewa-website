@@ -6,6 +6,7 @@ export type AuthContextType = {
   isLoadingLogin: boolean;
   isAuthenticated: boolean;
   isAuthChecked: boolean;
+  customerId: number | null;
   username: string | null;
   login: (values: z.infer<typeof loginFormSchema>) => Promise<void>;
   logout: () => void;

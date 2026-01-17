@@ -85,7 +85,7 @@ const createBookingService = () => {
 
   const verifyPayment = async (
     data: VerifyPaymentRequest
-  ): Promise<PaymentWithBookingEntity | null> => {
+  ): Promise<PaymentWithBookingEntity> => {
     try {
       const response = await interceptedAxios.post<PaymentWithBookingEntity>(
         `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/verify-payment`,
