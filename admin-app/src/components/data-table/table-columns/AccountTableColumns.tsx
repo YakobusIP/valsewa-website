@@ -38,8 +38,8 @@ export const accountColumns = (
     },
     {
       accessorKey: "priceTier",
-      accessorFn: ({ priceTier }) => {
-        return priceTier.code;
+      accessorFn: ({ priceTier, isLowRank }) => {
+        return isLowRank ? `LR-${priceTier.code}` : priceTier.code;
       },
       header: "Price Tier",
       size: "auto" as unknown as number
