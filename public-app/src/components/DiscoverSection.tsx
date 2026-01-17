@@ -159,7 +159,6 @@ const ranks = [
   }
 ];
 
-
 type DiscoverSectionProps = {
   onSelectTier: (id: string, isLowTier: string) => void;
   onSelectRank: (rank: string) => void;
@@ -168,8 +167,12 @@ type DiscoverSectionProps = {
 
 type FilterType = "LR-TIER" | "TIER" | "RANK";
 
-export default function DiscoverSection({onSelectTier, onSelectRank, loading} : DiscoverSectionProps) {
-    const [activeFilter, setActiveFilter] = useState<FilterType>("LR-TIER");
+export default function DiscoverSection({
+  onSelectTier,
+  onSelectRank,
+  loading
+}: DiscoverSectionProps) {
+  const [activeFilter, setActiveFilter] = useState<FilterType>("LR-TIER");
 
   return (
     <section className="w-full relative z-10 -mt-8 mb-12">
@@ -283,17 +286,19 @@ export default function DiscoverSection({onSelectTier, onSelectRank, loading} : 
                       </span>
                     </div>
 
-                     <button
-                                            type="button"
-                                            disabled={loading}
-                                            onClick={() => onSelectTier(lrtiers.id.toUpperCase(), "true")} 
-                                            className={cn(
-                                                "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
-                                            loading && "opacity-60 cursor-not-allowed"
-                                            )}
-                                        >
-                                            {loading ? "Loading..." : "See More"}
-                                        </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() =>
+                        onSelectTier(lrtiers.id.toUpperCase(), "true")
+                      }
+                      className={cn(
+                        "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                        loading && "opacity-60 cursor-not-allowed"
+                      )}
+                    >
+                      {loading ? "Loading..." : "See More"}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -354,15 +359,17 @@ export default function DiscoverSection({onSelectTier, onSelectRank, loading} : 
                     </div>
 
                     <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() => onSelectTier(tier.id.toUpperCase(), "false")} 
-                        className={cn(
-                            "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
-                            loading && "opacity-60 cursor-not-allowed"
-                        )}
+                      type="button"
+                      disabled={loading}
+                      onClick={() =>
+                        onSelectTier(tier.id.toUpperCase(), "false")
+                      }
+                      className={cn(
+                        "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                        loading && "opacity-60 cursor-not-allowed"
+                      )}
                     >
-                            {loading ? "Loading..." : "See More"}
+                      {loading ? "Loading..." : "See More"}
                     </button>
                   </div>
                 </div>
@@ -427,15 +434,15 @@ export default function DiscoverSection({onSelectTier, onSelectRank, loading} : 
                     </div>
 
                     <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() => onSelectRank(rank.id)} 
-                        className={cn(
-                            "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
-                            loading && "opacity-60 cursor-not-allowed"
-                        )}
+                      type="button"
+                      disabled={loading}
+                      onClick={() => onSelectRank(rank.id)}
+                      className={cn(
+                        "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                        loading && "opacity-60 cursor-not-allowed"
+                      )}
                     >
-                            {loading ? "Loading..." : "See More"}
+                      {loading ? "Loading..." : "See More"}
                     </button>
                   </div>
 

@@ -13,7 +13,7 @@ import CountdownTimer from "./CountdownTimer";
 
 interface CardProps {
   data?: AccountEntity[];
-  gridRef?: React.RefObject<HTMLDivElement | null>
+  gridRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const Card: React.FC<CardProps> = ({ data }) => {

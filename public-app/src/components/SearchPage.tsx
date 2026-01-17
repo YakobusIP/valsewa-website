@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-import { SearchModal } from "./SearchModal";
 import { useRouter } from "next/navigation";
+
+import { SearchModal } from "./SearchModal";
 import { SearchModalMobile } from "./SearchModalMobile";
 
 type SearchPageProps = {
@@ -11,7 +12,6 @@ type SearchPageProps = {
 };
 
 export default function SearchPage({ onClose }: SearchPageProps) {
-  
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
@@ -19,9 +19,7 @@ export default function SearchPage({ onClose }: SearchPageProps) {
     setMounted(true);
   }, []);
 
-  const handleCardClick = (
-    id: string
-  ) => {
+  const handleCardClick = (id: string) => {
     router?.push(`/details/${id}`);
   };
 
@@ -34,13 +32,15 @@ export default function SearchPage({ onClose }: SearchPageProps) {
     };
 
     window.addEventListener("keydown", handleEsc);
-    
+
     const prevOverflow = document.body.style.overflow;
     const prevPaddingRight = document.body.style.paddingRight;
 
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
-    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
+    if (scrollbarWidth > 0)
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
 
     return () => {
       window.removeEventListener("keydown", handleEsc);
@@ -52,15 +52,13 @@ export default function SearchPage({ onClose }: SearchPageProps) {
   if (!mounted) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[999]"
-    >
+    <div className="fixed inset-0 z-[999]">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-      />
-      
-      <div className="absolute inset-0 flex items-center justify-center p-3 lg:p-4"
-        onClick={onClose}>
+        className="absolute inset-0 flex items-center justify-center p-3 lg:p-4"
+        onClick={onClose}
+      >
         <div
           role="dialog"
           aria-modal="true"
@@ -70,12 +68,19 @@ export default function SearchPage({ onClose }: SearchPageProps) {
             h-dvh lg:h-[75vh] overflow-y-auto
           "
         >
-        <div className="relative pt-4">
-          <SearchModal onSelectAccount={handleCardClick} className="h-full w-full"/>
-        </div>
-        <div className="lg:hidden">
-          <SearchModalMobile onSelectAccount={handleCardClick} onClose={onClose} open></SearchModalMobile>
-        </div>
+          <div className="relative pt-4">
+            <SearchModal
+              onSelectAccount={handleCardClick}
+              className="h-full w-full"
+            />
+          </div>
+          <div className="lg:hidden">
+            <SearchModalMobile
+              onSelectAccount={handleCardClick}
+              onClose={onClose}
+              open
+            ></SearchModalMobile>
+          </div>
         </div>
       </div>
     </div>

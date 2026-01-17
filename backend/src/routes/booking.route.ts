@@ -70,7 +70,11 @@ class BookingRouter {
       this.bookingController.createBooking
     );
     this.router.post("/pay", authMiddleware, this.bookingController.payBooking);
-    this.router.post("/override", authMiddleware, this.bookingController.overrideBooking);
+    this.router.post(
+      "/override",
+      authMiddleware,
+      this.bookingController.overrideBooking
+    );
     this.router.post(
       "/cancel",
       authMiddleware,

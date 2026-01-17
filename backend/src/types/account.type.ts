@@ -57,7 +57,7 @@ type UpdateResetLogRequest = {
 type GetAvailableAccountsRequest = {
   startAt: Date;
   endAt: Date;
-}
+};
 
 type AccountSearchFilters = {
   query?: string;

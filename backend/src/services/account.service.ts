@@ -1,4 +1,11 @@
-import { Account, AccountResetLog, BookingStatus, Prisma, Skin, Status } from "@prisma/client";
+import {
+  Account,
+  AccountResetLog,
+  BookingStatus,
+  Prisma,
+  Skin,
+  Status
+} from "@prisma/client";
 import { addHours, subDays } from "date-fns";
 import Fuse, { IFuseOptions } from "fuse.js";
 import {
@@ -279,15 +286,16 @@ export class AccountService {
       availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
     };
 
-    
     const LR_LABEL = "-LRTIER";
-    
+
     const normalizeCode = (s: string) => s.trim().toUpperCase();
     const normalTierCodes =
       tiers?.filter((t) => !t.endsWith(LR_LABEL)).map(normalizeCode) ?? [];
 
     const lowTierCodes =
-      tiers?.filter((t) => t.endsWith(LR_LABEL)).map((t) => normalizeCode(t.replace(LR_LABEL, ""))) ?? [];
+      tiers
+        ?.filter((t) => t.endsWith(LR_LABEL))
+        .map((t) => normalizeCode(t.replace(LR_LABEL, ""))) ?? [];
 
     if (typeof lowTierOnly === "boolean") {
       where.isLowRank = lowTierOnly;
@@ -337,7 +345,7 @@ export class AccountService {
 
     if (tiers?.length) {
       const or: Prisma.AccountWhereInput[] = [];
-      
+
       if (normalTierCodes.length) {
         or.push({
           priceTier: { code: { in: normalTierCodes } },
@@ -653,12 +661,12 @@ export class AccountService {
         },
         distinct: ["accountId"],
         select: { accountId: true }
-      })
+      });
 
       const availableAccounts = await prisma.account.findMany({
         where: {
           availabilityStatus: { not: Status.NOT_AVAILABLE },
-          id: { notIn: unavailableAccounts.map(v => v.accountId) }
+          id: { notIn: unavailableAccounts.map((v) => v.accountId) }
         }
       });
 
@@ -666,7 +674,7 @@ export class AccountService {
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
-  }
+  };
 
   createAccount = async (data: AccountEntityRequest) => {
     try {

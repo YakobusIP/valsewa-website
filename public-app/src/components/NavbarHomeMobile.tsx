@@ -22,7 +22,7 @@ const NavbarHomeMobile = () => {
   };
 
   const handleSearchClick = () => {
-    setIsSearchOpen(true); 
+    setIsSearchOpen(true);
   };
   const { isAuthenticated, username } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -118,10 +118,7 @@ const NavbarHomeMobile = () => {
           <LoginPage onClose={() => setIsComponentOpen(false)} />
         )}
 
-        {isSearchOpen && (
-          <SearchPage onClose={() => setIsSearchOpen(false)}/>
-        )}
-        
+        {isSearchOpen && <SearchPage onClose={() => setIsSearchOpen(false)} />}
       </div>
     </div>
   );
