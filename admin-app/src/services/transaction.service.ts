@@ -5,7 +5,7 @@ import {
   PaymentEntity,
   UpdateBookingRequest
 } from "@/types/booking.type";
-import { CreateVoucherPayload, VoucherType } from "@/types/voucher.type";
+import { VoucherType } from "@/types/voucher.type";
 
 import { handleAxiosError, interceptedAxios } from "@/lib/axios";
 
@@ -93,18 +93,17 @@ const createBookingService = () => {
 
   const overrideBooking = async (id: string, newAccountId: number) => {
     try {
-      const response = await interceptedAxios.post<ApiResponseList<BookingEntity>>(
-        `${BASE_BOOKING_URL}/override`,
-        {
-          bookingId: id,
-          accountId: newAccountId
-        }
-      );
+      const response = await interceptedAxios.post<
+        ApiResponseList<BookingEntity>
+      >(`${BASE_BOOKING_URL}/override`, {
+        bookingId: id,
+        accountId: newAccountId
+      });
       return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));
     }
-  }
+  };
 
   return {
     fetchAll,

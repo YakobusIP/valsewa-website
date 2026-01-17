@@ -17,10 +17,7 @@ import { Label } from "@/components/ui/label";
 
 import { toast } from "@/hooks/useToast";
 
-import {
-  CarouselSlide,
-  CarouselSlideRequest
-} from "@/types/carousel.type";
+import { CarouselSlide, CarouselSlideRequest } from "@/types/carousel.type";
 
 import { Loader2Icon, TrashIcon, UploadIcon } from "lucide-react";
 
@@ -217,9 +214,7 @@ export default function CarouselDetailModal({
                       type="file"
                       accept="image/*,video/*"
                       className="sr-only"
-                      onChange={(e) =>
-                        handleFileChange(e.target.files![0])
-                      }
+                      onChange={(e) => handleFileChange(e.target.files![0])}
                     />
                     <Button
                       variant="outline"
@@ -254,10 +249,7 @@ export default function CarouselDetailModal({
 
               {preview && (
                 <div className="pt-2">
-                  <Label
-                    htmlFor="upload-image"
-                    className="cursor-pointer"
-                  >
+                  <Label htmlFor="upload-image" className="cursor-pointer">
                     <div className="flex items-center gap-2 text-sm text-primary hover:underline">
                       <UploadIcon className="h-4 w-4" />
                       Change media
@@ -268,9 +260,7 @@ export default function CarouselDetailModal({
                     type="file"
                     accept="image/*,video/*"
                     className="hidden"
-                    onChange={(e) =>
-                      handleFileChange(e.target.files![0])
-                    }
+                    onChange={(e) => handleFileChange(e.target.files![0])}
                   />
                 </div>
               )}
