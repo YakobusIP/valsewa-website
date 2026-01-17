@@ -1,42 +1,39 @@
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { useEffect, useState } from "react";
+
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+  CardTitle
+} from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
   FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+  FieldLabel
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
-import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { useAuth } from "@/hooks/useAuth";
 
-import { loginFormSchema } from "@/types/zod.type"
-import { useAuth } from "@/hooks/useAuth"
+import { loginFormSchema } from "@/types/zod.type";
 
-import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react"
+import { cn } from "@/lib/utils";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 type LoginFormProps = React.ComponentProps<"div"> & {
-  onClose?: () => void
-}
+  onClose?: () => void;
+};
 
-export function LoginForm({
-  className,
-  onClose,
-  ...props
-}: LoginFormProps) {
-
-  const [passwordVisible, setPasswordVisible] = useState(false)
-  const { isLoadingLogin, login } = useAuth()
+export function LoginForm({ className, onClose, ...props }: LoginFormProps) {
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const { isLoadingLogin, login } = useAuth();
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -44,20 +41,19 @@ export function LoginForm({
       username: "",
       password: ""
     }
-  })
+  });
 
   const onSubmit = async (values: z.infer<typeof loginFormSchema>) => {
-    await login(values)
-  }
+    await login(values);
+  };
 
   useEffect(() => {
-    document.title = "Login | Valsewa"
-  }, [])
+    document.title = "Login | Valsewa";
+  }, []);
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="relative">
-
         {/* Close Button */}
         {onClose && (
           <button
@@ -72,15 +68,12 @@ export function LoginForm({
 
         <CardHeader>
           <CardTitle>Login to your account</CardTitle>
-          <CardDescription>
-            Enter your username and password
-          </CardDescription>
+          <CardDescription>Enter your username and password</CardDescription>
         </CardHeader>
 
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <FieldGroup>
-
               {/* Username */}
               <Field>
                 <FieldLabel htmlFor="username">Username</FieldLabel>
@@ -123,10 +116,13 @@ export function LoginForm({
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                     onClick={() => setPasswordVisible(!passwordVisible)}
                   >
-                    {passwordVisible ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                    {passwordVisible ? (
+                      <EyeOffIcon size={16} />
+                    ) : (
+                      <EyeIcon size={16} />
+                    )}
                   </button>
                 </div>
-
 
                 {form.formState.errors.password && (
                   <p className="text-sm text-red-500">
@@ -137,7 +133,11 @@ export function LoginForm({
 
               {/* Submit */}
               <Field>
-                <Button type="submit" className="w-full" disabled={isLoadingLogin}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isLoadingLogin}
+                >
                   {isLoadingLogin && (
                     <Loader2Icon className="w-4 h-4 mr-2 animate-spin" />
                   )}
@@ -155,11 +155,10 @@ export function LoginForm({
                   </a>
                 </FieldDescription>
               </Field>
-
             </FieldGroup>
           </form>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

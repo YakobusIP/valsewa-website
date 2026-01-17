@@ -97,6 +97,24 @@ const createAccountService = () => {
     }
   };
 
+  const fetchAvailableAccounts = async (startAt: Date, endAt: Date) => {
+    try {
+      const response = await interceptedAxios.get<AccountEntity[]>(
+        `${BASE_ACCOUNT_URL}/available`,
+        {
+          params: {
+            startAt,
+            endAt,
+          }
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
   const create = async (data: Partial<AccountEntityRequest>) => {
     try {
       const response = await interceptedAxios.post<MessageResponse>(
@@ -167,6 +185,7 @@ const createAccountService = () => {
     fetchDuplicate,
     fetchFailedJobs,
     fetchResetLogs,
+    fetchAvailableAccounts,
     create,
     finishBooking,
     update,

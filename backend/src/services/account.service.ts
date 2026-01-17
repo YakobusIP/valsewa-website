@@ -1,4 +1,4 @@
-import { Account, AccountResetLog, Prisma, Skin, Status } from "@prisma/client";
+import { Account, AccountResetLog, BookingStatus, Prisma, Skin, Status } from "@prisma/client";
 import { addHours, subDays } from "date-fns";
 import Fuse, { IFuseOptions } from "fuse.js";
 import {
@@ -11,6 +11,7 @@ import { prisma } from "../lib/prisma";
 import {
   AccountEntityRequest,
   AccountWithSkins,
+  GetAvailableAccountsRequest,
   PublicAccount,
   UpdateResetLogRequest
 } from "../types/account.type";
@@ -354,7 +355,8 @@ export class AccountService {
           priceTier: true,
           thumbnail: true,
           otherImages: true,
-          isLowRank: true
+          isLowRank: true,
+          isRecommended: true
         }
       });
 
@@ -402,6 +404,41 @@ export class AccountService {
   getAllDatabaseAccounts = async (filter?: Prisma.AccountWhereInput) => {
     try {
       return await prisma.account.findMany({ where: filter });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  getRecommendedAccounts = async (): Promise<PublicAccount[]> => {
+    try {
+      const accounts = await prisma.account.findMany({
+        where: {
+          isRecommended: true,
+          availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
+        },
+        orderBy: {
+          totalRentHour: "desc"
+        },
+        take: 3,
+        select: {
+          id: true,
+          nickname: true,
+          accountCode: true,
+          description: true,
+          accountRank: true,
+          availabilityStatus: true,
+          currentExpireAt: true,
+          totalRentHour: true,
+          skinList: true,
+          priceTier: true,
+          thumbnail: true,
+          otherImages: true,
+          isLowRank: true,
+          isRecommended: true
+        }
+      });
+
+      return accounts;
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -462,6 +499,31 @@ export class AccountService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  getAvailableAccounts = async (data: GetAvailableAccountsRequest) => {
+    try {
+      const unavailableAccounts = await prisma.booking.findMany({
+        where: {
+          status: { in: [BookingStatus.HOLD, BookingStatus.RESERVED] },
+          startAt: { lt: data.endAt ?? new Date() },
+          endAt: { gt: data.startAt ?? new Date() }
+        },
+        distinct: ["accountId"],
+        select: { accountId: true }
+      })
+
+      const availableAccounts = await prisma.account.findMany({
+        where: {
+          availabilityStatus: { not: Status.NOT_AVAILABLE },
+          id: { notIn: unavailableAccounts.map(v => v.accountId) }
+        }
+      });
+
+      return availableAccounts;
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  }
 
   createAccount = async (data: AccountEntityRequest) => {
     try {

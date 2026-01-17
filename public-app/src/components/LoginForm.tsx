@@ -1,32 +1,30 @@
-"use client"
+"use client";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useEffect, useState } from "react";
 
-import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-import { loginFormSchema } from "@/types/zod.type"
-import { useAuth } from "@/hooks/useAuth"
+import { useAuth } from "@/hooks/useAuth";
 
-import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react"
-import Image from "next/image"
+import { loginFormSchema } from "@/types/zod.type";
+
+import { cn } from "@/lib/utils";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { EyeIcon, EyeOffIcon, Loader2Icon } from "lucide-react";
+import Image from "next/image";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 type LoginFormProps = React.ComponentProps<"div"> & {
-  onClose?: () => void
-}
+  onClose?: () => void;
+};
 
-export function LoginForm({
-  className,
-  onClose,
-  ...props
-}: LoginFormProps) {
-  const [passwordVisible, setPasswordVisible] = useState(false)
-  const { isLoadingLogin, login } = useAuth()
+export function LoginForm({ className, onClose, ...props }: LoginFormProps) {
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const { isLoadingLogin, login } = useAuth();
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -34,20 +32,20 @@ export function LoginForm({
       username: "",
       password: ""
     }
-  })
+  });
 
   const onSubmit = async (values: z.infer<typeof loginFormSchema>) => {
-    await login(values)
-  }
+    await login(values);
+  };
 
   useEffect(() => {
-    document.title = "Login | Valsewa"
-  }, [])
+    document.title = "Login | Valsewa";
+  }, []);
 
   return (
     <div
       className={cn(
-        "relative w-full h-full bg-black rounded-2xl overflow-hidden",
+        "relative w-full h-full bg-black overflow-hidden",
         className
       )}
       {...props}
@@ -56,37 +54,43 @@ export function LoginForm({
       {onClose && (
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 text-neutral-400 hover:text-white text-xl"
+          className="absolute z-[999] right-6 top-6 text-neutral-400 hover:text-white text-xl"
         >
           —
         </button>
       )}
 
-      <div className="grid h-full grid-cols-1 md:grid-cols-2">
+      <div className="relative h-full md:grid md:grid-cols-2">
         {/* LEFT IMAGE */}
-        <div className="relative hidden md:block">
+        <div className="absolute top-0 left-0 w-full h-[35vh] md:relative md:h-full">
           <Image
-            src="/LS/SVG/Loading Screen_VS_Loading_1280x2800px.svg"
+            src="/login/Login Page Interface.png"
             fill
             alt="Login visual"
             className="object-cover"
             priority
           />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-black md:hidden" />
         </div>
 
         {/* RIGHT FORM */}
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="flex items-center justify-center px-10"
+          className="
+    relative z-10
+            flex items-center justify-center
+            min-h-screen
+            px-6
+            md:px-10
+            md:min-h-full
+          "
         >
           <div className="w-full max-w-sm space-y-6 text-center">
             {/* Header */}
             <div className="space-y-2">
               <p className="text-sm text-yellow-400">
                 First Time Here?{" "}
-                <span className="underline cursor-pointer">
-                  Sign Up
-                </span>
+                <span className="underline cursor-pointer">Sign Up</span>
               </p>
 
               <h1 className="text-3xl font-semibold text-white">
@@ -171,5 +175,5 @@ export function LoginForm({
         </form>
       </div>
     </div>
-  )
+  );
 }

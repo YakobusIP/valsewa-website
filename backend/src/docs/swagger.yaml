@@ -158,7 +158,7 @@ components:
           type: string
         priceList:
           type: array
-          items: 
+          items:
             $ref: "#/components/schemas/PriceList"
         createdAt:
           type: string
@@ -315,7 +315,6 @@ components:
         - data
         - message
 
-    
     Skin:
       type: object
       properties:
@@ -359,8 +358,6 @@ components:
           type: string
           example: "prime"
       description: All fields are optional; only provided properties will be updated.
-
-
 
     Statistic:
       type: object
@@ -420,48 +417,86 @@ components:
       type: string
       enum: [PENDING, SUCCESS, EXPIRED, FAILED, CANCELLED, REFUNDED]
 
+    Provider:
+      type: string
+      enum: [FASPAY, MANUAL]
+
+    PaymentMethodType:
+      type: string
+      enum: [QRIS, VIRTUAL_ACCOUNT, MANUAL]
+
+    Type:
+      type: string
+      enum: [PERSENTASE, NOMINAL]
+
     CreateBookingRequest:
       type: object
-      required: [userId, accountId, baseDurationUnit, baseDurationType, mainValuePerUnit, quantity]
+      required: [customerId, accountId, priceListId, quantity]
       properties:
-        userId: { type: integer }
+        customerId: { type: integer }
         accountId: { type: integer }
-        baseDurationUnit: { type: integer }
-        baseDurationType: { $ref: '#/components/schemas/DurationType' }
-        mainValuePerUnit: { type: integer }
-        othersValuePerUnit: { type: integer }
+        priceListId: { type: integer }
         quantity: { type: integer }
         voucherId: { type: integer }
         startAt: { type: string, format: date-time }
 
+    PayBookingRequest:
+      type: object
+      required: [bookingId, provider, paymentMethod]
+      properties:
+        bookingId: { type: string, format: cuid }
+        voucherId: { type: integer }
+        provider: { $ref: "#/components/schemas/Provider" }
+        paymentMethod: { $ref: "#/components/schemas/PaymentMethodType" }
+        bankCode: { type: string }
+        bankAccountName: { type: string }
+
     BookingResponse:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        userId: { type: integer, nullable: true }
+        id: { type: string, format: cuid }
+        customerId: { type: integer, nullable: true }
         accountId: { type: integer }
-        status: { $ref: '#/components/schemas/BookingStatus' }
-        baseDurationUnit: { type: integer }
-        baseDurationType: { $ref: '#/components/schemas/DurationType' }
+        status: { $ref: "#/components/schemas/BookingStatus" }
+        duration: { type: string }
         quantity: { type: integer }
         startAt: { type: string, format: date-time, nullable: true }
         endAt: { type: string, format: date-time, nullable: true }
         expiredAt: { type: string, format: date-time, nullable: true }
         mainValuePerUnit: { type: integer }
         othersValuePerUnit: { type: integer, nullable: true }
+        voucherName: { type: string }
+        voucherType: { $ref: "#/components/schemas/Type" }
+        voucherAmount: { type: integer }
+        voucherMaxDiscount: { type: integer }
         mainValue: { type: integer }
+        othersValue: { type: integer }
         totalValue: { type: integer }
+        account:
+          type: pbject
+          nullable: true
+          properties:
+            accountCode: { type: string }
+            accountRank: { type: string }
+            priceTierCode: { type: string }
+            thumbnailImageUrl: { type: string }
+            username: { type: string, nullable: true }
+            password: { type: string, nullable: true }
 
     PaymentResponse:
       type: object
       properties:
-        paymentId: { type: string, format: uuid }
-        bookingId: { type: string, format: uuid }
-        status: { $ref: '#/components/schemas/PaymentStatus' }
+        paymentId: { type: string, format: cuid }
+        bookingId: { type: string, format: cuid }
+        status: { $ref: "#/components/schemas/PaymentStatus" }
         value: { type: integer }
         currency: { type: string, example: "IDR" }
+        provider: { $ref: "#/components/schemas/Provider" }
+        providerPaymentId: { type: string }
+        paymentMethod: { $ref: "#/components/schemas/PaymentMethodType" }
         qrUrl: { type: string, format: uri, nullable: true }
         paidAt: { type: string, format: date-time, nullable: true }
+        refundedAt: { type: string, format: date-time, nullable: true }
 
     ErrorResponse:
       type: object
@@ -730,7 +765,7 @@ paths:
         "400": { description: Invalid payload }
         "401": { description: Unauthorized }
         "404": { description: Account not found }
-  
+
     delete:
       tags: [Accounts]
       summary: Remove skins from an account (IDs only)
@@ -1157,7 +1192,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-
   /api/price-tiers/{id}:
     get:
       tags:
@@ -1232,7 +1266,7 @@ paths:
       responses:
         "204":
           description: "Price tiers deleted successfully."
-  
+
   /api/price-tiers/{tierId}/price-list:
     get:
       tags:
@@ -1373,7 +1407,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
 
   /api/skins:
     get:
@@ -1662,7 +1695,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  
+
   /api/skins/image:
     get:
       tags:
@@ -1770,30 +1803,73 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
   # --- Booking Endpoints ---
+  /api/bookings:
+    get:
+      tags: [Bookings]
+      summary: Retrieve a paginated list of bookings
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: string
+          description: "The page number."
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: string
+          description: "The number of accounts per page."
+        - in: query
+          name: q
+          required: false
+          schema:
+            type: string
+          description: "Optional search query."
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BookingResponse"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+
   /api/bookings/{id}:
     get:
       tags: [Bookings]
       summary: Get booking by ID
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: string
-            format: uuid
+            format: cuid
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BookingResponse'
+                $ref: "#/components/schemas/BookingResponse"
 
-  /api/users/bookings/{userId}:
+  /api/bookings/customers/{customerId}:
     get:
       tags: [Bookings]
-      summary: Get all bookings for a user
+      summary: Get all bookings for a customer
+      security:
+        - bearerAuth: []
       parameters:
-        - name: userId
+        - name: customerId
           in: path
           required: true
           schema:
@@ -1805,14 +1881,16 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BookingResponse'
+                  $ref: "#/components/schemas/BookingResponse"
 
-  /api/users/hold-bookings/{userId}:
+  /api/bookings/customers/hold-bookings/{customerId}:
     get:
       tags: [Bookings]
-      summary: Get only bookings with HOLD status for a user
+      summary: Get only bookings with HOLD status for a customer
+      security:
+        - bearerAuth: []
       parameters:
-        - name: userId
+        - name: customerId
           in: path
           required: true
           schema:
@@ -1824,53 +1902,117 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/BookingResponse'
+                  $ref: "#/components/schemas/BookingResponse"
 
-  /api/book:
+  /api/bookings/book:
     post:
       tags: [Bookings]
       summary: Create a new booking
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateBookingRequest'
+              $ref: "#/components/schemas/CreateBookingRequest"
       responses:
         "201":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BookingResponse'
+                $ref: "#/components/schemas/BookingResponse"
 
-  # --- Payment Endpoints ---
-  /api/pay:
+  /api/bookings/cancel:
     post:
-      tags: [Payments]
-      summary: Initiate payment for a booking
+      tags: [Bookings]
+      summary: Cancel booking
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [id]
+              required: [bookingId]
               properties:
-                id:
+                bookingId:
                   type: string
-                  format: uuid
-                  description: Booking ID
+                  format: cuid
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentResponse'
+                $ref: "#/components/schemas/BookingResponse"
 
-  /api/verify-payment:
+  # --- Payment Endpoints ---
+  /api/bookings/payments/{id}:
+    get:
+      tags: [Payments]
+      summary: Get payment by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /api/bookings/active-payments/{bookingId}:
+    get:
+      tags: [Payments]
+      summary: Get active payment by booking ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bookingId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /api/bookings/pay:
+    post:
+      tags: [Payments]
+      summary: Initiate payment for a booking
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PayBookingRequest"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /api/bookings/verify-payment:
     post:
       tags: [Payments]
       summary: Manually verify payment status
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -1881,18 +2023,85 @@ paths:
               properties:
                 paymentId:
                   type: string
-                  format: uuid
+                  format: cuid
       responses:
         "200":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentResponse'
+                $ref: "#/components/schemas/PaymentResponse"
 
-  /api/faspay/callback:
+  /api/bookings/force-pay:
+    post:
+      tags: [Payments]
+      summary: Manually verify payment status
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentId]
+              properties:
+                paymentId:
+                  type: string
+                  format: cuid
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentResponse"
+
+  /api/bookings/sync-expired:
+    post:
+      tags: [Bookings]
+      summary: Sync expired bookings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+
+  /api/bookings/sync-completed:
+    post:
+      tags: [Bookings]
+      summary: Sync completed bookings
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count: { type: integer }
+
+  /api/bookings/sync-account-availability:
+    post:
+      tags: [Bookings]
+      summary: Sync account availabilities
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  markedInUse: { type: integer }
+                  markedAvailable: { type: integer }
+
+  /api/bookings/faspay/callback:
     post:
       tags: [Webhooks]
       summary: Faspay Payment Notification Webhook
+      requestBody:
+        required: true
+        content: application/json
       responses:
         "200":
           description: Acknowledged

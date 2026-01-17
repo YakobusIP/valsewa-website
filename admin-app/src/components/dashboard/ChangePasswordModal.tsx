@@ -1,15 +1,20 @@
+import { useState } from "react";
+
+import { CustomerEntity, customerService } from "@/services/customer.service";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { customerService, CustomerEntity } from "@/services/customer.service";
+
 import { toast } from "@/hooks/useToast";
+
 import { generatePassword } from "@/lib/utils";
-import { LockIcon, CopyIcon } from "lucide-react";
+
+import { CopyIcon, LockIcon } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -77,9 +82,7 @@ export default function ChangePasswordModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            Change Password — {user?.username}
-          </DialogTitle>
+          <DialogTitle>Change Password — {user?.username}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
@@ -127,18 +130,11 @@ export default function ChangePasswordModal({
 
           {/* ACTIONS */}
           <div className="flex justify-end gap-2">
-            <Button
-              variant="ghost"
-              onClick={onClose}
-              disabled={loading}
-            >
+            <Button variant="ghost" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
 
-            <Button
-              onClick={handleSubmit}
-              disabled={loading || !password}
-            >
+            <Button onClick={handleSubmit} disabled={loading || !password}>
               {loading ? "Saving..." : "Update Password"}
             </Button>
           </div>

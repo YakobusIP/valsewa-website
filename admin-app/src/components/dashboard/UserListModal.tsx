@@ -1,14 +1,17 @@
+import { useEffect, useState } from "react";
+
+import { customerService } from "@/services/customer.service";
+
+import ChangePasswordModal from "@/components/dashboard/ChangePasswordModal";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
-import { customerService } from "@/services/customer.service";
+
 import { Customer } from "@/types/customer.type";
-import ChangePasswordModal from "@/components/dashboard/ChangePasswordModal";
 
 type User = Customer;
 
@@ -85,7 +88,10 @@ export default function UserListModal({
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-muted-foreground">
+                  <td
+                    colSpan={5}
+                    className="py-6 text-center text-muted-foreground"
+                  >
                     Loading users...
                   </td>
                 </tr>
@@ -101,7 +107,10 @@ export default function UserListModal({
 
               {!loading && !error && users.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-muted-foreground">
+                  <td
+                    colSpan={5}
+                    className="py-6 text-center text-muted-foreground"
+                  >
                     No users found
                   </td>
                 </tr>
@@ -116,9 +125,7 @@ export default function UserListModal({
                   >
                     <td className="px-4 py-3">{index + 1}</td>
 
-                    <td className="px-4 py-3 font-medium">
-                      {user.username}
-                    </td>
+                    <td className="px-4 py-3 font-medium">{user.username}</td>
 
                     <td className="px-4 py-3">
                       <span
@@ -153,9 +160,7 @@ export default function UserListModal({
 
         {/* FOOTER */}
         <div className="flex justify-end mt-4">
-          <Button onClick={onOpenCreateUser}>
-            + Create User
-          </Button>
+          <Button onClick={onOpenCreateUser}>+ Create User</Button>
         </div>
       </DialogContent>
 

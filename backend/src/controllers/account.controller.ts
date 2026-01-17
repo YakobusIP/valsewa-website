@@ -67,6 +67,19 @@ export class AccountController {
     }
   };
 
+  getRecommendedAccounts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const data = await this.accountService.getRecommendedAccounts();
+      return res.json({ data });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getAccountById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const account = await this.accountService.getAccountById(
@@ -158,6 +171,22 @@ export class AccountController {
   ) => {
     try {
       const accounts = await this.accountService.getAccountResetLogs();
+
+      return res.json(accounts);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getAvailableAccounts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {      
+      const startAt = new Date(req.query.startAt as string);
+      const endAt = new Date(req.query.endAt as string);
+      const accounts = await this.accountService.getAvailableAccounts({ startAt, endAt });
 
       return res.json(accounts);
     } catch (error) {

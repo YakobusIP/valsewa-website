@@ -72,12 +72,15 @@ export class CustomerService {
   updatePassword = async (id: number, newPassword: string) => {
     try {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const activeStatus = true;
 
       const user = await prisma.customer.update({
         where: { id },
         data: {
           password: hashedPassword,
-          passwordChangedAt: new Date()
+          passwordChangedAt: new Date(),
+          isActive: activeStatus,
+          passwordExpireAt: addDays(new Date(), 30)
         }
       });
 
@@ -111,6 +114,47 @@ export class CustomerService {
       });
 
       return user;
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  toggleCustomerActiveStatus = async (id: number, isActive: boolean) => {
+    try {
+      const user = await prisma.customer.update({
+        where: { id },
+        data: { isActive }
+      });
+      return user;
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  checkPasswordExpiration = async () => {
+    try {
+      const today = new Date();
+
+      // Find all active customers whose password has expired
+      const expiredCustomers = await prisma.customer.findMany({
+        where: {
+          isActive: true,
+          passwordExpireAt: {
+            lt: today
+          }
+        }
+      });
+
+      console.log(`Found ${expiredCustomers.length} expired customers.`);
+
+      const updatePromises = expiredCustomers.map((customer) => {
+        console.log(`Deactivating customer: ${customer.username}`);
+        return this.toggleCustomerActiveStatus(customer.id, false);
+      });
+
+      await Promise.all(updatePromises);
+
+      return { count: expiredCustomers.length };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }

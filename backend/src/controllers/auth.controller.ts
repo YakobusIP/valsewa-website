@@ -13,10 +13,17 @@ import { StringValue } from "ms";
 const ACCESS_TOKEN_SECRET = env.ACCESS_TOKEN_SECRET || "access_token_secret";
 const REFRESH_TOKEN_SECRET = env.REFRESH_TOKEN_SECRET || "refresh_token_secret";
 
-const PUB_ACCESS_TOKEN_SECRET = env.PUB_ACCESS_TOKEN_SECRET || "pub_access_token_secret";
-const PUB_REFRESH_TOKEN_SECRET = env.PUB_REFRESH_TOKEN_SECRET || "pub_refresh_token_secret";
+const PUB_ACCESS_TOKEN_SECRET =
+  env.PUB_ACCESS_TOKEN_SECRET || "pub_access_token_secret";
+const PUB_REFRESH_TOKEN_SECRET =
+  env.PUB_REFRESH_TOKEN_SECRET || "pub_refresh_token_secret";
 
 type TokenPayload = {
+  username: string;
+};
+
+type PubTokenPayload = {
+  id: number;
   username: string;
 };
 
@@ -145,16 +152,31 @@ export class AuthController {
         throw new BadRequestError("Invalid request body!");
       }
 
-      if (await this.authService.publogin(username, password)) {
-        const accessToken = jwt.sign({ username }, PUB_ACCESS_TOKEN_SECRET, {
-          expiresIn: env.PUB_ACCESS_TOKEN_DURATION as StringValue
-        });
+      const { valid, id } = await this.authService.publogin(username, password);
 
-        const refreshToken = jwt.sign({ username }, PUB_REFRESH_TOKEN_SECRET, {
-          expiresIn: env.PUB_REFRESH_TOKEN_DURATION as StringValue
-        });
+      if (valid) {
+        const accessToken = jwt.sign(
+          { id, username },
+          PUB_ACCESS_TOKEN_SECRET,
+          {
+            expiresIn: env.PUB_ACCESS_TOKEN_DURATION as StringValue
+          }
+        );
 
-        res.status(200).json({ pubAccessToken: accessToken, pubRefreshToken: refreshToken, username });
+        const refreshToken = jwt.sign(
+          { id, username },
+          PUB_REFRESH_TOKEN_SECRET,
+          {
+            expiresIn: env.PUB_REFRESH_TOKEN_DURATION as StringValue
+          }
+        );
+
+        res.status(200).json({
+          pubAccessToken: accessToken,
+          pubRefreshToken: refreshToken,
+          username,
+          id
+        });
       } else {
         throw new UnauthorizedError("Wrong username or password");
       }
@@ -197,9 +219,9 @@ export class AuthController {
           return res.status(401).json({ error: "Invalid token!" });
         }
 
-        const payload = decoded as TokenPayload;
+        const payload = decoded as PubTokenPayload;
 
-        return res.json({ username: payload.username });
+        return res.json({ id: payload.id, username: payload.username });
       });
     } catch (error) {
       if (error instanceof UnauthorizedError) {
@@ -227,7 +249,7 @@ export class AuthController {
             )
           );
 
-        const payload = decoded as TokenPayload;
+        const payload = decoded as PubTokenPayload;
 
         const accessToken = jwt.sign(
           { username: payload.username },
@@ -245,7 +267,9 @@ export class AuthController {
           }
         );
 
-        return res.status(200).json({ pubAccessToken: accessToken, pubRefreshToken: refreshToken });
+        return res
+          .status(200)
+          .json({ pubAccessToken: accessToken, pubRefreshToken: refreshToken });
       });
     } catch (error) {
       if (error instanceof ForbiddenError) {

@@ -16,6 +16,7 @@ import Navbar from "@/components/dashboard/Navbar";
 import SettingsModal from "@/components/dashboard/SettingsModal";
 import SortComponent from "@/components/dashboard/SortComponent";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
+import TransactionListModal from "@/components/dashboard/TransactionListModal";
 import UserListModal from "@/components/dashboard/UserListModal";
 import VoucherModal from "@/components/dashboard/VoucherModal";
 import DataTable from "@/components/data-table/DataTable";
@@ -41,8 +42,8 @@ export default function Dashboard() {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
   const [openCreateUserAccount, setOpenCreateUserAccount] = useState(false);
   const [openUserList, setOpenUserList] = useState(false);
-  const [openVoucherModal, setopenVoucherModal] = useState(false);
-
+  const [openVoucherModal, setOpenVoucherModal] = useState(false);
+  const [openTransactionModal, setOpenTransactionModal] = useState(false);
   const [openSkinManagement, setOpenSkinManagement] = useState(false);
   const [openPriceTier, setOpenPriceTier] = useState(false);
   const [openCarouselManagement, setOpenCarouselManagement] = useState(false);
@@ -310,7 +311,7 @@ export default function Dashboard() {
       />
       <VoucherModal
         open={openVoucherModal}
-        onOpenChange={setopenVoucherModal}
+        onOpenChange={setOpenVoucherModal}
       />
       <SkinProvider>
         <SkinManagementModal

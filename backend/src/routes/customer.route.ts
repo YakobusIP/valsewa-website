@@ -2,6 +2,7 @@ import { Router } from "express";
 import { CustomerService } from "../services/customer.service";
 import { CustomerController } from "../controllers/customer.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 
 class CustomerRouter {
   public router: Router;
@@ -32,6 +33,16 @@ class CustomerRouter {
       "/",
       authMiddleware,
       this.customerController.createCustomer
+    );
+    this.router.patch(
+      "/:id/active-status",
+      authMiddleware,
+      this.customerController.toggleActiveStatus
+    );
+    this.router.post(
+      "/check-password-expiration",
+      schedulerMiddleware,
+      this.customerController.checkPasswordExpiration
     );
   }
 }

@@ -1,5 +1,9 @@
 import { Prisma, Type } from "@prisma/client";
-import { BadRequestError, InternalServerError } from "../lib/error";
+import {
+  BadRequestError,
+  InternalServerError,
+  NotFoundError
+} from "../lib/error";
 import { prisma } from "../lib/prisma";
 import { Metadata } from "../types/metadata.type";
 
@@ -53,6 +57,21 @@ export class VoucherService {
 
       return [data, metadata];
     } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  getActiveVoucherByVoucherName = async (voucherName: string) => {
+    try {
+      const voucher = await prisma.voucher.findUnique({
+        where: { voucherName, isValid: true }
+      });
+
+      if (!voucher) throw new NotFoundError("Voucher not found");
+
+      return voucher;
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
   };
@@ -135,6 +154,45 @@ export class VoucherService {
   remove = async (id: number) => {
     try {
       await prisma.voucher.delete({ where: { id } });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  toggleVoucherValidity = async (id: number, isValid: boolean) => {
+    try {
+      return await prisma.voucher.update({
+        where: { id },
+        data: { isValid }
+      });
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  checkVoucherExpiration = async () => {
+    try {
+      const today = new Date();
+
+      const expiredVouchers = await prisma.voucher.findMany({
+        where: {
+          isValid: true,
+          dateEnd: {
+            lt: today
+          }
+        }
+      });
+
+      console.log(`Found ${expiredVouchers.length} expired vouchers.`);
+
+      const updatePromises = expiredVouchers.map((voucher) => {
+        console.log(`Deactivating voucher: ${voucher.voucherName}`);
+        return this.toggleVoucherValidity(voucher.id, false);
+      });
+
+      await Promise.all(updatePromises);
+
+      return { count: expiredVouchers.length };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }

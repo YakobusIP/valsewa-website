@@ -1,79 +1,126 @@
+"use client";
+
+import { useRef } from "react";
+
+import HeroAgentLayer from "@/components/hero/HeroAgentLayer";
+import HeroNotchShape from "@/components/hero/HeroNotchShape";
+import HeroNotchShapeMobile from "@/components/hero/HeroNotchShapeMobile";
+import HeroTextBlock from "@/components/hero/HeroTextBlock";
+import MobileBrandSwitcher from "@/components/hero/MobileBranchSwitcher";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious
+} from "@/components/ui/carousel";
+
+import { CarouselSlide } from "@/types/account.type";
+
+import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
 
-export default function Hero() {
+interface HeroProps {
+  initialCarousel: CarouselSlide[];
+}
+
+export default function Hero({ initialCarousel }: HeroProps) {
+  const autoplay = useRef(Autoplay({ delay: 5000, stopOnInteraction: false }));
+
   return (
-    <section className="mt-14 lg:mt-20 grid lg:grid-cols-2 gap-10 relative">
+    <section className="relative w-full">
+      {/* Hero container with notch */}
+      <div className="relative w-full min-h-[550px] md:min-h-[620px] overflow-x-hidden overflow-y-hidden xl:overflow-visible">
+        {/* Desktop: SVG Notch Shape with fill and border */}
+        <HeroNotchShape />
 
-      {/* LEFT SIDE */}
-      <div className="relative z-10">
+        {/* Mobile/Tablet: SVG Notch Shape */}
+        <HeroNotchShapeMobile />
 
-        <h5 className="flex items-center gap-3 text-white/80">
-          <span className="text-red-600 font-bold text-xl">V3</span>
-          VALSEWA
-        </h5>
-
-        <h1 className="text-white font-black text-4xl md:text-5xl xl:text-6xl 2xl:text-7xl leading-[1.1] mt-4 max-w-0.5">
-          WORLD’S #1 <br />
-          <span>VALORANT ACCOUNT</span> <br />
-          RENTAL SITE
-        </h1>
-
-        {/* CHARACTER */}
-        <div
-          className="
-            absolute
-            right-[-100px] 
-            -top-10 
-            w-[280px] sm:w-[340px] md:w-[400px] xl:w-[480px]
-            h-[380px] sm:h-[450px] md:h-[500px] xl:h-[600px]
-            pointer-events-none
-          "
-        >
-          <Image
-            src="/NewHero/Agent Neon.png"
-            alt="Valorant Agent"
-            fill
-            className="object-contain drop-shadow-[0_0_40px_#00ffff50]"
-          />
+        {/* MOBILE: Brand Switcher - absolutely positioned at top to align with notch */}
+        <div className="xl:hidden absolute top-0 left-0 right-0 z-20">
+          <MobileBrandSwitcher />
         </div>
 
-      </div>
+        {/* MOBILE: Hero carousel (includes hardcoded design as slide 1) */}
+        <div className="relative z-10 xl:hidden pt-16">
+          <div className="w-full pt-12">
+            <div className="w-full rounded-lg overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
+              <Carousel
+                className="w-full"
+                plugins={[autoplay.current]}
+                opts={{ loop: true }}
+              >
+                <CarouselContent>
+                  <CarouselItem>
+                    <AspectRatio ratio={4 / 5}>
+                      <div className="relative w-full h-full">
+                        <HeroTextBlock className="w-full" />
+                        <HeroAgentLayer />
+                      </div>
+                    </AspectRatio>
+                  </CarouselItem>
+                  {initialCarousel?.map((item, index) => (
+                    <CarouselItem key={index}>
+                      <AspectRatio ratio={4 / 5}>
+                        <Image
+                          src={item.image123.imageUrl}
+                          alt="Featured Account"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </AspectRatio>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
 
-      {/* RIGHT CARD / SLIDER */}
-      <div className="flex justify-center lg:justify-end items-start">
-        <div className="relative w-full max-w-[360px] lg:max-w-[380px] h-[460px] bg-gradient-to-br from-white/10 via-black/60 to-red-950/70 rounded-2xl border border-white/10 shadow-xl p-4">
-
-          <div className="relative w-full h-[240px] rounded-xl overflow-hidden">
-            <Image
-              src="/screen1.jpg"
-              alt="preview"
-              fill
-              className="object-cover"
-            />
-          </div>
-
-          <div className="mt-4 flex justify-between items-center text-white">
-            <div>
-              <p className="font-bold text-xl">A-27</p>
-              <p className="text-white/70 text-sm">1 transaction</p>
+                <CarouselPrevious className="left-2 bg-black/60 text-white hover:bg-black" />
+                <CarouselNext className="right-2 bg-black/60 text-white hover:bg-black" />
+              </Carousel>
             </div>
-            <span className="text-white/60">7 days</span>
           </div>
-
-          <button className="absolute -left-4 top-1/2 -translate-y-1/2 bg-white/10 w-9 h-9 rounded-full text-white">
-            ←
-          </button>
-          <button className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white/10 w-9 h-9 rounded-full text-white">
-            →
-          </button>
-
-          <div className="mt-6 flex justify-center gap-2">
-            <span className="w-3 h-3 bg-blue-600 rounded-full" />
-            <span className="w-3 h-3 bg-white/30 rounded-full" />
-            <span className="w-3 h-3 bg-white/30 rounded-full" />
-          </div>
-
         </div>
+
+        {/* Content layer - positioned inside the main area (below notch on desktop) */}
+        <div className="relative z-10 hidden xl:flex flex-col xl:flex-row h-full max-w-[1920px] mx-auto xl:items-center justify-between xl:px-12 large:px-0 min-h-[550px] md:min-h-[620px] pt-16 xl:pt-20">
+          <HeroAgentLayer />
+          <HeroTextBlock className="w-full xl:w-[55%]" />
+
+          {/* RIGHT – CAROUSEL (Desktop only) */}
+          <div className="relative w-full xl:w-[30%] hidden xl:flex justify-end aspect-[4/5] h-full">
+            <div className="w-full rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
+              <Carousel
+                className="w-full"
+                plugins={[autoplay.current]}
+                opts={{ loop: true }}
+              >
+                <CarouselContent>
+                  {initialCarousel?.map((item, index) => (
+                    <CarouselItem key={index}>
+                      <AspectRatio ratio={4 / 5}>
+                        <Image
+                          src={item.image123.imageUrl}
+                          alt="Featured Account"
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                      </AspectRatio>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+
+                <CarouselPrevious className="left-2 bg-black/60 text-white hover:bg-black" />
+                <CarouselNext className="right-2 bg-black/60 text-white hover:bg-black" />
+              </Carousel>
+            </div>
+          </div>
+        </div>
+
+        {/* Red Glow overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#C70515] pointer-events-none rounded-2xl xl:rounded-none xl:mx-12 large:mx-0 mt-16" />
       </div>
     </section>
   );

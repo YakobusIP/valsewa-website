@@ -1,21 +1,43 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
-import { notFound, useParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { fetchAccountById } from "@/services/accountService";
+import { bookingService } from "@/services/booking.service";
 
 import Navbar from "@/components/Navbar";
+import NavbarMobile from "@/components/NavbarMobile";
 import { Badge } from "@/components/ui/badge";
-import { fetchAccountById } from "@/services/accountService";
-import { AccountEntity, UploadResponse } from "@/types/account.type";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious
+} from "@/components/ui/carousel";
+
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/useToast";
+
+import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
+
+import { getRankImageUrl } from "@/lib/utils";
+
+import { isAxiosError } from "axios";
+import { ChevronDown, Search } from "lucide-react";
+import Image from "next/image";
+import { notFound, useParams, useRouter } from "next/navigation";
 
 export default function AccountDetailPage() {
+  const router = useRouter();
+
   const params = useParams<{ id: string }>();
   const id = params?.id;
 
   const [account, setAccount] = useState<AccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   // Skin UI state
   const [showSkins, setShowSkins] = useState(false);
@@ -24,11 +46,13 @@ export default function AccountDetailPage() {
   const [qty, setQty] = useState(1);
   const [selectedDuration, setSelectedDuration] = useState<{
     label: string;
-    price: string;
+    value: PriceList;
   } | null>(null);
-  const [bookDate, setBookDate] = useState<Date | null>(null);
+  const [bookDate, setBookDate] = useState<Date | null>(new Date());
   const [startTime, setStartTime] = useState<string>(""); // "09:00"
   const [endTime, setEndTime] = useState<string>("");
+
+  const { customerId } = useAuth();
 
   useEffect(() => {
     fetchAccountById(id)
@@ -40,6 +64,40 @@ export default function AccountDetailPage() {
   useEffect(() => {
     setSelectedDuration(null);
   }, [mode]);
+
+  const onSubmit = async () => {
+    if (!selectedDuration) return;
+    try {
+      setSubmitting(true);
+      const booking = await bookingService.createBooking({
+        customerId: customerId ?? undefined,
+        accountId: parseInt(id),
+        priceListId: selectedDuration.value.id,
+        quantity: qty,
+        ...(bookDate ? { startAt: bookDate } : {})
+      });
+
+      if (booking) {
+        router.push(`/bookings/${booking.id}`);
+      }
+    } catch (error) {
+      let message = "Booking failed";
+
+      if (isAxiosError(error)) {
+        message = error.response?.data?.error || error.message || message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+
+      toast({
+        variant: "destructive",
+        title: "Booking failed",
+        description: message
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const filteredSkins = useMemo(() => {
     if (!account?.skinList) return [];
@@ -73,7 +131,7 @@ export default function AccountDetailPage() {
       return;
     }
 
-    const durationHours = parseDurationToHours(selectedDuration.label);
+    const durationHours = parseDurationToHours(selectedDuration.value.duration);
     const totalHours = durationHours * qty;
 
     const [startHour, startMinute] = startTime.split(":").map(Number);
@@ -89,27 +147,27 @@ export default function AccountDetailPage() {
     setEndTime(`${hh}:${mm}`);
   }, [selectedDuration, startTime, qty]);
 
-  const bookTotalPrice = useMemo(() => {
+  const calculateBasePrice = useCallback(
+    (priceList: PriceList) => {
+      if (!priceList) return 0;
+      return (
+        Number(priceList.normalPrice) +
+        (account?.isLowRank ? Number(priceList.lowPrice) : 0)
+      );
+    },
+    [account?.isLowRank]
+  );
+
+  const calculateTotalPrice = useMemo(() => {
     if (!selectedDuration || qty === 0) return 0;
 
-    const basePrice = Number(selectedDuration.price);
-
-    return basePrice * qty;
-  }, [selectedDuration, qty]);
-
-  const rentTotalPrice = useMemo(() => {
-    if (!selectedDuration || qty === 0) return 0;
-
-    return Number(selectedDuration.price) * qty;
-  }, [selectedDuration, qty]);
-
+    return calculateBasePrice(selectedDuration.value) * qty;
+  }, [selectedDuration, qty, calculateBasePrice]);
 
   const isDisabled =
     (mode === "RENT" && (!selectedDuration || qty === 0)) ||
     (mode === "BOOK" &&
       (!selectedDuration || !bookDate || !startTime || qty === 0));
-
-
 
   function formatRentDuration(totalHours: number): string {
     if (!totalHours || totalHours <= 0) return "0h";
@@ -123,7 +181,7 @@ export default function AccountDetailPage() {
 
     return `${hours}h`;
   }
-  
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -137,48 +195,58 @@ export default function AccountDetailPage() {
   const images =
     account.thumbnail && account.otherImages?.length
       ? [{ ...account.thumbnail, isThumbnail: true }, ...account.otherImages]
-      : account.otherImages ?? [account.thumbnail];
-
-
-  function getRankImageUrl(rank: string): string {
-    const r = rank.toLowerCase();
-
-    if (r.includes("iron")) return "/rank/Iron 3.svg";
-    if (r.includes("bronze")) return "/rank/Bronze 3.svg";
-    if (r.includes("silver")) return "/rank/Silver 3.svg";
-    if (r.includes("gold")) return "/rank/Gold 3.svg";
-    if (r.includes("platinum")) return "/rank/Platinum 3.svg";
-    if (r.includes("diamond")) return "/rank/Diamond 3.svg";
-    if (r.includes("ascendant")) return "/rank/Ascendant 3.svg";
-    if (r.includes("immortal")) return "/rank/Immortal 3.svg";
-    if (r.includes("radiant")) return "/rank/Radiant 3.svg";
-
-    return "/ranks/Unranked.svg";
-  }
+      : (account.otherImages ?? [account.thumbnail]);
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <Navbar />
+      <div className="relative max-lg:hidden">
+        <Navbar />
+      </div>
+      <div className="lg:hidden">
+        <NavbarMobile />
+      </div>
 
       <div className="pt-[110px] px-4 lg:px-10">
         <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8">
-
           {/* LEFT — GALLERY */}
-          <div className="col-span-12 lg:col-span-7 grid grid-cols-2 gap-4">
-            {images.map((img: UploadResponse, i: number) => (
-              <div
-                key={i}
-                className="relative aspect-video rounded-xl overflow-hidden"
-              >
-                <Image
-                  src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
-                  alt="Account Image"
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              </div>
-            ))}
+          <div className="col-span-12 lg:col-span-7">
+            {/* MOBILE CAROUSEL (< sm) */}
+            <div className="lg:hidden">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {images.map((img: UploadResponse, i: number) => (
+                    <CarouselItem key={i}>
+                      <div className="relative aspect-video w-full">
+                        <Image
+                          src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
+                          alt="Account Image"
+                          fill
+                          className="object-cover rounded-md"
+                          unoptimized
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </Carousel>
+            </div>
+
+            {/* DESKTOP GRID (>= sm) */}
+            <div className="hidden lg:grid grid-cols-2 gap-1 max-h-[100vh] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {images.map((img: UploadResponse, i: number) => (
+                <div key={i} className="relative aspect-video">
+                  <Image
+                    src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
+                    alt="Account Image"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* RIGHT — DETAILS */}
@@ -198,7 +266,7 @@ export default function AccountDetailPage() {
               </div>
 
               {/* COL 2 ROW 1 — TITLE */}
-              <h1 className="text-3xl font-bold text-white tracking-wide leading-tight">
+              <h1 className="sm:text-3xl text-xl font-bold text-white tracking-wide leading-tight">
                 <span className="uppercase">{account.accountRank}</span>
                 <span className="text-neutral-400"> | </span>
                 <span>{account.accountCode}</span>
@@ -214,7 +282,6 @@ export default function AccountDetailPage() {
                 </span>
               </div>
 
-
               {/* COL 2 ROW 2 — PRICE TIER + STATUS */}
               <div className="flex items-center gap-3">
                 <div className="bg-purple-600 text-white px-2 py-0.5 text-xs rounded-sm">
@@ -222,8 +289,6 @@ export default function AccountDetailPage() {
                 </div>
               </div>
             </div>
-
-
 
             {/* META */}
             <div className="space-y-2 text-sm text-neutral-300">
@@ -250,44 +315,40 @@ export default function AccountDetailPage() {
                   >
                     <p className="font-semibold">Skin List</p>
 
-                    <span
-                      className={`transition-transform duration-200 text-white bg-neutral-600 ml-2 p-0.5 ${
+                    <div
+                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${
                         showSkins ? "rotate-180" : "rotate-0"
                       }`}
                     >
-                      ▲
-                    </span>
+                      <ChevronDown className="w-3 h-3 text-white" />
+                    </div>
                   </div>
                 </span>
-                
+
                 <p>{account.skinList.length} Skins</p>
               </div>
-              
-              
             </div>
 
             {/* SKIN LIST */}
             <div className="space-y-3">
-              
-
               {showSkins && (
                 <div className="space-y-3">
                   {/* SEARCH */}
-                  <input
-                    type="text"
-                    placeholder="Search Valorant skin..."
-                    value={skinSearch}
-                    onChange={(e) => setSkinSearch(e.target.value)}
-                    className="w-full rounded-md bg-neutral-900 border border-neutral-700 px-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-red-500"
-                  />
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                    <input
+                      type="text"
+                      placeholder="Search Valorant skin..."
+                      value={skinSearch}
+                      onChange={(e) => setSkinSearch(e.target.value)}
+                      className="w-full rounded-md bg-neutral-900 border border-neutral-700 pl-9 pr-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-red-500"
+                    />
+                  </div>
 
                   {/* LIST */}
                   <div className="flex flex-wrap gap-2 max-h-[240px] overflow-y-auto pr-1">
-                    {
-                    filteredSkins.length === 0 ? (
-                      <p className="text-sm text-neutral-500">
-                        No skins found
-                      </p>
+                    {filteredSkins.length === 0 ? (
+                      <p className="text-sm text-neutral-500">No skins found</p>
                     ) : (
                       filteredSkins.map((skin, i) => (
                         <Badge
@@ -304,25 +365,29 @@ export default function AccountDetailPage() {
             </div>
 
             {/* RENT / BOOK SECTION */}
-            <div className="bg-neutral-900 rounded-xl p-4 space-y-4">
+            <div className="bg-neutral-900 rounded-xl xl:p-4 p-2 space-y-4">
               {/* MODE TOGGLE */}
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setMode("RENT")}
-                  className={`text-sm font-semibold py-2 rounded-md transition
-                    ${mode === "RENT"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"}`}
+                  className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
+                    ${
+                      mode === "RENT"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    }`}
                 >
                   RENT NOW
                 </button>
 
                 <button
                   onClick={() => setMode("BOOK")}
-                  className={`text-sm font-semibold py-2 rounded-md transition
-                    ${mode === "BOOK"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"}`}
+                  className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
+                    ${
+                      mode === "BOOK"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    }`}
                 >
                   BOOK FOR LATER
                 </button>
@@ -340,7 +405,7 @@ export default function AccountDetailPage() {
                         onClick={() =>
                           setSelectedDuration({
                             label: item.duration,
-                            price: item.normalPrice.toString()
+                            value: item
                           })
                         }
                         className={`border rounded-md py-2 cursor-pointer transition
@@ -350,24 +415,25 @@ export default function AccountDetailPage() {
                               : "border-neutral-700 hover:border-red-600"
                           }`}
                       >
-                        <p className="text-xs font-semibold uppercase">{item.duration}</p>
-                        <p className="text-[11px] text-neutral-400">
-                          IDR {item.normalPrice.toLocaleString("id-ID")}
+                        <p className="text-xs font-semibold uppercase">
+                          {item.duration}
+                        </p>
+                        <p className="sm:text-[11px] text-xs text-neutral-400">
+                          IDR {calculateBasePrice(item).toLocaleString("id-ID")}
                         </p>
                       </div>
                     );
                   })}
-
                 </div>
               )}
 
               {mode === "BOOK" && (
                 <div className="space-y-4">
-
                   {/* DURATION SELECT */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                     {priceList.map((item) => {
-                      const isActive = selectedDuration?.label === item.duration;
+                      const isActive =
+                        selectedDuration?.label === item.duration;
 
                       return (
                         <div
@@ -375,7 +441,7 @@ export default function AccountDetailPage() {
                           onClick={() =>
                             setSelectedDuration({
                               label: item.duration,
-                              price: item.normalPrice.toString()
+                              value: item
                             })
                           }
                           className={`border rounded-md py-2 cursor-pointer transition
@@ -385,9 +451,12 @@ export default function AccountDetailPage() {
                                 : "border-neutral-700 hover:border-red-600"
                             }`}
                         >
-                          <p className="text-xs font-semibold uppercase">{item.duration}</p>
+                          <p className="text-xs font-semibold uppercase">
+                            {item.duration}
+                          </p>
                           <p className="text-[11px] text-neutral-400">
-                            IDR {item.normalPrice.toLocaleString("id-ID")}
+                            IDR{" "}
+                            {calculateBasePrice(item).toLocaleString("id-ID")}
                           </p>
                         </div>
                       );
@@ -395,16 +464,21 @@ export default function AccountDetailPage() {
                   </div>
 
                   {/* DATE + TIME */}
-                  <div className="bg-neutral-900 rounded-xl p-4 grid grid-cols-2 gap-4">
+                  <div className="bg-neutral-900 rounded-xl sm:p-4 grid grid-cols-2 gap-4 pt-5 sm:pt-0">
                     {/* DATE */}
-                    <div>
+                    <div className="flex h-auto justify-center sm:mb-10">
                       <Calendar
                         mode="single"
                         selected={bookDate ?? undefined}
                         onSelect={(date) => setBookDate(date ?? null)}
-                        disabled={(date) => date < new Date()}
-                        className="rounded-md border border-neutral-800 bg-black text-white
-                          [&_.rdp-day]:text-white
+                        disabled={(date) =>
+                          date < new Date(new Date().setHours(0, 0, 0, 0))
+                        }
+                        className="rounded-md border border-neutral-800 bg-black text-white p-2 max-sm:scale-75 origin-top -mt-2 -mb-16
+                          [&_.rdp-day]:text-white [&_.rdp-day]:h-7 [&_.rdp-day]:w-7 [&_.rdp-day]:text-xs
+                          [&_.rdp-head_cell]:text-neutral-400 [&_.rdp-head_cell]:text-[0.65rem] [&_.rdp-head_cell]:font-normal
+                          [&_.rdp-caption_label]:text-white [&_.rdp-caption_label]:text-sm
+                          [&_.rdp-nav_button]:text-white [&_.rdp-nav_button]:h-6 [&_.rdp-nav_button]:w-6
 
                           [&_.rdp-day[aria-selected=true]]:bg-red-500
                           [&_.rdp-day[aria-selected=true]]:text-white
@@ -412,28 +486,20 @@ export default function AccountDetailPage() {
 
                           [&_.rdp-day_today]:border
                           [&_.rdp-day_today]:border-red-500
-
-                          [&_.rdp-nav_button]:text-white
-                          [&_.rdp-caption_label]:text-white
-                          [&_.rdp-head_cell]:text-neutral-400
                         "
                       />
-
-
-
-                      <p className="mt-2 text-xs text-neutral-400">
-                        {bookDate
-                          ? `Selected: ${bookDate.toLocaleDateString("id-ID")}`
-                          : "Select a date"}
-                      </p>
                     </div>
 
                     {/* TIME */}
                     <div className="flex flex-col gap-3">
-                      <p className="text-white text-sm font-semibold">Rental Time</p>
+                      <p className="text-white sm:text-sm text-xs font-semibold">
+                        Rental Time
+                      </p>
 
                       <div className="flex flex-col gap-1">
-                        <label className="text-xs text-neutral-400">Start Time</label>
+                        <label className="text-xs text-neutral-400">
+                          Start Time
+                        </label>
                         <input
                           type="time"
                           value={startTime}
@@ -443,7 +509,9 @@ export default function AccountDetailPage() {
                       </div>
 
                       <div className="flex flex-col gap-1">
-                        <label className="text-xs text-neutral-400">End Time</label>
+                        <label className="text-xs text-neutral-400">
+                          End Time
+                        </label>
                         <input
                           type="time"
                           value={endTime}
@@ -451,6 +519,11 @@ export default function AccountDetailPage() {
                           className="bg-neutral-700 text-neutral-400 rounded-md px-2 py-1 cursor-not-allowed"
                         />
                       </div>
+                      <p className="mt-2 text-xs text-neutral-400">
+                        {bookDate
+                          ? `Selected: ${bookDate.toLocaleDateString("id-ID")}`
+                          : "Select a date"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -458,50 +531,54 @@ export default function AccountDetailPage() {
 
               {/* QTY */}
               <div className="flex items-center justify-between">
-                <span className="text-sm">Qty</span>
+                <span className="sm:text-sm text-xs">Qty</span>
 
                 <div className="flex items-center bg-neutral-800 rounded-md overflow-hidden">
                   <button
                     onClick={() => setQty((prev) => Math.max(1, prev - 1))}
-                    className="px-3 py-1 text-lg hover:bg-neutral-700"
+                    className="px-3 py-1 sm:text-lg text-md hover:bg-neutral-700"
                   >
                     −
                   </button>
 
-                  <span className="px-4 text-sm">{qty}</span>
+                  <span className="px-4 sm:text-sm text-xs">{qty}</span>
 
                   <button
                     onClick={() => setQty((prev) => prev + 1)}
-                    className="px-3 py-1 text-lg hover:bg-neutral-700"
+                    className="px-3 py-1 sm:text-lg text-md hover:bg-neutral-700"
                   >
                     +
                   </button>
                 </div>
               </div>
 
-
               <button
-                disabled={isDisabled}
+                onClick={onSubmit}
+                disabled={isDisabled || submitting}
                 className={`w-full font-semibold py-3 rounded-md transition
                   ${
-                    isDisabled
+                    isDisabled || submitting
                       ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
                       : "bg-red-600 hover:bg-red-700 text-white"
                   }`}
               >
-                {mode === "RENT" && selectedDuration && (
-                  <>IDR {rentTotalPrice.toLocaleString("id-ID")} | Rent Now</>
+                {submitting && <>Loading...</>}
+
+                {mode === "RENT" && selectedDuration && !submitting && (
+                  <>
+                    IDR {calculateTotalPrice.toLocaleString("id-ID")} | Rent Now
+                  </>
                 )}
 
-                {mode === "BOOK" && selectedDuration && (
-                  <>IDR {bookTotalPrice.toLocaleString("id-ID")} | Book Now</>
+                {mode === "BOOK" && selectedDuration && !submitting && (
+                  <>
+                    IDR {calculateTotalPrice.toLocaleString("id-ID")} | Book Now
+                  </>
                 )}
-
 
                 {mode === "RENT" && !selectedDuration && "Select Duration"}
                 {mode === "BOOK" && !selectedDuration && "Select Date"}
               </button>
-
 
               {/* FOOTER */}
               <div className="text-center text-xs text-neutral-400 space-y-2">
@@ -511,8 +588,6 @@ export default function AccountDetailPage() {
                 </button>
               </div>
             </div>
-
-
           </div>
         </div>
       </div>

@@ -96,7 +96,8 @@ const formSchema = z.object({
       ])
     )
     .optional(),
-  isLowRank: z.boolean().optional().default(false)
+  isLowRank: z.boolean().optional().default(false),
+  isRecommended: z.boolean().optional().default(false)
 });
 
 type Props = {
@@ -180,7 +181,8 @@ export default function AccountDetailModal({
             skinList: data.skinList.map((skin) => skin.id),
             thumbnail: data.thumbnail,
             otherImages: data.otherImages ? data.otherImages : [],
-            isLowRank: data.isLowRank
+            isLowRank: data.isLowRank,
+            isRecommended: data.isRecommended
           }
         : {
             username: "",
@@ -194,7 +196,8 @@ export default function AccountDetailModal({
             skinList: [],
             thumbnail: undefined,
             otherImages: [],
-            isLowRank: false
+            isLowRank: false,
+            isRecommended: false
           },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -497,7 +500,8 @@ export default function AccountDetailModal({
         skinList: data.skinList.map((skin) => skin.id),
         thumbnail: data.thumbnail,
         otherImages: data.otherImages || [],
-        isLowRank: data.isLowRank
+        isLowRank: data.isLowRank,
+        isRecommended: data.isRecommended
       });
     } else if (mode === "add") {
       form.reset({
@@ -511,7 +515,8 @@ export default function AccountDetailModal({
         skinList: [],
         thumbnail: undefined,
         otherImages: [],
-        isLowRank: undefined
+        isLowRank: undefined,
+        isRecommended: undefined
       });
     }
   }, [mode, data, form]);
@@ -774,6 +779,29 @@ export default function AccountDetailModal({
                 Password needs to be updated!
               </p>
             )}
+
+            <div>
+              <FormField
+                control={form.control}
+                name="isRecommended"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={(checked) =>
+                          field.onChange(checked === true)
+                        }
+                      />
+                    </FormControl>
+
+                    <FormLabel className="font-normal cursor-pointer">
+                      Recommended
+                    </FormLabel>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="relative col-span-1 xl:col-span-3 gap-2">
               <FormField

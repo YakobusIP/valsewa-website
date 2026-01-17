@@ -9,13 +9,16 @@ import {
 } from "react";
 
 import { authService } from "@/services/auth.service";
+
 import { toast } from "@/hooks/useToast";
+
+import { AuthContextType } from "@/types/auth-context.type";
 import { loginFormSchema } from "@/types/zod.type";
+
 import { setAccessToken } from "@/lib/axios";
 
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { z } from "zod";
-import { AuthContextType } from "@/types/auth-context.type";
 
 type AuthProviderProps = {
   children: ReactNode;
@@ -30,6 +33,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const pathname = usePathname();
 
   const [isLoadingLogin, setIsLoadingLogin] = useState(false);
+  const [customerId, setCustomerId] = useState<number | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
@@ -45,6 +49,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setAccessToken(response.pubAccessToken);
       localStorage.setItem("refreshToken", response.pubRefreshToken);
 
+      setCustomerId(response.id);
       setUsername(response.username);
       setIsAuthenticated(true);
 
@@ -53,10 +58,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         description: "Login successful"
       });
 
-      router.push("/details");
+      router.push("/");
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Login failed";
+      const message = error instanceof Error ? error.message : "Login failed";
 
       toast({
         variant: "destructive",
@@ -77,6 +81,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem("refreshToken");
     setAccessToken(null);
 
+    setCustomerId(null);
     setUsername(null);
     setIsAuthenticated(false);
     setIsAuthChecked(true);
@@ -128,6 +133,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isLoadingLogin,
         isAuthenticated,
         isAuthChecked,
+        customerId,
         username,
         login,
         logout
