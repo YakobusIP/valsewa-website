@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { bookingService } from "@/services/booking.service";
 
 import Navbar from "@/components/Navbar";
+import NavbarMobile from "@/components/NavbarMobile";
 
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 
@@ -17,7 +18,6 @@ import { cn } from "@/lib/utils";
 import { AlertTriangleIcon, CheckIcon, CopyIcon, HomeIcon } from "lucide-react";
 import { notFound, useParams, useRouter } from "next/navigation";
 import { FaDiscord } from "react-icons/fa6";
-import NavbarMobile from "@/components/NavbarMobile";
 
 function LoadingState() {
   return (

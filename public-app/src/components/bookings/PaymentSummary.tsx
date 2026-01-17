@@ -85,7 +85,12 @@ function PaymentSummary({
   if (!booking) return null;
 
   return (
-    <div className={cn("w-full lg:w-3/4 space-y-4 sm:space-y-6 rounded-lg", instrumentSans.className)}>
+    <div
+      className={cn(
+        "w-full lg:w-3/4 space-y-4 sm:space-y-6 rounded-lg",
+        instrumentSans.className
+      )}
+    >
       <div>
         <h1
           className={`text-xl sm:text-2xl font-semibold leading-[1.2] ${staatliches.className}`}

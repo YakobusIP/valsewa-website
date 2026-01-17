@@ -571,8 +571,13 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
 
     const getOptionByValue = React.useCallback(
       (value: string): MultiSelectOption | undefined => {
-        const option = getAllOptions().find((option) => option.value === value);
-        if (!option && process.env.NODE_ENV === "development") {
+        const allOptions = getAllOptions();
+        const option = allOptions.find((option) => option.value === value);
+        if (
+          !option &&
+          allOptions.length > 0 &&
+          process.env.NODE_ENV === "development"
+        ) {
           console.warn(
             `MultiSelect: Option with value "${value}" not found in options list`
           );
@@ -1012,6 +1017,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
             role="listbox"
             aria-multiselectable="true"
             aria-label="Available options"
+            disablePortal={modalPopover}
             className={cn(
               "w-auto p-0",
               getPopoverAnimationClass(),

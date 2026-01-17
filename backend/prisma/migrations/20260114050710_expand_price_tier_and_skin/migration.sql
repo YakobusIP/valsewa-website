@@ -1,11 +1,18 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `skinList` on the `Account` table. All the data in the column will be lost.
-
-*/
 -- AlterTable
-ALTER TABLE "Account" DROP COLUMN "skinList";
+ALTER TABLE "PriceTier" ALTER COLUMN "description" DROP NOT NULL;
+
+-- CreateTable
+CREATE TABLE "PriceList" (
+    "id" SERIAL NOT NULL,
+    "duration" TEXT NOT NULL,
+    "normalPrice" INTEGER NOT NULL,
+    "lowPrice" INTEGER NOT NULL,
+    "tierId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PriceList_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Skin" (
@@ -26,10 +33,16 @@ CREATE TABLE "_AccountToSkin" (
 );
 
 -- CreateIndex
+CREATE INDEX "PriceList_tierId_idx" ON "PriceList"("tierId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Skin_name_key" ON "Skin"("name");
 
 -- CreateIndex
 CREATE INDEX "_AccountToSkin_B_index" ON "_AccountToSkin"("B");
+
+-- AddForeignKey
+ALTER TABLE "PriceList" ADD CONSTRAINT "PriceList_tierId_fkey" FOREIGN KEY ("tierId") REFERENCES "PriceTier"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_AccountToSkin" ADD CONSTRAINT "_AccountToSkin_A_fkey" FOREIGN KEY ("A") REFERENCES "Account"("id") ON DELETE CASCADE ON UPDATE CASCADE;

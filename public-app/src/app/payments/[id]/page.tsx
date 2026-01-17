@@ -247,7 +247,9 @@ export default function PaymentDetailPage() {
 
           <div className="w-full mt-auto space-y-2 sm:space-y-1">
             <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-              <p className="font-semibold text-sm sm:text-base">Selected Payment Method</p>
+              <p className="font-semibold text-sm sm:text-base">
+                Selected Payment Method
+              </p>
               <p className="text-sm sm:text-base">{paymentMethodLabel}</p>
             </div>
             {payment.bankAccountNo && (
@@ -258,7 +260,9 @@ export default function PaymentDetailPage() {
                   onClick={() => handleCopyVaNo(payment.bankAccountNo!)}
                   className="flex items-center gap-2 font-medium text-white hover:text-red-600 text-sm sm:text-base"
                 >
-                  <span className="select-text break-all">{payment.bankAccountNo}</span>
+                  <span className="select-text break-all">
+                    {payment.bankAccountNo}
+                  </span>
 
                   {vaNoCopied ? (
                     <CheckIcon className="w-4 h-4 flex-shrink-0" />
@@ -285,7 +289,9 @@ export default function PaymentDetailPage() {
                 />
               </button>
             )}
-            <p className="text-xs sm:text-sm">No payment confirmation received?</p>
+            <p className="text-xs sm:text-sm">
+              No payment confirmation received?
+            </p>
             <button
               type="button"
               onClick={onVerify}

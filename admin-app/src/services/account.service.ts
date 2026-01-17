@@ -13,23 +13,38 @@ import { SORT_ORDER } from "@/lib/enums";
 
 const BASE_ACCOUNT_URL = "/api/accounts";
 
+export const isCanceledError = (
+  error: unknown
+): error is Error & { code: string } => {
+  return (
+    error instanceof Error &&
+    (error.name === "CanceledError" ||
+      ("code" in error && (error as { code: string }).code === "ERR_CANCELED"))
+  );
+};
+
 const createAccountService = () => {
   const fetchAll = async (
     page: number,
     limit: number,
     query: string,
     sortBy: string,
-    direction: SORT_ORDER
+    direction: SORT_ORDER,
+    signal?: AbortSignal
   ) => {
     try {
       const response = await interceptedAxios.get<
         ApiResponseList<AccountEntity>
       >(BASE_ACCOUNT_URL, {
-        params: { page, limit, q: query, sortBy, direction }
+        params: { page, limit, q: query, sortBy, direction },
+        signal
       });
 
       return response.data;
     } catch (error) {
+      if (isCanceledError(error)) {
+        throw error;
+      }
       throw new Error(handleAxiosError(error));
     }
   };

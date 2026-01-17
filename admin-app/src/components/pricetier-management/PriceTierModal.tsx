@@ -5,24 +5,28 @@ import { priceTierService } from "@/services/pricetier.service";
 import DataTable from "@/components/data-table/DataTable";
 import { priceTierColumns } from "@/components/data-table/table-columns/PriceTierTableColumns";
 import PriceTierDetailModal from "@/components/pricetier-management/PriceTierDetailModal";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
 import { usePriceTier } from "@/hooks/usePriceTier";
 import { toast } from "@/hooks/useToast";
 
-import { CircleDollarSignIcon, SearchIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { useDebounce } from "use-debounce";
 
-export default function PriceTierModal() {
+export default function PriceTierModal({
+  open,
+  onOpenChange
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const {
     priceTierList,
     priceTierMetadata,
@@ -32,8 +36,6 @@ export default function PriceTierModal() {
     setPriceTierSearch,
     refetchPriceTier
   } = usePriceTier();
-
-  const [open, setOpen] = useState(false);
 
   const [isLoadingDeletePriceTier, setIsLoadingDeletePriceTier] =
     useState(false);
@@ -49,7 +51,7 @@ export default function PriceTierModal() {
   }, [debouncedSearch, setPriceTierSearch, setPriceTierListPage, open]);
 
   const handleOpenChange = (nextOpen: boolean) => {
-    setOpen(nextOpen);
+    onOpenChange(nextOpen);
 
     if (!nextOpen) {
       setLocalSearch("");
@@ -88,12 +90,6 @@ export default function PriceTierModal() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button className="w-full xl:w-fit">
-          <CircleDollarSignIcon className="w-4 h-4" />
-          Price Tiers
-        </Button>
-      </DialogTrigger>
       <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
           <DialogTitle>Price Tiers</DialogTitle>

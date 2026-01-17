@@ -18,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
@@ -531,6 +532,11 @@ export default function AccountDetailModal({
           <DialogTitle>
             {mode === "add" ? "Add New Account" : "Edit Account"}
           </DialogTitle>
+          <DialogDescription>
+            {mode === "add"
+              ? "Create a new account with all required details"
+              : "Edit account information and settings"}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -797,14 +803,6 @@ export default function AccountDetailModal({
               />
             </div>
 
-            <div className="flex flex-col col-span-1 xl:col-span-3 gap-2">
-              <p className="font-semibold">Skins</p>
-              <hr />
-              <p className="text-sm">
-                3 entri pertama akan ditampilkan di halaman utama
-              </p>
-            </div>
-
             <div className="relative col-span-1 xl:col-span-3 gap-2">
               <FormField
                 control={form.control}
@@ -819,6 +817,7 @@ export default function AccountDetailModal({
                       </FormLabel>
                       <FormControl>
                         <MultiSelect
+                          modalPopover={true}
                           options={skinOptions}
                           value={selectedValue}
                           onValueChange={(value: string[]) => {
@@ -834,7 +833,7 @@ export default function AccountDetailModal({
                                 : "Select one or more skins"
                           }
                           searchable={true}
-                          maxCount={100}
+                          maxCount={25}
                           className="w-full"
                           animationConfig={{
                             badgeAnimation: "slide",

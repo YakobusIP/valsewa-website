@@ -13,6 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
@@ -191,6 +192,9 @@ export default function AccountNextBookModal({
       <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
           <DialogTitle>Next Booking</DialogTitle>
+          <DialogDescription>
+            View and manage the next scheduled booking for this account
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

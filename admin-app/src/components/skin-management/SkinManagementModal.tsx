@@ -5,24 +5,28 @@ import { skinService } from "@/services/skin.service";
 import DataTable from "@/components/data-table/DataTable";
 import { skinColumns } from "@/components/data-table/table-columns/SkinTableColumns";
 import SkinDetailModal from "@/components/skin-management/SkinDetailModal";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
 import { useSkin } from "@/hooks/useSkin";
 import { toast } from "@/hooks/useToast";
 
-import { Paintbrush, SearchIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { useDebounce } from "use-debounce";
 
-export default function SkinManagementModal() {
+export default function SkinManagementModal({
+  open,
+  onOpenChange
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const {
     skinList,
     skinMetadata,
@@ -70,13 +74,7 @@ export default function SkinManagementModal() {
   }, [debouncedSearch, setSkinSearch, setSkinListPage]);
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button className="w-full xl:w-fit">
-          <Paintbrush className="w-4 h-4" />
-          Skin Management
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
           <DialogTitle>Skin Management</DialogTitle>

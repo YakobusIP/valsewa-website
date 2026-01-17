@@ -83,15 +83,21 @@ function ProgressStepper({ bookingId, stepIdx, onBack }: ProgressStepperProps) {
           </div>
         </div>
         <div className="grid items-center grid-cols-3 font-semibold text-white text-[10px] sm:text-xs lg:text-sm">
-          <span className={`text-left break-words ${isActive(0) ? "" : "opacity-50"}`}>
+          <span
+            className={`text-left break-words ${isActive(0) ? "" : "opacity-50"}`}
+          >
             Choose Booking
           </span>
 
-          <span className={`text-center break-words ${isActive(0) ? "" : "opacity-50"}`}>
+          <span
+            className={`text-center break-words ${isActive(0) ? "" : "opacity-50"}`}
+          >
             Purchase Details
           </span>
 
-          <span className={`text-right break-words ${isActive(0) ? "" : "opacity-50"}`}>
+          <span
+            className={`text-right break-words ${isActive(0) ? "" : "opacity-50"}`}
+          >
             Payment
           </span>
         </div>
