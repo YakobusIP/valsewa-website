@@ -1,59 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Badge } from "@/components/ui/badge";
-import { Dialog } from "@/components/ui/dialog";
 
 import { AccountEntity } from "@/types/account.type";
 
-import { ExternalLink } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
-import CardModal from "./CardModal";
 import CountdownTimer from "./CountdownTimer";
-
-// Define types for props and data items
 
 interface CardProps {
   data?: AccountEntity[];
 }
+
 const Card: React.FC<CardProps> = ({ data }) => {
-  const [selectedCard, setSelectedCard] = useState<AccountEntity | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-  const [isAboveLargeDesktop, setIsAboveLargeDesktop] =
-    useState<boolean>(false);
-  const [isAboveSmallDesktop, setIsAboveSmallDesktop] =
-    useState<boolean>(false);
-  const [isAbovePhone, setIsAbovePhone] = useState<boolean>(false);
-  const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
 
-  const updateScreenSize = () => {
-    setIsAboveLargeDesktop(window.innerWidth >= 1700);
-    setIsAboveSmallDesktop(window.innerWidth >= 1024);
-    setIsAbovePhone(window.innerWidth >= 640);
-  };
-
-  useEffect(() => {
-    updateScreenSize();
-    window.addEventListener("resize", updateScreenSize);
-    return () => {
-      window.removeEventListener("resize", updateScreenSize);
-    };
-  }, []);
-
-  const getGridClass = (): string => {
-    let gridClass = "col-span-4"; // Default to 3 columns
-
-    if (isAboveLargeDesktop) gridClass = "col-span-3";
-    else if (!isAboveSmallDesktop && isAbovePhone) gridClass = "col-span-6";
-    else if (!isAboveSmallDesktop && !isAbovePhone) gridClass = "col-span-6";
-
-    return gridClass;
-  };
-
-  const processCardData = (items: AccountEntity[] | undefined) => {
+  const processCardData = (items?: AccountEntity[]) => {
     return items?.map((item) => ({
       ...item,
       otherImages:
@@ -62,257 +27,180 @@ const Card: React.FC<CardProps> = ({ data }) => {
           : item.otherImages
     }));
   };
-  const visitTracker = (nickname: string) => {
-    const linkTracker =
-      "https://tracker.gg/valorant/profile/riot/" +
-      encodeURIComponent(nickname) +
-      "/overview";
-    window.open(linkTracker, "_blank");
-  };
+
   const processedData = processCardData(data);
-  const getTier = (tier: string) => {
-    if (tier === "SSS") {
-      return "/cardneed/update/sss.svg";
-    } else if (tier === "LR-SSS") {
-      return "/cardneed/update/lrsss.svg";
-    } else if (tier === "LR-V") {
-      return "/cardneed/update/lrv.svg";
-    } else if (tier === "V") {
-      return "/cardneed/update/v.svg";
-    } else if (tier === "S") {
-      return "/cardneed/update/s.svg";
-    } else if (tier === "LR-S") {
-      return "/cardneed/update/lrs.svg";
-    } else if (tier === "A") {
-      return "/cardneed/update/a.svg";
-    } else if (tier === "LR-A") {
-      return "/cardneed/update/lra.svg";
-    } else if (tier === "B") {
-      return "/cardneed/update/b.svg";
-    } else if (tier === "LR-B") {
-      return "/cardneed/update/lrb.svg";
-    } else if (tier === "C") {
-      return "/cardneed/update/c.svg";
-    } else if (tier === "LR-C") {
-      return "/cardneed/update/lrc.svg";
-    } else if (tier === "SSS⁺") {
-      return "/cardneed/update/sss+.svg";
-    } else if (tier === "LR-SSS⁺") {
-      return "/cardneed/update/lrsss+.svg";
-    }
 
-    return "";
-  };
-  const checkStatusInUse = (status: string) => {
-    if (status == "IN_USE") {
-      return true;
-    }
-    return false;
-  };
-  const handleCardClick = (item: AccountEntity) => {
-    const isMobile = window.innerWidth < 640;
-
-    if (isMobile && item.availabilityStatus === "IN_USE") {
-      if (hoveredCardId !== item.accountCode) {
-        setHoveredCardId(item.accountCode);
-      } else {
-        setSelectedCard(item);
-        setHoveredCardId(null);
-      }
-    } else {
-      setHoveredCardId(null);
-      setSelectedCard(item);
-    }
-  };
+  function getRankImage(rank: string): string {
+    if (!rank) return "/rank/default.svg";
+    const baseRank = rank.trim().split(" ")[0].toLowerCase();
+    return `/rank/${baseRank} 3.svg`;
+  }
 
   return (
-    <Dialog open={!!selectedCard} onOpenChange={() => setSelectedCard(null)}>
-      <div
-        className="grid grid-cols-12 md:gap-x-10 sm:gap-x-6 gap-x-3 justify-items-center w-full 2xl:gap-y-14 xl:gap-y-10 sm:gap-y-7 gap-y-3 px-3 font-sans"
-        ref={ref}
-      >
-        {processedData?.map((item, index) => (
-          <div
-            className={`
-              rounded-xl relative h-auto w-full 
-              transform sm:hover:shadow-[0px_4px_15px_rgba(255,255,255,0.5)] sm:hover:scale-[1.02] sm:transition-all sm:duration-300 hover:cursor-pointer
-              ${getGridClass()} 
-              ${checkStatusInUse(item.availabilityStatus) ? "" : ""}
-              ${hoveredCardId === item.accountCode ? "shadow-[0px_4px_15px_rgba(255,255,255,0.5)]" : ""}
-              `}
-            key={index}
-            onClick={() => handleCardClick(item)}
-          >
-            <div className="group relative h-full w-full bg-[#333640] rounded-xl transition-opacity duration-300">
-              {/* Notification: Hidden by default, shown on hover */}
-              {item.availabilityStatus === "IN_USE" && (
-                <div
-                  className={`opacity-100 max-sm:hidden hidden group-hover:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-2 bg-black/75 text-white px-4 py-2 rounded-lg w-full h-full z-30`}
-                >
-                  <div className="flex justify-center items-center gap-3">
-                    <figure className="w-[24px] h-[24px] flex items-center">
-                      <Image
-                        src="/cardneed/in_use.svg"
-                        width={28}
-                        height={28}
-                        alt="In Use"
-                      />
-                    </figure>
-                    <span className="flex flex-col">
-                      <span className="font-bold text-xl text-[#FBB201]">
-                        In Use
-                      </span>
-                      {item.currentExpireAt ? (
-                        <CountdownTimer
-                          targetDate={
-                            item.currentExpireAt
-                              ? new Date(item.currentExpireAt).toISOString()
-                              : ""
-                          }
-                        />
-                      ) : (
-                        ""
-                      )}
-                    </span>
-                  </div>
-                </div>
-              )}
-              <div
-                className={`${checkStatusInUse(item.availabilityStatus) ? "opacity-50" : "opacity-100"}`}
-              >
-                <figure className="relative w-full sm:hidden">
-                  <AspectRatio ratio={16 / 16}>
-                    <Image
-                      loading="lazy"
-                      src={item.thumbnail.imageUrl}
-                      alt="Thumbnail"
-                      fill
-                      className="object-cover rounded-t-xl w-full"
-                      unoptimized
-                    />
-                  </AspectRatio>
-                </figure>
-                <figure className="relative w-full max-sm:hidden">
-                  <AspectRatio ratio={16 / 9}>
-                    <Image
-                      loading="lazy"
-                      src={item.thumbnail.imageUrl}
-                      alt="Thumbnail"
-                      fill
-                      className="object-cover rounded-t-xl w-full"
-                      unoptimized
-                    />
-                  </AspectRatio>
-                </figure>
-              </div>
-              <div
-                className={`${checkStatusInUse(item.availabilityStatus) ? "opacity-50" : "opacity-100"} relative w-full h-full `}
-              >
-                <div className="relative">
-                  {/* Account Rank */}
-                  <div
-                    className="relative flex items-center bg-gradient-to-r from-[#FFB800] to-[#D48002] text-white  font-bold sm:px-8 px-3 sm:py-2 sm:text-2xl text-sm italic  sm:w-[70%] w-[75%] max-md:h-[25px]"
-                    style={{
-                      clipPath: "polygon(0% 0%, 100% 0%, 90% 100%, 0% 100%)"
-                    }}
-                  >
-                    {item.accountRank}
-                  </div>
-                  <div className="h-full w-full absolute top-0 left-auto">
-                    <figure className="absolute top-0 right-0 h-[60px] w-[60px] sm:h-[120px] sm:w-[120px] ">
-                      <Image
-                        src={getTier(item.priceTier.code)}
-                        alt="Price Tier"
-                        fill
-                      />
-                    </figure>
-                  </div>
-                </div>
-                <div className="sm:px-7 px-3 sm:mt-5 mt-2">
-                  <div className="relative sm:mb-3">
-                    {/* Account Code */}
-                    <div className="flex items-center sm:gap-[8px] gap-1">
-                      {item.availabilityStatus === "AVAILABLE" && (
-                        <span className="w-4 h-4 bg-[#66FFF8] rounded-full"></span>
-                      )}
-                      {item.availabilityStatus === "IN_USE" && (
-                        <figure className="relative w-[20px] h-[20px] sm:w-[28px] sm:h-[28px]">
-                          <Image src="/cardneed/in_use.svg" fill alt="In_Use" />
-                        </figure>
-                      )}
-
-                      {/* Account Code */}
-                      <span className="font-bold text-[#f36164] sm:text-4xl text-2xl">
-                        {item.accountCode}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap text-nowrap mb-5 gap-[20px] items-center text-roseWhite sm:text-sm text-xs font-bold mt-2 max-lg:hidden font-sans">
-                      <span className="">
-                        Total Skin <span>{item.skinList.length}</span>
-                      </span>
-                      <span className="flex gap-1">
-                        <span
-                          className=" cursor-pointer"
-                          onClick={() => visitTracker(item.nickname)}
-                        >
-                          {item.nickname}
-                        </span>
-                        <ExternalLink
-                          className="w-4 h-4 text-white inline"
-                          onClick={() => visitTracker(item.nickname)}
-                        />
-                      </span>
-                    </div>
-                    <div className="flex flex-col mb-2 gap-[10px] text-roseWhite sm:text-sm text-xs font-bold mt-2 text-nowrap lg:hidden font-sans">
-                      <span className="flex gap-1">
-                        <span
-                          className=" cursor-pointer"
-                          onClick={() => visitTracker(item.nickname)}
-                        >
-                          {item.nickname}
-                        </span>
-                        <ExternalLink
-                          className="w-4 h-4 text-white inline"
-                          onClick={() => visitTracker(item.nickname)}
-                        />
-                      </span>
-                      <span className="font-sans">
-                        Total Skin <span>{item.skinList.length}</span>
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-y-2 gap-2 pb-5">
-                      {item.skinList?.slice(0, 2).map((skin, index) => (
-                        <Badge
-                          variant="secondary"
-                          key={index}
-                          className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-[8px] sm:text-xs hover:bg-[#4b4f5e]"
-                        >
-                          {skin}
-                        </Badge>
-                      ))}
-                      {item.skinList.length > 3 && (
-                        <Badge
-                          variant="secondary"
-                          key={index}
-                          className="bg-[#4b4f5e] font-normal font-sans text-[#E6E6E6] text-[8px] sm:text-xs hover:bg-[#4b4f5e]"
-                        >
-                          +{item.skinList.length - 2} Lainnya
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+    <section className="w-full flex justify-center">
+      <div className="w-full max-w-[1920px] xl:px-12">
+        <div className="flex flex-col mb-8">
+          <div className="flex items-center gap-2 mb-2">
+            <h2 className="text-3xl md:text-5xl font-antonio font-black text-white tracking-tighter uppercase relative">
+              FULL INVENTORY
+            </h2>
           </div>
-        ))}
+          <p className="text-white/70 text-xs md:text-lg">
+            Explore 100+ Premium Accounts today!
+          </p>
+        </div>
+        <div
+          ref={ref}
+          className="
+              grid grid-cols-12 
+              gap-x-3 gap-y-4
+              sm:gap-x-6 sm:gap-y-6
+              lg:gap-x-8 lg:gap-y-10
+              justify-items-center
+              font-instrumentSans
+            "
+        >
+          {processedData?.map((item) => {
+            // {debug(item)}
+            const inUse = item.availabilityStatus === "IN_USE";
+
+            return (
+              <Link
+                key={item.id}
+                href={`/details/${item.id}`}
+                className={`
+                col-span-6 sm:col-span-6 lg:col-span-4 xl:col-span-4
+                w-full h-full cursor-pointer
+                transition-all duration-300
+                ${inUse ? "" : "hover:scale-[1.02]"}
+              `}
+              >
+                {/* CARD FRAME */}
+                <div className="rounded-sm h-full p-[1px] bg-gradient-to-b from-white/40 via-black to-white/40">
+                  <div className="relative h-full rounded-sm overflow-hidden bg-gradient-to-b from-black to-[#7A0610] flex flex-col justify-between">
+                    {inUse && (
+                      <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
+                    )}
+
+                    {/* HEADER */}
+                    <div className="flex items-center justify-between px-2 sm:px-4 pt-4">
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        <Image
+                          src={getRankImage(item.accountRank)}
+                          width={0}
+                          height={0}
+                          sizes="100vw"
+                          className="w-7 h-7 sm:w-[42px] sm:h-[42px]"
+                          alt="Rank"
+                        />
+                        <div className="flex flex-col gap-0">
+                          <p className="text-white font-semibold text-[0.4rem] sm:text-sm">
+                            {item.accountRank} | {item.accountCode}
+                          </p>
+                          <span className="flex items-top justify-top">
+                            <span
+                              className="inline-flex items-center justify-center text-center
+                              text-[0.4rem] sm:text-xs font-bold text-white bg-red-600
+                              sm:h-5 h-auto py-0.1 rounded pl-1 pr-1 sm:pl-2 sm:pr-2"
+                            >
+                              {item.priceTier.code}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-center gap-1 text-blue-400 text-[0.4rem] sm:text-xs cursor-pointer hover:text-blue-300">
+                        Account Info
+                        <span className="flex items-center justify-center w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-400 text-black text-[0.4rem] sm:text-[10px] font-bold no-underline">
+                          ?
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* IMAGE */}
+                    <div className="relative px-2 sm:px-4 pt-4">
+                      <div className="sm:hidden">
+                        <AspectRatio ratio={1 / 1}>
+                          <Image
+                            src={
+                              item.thumbnail?.imageUrl ??
+                              "/defaultPicture/default.jpg"
+                            }
+                            fill
+                            alt="Thumbnail"
+                            className="object-cover rounded-sm"
+                            unoptimized
+                          />
+                        </AspectRatio>
+                      </div>
+                      <div className="hidden sm:block">
+                        <AspectRatio ratio={16 / 9}>
+                          <Image
+                            src={
+                              item.thumbnail?.imageUrl ??
+                              "/defaultPicture/default.jpg"
+                            }
+                            fill
+                            alt="Thumbnail"
+                            className="object-cover rounded-sm"
+                            unoptimized
+                          />
+                        </AspectRatio>
+                      </div>
+
+                      {/* AVAILABLE BADGE */}
+                      {!inUse && (
+                        <div
+                          className="absolute sm:top-6 sm:left-6 top-5 left-4
+                            bg-gradient-to-r from-[#4FDF6D] to-[#BBFD7B] text-black
+                            text-[0.4rem] sm:text-xs px-3 py-1 rounded-sm"
+                        >
+                          Available
+                        </div>
+                      )}
+
+                      {/* IN USE OVERLAY */}
+                      {inUse && (
+                        <div
+                          className="absolute sm:top-6 sm:left-6 top-5 left-4 flex items-center justify-center z-20
+                            bg-black/70 rounded-sm"
+                        >
+                          <div
+                            className="bg-white text-black
+                              sm:px-3 sm:py-1 px-2 py-1 rounded-sm text-[0.4rem] sm:text-xs lg:text-sm"
+                          >
+                            Time Left{" "}
+                            {item.currentExpireAt && (
+                              <CountdownTimer
+                                targetDate={new Date(
+                                  item.currentExpireAt
+                                ).toISOString()}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* FOOTER */}
+                    <div className="px-2 sm:px-4 sm:py-4 py-1">
+                      <div
+                        className="inline-flex items-center
+                          bg-white/10 text-white
+                          text-[0.4rem] sm:text-xs px-3 py-1 rounded-sm"
+                      >
+                        Skins Amount |{" "}
+                        <span className="ml-1">{item.skinList.length}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
-      <CardModal
-        selectedCard={selectedCard}
-        onClose={() => setSelectedCard(null)}
-      />
-    </Dialog>
+    </section>
   );
 };
 

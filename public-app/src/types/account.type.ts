@@ -1,18 +1,29 @@
+import { Skin } from "./skin.type";
+
 export type { AccountEntity, AccountEntityRequest, RankResponse };
+
+type PriceList = {
+  id: number;
+  duration: string;
+  normalPrice: number;
+  lowPrice: number;
+  tierId: number;
+};
 
 type PriceTier = {
   id: number;
   code: string;
-  description: string;
+  priceList: PriceList[];
 };
 
 type PriceTierRequest = Omit<PriceTier, "id">;
 
-export type { PriceTier, PriceTierRequest };
+export type { PriceList, PriceTier, PriceTierRequest };
 
 type UploadResponse = {
   id: number;
   imageUrl: string;
+  type: "IMAGE" | "VIDEO";
 };
 
 export type { UploadResponse };
@@ -30,19 +41,20 @@ type AccountEntity = {
   currentExpireAt?: Date | null;
   totalRentHour: number;
   password: string;
-  skinList: string[];
+  skinList: Skin[];
   stale_password: boolean;
   thumbnail: UploadResponse;
   otherImages: UploadResponse[] | null;
   priceTier: PriceTier;
   nickname: string;
+  isLowRank: boolean;
+  isRecommended: boolean;
 };
 
 export type CarouselSlide = {
   id: number;
-  image123: UploadResponse;
-  image126: UploadResponse;
-  image129: UploadResponse;
+  image: UploadResponse;
+  duration: number;
 };
 
 type AccountEntityRequest = Omit<

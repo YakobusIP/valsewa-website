@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma, MediaType } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { generateFilename } from "../lib/utils";
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "fs";
@@ -16,9 +16,9 @@ export class UploadService {
   private static readonly IMAGES_ROOT = "/srv/images";
   private static readonly IMAGES_CDN = "https://images.valsewa.com";
 
-  private async saveImageToDatabase(imageUrl: string) {
+  private async saveImageToDatabase(imageUrl: string, type: MediaType) {
     try {
-      return await prisma.imageUpload.create({ data: { imageUrl } });
+      return await prisma.imageUpload.create({ data: { imageUrl, type } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientValidationError) {
         throw new BadRequestError("Invalid request body!");
@@ -74,7 +74,12 @@ export class UploadService {
 
           url = `http://localhost:${env.PORT}/uploads/${filePath}`;
         }
-        return await this.saveImageToDatabase(url);
+
+        const type = file.mimetype.startsWith("video/")
+          ? MediaType.VIDEO
+          : MediaType.IMAGE;
+
+        return await this.saveImageToDatabase(url, type);
       } catch (error) {
         if (
           error instanceof BadRequestError ||

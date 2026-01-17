@@ -24,6 +24,11 @@ const envSchema = z.object({
   GCP_PROJECT_ID: z.string().optional(),
   GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
 
+  PUB_ACCESS_TOKEN_SECRET: z.string(),
+  PUB_REFRESH_TOKEN_SECRET: z.string(),
+  PUB_ACCESS_TOKEN_DURATION: z.string(),
+  PUB_REFRESH_TOKEN_DURATION: z.string(),
+
   ADMIN_APP_URL: z.string().url(),
   CANONICAL_PUBLIC_APP_URL: z.string().url(),
   PUBLIC_APP_URL: z.string().url(),
@@ -37,7 +42,32 @@ const envSchema = z.object({
     return parsed;
   }),
 
-  SCHEDULER_API_KEY: z.string()
+  SCHEDULER_API_KEY: z.string(),
+
+  SNAP_BI_MERCHANT_ID: z.string(),
+  SNAP_BI_CLIENT_ID: z.string(),
+  SNAP_BI_PRIVATE_KEY: z.string(),
+  SNAP_BI_CLIENT_SECRET: z.string(),
+  SNAP_BI_PARTNER_ID: z.string(),
+  SNAP_BI_CHANNEL_ID: z.string(),
+  SNAP_BI_PUBLIC_KEY: z.string(),
+
+  BOOKING_HOLD_TIME_MINUTES: z
+    .string()
+    .optional()
+    .transform((value) => {
+      const parsed = parseInt(value ?? "15", 10);
+      if (isNaN(parsed)) throw new Error("Booking hold time must be a number");
+      return parsed;
+    }),
+  BOOKING_GRACE_TIME_MILLIS: z
+    .string()
+    .optional()
+    .transform((value) => {
+      const parsed = parseInt(value ?? "30000", 10);
+      if (isNaN(parsed)) throw new Error("Booking grace time must be a number");
+      return parsed;
+    })
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

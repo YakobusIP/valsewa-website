@@ -1,0 +1,109 @@
+import { memo, useCallback, useState } from "react";
+
+import { bookingService } from "@/services/booking.service";
+
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+
+import { instrumentSans } from "@/lib/fonts";
+import { cn } from "@/lib/utils";
+
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  DollarSign,
+  MoreHorizontal
+} from "lucide-react";
+
+type ProgressStepperProps = {
+  bookingId: string;
+  stepIdx: number;
+  onBack: () => void;
+};
+
+function ProgressStepper({ bookingId, stepIdx, onBack }: ProgressStepperProps) {
+  const { handleAsyncError } = useErrorHandler();
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const isActive = useCallback((idx: number) => idx <= stepIdx, [stepIdx]);
+
+  const handleBack = useCallback(async () => {
+    if (isCancelling) return;
+
+    try {
+      setIsCancelling(true);
+      await bookingService.cancelBooking({ bookingId });
+    } catch (error) {
+      handleAsyncError(error, "Cancel booking failed", "Cancel booking failed");
+    } finally {
+      setIsCancelling(false);
+      onBack();
+    }
+  }, [bookingId, isCancelling, handleAsyncError, onBack]);
+
+  return (
+    <nav
+      className={cn(
+        "flex gap-3 sm:gap-4 lg:gap-6 text-xs sm:text-sm font-bold items-center text-white",
+        instrumentSans.className
+      )}
+      aria-label="Booking progress"
+    >
+      <button
+        onClick={handleBack}
+        disabled={isCancelling}
+        className="cursor-pointer w-fit rounded-xl disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+        aria-label="Go back and cancel booking"
+      >
+        <div className="flex items-center gap-1 sm:gap-2 p-2 sm:p-3 lg:p-4 transition border cursor-pointer border-white/30 rounded-xl hover:border-white bg-white/30">
+          <ChevronLeftIcon className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" />
+        </div>
+      </button>
+      <div className="flex flex-col w-full gap-1 sm:gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+          <div
+            className={`flex items-center justify-center ${isActive(0) ? "" : "opacity-50"}`}
+          >
+            <CheckIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-black bg-white rounded-full" />
+          </div>
+
+          <div className="flex-1 h-px bg-gray-600" />
+
+          <div
+            className={`flex items-center justify-center ${isActive(1) ? "" : "opacity-50"}`}
+          >
+            <MoreHorizontal className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-black bg-white rounded-full" />
+          </div>
+
+          <div className="flex-1 h-px bg-gray-700" />
+
+          <div
+            className={`flex items-center justify-center ${isActive(2) ? "" : "opacity-50"}`}
+          >
+            <DollarSign className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-black bg-white rounded-full" />
+          </div>
+        </div>
+        <div className="grid items-center grid-cols-3 font-semibold text-white text-[10px] sm:text-xs lg:text-sm">
+          <span
+            className={`text-left break-words ${isActive(0) ? "" : "opacity-50"}`}
+          >
+            Choose Booking
+          </span>
+
+          <span
+            className={`text-center break-words ${isActive(0) ? "" : "opacity-50"}`}
+          >
+            Purchase Details
+          </span>
+
+          <span
+            className={`text-right break-words ${isActive(0) ? "" : "opacity-50"}`}
+          >
+            Payment
+          </span>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+export default memo(ProgressStepper);

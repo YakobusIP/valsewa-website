@@ -1,3 +1,5 @@
+import CreateUserPage from "@/components/dashboard/CreateUserModal";
+
 import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
 import NotFoundPage from "@/routes/NotFoundPage";
@@ -20,6 +22,19 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        )
+      },
+      {
+        path: "register", // ✅ ADD THIS ROUTE
+        element: (
+          <ProtectedRoute>
+            <CreateUserPage
+              open={false}
+              onOpenChange={function (open: boolean): void {
+                throw new Error("Function not implemented.");
+              }}
+            />
           </ProtectedRoute>
         )
       },

@@ -27,6 +27,11 @@ class AccountRouter {
     this.router.get("/", authMiddleware, this.accountController.getAllAccounts);
     this.router.get("/public", this.accountController.getAllPublicAccounts);
     this.router.get(
+      "/public/recommended",
+      this.accountController.getRecommendedAccounts
+    );
+    this.router.get("/public/:id", this.accountController.getAccountById);
+    this.router.get(
       "/failed-jobs",
       authMiddleware,
       this.accountController.getFailedAccountJobs
@@ -45,6 +50,11 @@ class AccountRouter {
       "/reset-logs",
       authMiddleware,
       this.accountController.getAccountResetLogs
+    );
+    this.router.get(
+      "/available",
+      authMiddleware,
+      this.accountController.getAvailableAccounts
     );
     this.router.get("/:id", this.accountController.getAccountById);
     this.router.post("/", authMiddleware, this.accountController.createAccount);
@@ -77,6 +87,16 @@ class AccountRouter {
       "/",
       authMiddleware,
       this.accountController.deleteManyAccounts
+    );
+    this.router.post(
+      "/:id/skins",
+      authMiddleware,
+      this.accountController.addSkinsToAccount
+    );
+    this.router.delete(
+      "/:id/skins",
+      authMiddleware,
+      this.accountController.removeSkinsFromAccount
     );
   }
 }
