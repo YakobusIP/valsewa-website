@@ -278,7 +278,7 @@ export class AccountService {
           priceTier: true,
           thumbnail: true,
           otherImages: true,
-          skins: true
+          skinList: true
         }
       });
 
@@ -297,8 +297,8 @@ export class AccountService {
             "nickname",
             "accountCode",
             "accountRank",
-            "skins.name",
-            "skins.keyword"
+            "skinList.name",
+            "skinList.keyword"
           ],
           threshold: 0.3
         };
@@ -351,7 +351,7 @@ export class AccountService {
           availabilityStatus: true,
           currentExpireAt: true,
           totalRentHour: true,
-          skins: true,
+          skinList: true,
           priceTier: true,
           thumbnail: true,
           otherImages: true,
@@ -371,7 +371,7 @@ export class AccountService {
       let filteredData: PublicAccount[] = data;
       if (query && query.trim().length > 0) {
         const fuseOptions: IFuseOptions<PublicAccount> = {
-          keys: ["nickname", "accountCode", "accountRank", "skins"],
+          keys: ["nickname", "accountCode", "accountRank", "skinList"],
           threshold: 0.3
         };
 
@@ -429,7 +429,7 @@ export class AccountService {
           availabilityStatus: true,
           currentExpireAt: true,
           totalRentHour: true,
-          skins: true,
+          skinList: true,
           priceTier: true,
           thumbnail: true,
           otherImages: true,
@@ -454,7 +454,7 @@ export class AccountService {
               priceList: true
             }
           },
-          skins: true,
+          skinList: true,
           thumbnail: true,
           otherImages: true
         }
@@ -537,7 +537,7 @@ export class AccountService {
       return await prisma.account.create({
         data: {
           ...scalars,
-          skins: skinConnect,
+          skinList: skinConnect,
           thumbnail: { connect: { id: thumbnail } },
           availabilityStatus: scalars.availabilityStatus as Status,
           otherImages: { connect: otherImages?.map((id) => ({ id })) },
@@ -655,7 +655,7 @@ export class AccountService {
       }
 
       if (skinList !== undefined) {
-        updateData.skins = {
+        updateData.skinList = {
           set: skinList.map((id) => ({ id }))
         };
       }
@@ -785,7 +785,7 @@ export class AccountService {
   async addSkinsToAccount(
     accountId: number,
     skinIds: number[]
-  ): Promise<Account & { skins: Skin[] }> {
+  ): Promise<Account & { skinList: Skin[] }> {
     try {
       if (!Array.isArray(skinIds) || skinIds.length === 0) {
         throw new BadRequestError(
@@ -800,11 +800,11 @@ export class AccountService {
       const updated = await prisma.account.update({
         where: { id: accountId },
         data: {
-          skins: {
+          skinList: {
             connect: skinIds.map((id) => ({ id }))
           }
         },
-        include: { skins: true }
+        include: { skinList: true }
       });
 
       return updated;
@@ -826,7 +826,7 @@ export class AccountService {
   async removeSkinsFromAccount(
     accountId: number,
     skinIds: number[]
-  ): Promise<Account & { skins: Skin[] }> {
+  ): Promise<Account & { skinList: Skin[] }> {
     try {
       if (!Array.isArray(skinIds) || skinIds.length === 0) {
         throw new BadRequestError(
@@ -839,11 +839,11 @@ export class AccountService {
       const updated = await prisma.account.update({
         where: { id: accountId },
         data: {
-          skins: {
+          skinList: {
             disconnect: skinIds.map((id) => ({ id }))
           }
         },
-        include: { skins: true }
+        include: { skinList: true }
       });
 
       return updated;
