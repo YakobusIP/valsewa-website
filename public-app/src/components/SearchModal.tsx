@@ -15,7 +15,7 @@ import { Slider } from "./ui/slider";
 
 type SearchModalProps = React.ComponentProps<"div"> & {
   onClose?: () => void;
-  onSelectAccount?: (acc: AccountEntity) => void;
+  onSelectAccount?: (id: string) => void;
 };
 
 type TierTab = "all" | "low" | "normal";
@@ -25,6 +25,11 @@ const PRICE_MIN = 0;
 const PRICE_MAX = 1_000_000;
 
 const RANKS = [
+  {
+    id: "Unrated",
+    name: "UNRATED",
+    image: "/rank/unranked.webp"
+  },
   {
     id: "Iron",
     name: "IRON",
@@ -72,8 +77,8 @@ const RANKS = [
   }
 ];
 
-const SKIN_COUNTS = ["0-5", "6-10", "11-15", "16-20", "20+"] as const;
-const TIER_CODES = ["c", "B", "A", "S", "SSS"] as const;
+const SKIN_COUNTS = ["0-5", "6-10", "11-15", "16-20"] as const;
+const TIER_CODES = ["c", "B", "V", "S", "SSS", "SSS⁺", "C - LR TIER", "B - LR TIER", "V - LR TIER", "S - LR TIER", "SSS - LR TIER", "SSS⁺ - LR TIER"] as const;
 const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max)
 
 function Section({
@@ -88,7 +93,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl bg-black overflow-hidden">
+    <div className="rounded-xl bg-black overflow-y-auto">
       <button
         type="button"
         onClick={onToggle}
@@ -180,14 +185,14 @@ export function SearchModal({ className, onSelectAccount, ...props }: SearchModa
   const requestParams = useMemo(() => {
     const lowTierOnly =
       tierTab === "all" ? undefined : tierTab === "low" ? true : false;
-
       
     return {
       page,
       limit,
       q: debouncedQ?.trim() || undefined,
       low_tier_only: lowTierOnly,
-      tiers: selectedTiers.length ? selectedTiers.map((t) => t.toUpperCase()) : undefined, // if BE expects uppercase
+      tiers: selectedTiers.length ? selectedTiers.map((t) => t.toUpperCase().trim().replace(/\s*-\s*/g, "-").replace(/\s+/g, "")
+    ) : undefined,
       skin_counts: selectedSkins.length ? selectedSkins : undefined,
       ranks: selectedRanks.length ? selectedRanks : undefined,
       min_price: priceRange[0],
@@ -225,7 +230,7 @@ export function SearchModal({ className, onSelectAccount, ...props }: SearchModa
   return (
     <div
       className={cn(
-        "w-full h-full overflow-hidden bg-black",
+        "w-full h-full bg-black overflow-hidden",
         className
       )}
       {...props}
@@ -250,7 +255,7 @@ export function SearchModal({ className, onSelectAccount, ...props }: SearchModa
 
         {/* MAIN */}
         <div className="flex-1 min-h-0 overflow-hidden">
-          <div className="mx-auto max-w-6xl h-full grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 px-4 md:px-8 py-4">
+          <div className="mx-auto max-w-6xl h-full grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 px-4 md:px-4 py-4">
             {/* LEFT FILTERS */}
             <aside className="h-full min-h-0 overflow-y-auto overscroll-contain pr-1 space-y-3">
               <div className="text-sm text-neutral-300 font-medium">Filters</div>
@@ -331,18 +336,18 @@ export function SearchModal({ className, onSelectAccount, ...props }: SearchModa
               <Section title="Ranks" open={openRanks} onToggle={() => setOpenRanks((v) => !v)}>
                 <div className="space-y-2">
                   {RANKS.map((r) => {
-                    const checked = selectedRanks.includes(r.name);
+                    const checked = selectedRanks.includes(r.id);
 
                     return (
                       <CheckboxRow 
                       key={r.id}
                       checked={checked}
-                      onCheckedChange={() => toggle(selectedRanks, r.name, setSelectedRanks)}
+                      onCheckedChange={() => toggle(selectedRanks, r.id, setSelectedRanks)}
                       >
                         <div className="relative w-6 h-6 shrink-0">
-                          <Image src={r.image} alt={r.name} fill className="object-contain" />
+                          <Image src={r.image} alt={r.id} fill className="object-contain" />
                         </div>
-                        <span className="text-sm text-neutral-100 truncate">{r.name}</span>
+                        <span className="text-sm text-neutral-100 truncate">{r.id}</span>
                       </CheckboxRow>
                     );
                   })}
@@ -389,7 +394,7 @@ export function SearchModal({ className, onSelectAccount, ...props }: SearchModa
             </aside>
 
             {/* RIGHT RESULTS */}
-            <section className="h-full flex-1 min-h-0 overflow-hidden flex flex-col rounded-2xl bg-neutral-950/40">
+            <section className="h-full flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col rounded-2xl bg-neutral-950/40">
               {/* Tabs + count */}
               <div className="p-3 md:p-4 border-b border-neutral-800">
                 <div className="grid grid-cols-3 gap-2 w-full">
@@ -449,10 +454,12 @@ export function SearchModal({ className, onSelectAccount, ...props }: SearchModa
                     return (
                       <button
                         key={acc.id}
-                        onClick={() => onSelectAccount?.(acc)}
+                        onClick={() => {
+                          onSelectAccount?.(acc.id.toString())
+                        }}
                         className="w-full text-left rounded-xl bg-neutral-900/40 hover:bg-red-600 transition px-4 py-3"
                       >
-                        {/* One row: left info, thumbnail far right */}
+                        
                         <div className="flex items-center justify-between gap-3">
                           {/* LEFT (new snippet style) */}
                           <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
@@ -494,7 +501,7 @@ export function SearchModal({ className, onSelectAccount, ...props }: SearchModa
                           </div>
                               
                           {/* RIGHT thumbnail (unchanged positioning, far right) */}
-                          <div className="relative w-14 h-14 rounded-lg overflow-hidden border border-neutral-800 bg-neutral-950 shrink-0">
+                          <div className="relative w-14 h-14 rounded-lg border border-neutral-800 bg-neutral-950 shrink-0">
                             {acc.thumbnail.imageUrl ? (
                               <Image
                                 src={acc.thumbnail.imageUrl}

@@ -8,14 +8,23 @@ import Image from "next/image";
 import Link from "next/link";
 
 import LoginPage from "./LoginPage";
+import SearchPage from "./SearchPage";
 
 const NavbarHomeMobile = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [activeBrand, setActiveBrand] = useState<
+    "valsewa" | "valjubel" | "valjoki"
+  >("valsewa");
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
   };
-  const { isAuthenticated } = useAuth();
+
+  const handleSearchClick = () => {
+    setIsSearchOpen(true); 
+  };
+  const { isAuthenticated, username } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -36,7 +45,7 @@ const NavbarHomeMobile = () => {
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-3 sm:px-6 lg:px-12">
         {/* LEFT */}
         <div className="flex items-center flex-1">
-          <Link href="#">
+          <button onClick={handleSearchClick}>
             <div className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/10 transition">
               <Image
                 src="/header/Frame.svg"
@@ -45,7 +54,7 @@ const NavbarHomeMobile = () => {
                 height={18}
               />
             </div>
-          </Link>
+          </button>
         </div>
 
         {/* CENTER */}
@@ -108,6 +117,11 @@ const NavbarHomeMobile = () => {
         {isComponentOpen && (
           <LoginPage onClose={() => setIsComponentOpen(false)} />
         )}
+
+        {isSearchOpen && (
+          <SearchPage onClose={() => setIsSearchOpen(false)}/>
+        )}
+        
       </div>
     </div>
   );
