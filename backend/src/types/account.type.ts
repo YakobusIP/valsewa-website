@@ -25,7 +25,7 @@ type AccountEntityRequest = {
 };
 
 type AccountWithSkins = Prisma.AccountGetPayload<{
-  include: { skinList: true };
+  include: { skins: true };
 }>;
 
 type PublicAccount = Prisma.AccountGetPayload<{
@@ -37,7 +37,7 @@ type PublicAccount = Prisma.AccountGetPayload<{
     availabilityStatus: true;
     currentExpireAt: true;
     totalRentHour: true;
-    skinList: true;
+    skins: true;
     priceTier: true;
     thumbnail: true;
     otherImages: true;
