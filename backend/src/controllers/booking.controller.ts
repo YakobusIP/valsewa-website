@@ -209,6 +209,28 @@ export class BookingController {
     }
   };
 
+  overrideBooking = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { bookingId, accountId } = req.body;
+
+      if (!bookingId || !accountId) {
+        throw new BadRequestError("Missing required fields.");
+      }
+      const result = await this.bookingService.overrideBooking({
+        bookingId,
+        accountId
+      });
+
+      return res.status(201).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   cancelBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { bookingId } = req.body;

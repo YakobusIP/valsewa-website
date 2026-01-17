@@ -8,6 +8,7 @@ import {
   PriceList,
   Prisma,
   Provider,
+  Status,
   Type,
   Voucher
 } from "@prisma/client";
@@ -25,6 +26,7 @@ import {
   CallbackNotificationRequest,
   CreateBookingRequest,
   CreateManualBookingRequest,
+  OverrideBookingRequest,
   PayBookingRequest,
   PaymentMethodRequest,
   PaymentResponse,
@@ -484,6 +486,39 @@ export class BookingService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  overrideBooking = async (data: OverrideBookingRequest): Promise<BookingResponse> => {
+    try {
+      const { bookingId, accountId } = data;
+
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId, status: BookingStatus.RESERVED }
+      });
+      if (!booking) throw new NotFoundError("Booking not found");
+
+      const account = await prisma.account.findUnique({
+        where: {
+          id: accountId,
+          availabilityStatus: { not: Status.NOT_AVAILABLE }
+        }
+      });
+      if (!account)
+        throw new NotFoundError("Account not found or not available!");
+
+      const updatedBooking = await prisma.booking.update({
+        where: { id: booking.id },
+        data: {
+          accountId,
+          version: { increment: 1 }
+        }
+      });
+
+      return this.mapBookingDataToBookingResponse(updatedBooking);
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  }
 
   payBooking = async (data: PayBookingRequest): Promise<PaymentResponse> => {
     try {
