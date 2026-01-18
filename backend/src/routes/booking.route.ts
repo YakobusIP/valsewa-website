@@ -2,6 +2,7 @@ import { Router } from "express";
 import { BookingService } from "../services/booking.service";
 import { BookingController } from "../controllers/booking.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { customerMiddleware } from "../middleware/customer.middleware";
 import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 import { FaspayClient } from "../faspay/faspay.client";
 
@@ -41,7 +42,7 @@ class BookingRouter {
     );
     this.router.get(
       "/:id",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.getBookingById
     );
     this.router.get(
@@ -56,7 +57,7 @@ class BookingRouter {
     );
     this.router.get(
       "/payments/:id",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.getPaymentById
     );
     this.router.get(
@@ -66,19 +67,19 @@ class BookingRouter {
     );
     this.router.post(
       "/book",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.createBooking
     );
-    this.router.post("/pay", authMiddleware, this.bookingController.payBooking);
+    this.router.post("/pay", customerMiddleware, this.bookingController.payBooking);
     this.router.post("/override", authMiddleware, this.bookingController.overrideBooking);
     this.router.post(
       "/cancel",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.cancelBooking
     );
     this.router.post(
       "/verify-payment",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.verifyPayment
     );
     this.router.post(
