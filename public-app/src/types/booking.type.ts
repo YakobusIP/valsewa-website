@@ -55,6 +55,7 @@ export type BookingEntity = {
   voucherMaxDiscount: number | null;
   mainValue: number;
   othersValue: number | null;
+  adminFee: number | null;
   discount: number | null;
   totalValue: number;
   active: boolean | null;

@@ -209,11 +209,7 @@ export class BookingController {
     }
   };
 
-  overrideBooking = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  overrideBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { bookingId, accountId } = req.body;
 

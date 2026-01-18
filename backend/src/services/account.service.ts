@@ -1,4 +1,11 @@
-import { Account, AccountResetLog, BookingStatus, Prisma, Skin, Status } from "@prisma/client";
+import {
+  Account,
+  AccountResetLog,
+  BookingStatus,
+  Prisma,
+  Skin,
+  Status
+} from "@prisma/client";
 import { addHours, subDays } from "date-fns";
 import Fuse, { IFuseOptions } from "fuse.js";
 import {
@@ -510,12 +517,12 @@ export class AccountService {
         },
         distinct: ["accountId"],
         select: { accountId: true }
-      })
+      });
 
       const availableAccounts = await prisma.account.findMany({
         where: {
           availabilityStatus: { not: Status.NOT_AVAILABLE },
-          id: { notIn: unavailableAccounts.map(v => v.accountId) }
+          id: { notIn: unavailableAccounts.map((v) => v.accountId) }
         }
       });
 
@@ -523,7 +530,7 @@ export class AccountService {
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
-  }
+  };
 
   createAccount = async (data: AccountEntityRequest) => {
     try {

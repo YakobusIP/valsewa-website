@@ -1,3 +1,4 @@
+import { PAYMENT_METHOD_REQUEST } from "@/types/booking.type";
 import { TYPE } from "@/types/voucher.type";
 
 import { type ClassValue, clsx } from "clsx";
@@ -57,4 +58,21 @@ export function calculateVoucherDiscount(
   }
 
   return Math.min(discount, mainValue);
+}
+
+export function calculateAdminFee(
+  totalValue: number,
+  paymentMethod: PAYMENT_METHOD_REQUEST | null,
+): number {
+  if (!totalValue || !paymentMethod) return 0;
+
+  if (paymentMethod === PAYMENT_METHOD_REQUEST.QRIS) {
+    return totalValue * 0.007;
+  }
+  
+  if ([PAYMENT_METHOD_REQUEST.VA_BNI, PAYMENT_METHOD_REQUEST.VA_PERMATA, PAYMENT_METHOD_REQUEST.VA_BRI].includes(paymentMethod)) {
+    return 4000;
+  }
+
+  return 0;
 }

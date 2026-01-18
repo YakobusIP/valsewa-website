@@ -296,6 +296,7 @@ export class BookingService {
     isLowRank: boolean,
     duration: string,
     voucher: VoucherResponse | null,
+    paymentMethod: PaymentMethodType | null,
     quantity: number
   ) => {
     const mainValue = normalPrice * quantity;
@@ -323,7 +324,22 @@ export class BookingService {
       discount = Math.min(discount, mainValue);
     }
 
-    const totalValue = mainValue + othersValue - discount;
+    const subtotalValue = mainValue + othersValue - discount;
+    let adminFee = 0;
+    switch (paymentMethod) {
+      case PaymentMethodType.QRIS:
+        adminFee = 0.007 * subtotalValue;
+        break;
+
+      case PaymentMethodType.VIRTUAL_ACCOUNT:
+        adminFee = 4000;
+        break;
+
+      default:
+        adminFee = 0;
+    }
+
+    const totalValue = subtotalValue + adminFee;
 
     const durationInHours = this.parseDurationToHours(duration);
 
@@ -336,6 +352,7 @@ export class BookingService {
       duration,
       durationInHours,
       discount,
+      adminFee,
       totalValue
     };
   };
@@ -387,12 +404,23 @@ export class BookingService {
         ? await this.getValidVoucherById(voucherId)
         : null;
 
-      const bookingPriceValues = this.calculateValues(
+      const {
+        voucherType,
+        voucherAmount,
+        voucherMaxDiscount,
+        mainValue,
+        othersValue,
+        duration,
+        durationInHours,
+        discount,
+        totalValue
+      } = this.calculateValues(
         priceList.normalPrice,
         priceList.lowPrice,
         account.isLowRank,
         priceList.duration,
         voucher,
+        null,
         quantity
       );
 
@@ -401,10 +429,7 @@ export class BookingService {
       const now = new Date();
       const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
       const bookingStartAt = immediate ? bookingExpiredAt : startAt;
-      const bookingEndAt = addHours(
-        bookingStartAt,
-        bookingPriceValues.durationInHours * quantity
-      );
+      const bookingEndAt = addHours(bookingStartAt, durationInHours * quantity);
 
       const booking = await prisma.$transaction(async (tx) => {
         // Prevent race condition
@@ -432,7 +457,7 @@ export class BookingService {
             customerId,
             accountId,
             status: BookingStatus.HOLD,
-            duration: bookingPriceValues.duration,
+            duration,
             quantity,
             immediate,
             startAt: bookingStartAt,
@@ -441,13 +466,13 @@ export class BookingService {
             mainValuePerUnit: priceList.normalPrice,
             othersValuePerUnit: account.isLowRank ? priceList.lowPrice : 0,
             voucherName: voucher?.voucherName,
-            voucherType: bookingPriceValues.voucherType,
-            voucherAmount: bookingPriceValues.voucherAmount,
-            voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
-            mainValue: bookingPriceValues.mainValue,
-            othersValue: bookingPriceValues.othersValue,
-            discount: bookingPriceValues.discount,
-            totalValue: bookingPriceValues.totalValue,
+            voucherType,
+            voucherAmount,
+            voucherMaxDiscount,
+            mainValue,
+            othersValue,
+            discount,
+            totalValue,
             version: 1
           }
         });
@@ -505,7 +530,9 @@ export class BookingService {
     }
   };
 
-  overrideBooking = async (data: OverrideBookingRequest): Promise<BookingResponse> => {
+  overrideBooking = async (
+    data: OverrideBookingRequest
+  ): Promise<BookingResponse> => {
     try {
       const { bookingId, accountId } = data;
 
@@ -536,7 +563,7 @@ export class BookingService {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
-  }
+  };
 
   payBooking = async (data: PayBookingRequest): Promise<PaymentResponse> => {
     try {
@@ -579,17 +606,27 @@ export class BookingService {
         ? await this.getValidVoucherById(voucherId)
         : null;
 
-      const bookingPriceValues = this.calculateValues(
+      const { paymentMethodType, bankCode } =
+        PAYMENT_METHODS_MAP[paymentMethod];
+
+      const {
+        voucherType,
+        voucherAmount,
+        voucherMaxDiscount,
+        mainValue,
+        othersValue,
+        discount,
+        adminFee,
+        totalValue
+      } = this.calculateValues(
         booking.mainValuePerUnit,
         booking.othersValuePerUnit ?? 0,
         account.isLowRank,
         booking.duration,
         voucher,
+        paymentMethodType,
         booking.quantity
       );
-
-      const { paymentMethodType, bankCode } =
-        PAYMENT_METHODS_MAP[paymentMethod];
 
       const { payment, isPaymentNew } = await prisma.$transaction(
         async (tx) => {
@@ -601,13 +638,14 @@ export class BookingService {
             where: { id: booking.id },
             data: {
               voucherName: voucher?.voucherName,
-              voucherType: bookingPriceValues.voucherType,
-              voucherAmount: bookingPriceValues.voucherAmount,
-              voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
-              mainValue: bookingPriceValues.mainValue,
-              othersValue: bookingPriceValues.othersValue,
-              discount: bookingPriceValues.discount,
-              totalValue: bookingPriceValues.totalValue,
+              voucherType,
+              voucherAmount,
+              voucherMaxDiscount,
+              mainValue,
+              othersValue,
+              discount,
+              adminFee,
+              totalValue,
               version: { increment: 1 }
             }
           });
@@ -1030,7 +1068,7 @@ export class BookingService {
         data: {
           status: PaymentStatus.FAILED
         }
-      })
+      });
       return await prisma.payment.update({
         where: { id: payment.id },
         data: {
