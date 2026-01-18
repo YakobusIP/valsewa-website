@@ -52,8 +52,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         title: "All set!",
         description: "Login successful"
       });
-
-      router.push("/");
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Login failed";
@@ -72,7 +70,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       await authService.logout();
-    } catch {}
+    } catch { }
 
     localStorage.removeItem("refreshToken");
     setAccessToken(null);
