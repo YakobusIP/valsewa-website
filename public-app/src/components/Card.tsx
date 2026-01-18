@@ -32,9 +32,14 @@ const Card: React.FC<CardProps> = ({ data }) => {
 
   function getRankImage(rank: string): string {
     if (!rank) return "/rank/default.svg";
-    const baseRank = rank.trim().split(" ")[0].toLowerCase();
+
+    const baseRankRaw = rank.trim().split(" ")[0].toLowerCase();
+    const baseRank =
+      baseRankRaw.charAt(0).toUpperCase() + baseRankRaw.slice(1);
+
     return `/rank/${baseRank} 3.svg`;
   }
+
 
   return (
     <section className="w-full flex justify-center">
