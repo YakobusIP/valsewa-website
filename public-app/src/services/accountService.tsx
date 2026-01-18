@@ -41,7 +41,7 @@ export async function fetchAccountById(
     const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/${id}`;
     const response = await axios.get(url);
     return response.data;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

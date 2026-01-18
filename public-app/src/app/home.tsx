@@ -4,7 +4,6 @@ import Card from "@/components/Card";
 import DiscoverSection from "@/components/DiscoverSection";
 import Hero from "@/components/Hero";
 import HowToOrder from "@/components/HowToOrder";
-import Navbar1 from "@/components/Navbar1";
 import NavbarHome from "@/components/NavbarHome";
 import NavbarHomeMobile from "@/components/NavbarHomeMobile";
 import RecommendedSection from "@/components/RecommendedSection";
@@ -12,8 +11,6 @@ import RecommendedSection from "@/components/RecommendedSection";
 import { AccountEntity, CarouselSlide } from "@/types/account.type";
 
 import { useAccountController } from "@/controllers/useAccountController";
-import Image from "next/image";
-import { FaArrowUp } from "react-icons/fa";
 
 interface Props {
   initialAccount: AccountEntity[];
@@ -21,10 +18,6 @@ interface Props {
 }
 export default function Home({ initialAccount, initialCarousel }: Props) {
   const { accountList } = useAccountController(initialAccount);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 300, behavior: "smooth" });
-  };
   return (
     <section className="bg-[#0F0F0F] md:pb-64 pb-32 relative ">
       {/* Hero wrapper - overflow-visible to allow notch to show, pt for navbar space */}
