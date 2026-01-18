@@ -75,7 +75,9 @@ const swaggerDefinition: OAS3Definition = {
       description:
         env.NODE_ENV === "development"
           ? "Development server"
-          : "Production server"
+          : env.NODE_ENV === "staging"
+            ? "Staging server"
+            : "Production server"
     }
   ]
 };
@@ -87,7 +89,9 @@ const options: Options = {
 
 const swaggerSpec = swaggerJSDoc(options);
 
-app.use("/docs", serve, setup(swaggerSpec));
+if (env.NODE_ENV !== 'production') {
+  app.use("/docs", serve, setup(swaggerSpec));
+}
 
 app.use(errorMiddleware);
 

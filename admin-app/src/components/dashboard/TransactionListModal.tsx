@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import { accountService } from "@/services/account.service";
 import { bookingService } from "@/services/transaction.service";
 
 import { Button } from "@/components/ui/button";
@@ -11,23 +12,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
+import { AccountEntity } from "@/types/account.type";
 import {
   BOOKING_STATUS,
   BookingEntity,
   CreateBookingRequest,
-  PAYMENT_STATUS,
   PaymentEntity,
   UpdateBookingRequest
 } from "@/types/booking.type";
 
+import { SelectTrigger } from "@radix-ui/react-select";
 import { format } from "date-fns";
 
-import TransactionStatisticsGrid from "./TransactionStatisticGrid";
-import { accountService } from "@/services/account.service";
-import { AccountEntity } from "@/types/account.type";
-import { Select, SelectContent, SelectItem, SelectValue } from "../ui/select";
-import { SelectTrigger } from "@radix-ui/react-select";
 import { Label } from "../ui/label";
+import { Select, SelectContent, SelectItem, SelectValue } from "../ui/select";
+import TransactionStatisticsGrid from "./TransactionStatisticGrid";
 
 type Props = {
   open: boolean;
@@ -39,7 +38,6 @@ type DatePreset = "1D" | "7D" | "30D" | null;
 export default function TransactionListModal({ open, onOpenChange }: Props) {
   const [bookings, setBookings] = useState<BookingEntity[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [datePreset, setDatePreset] = useState<DatePreset>(null);
@@ -56,7 +54,9 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
 
   const [editTotalValue, setEditTotalValue] = useState<number>(0);
   const [accountOverrideValue, setAccountOverrideValue] = useState<number>(0);
-  const [availableAccounts, setAvailableAccounts] = useState<AccountEntity[]>([]);
+  const [availableAccounts, setAvailableAccounts] = useState<AccountEntity[]>(
+    []
+  );
 
   const [createForm, setCreateForm] = useState<CreateBookingRequest>({
     accountCode: "",
@@ -72,12 +72,10 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      setError(null);
       const res = await bookingService.fetchAll();
       setBookings(res.data);
     } catch (err) {
       console.error(err);
-      setError("Failed to load transactions");
     } finally {
       setLoading(false);
     }
@@ -86,7 +84,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const fetchAccountRented = async () => {
     try {
       setLoading(true);
-      setError(null);
 
       if (datePreset) {
         const now = new Date();
@@ -118,7 +115,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       return;
     } catch (err) {
       console.error(err);
-      setError("Failed to load transactions");
     } finally {
       setLoading(false);
     }
@@ -198,20 +194,26 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       setSelectedBooking(booking);
       setAccountOverrideValue(0);
 
-      const accounts = await accountService.fetchAvailableAccounts(booking.startAt!, booking.endAt!);
+      const accounts = await accountService.fetchAvailableAccounts(
+        booking.startAt!,
+        booking.endAt!
+      );
       setAvailableAccounts(accounts);
       setIsOverrideBookingOpen(true);
     } catch (err) {
       console.error(err);
       alert("Failed to open override booking");
     }
-  }
+  };
 
   const handleOverrideBooking = async () => {
     if (!selectedBooking || !accountOverrideValue) return;
 
     try {
-      await bookingService.overrideBooking(selectedBooking.id, accountOverrideValue);
+      await bookingService.overrideBooking(
+        selectedBooking.id,
+        accountOverrideValue
+      );
 
       setIsOverrideBookingOpen(false);
       setSelectedBooking(null);
@@ -220,7 +222,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       console.error(err);
       alert("Failed to override booking");
     }
-  }
+  };
 
   const handleCreateBooking = async () => {
     try {
@@ -469,7 +471,10 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
       </Dialog>
 
       {/* OVERRIDE BOOKING MODAL */}
-      <Dialog open={isOverrideBookingOpen} onOpenChange={setIsOverrideBookingOpen}>
+      <Dialog
+        open={isOverrideBookingOpen}
+        onOpenChange={setIsOverrideBookingOpen}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Override booking</DialogTitle>
@@ -480,7 +485,9 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
               <Label>Override booking to account</Label>
               <Select
                 value={accountOverrideValue ? String(accountOverrideValue) : ""}
-                onValueChange={(value) => setAccountOverrideValue(Number(value))}
+                onValueChange={(value) =>
+                  setAccountOverrideValue(Number(value))
+                }
               >
                 <SelectTrigger className="text-left border border-gray-300 px-2 py-1">
                   <SelectValue placeholder="Select account" />

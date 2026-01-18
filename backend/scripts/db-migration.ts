@@ -278,8 +278,13 @@ async function migratePriceTiers(): Promise<void> {
         continue;
       }
 
-      // Create PriceList entries for each duration
-      const durations = ["1d", "3d", "7d", "30d"];
+      // Create PriceList entries for each duration found in the parsed prices
+      // Get all unique durations from both normal and low prices
+      const durations = new Set([
+        ...normalPrices.keys(),
+        ...lowPrices.keys()
+      ]);
+      
       const priceListEntries: Array<{
         duration: string;
         normalPrice: number;
@@ -299,19 +304,14 @@ async function migratePriceTiers(): Promise<void> {
         });
       }
 
-      // Create PriceList entries in database using transaction
+      // Create PriceList entries in parallel (no transaction needed for inserts)
       try {
-        await prisma.$transaction(
-          async (tx) => {
-            for (const entry of priceListEntries) {
-              await tx.priceList.create({
-                data: entry
-              });
-            }
-          },
-          {
-            timeout: 10_000 // 10 second timeout
-          }
+        await Promise.all(
+          priceListEntries.map((entry) =>
+            prisma.priceList.create({
+              data: entry
+            })
+          )
         );
       } catch (error) {
         console.error(
@@ -399,29 +399,27 @@ async function migratePriceTiers(): Promise<void> {
       }
     }
 
-    // Update accounts in batches
+    // Update accounts in batches (no transaction needed - updates are independent)
     const batchSize = 100;
     let updatedCount = 0;
     for (let i = 0; i < accountsToUpdate.length; i += batchSize) {
       const batch = accountsToUpdate.slice(i, i + batchSize);
+      console.log(`Updating batch ${i}-${i + batch.length}...`);
+      
+      // Use Promise.all for parallel updates within each batch
       try {
-        await prisma.$transaction(
-          async (tx) => {
-            for (const acc of batch) {
-              await tx.account.update({
-                where: { id: acc.id },
-                data: {
-                  ...(acc.priceTierId !== undefined && {
-                    priceTierId: acc.priceTierId
-                  }),
-                  isLowRank: acc.isLowRank
-                }
-              });
-            }
-          },
-          {
-            timeout: 10_000 // 10 second timeout
-          }
+        await Promise.all(
+          batch.map((acc) =>
+            prisma.account.update({
+              where: { id: acc.id },
+              data: {
+                ...(acc.priceTierId !== undefined && {
+                  priceTierId: acc.priceTierId
+                }),
+                isLowRank: acc.isLowRank
+              }
+            })
+          )
         );
         updatedCount += batch.length;
       } catch (error) {
@@ -482,63 +480,76 @@ async function migrateSkins(): Promise<void> {
     // Fetch all skins from Valorant API once
     const apiSkins = await fetchValorantSkins();
 
-    // Create Skin records
+    // Create Skin records using batch insert (assumes table is empty)
     console.log("Creating Skin records...");
-    const skinMap = new Map<string, { id: number; name: string }>(); // Maps normalized name to Skin record
-
-    // Process each unique skin name
+    
+    // Build skin data for batch insert, deduplicating by canonical name
+    const skinDataMap = new Map<string, { name: string; imageUrl: string }>();
+    const originalToCanonical = new Map<string, string>(); // Maps normalized original name to canonical name
+    
     for (const skinName of uniqueSkinNames) {
       const normalizedOriginal = normalize(skinName);
       const skinData = findSkinImageUrl(skinName, apiSkins);
 
       if (skinData) {
-        // Create or find existing skin by name (use API name as canonical)
-        const skin = await prisma.skin.upsert({
-          where: { name: skinData.name },
-          update: {
-            imageUrl: skinData.imageUrl
-          },
-          create: {
-            name: skinData.name,
-            imageUrl: skinData.imageUrl
-          }
+        // Use API name as canonical
+        skinDataMap.set(skinData.name, {
+          name: skinData.name,
+          imageUrl: skinData.imageUrl
         });
-
-        // Store mapping from normalized original name to skin record
-        skinMap.set(normalizedOriginal, { id: skin.id, name: skin.name });
-        // Also store mapping from normalized API name for potential future lookups
-        const normalizedApi = normalize(skinData.name);
-        if (normalizedApi !== normalizedOriginal) {
-          skinMap.set(normalizedApi, { id: skin.id, name: skin.name });
-        }
-        console.log(
-          `  Created/found skin: "${skin.name}" (from "${skinName}")`
-        );
+        originalToCanonical.set(normalizedOriginal, skinData.name);
       } else {
-        // Create skin with empty imageUrl if not found in API
-        const skin = await prisma.skin.upsert({
-          where: { name: skinName },
-          update: {},
-          create: {
-            name: skinName,
-            imageUrl: ""
-          }
+        // Use original name if not found in API
+        skinDataMap.set(skinName, {
+          name: skinName,
+          imageUrl: ""
         });
-
-        // Store mapping from normalized name to skin record
-        skinMap.set(normalizedOriginal, { id: skin.id, name: skin.name });
-        console.log(`  Created skin with empty image: "${skinName}"`);
+        originalToCanonical.set(normalizedOriginal, skinName);
       }
     }
 
-    console.log(`Created/found ${skinMap.size} Skin records`);
+    // Batch insert all skins at once
+    const skinsToCreate = Array.from(skinDataMap.values());
+    console.log(`Batch inserting ${skinsToCreate.length} skins...`);
+    
+    await prisma.skin.createMany({
+      data: skinsToCreate,
+      skipDuplicates: true
+    });
+
+    // Fetch all created skins to build the skinMap with IDs
+    const createdSkins = await prisma.skin.findMany({
+      where: {
+        name: { in: skinsToCreate.map(s => s.name) }
+      },
+      select: { id: true, name: true }
+    });
+
+    // Build skinMap: normalized original name -> { id, name }
+    const skinMap = new Map<string, { id: number; name: string }>();
+    const nameToSkin = new Map(createdSkins.map(s => [s.name, s]));
+    
+    for (const [normalizedOriginal, canonicalName] of originalToCanonical) {
+      const skin = nameToSkin.get(canonicalName);
+      if (skin) {
+        skinMap.set(normalizedOriginal, { id: skin.id, name: skin.name });
+        // Also map normalized canonical name
+        const normalizedCanonical = normalize(canonicalName);
+        if (normalizedCanonical !== normalizedOriginal) {
+          skinMap.set(normalizedCanonical, { id: skin.id, name: skin.name });
+        }
+      }
+    }
+
+    console.log(`Created ${createdSkins.length} Skin records, mapped ${skinMap.size} names`);
 
     // Link skins to accounts
     console.log("Linking skins to accounts...");
-    let linkedCount = 0;
-
+    
+    // Build account-to-skinIds mapping
+    const accountSkinLinks: Array<{ accountId: number; skinIds: number[] }> = [];
+    
     for (const account of accounts) {
-      // account.skinList is String[] in expanded schema
       if (!Array.isArray(account.skinList) || account.skinList.length === 0) {
         continue;
       }
@@ -559,25 +570,39 @@ async function migrateSkins(): Promise<void> {
       }
 
       if (skinIds.length > 0) {
-        try {
-          // Connect skins to account using many-to-many relation (skins is the renamed relation)
-          // Note: After running `npx prisma generate`, skins relation will be available
-          // Use set to replace existing connections
-          await (prisma.account.update as any)({
-            where: { id: account.id },
+        accountSkinLinks.push({ accountId: account.id, skinIds });
+      }
+    }
+
+    // Process in parallel batches
+    const batchSize = 50;
+    let linkedCount = 0;
+    
+    for (let i = 0; i < accountSkinLinks.length; i += batchSize) {
+      const batch = accountSkinLinks.slice(i, i + batchSize);
+      console.log(`Linking batch ${i}-${i + batch.length} of ${accountSkinLinks.length}...`);
+      
+      const results = await Promise.allSettled(
+        batch.map(({ accountId, skinIds }) =>
+          prisma.account.update({
+            where: { id: accountId },
             data: {
               skins: {
                 set: skinIds.map((id) => ({ id }))
               }
             }
-          });
+          })
+        )
+      );
+      
+      for (let j = 0; j < results.length; j++) {
+        if (results[j].status === "fulfilled") {
           linkedCount++;
-        } catch (error) {
+        } else {
           console.error(
-            `Error linking skins to account ${account.id}:`,
-            (error as Error).message
+            `Error linking skins to account ${batch[j].accountId}:`,
+            (results[j] as PromiseRejectedResult).reason?.message
           );
-          // Continue with other accounts instead of failing completely
         }
       }
     }

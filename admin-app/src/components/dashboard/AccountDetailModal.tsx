@@ -57,14 +57,8 @@ import { ranks } from "@/lib/constants";
 import { cn, convertHoursToDays, generatePassword } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  CirclePlusIcon,
-  CopyIcon,
-  Loader2Icon,
-  LockIcon,
-  Trash2Icon
-} from "lucide-react";
-import { FieldErrors, useFieldArray, useForm, useWatch } from "react-hook-form";
+import { CopyIcon, Loader2Icon, LockIcon, Trash2Icon } from "lucide-react";
+import { FieldErrors, useForm, useWatch } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
 
@@ -411,7 +405,6 @@ export default function AccountDetailModal({
   };
 
   const hasPasswordError = !!form.formState.errors.password;
-  const hasSkinsError = !!form.formState.errors.skinList;
   const hasThumbnail = !!form.getValues("thumbnail");
   const isPasswordUpdated = form.watch("passwordResetRequired");
 

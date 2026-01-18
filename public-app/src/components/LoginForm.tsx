@@ -24,7 +24,7 @@ type LoginFormProps = React.ComponentProps<"div"> & {
 
 export function LoginForm({ className, onClose, ...props }: LoginFormProps) {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const { isLoadingLogin, login } = useAuth();
+  const { isLoadingLogin, login, isAuthenticated } = useAuth();
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
@@ -41,6 +41,12 @@ export function LoginForm({ className, onClose, ...props }: LoginFormProps) {
   useEffect(() => {
     document.title = "Login | Valsewa";
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && onClose) {
+      onClose()
+    }
+  }, [isAuthenticated, onClose])
 
   return (
     <div

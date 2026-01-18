@@ -31,8 +31,8 @@ RUN npx prisma generate
 # Expose port
 EXPOSE 5000
 
-# Set the environment to production
-ENV NODE_ENV=production
+# Set the environment to staging
+ENV NODE_ENV=staging
 
 # Run the web service on container startup.
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]

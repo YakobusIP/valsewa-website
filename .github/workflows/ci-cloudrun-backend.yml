@@ -1,69 +1,86 @@
-# name: Deploy to Google Cloud Run
+name: Deploy to Google Cloud Run for Staging
 
-# on:
-#     pull_request:
-#         branches: ['production']
-#         paths: 
-#           - '.github/workflows/ci-cloudrun-backend.yml'
-#           - 'backend/**'
+on:
+    pull_request:
+        branches: ['staging']
+        paths: 
+          - '.github/workflows/ci-cloudrun-backend.yml'
+          - 'backend/**'
+    push:
+        branches: ['staging']
+        paths: 
+          - '.github/workflows/ci-cloudrun-backend.yml'
+          - 'backend/**'
 
-# jobs:
-#     setup-build-publish-deploy:
-#         name: Setup, Build, Publish, Deploy
-#         runs-on: ubuntu-latest
+jobs:
+    setup-build-publish-deploy:
+        name: Setup, Build, Publish, Deploy
+        runs-on: ubuntu-latest
+        environment: staging
 
-#         steps:
-#             - name: Checkout code
-#               uses: actions/checkout@v4
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-#             - name: Authenticate to Google Cloud
-#               id: auth
-#               uses: google-github-actions/auth@v2
-#               with:
-#                 credentials_json: ${{ secrets.GCP_SA_KEY }}
+            - name: Authenticate to Google Cloud
+              id: auth
+              uses: google-github-actions/auth@v2
+              with:
+                credentials_json: ${{ secrets.GCP_DEPLOYER_SA }}
 
-#             - name: Set Up Google Cloud SDK
-#               uses: google-github-actions/setup-gcloud@v2.0.0
-#               with:
-#                 project_id: ${{ secrets.GCP_PROJECT_ID }}
+            - name: Set Up Google Cloud SDK
+              uses: google-github-actions/setup-gcloud@v2.0.0
+              with:
+                project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-#             - name: Authenticate Docker
-#               run: gcloud auth configure-docker ${{ vars.GCP_REPO_REGION }}-docker.pkg.dev --quiet
+            - name: Authenticate Docker
+              run: gcloud auth configure-docker ${{ vars.GCP_REPO_REGION }}-docker.pkg.dev --quiet
 
-#             - name: Build Docker Image
-#               working-directory: ./backend
-#               run: docker build --no-cache --tag ${{ vars.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/valsewa/valsewa-be:${{ github.sha }} .
+            - name: Build Docker Image
+              working-directory: ./backend
+              run: docker build --no-cache --tag ${{ vars.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/valsewa/valsewa-be:${{ github.sha }} .
 
-#             - name: Push image to Artifact Registry
-#               run: docker push ${{ vars.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/valsewa/valsewa-be:${{ github.sha }}
+            - name: Push image to Artifact Registry
+              run: docker push ${{ vars.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/valsewa/valsewa-be:${{ github.sha }}
 
-#             - name: Deploy image to Google Cloud Run
-#               run: |
-#                 gcloud run deploy valsewa-be \
-#                   --image=${{ vars.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/valsewa/valsewa-be:${{ github.sha }} \
-#                   --platform=managed \
-#                   --region=${{ vars.GCP_CLOUD_RUN_REGION }} \
-#                   --add-cloudsql-instances=${{ secrets.GCP_PROJECT_ID }}:${{ vars.GCP_CLOUD_SQL_REGION }}:${{ secrets.CLOUD_SQL_INSTANCE_NAME }} \
-#                   --allow-unauthenticated \
-#                   --service-account=${{ secrets.GCS_CLOUD_RUN_SA }} \
-#                   --network=default \
-#                   --subnet=default \
-#                   --vpc-egress=private-ranges-only \
-#                   --port=5000 \
-#                   --min-instances=0 \
-#                   --max-instances=2 \
-#                   --set-env-vars=DATABASE_URL=${{ secrets.DATABASE_URL }} \
-#                   --set-env-vars=DIRECT_URL=${{ secrets.DIRECT_URL }} \
-#                   --set-env-vars=ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }} \
-#                   --set-env-vars=REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }} \
-#                   --set-env-vars=ACCESS_TOKEN_DURATION=${{ vars.ACCESS_TOKEN_DURATION }} \
-#                   --set-env-vars=REFRESH_TOKEN_DURATION=${{ vars.REFRESH_TOKEN_DURATION }} \
-#                   --set-env-vars=GCS_BUCKET_NAME=${{ vars.GCS_BUCKET_NAME }} \
-#                   --set-env-vars=BULL_REDIS_IP=${{ secrets.BULL_REDIS_IP }} \
-#                   --set-env-vars=BULL_REDIS_PORT=${{ secrets.BULL_REDIS_PORT }} \
-#                   --set-env-vars=ADMIN_APP_URL=${{ vars.ADMIN_APP_URL }} \
-#                   --set-env-vars=CANONICAL_PUBLIC_APP_URL=${{ vars.CANONICAL_PUBLIC_APP_URL }} \
-#                   --set-env-vars=PUBLIC_APP_URL=${{ vars.PUBLIC_APP_URL }} \
-#                   --set-env-vars=HENRIKDEV_API_KEY=${{ secrets.HENRIKDEV_API_KEY }} \
-#                   --set-env-vars=SCHEDULER_API_KEY=${{ secrets.SCHEDULER_API_KEY }} \
-#                   --set-env-vars=BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}
+            - name: Deploy image to Google Cloud Run
+              run: |
+                gcloud run deploy valsewa-be \
+                  --image=${{ vars.GCP_REPO_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/valsewa/valsewa-be:${{ github.sha }} \
+                  --platform=managed \
+                  --region=${{ vars.GCP_CLOUD_RUN_REGION }} \
+                  --allow-unauthenticated \
+                  --service-account=${{ secrets.CLOUD_RUN_RUNTIME_SA_EMAIL }} \
+                  --network=default \
+                  --subnet=default \
+                  --port=5000 \
+                  --min-instances=0 \
+                  --max-instances=2 \
+                  --set-env-vars=DATABASE_URL=${{ secrets.DATABASE_URL }} \
+                  --set-env-vars=DIRECT_URL=${{ secrets.DIRECT_URL }} \
+                  --set-env-vars=ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }} \
+                  --set-env-vars=REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }} \
+                  --set-env-vars=ACCESS_TOKEN_DURATION=${{ vars.ACCESS_TOKEN_DURATION }} \
+                  --set-env-vars=REFRESH_TOKEN_DURATION=${{ vars.REFRESH_TOKEN_DURATION }} \
+                  --set-env-vars=GCS_BUCKET_NAME=${{ vars.GCS_BUCKET_NAME }} \
+                  --set-env-vars=BULL_REDIS_IP=${{ secrets.BULL_REDIS_IP }} \
+                  --set-env-vars=BULL_REDIS_PORT=${{ secrets.BULL_REDIS_PORT }} \
+                  --set-env-vars=ADMIN_APP_URL=${{ vars.ADMIN_APP_URL }} \
+                  --set-env-vars=CANONICAL_PUBLIC_APP_URL=${{ vars.CANONICAL_PUBLIC_APP_URL }} \
+                  --set-env-vars=PUBLIC_APP_URL=${{ vars.PUBLIC_APP_URL }} \
+                  --set-env-vars=HENRIKDEV_API_KEY=${{ secrets.HENRIKDEV_API_KEY }} \
+                  --set-env-vars=SCHEDULER_API_KEY=${{ secrets.SCHEDULER_API_KEY }} \
+                  --set-env-vars=BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }} \
+                  --set-env-vars=PUB_ACCESS_TOKEN_SECRET=${{ secrets.PUB_ACCESS_TOKEN_SECRET }} \
+                  --set-env-vars=PUB_REFRESH_TOKEN_SECRET=${{ secrets.PUB_REFRESH_TOKEN_SECRET }} \
+                  --set-env-vars=PUB_ACCESS_TOKEN_DURATION=${{ vars.PUB_ACCESS_TOKEN_DURATION }} \
+                  --set-env-vars=PUB_REFRESH_TOKEN_DURATION=${{ vars.PUB_REFRESH_TOKEN_DURATION }} \
+                  --set-env-vars=SNAP_BI_MERCHANT_ID=${{ secrets.SNAP_BI_MERCHANT_ID }} \
+                  --set-env-vars=SNAP_BI_CLIENT_ID=${{ secrets.SNAP_BI_CLIENT_ID }} \
+                  --set-env-vars=SNAP_BI_PRIVATE_KEY=${{ secrets.SNAP_BI_PRIVATE_KEY }} \
+                  --set-env-vars=SNAP_BI_CLIENT_SECRET=${{ secrets.SNAP_BI_CLIENT_SECRET }} \
+                  --set-env-vars=SNAP_BI_PARTNER_ID=${{ secrets.SNAP_BI_PARTNER_ID }} \
+                  --set-env-vars=SNAP_BI_CHANNEL_ID=${{ secrets.SNAP_BI_CHANNEL_ID }} \
+                  --set-env-vars=SNAP_BI_PUBLIC_KEY=${{ secrets.SNAP_BI_PUBLIC_KEY }} \
+                  --set-env-vars=BOOKING_HOLD_TIME_MINUTES=${{ vars.BOOKING_HOLD_TIME_MINUTES }} \
+                  --set-env-vars=BOOKING_GRACE_TIME_MILLIS=${{ vars.BOOKING_GRACE_TIME_MILLIS }}

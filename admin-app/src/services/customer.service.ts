@@ -60,8 +60,6 @@ const createCustomerService = () => {
     }
   };
 
-  
-
   return {
     fetchAll,
     create,

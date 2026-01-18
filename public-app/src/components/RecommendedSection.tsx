@@ -60,7 +60,7 @@ export default function RecommendedSection() {
                         xl:overflow-visible
                     "
         >
-          {accounts.map((account, index) => {
+          {accounts.map((account) => {
             // Construct displayed tier and rank info
             // Assuming accountCode format like "SSS-01" or similar
             const tierCode = account.priceTier?.code || "N/A";
@@ -68,28 +68,22 @@ export default function RecommendedSection() {
 
             // Parsing color based on letter grade for styling
             let glowColor = "from-gray-500/20";
-            let textColor = "text-gray-400";
             let borderColor = "border-gray-600";
 
             if (letterGrade.includes("SSS")) {
               glowColor = "from-[#9146FF]/30";
-              textColor = "text-[#9146FF]";
               borderColor = "border-[#9146FF]";
             } else if (letterGrade.includes("S")) {
               glowColor = "from-[#3B5BDB]/30";
-              textColor = "text-[#3B5BDB]";
               borderColor = "border-[#3B5BDB]";
             } else if (letterGrade.includes("A")) {
               glowColor = "from-[#BD2C2C]/30";
-              textColor = "text-[#BD2C2C]";
               borderColor = "border-[#BD2C2C]";
             } else if (letterGrade.includes("B")) {
               glowColor = "from-[#C69C6D]/30"; // Gold/Bronze
-              textColor = "text-[#C69C6D]";
               borderColor = "border-[#C69C6D]";
             } else if (letterGrade.includes("V")) {
               glowColor = "from-[#3CCFCF]/30";
-              textColor = "text-[#3CCFCF]";
               borderColor = "border-[#3CCFCF]";
             }
 

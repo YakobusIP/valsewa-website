@@ -6,7 +6,6 @@ import Card from "@/components/Card";
 import DiscoverSection from "@/components/DiscoverSection";
 import Hero from "@/components/Hero";
 import HowToOrder from "@/components/HowToOrder";
-import Navbar1 from "@/components/Navbar1";
 import NavbarHome from "@/components/NavbarHome";
 import NavbarHomeMobile from "@/components/NavbarHomeMobile";
 import RecommendedSection from "@/components/RecommendedSection";
@@ -14,8 +13,6 @@ import RecommendedSection from "@/components/RecommendedSection";
 import { AccountEntity, CarouselSlide } from "@/types/account.type";
 
 import { useAccountController } from "@/controllers/useAccountController";
-import Image from "next/image";
-import { FaArrowUp } from "react-icons/fa";
 
 interface Props {
   initialAccount: AccountEntity[];

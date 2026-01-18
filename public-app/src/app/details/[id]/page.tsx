@@ -29,6 +29,8 @@ import { ChevronDown, Search } from "lucide-react";
 import Image from "next/image";
 import { notFound, useParams, useRouter } from "next/navigation";
 
+import LoginPage from "@/components/LoginPage"
+
 export default function AccountDetailPage() {
   const router = useRouter();
 
@@ -51,8 +53,8 @@ export default function AccountDetailPage() {
   const [bookDate, setBookDate] = useState<Date | null>(new Date());
   const [startTime, setStartTime] = useState<string>(""); // "09:00"
   const [endTime, setEndTime] = useState<string>("");
-
-  const { customerId } = useAuth();
+  const { isAuthenticated, isAuthChecked, customerId } = useAuth()
+  const [showLogin, setShowLogin] = useState(false)
 
   useEffect(() => {
     fetchAccountById(id)
@@ -66,6 +68,19 @@ export default function AccountDetailPage() {
   }, [mode]);
 
   const onSubmit = async () => {
+    if (!isAuthChecked) {
+      toast({
+        title: "Please wait",
+        description: "Checking login status..."
+      })
+      return
+    }
+
+    // 🔒 not logged in → open login modal
+    if (!isAuthenticated) {
+      setShowLogin(true)
+      return
+    }
     if (!selectedDuration) return;
     try {
       setSubmitting(true);
@@ -591,6 +606,9 @@ export default function AccountDetailPage() {
           </div>
         </div>
       </div>
+      {showLogin && (
+        <LoginPage onClose={() => setShowLogin(false)} />
+      )}
     </main>
   );
 }
