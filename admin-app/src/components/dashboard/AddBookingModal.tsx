@@ -6,7 +6,7 @@ import {
   useState
 } from "react";
 
-import { accountService } from "@/services/account.service";
+import { bookingService } from "@/services/transaction.service";
 import { settingService } from "@/services/setting.service";
 
 import { Button } from "@/components/ui/button";
@@ -35,13 +35,6 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -54,8 +47,6 @@ import { toast } from "@/hooks/useToast";
 
 import { AccountEntity } from "@/types/account.type";
 
-import { availabilityStatuses } from "@/lib/constants";
-import { AVAILABILITY_STATUS } from "@/lib/enums";
 import { cn, convertHoursToDays } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -66,12 +57,14 @@ import { FieldErrors, useForm } from "react-hook-form";
 import { z } from "zod";
 
 const formSchema = z.object({
-  availabilityStatus: z.enum(["AVAILABLE", "IN_USE", "NOT_AVAILABLE"]),
-  currentBookingDate: z.date().nullish(),
-  currentBookingDuration: z
+  bookingDate: z.date({ required_error: "Booking date is required" }),
+  duration: z
     .string({ required_error: "Duration is required" })
-    .nonempty(),
-  currentExpireAt: z.date().nullish()
+    .nonempty("Duration is required"),
+  totalValue: z
+    .number({ required_error: "Total price is required" })
+    .min(1, "Total price must be greater than 0"),
+  expireAt: z.date().nullish()
 });
 
 type Props = {
@@ -81,7 +74,7 @@ type Props = {
   resetParent: () => Promise<void>;
 };
 
-export default function AccountCurrentBookModal({
+export default function AddBookingModal({
   open,
   onOpenChange,
   data,
@@ -93,16 +86,10 @@ export default function AccountCurrentBookModal({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      availabilityStatus:
-        (data.availabilityStatus as AVAILABILITY_STATUS) || "AVAILABLE",
-      currentBookingDate: data.currentBookingDate
-        ? new Date(data.currentBookingDate)
-        : new Date(),
-      currentBookingDuration:
-        convertHoursToDays(data.currentBookingDuration) || undefined,
-      currentExpireAt: data.currentExpireAt
-        ? new Date(data.currentExpireAt)
-        : undefined
+      bookingDate: new Date(),
+      duration: "",
+      totalValue: 0,
+      expireAt: undefined
     },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -110,12 +97,12 @@ export default function AccountCurrentBookModal({
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      form.setValue("currentBookingDate", date);
+      form.setValue("bookingDate", date);
     }
   };
 
   const handleTimeChange = (type: "hour" | "minute", value: string) => {
-    const currentDate = form.getValues("currentBookingDate") || new Date();
+    const currentDate = form.getValues("bookingDate") || new Date();
     const newDate = new Date(currentDate);
 
     if (type === "hour") {
@@ -126,21 +113,21 @@ export default function AccountCurrentBookModal({
       newDate.setMinutes(minute);
     }
 
-    form.setValue("currentBookingDate", newDate);
+    form.setValue("bookingDate", newDate);
   };
 
   const handleDeleteBookingDate = () => {
-    form.setValue("currentBookingDate", null);
-    form.setValue("currentBookingDuration", "");
+    form.setValue("bookingDate", new Date());
+    form.setValue("duration", "");
   };
 
   const parseDurationToHours = useCallback(
     (duration: string) => {
       const ms = parse(duration);
       if (ms === null) {
-        form.setError("currentBookingDuration", {
+        form.setError("duration", {
           type: "validate",
-          message: "Invalid date format"
+          message: "Invalid duration format"
         });
 
         return null;
@@ -159,26 +146,23 @@ export default function AccountCurrentBookModal({
     });
   };
 
-  const handleUpdateBooking = async (
-    id: number,
+  const handleCreateBooking = async (
+    accountId: number,
     values: z.infer<typeof formSchema>
   ) => {
-    const bookingDurationNumber = parse(values.currentBookingDuration);
-
-    const payload = {
-      ...values,
-      ...{
-        currentBookingDuration: (bookingDurationNumber || 0) / (1000 * 60 * 60)
-      }
-    };
     try {
-      const response = await accountService.update(id, payload, true);
+      const response = await bookingService.createAdminBooking({
+        accountId,
+        startAt: values.bookingDate,
+        duration: values.duration,
+        totalValue: values.totalValue
+      });
       onOpenChange(false);
       await resetParent();
 
       toast({
         title: "All set!",
-        description: response.message
+        description: response.message || "Booking created successfully"
       });
     } catch (error) {
       const errorMessage =
@@ -197,31 +181,26 @@ export default function AccountCurrentBookModal({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoadingSubmit(true);
 
-    await handleUpdateBooking(data.id, values);
+    await handleCreateBooking(data.id, values);
   };
 
   const handleError = (errors: FieldErrors<z.infer<typeof formSchema>>) => {
     console.log(errors);
   };
 
-  const selectedStatusColor =
-    availabilityStatuses.find(
-      (status) => status.value === form.watch("availabilityStatus")
-    )?.color || "bg-white";
-
-  const durationValue = form.watch("currentBookingDuration");
-  const currentBookingValue = form.watch("currentBookingDate");
-  const expireAtValue = form.watch("currentExpireAt");
+  const durationValue = form.watch("duration");
+  const bookingDateValue = form.watch("bookingDate");
+  const expireAtValue = form.watch("expireAt");
 
   useEffect(() => {
     if (durationValue) {
       const hours = parseDurationToHours(durationValue) || 0;
-      const currentBookingDate = currentBookingValue || new Date();
+      const bookingDate = bookingDateValue || new Date();
 
-      const expireDate = addHours(new Date(currentBookingDate), hours);
-      form.setValue("currentExpireAt", expireDate);
+      const expireDate = addHours(new Date(bookingDate), hours);
+      form.setValue("expireAt", expireDate);
     }
-  }, [durationValue, currentBookingValue, form, parseDurationToHours]);
+  }, [durationValue, bookingDateValue, form, parseDurationToHours]);
 
   const [reminderTemplate, setReminderTemplate] = useState("");
 
@@ -265,9 +244,9 @@ export default function AccountCurrentBookModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
-          <DialogTitle>Current Booking</DialogTitle>
+          <DialogTitle>Add New Booking</DialogTitle>
           <DialogDescription>
-            View and manage the current booking details for this account
+            Create a new booking for this account
           </DialogDescription>
         </DialogHeader>
 
@@ -284,37 +263,11 @@ export default function AccountCurrentBookModal({
             <div className="flex flex-col min-[1920px]:flex-row gap-4">
               <FormField
                 control={form.control}
-                name="availabilityStatus"
-                render={({ field }) => (
-                  <FormItem className="w-full min-[1920px]:w-1/5">
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className={selectedStatusColor}>
-                          <SelectValue placeholder="Select a status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {availabilityStatuses.map((status) => {
-                          return (
-                            <SelectItem key={status.value} value={status.value}>
-                              {status.label}
-                            </SelectItem>
-                          );
-                        })}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="currentBookingDate"
+                name="bookingDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col w-full min-[1920px]:w-2/5">
                     <FormLabel className="mt-[0.4rem] mb-[0.275rem]">
-                      Next Booking
+                      Booking Date
                     </FormLabel>
                     <div className="flex items-center justify-center gap-2">
                       <Popover modal>
@@ -431,7 +384,7 @@ export default function AccountCurrentBookModal({
               />
               <FormField
                 control={form.control}
-                name="currentBookingDuration"
+                name="duration"
                 render={({ field }) => (
                   <FormItem className="w-full min-[1920px]:w-2/5">
                     <FormLabel>Duration</FormLabel>
@@ -439,6 +392,35 @@ export default function AccountCurrentBookModal({
                       <Input placeholder="Enter duration here" {...field} />
                     </FormControl>
                     <FormDescription>Contoh format: 7d 1h</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="totalValue"
+                render={({ field }) => (
+                  <FormItem className="w-full min-[1920px]:w-2/5">
+                    <FormLabel>Total Price</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Enter total price"
+                        value={field.value === 0 ? "" : field.value.toString()}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "") {
+                            field.onChange(0);
+                          } else {
+                            const numValue = parseFloat(value);
+                            if (!isNaN(numValue)) {
+                              field.onChange(numValue);
+                            }
+                          }
+                        }}
+                        onBlur={field.onBlur}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -36,6 +36,13 @@ export type CreateManualBookingRequest = {
   startAt?: Date;
 };
 
+export type CreateAdminBookingRequest = {
+  accountId: number;
+  startAt: Date;
+  duration: string;
+  totalValue: number;
+};
+
 export type OverrideBookingRequest = {
   bookingId: string;
   accountId: number;

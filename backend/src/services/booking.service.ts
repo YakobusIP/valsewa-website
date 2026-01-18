@@ -24,6 +24,7 @@ import {
   BankCodes,
   BookingResponse,
   CallbackNotificationRequest,
+  CreateAdminBookingRequest,
   CreateBookingRequest,
   CreateManualBookingRequest,
   OverrideBookingRequest,
@@ -35,6 +36,7 @@ import {
 import { FaspayClient } from "../faspay/faspay.client";
 import { Metadata } from "../types/metadata.type";
 import { env } from "../lib/env";
+import parseDuration from "parse-duration";
 
 export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<
   PaymentStatus,
@@ -501,6 +503,56 @@ export class BookingService {
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  createAdminBooking = async (
+    data: CreateAdminBookingRequest
+  ): Promise<BookingResponse> => {
+    try {
+      const { accountId, startAt, duration, totalValue } = data;
+
+      const account = await prisma.account.findUnique({
+        where: {
+          id: accountId,
+          availabilityStatus: { not: Status.NOT_AVAILABLE }
+        }
+      });
+      if (!account)
+        throw new NotFoundError("Account not found or not available!");
+
+      const durationMs = parseDuration(duration);
+      if (durationMs === null || durationMs <= 0) {
+        throw new BadRequestError("Invalid duration format");
+      }
+      const durationInHours = durationMs / (1000 * 60 * 60);
+
+      const endAt = addHours(startAt, durationInHours);
+
+      const booking = await prisma.booking.create({
+        data: {
+          accountId: account.id,
+          status: BookingStatus.RESERVED,
+          duration: duration,
+          quantity: 1,
+          immediate: false,
+          startAt: startAt,
+          endAt: endAt,
+          mainValuePerUnit: totalValue,
+          othersValuePerUnit: 0,
+          mainValue: totalValue,
+          othersValue: 0,
+          discount: 0,
+          totalValue: totalValue,
+        }
+      });
+
+      return this.mapBookingDataToBookingResponse(booking);
+    } catch (error) {
+      if (error instanceof PrismaUniqueError) throw error;
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
       throw new InternalServerError((error as Error).message);
     }
   };

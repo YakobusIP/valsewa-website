@@ -1,17 +1,13 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useState } from "react";
 
-import { accountService } from "@/services/account.service";
-
-import AccountCurrentBookModal from "@/components/dashboard/AccountCurrentBookModal";
+import AddBookingModal from "@/components/dashboard/AddBookingModal";
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
-import AccountNextBookModal from "@/components/dashboard/AccountNextBookModal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import {
@@ -21,9 +17,7 @@ import {
   TooltipTrigger
 } from "@/components/ui/tooltip";
 
-import { toast } from "@/hooks/useToast";
-
-import { AccountEntity, AccountEntityRequest } from "@/types/account.type";
+import { AccountEntity } from "@/types/account.type";
 
 import { MoreHorizontalIcon } from "lucide-react";
 import { Fragment } from "react/jsx-runtime";
@@ -35,78 +29,8 @@ type Props = {
 
 export default memo(function AccountTableAction({ data, resetParent }: Props) {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
-  const [openCurrentBookingModal, setOpenCurrentBookingModal] = useState(false);
-  const [openNextBookingModal, setOpenNextBookingModal] = useState(false);
+  const [openAddBookingModal, setOpenAddBookingModal] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const currentBookingExist =
-    !!data.currentBookingDate &&
-    !!data.currentBookingDuration &&
-    !!data.currentExpireAt;
-
-  const nextBookingExist =
-    !!data.nextBookingDate && !!data.nextBookingDuration && !!data.nextExpireAt;
-
-  const finishCurrentBooking = useCallback(async () => {
-    if (currentBookingExist) {
-      try {
-        const response = await accountService.finishBooking(data.id);
-        await resetParent();
-
-        toast({
-          title: "All set!",
-          description: response.message
-        });
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "An unknown error occured";
-
-        toast({
-          variant: "destructive",
-          title: "Uh oh! Something went wrong!",
-          description: errorMessage
-        });
-      }
-    }
-  }, [currentBookingExist, data.id, resetParent]);
-
-  const moveNextBookingToCurrent = useCallback(async () => {
-    if (nextBookingExist) {
-      const payload: Partial<AccountEntityRequest> = {
-        currentBookingDate: data.nextBookingDate,
-        currentBookingDuration: data.nextBookingDuration,
-        currentExpireAt: data.nextExpireAt,
-        nextBookingDate: null,
-        nextBookingDuration: null,
-        nextExpireAt: null
-      };
-      try {
-        const response = await accountService.update(data.id, payload);
-        await resetParent();
-
-        toast({
-          title: "All set!",
-          description: response.message
-        });
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "An unknown error occured";
-
-        toast({
-          variant: "destructive",
-          title: "Uh oh! Something went wrong!",
-          description: errorMessage
-        });
-      }
-    }
-  }, [
-    data.id,
-    data.nextBookingDate,
-    data.nextBookingDuration,
-    data.nextExpireAt,
-    nextBookingExist,
-    resetParent
-  ]);
 
   return (
     <Fragment>
@@ -143,33 +67,10 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
             <DropdownMenuItem
               onClick={() => {
                 setDropdownOpen(false);
-                setOpenCurrentBookingModal(true);
+                setOpenAddBookingModal(true);
               }}
             >
-              View current booking
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                setDropdownOpen(false);
-                setOpenNextBookingModal(true);
-              }}
-            >
-              View next booking
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Booking Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={finishCurrentBooking}
-              disabled={!currentBookingExist}
-            >
-              Finish current booking
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={moveNextBookingToCurrent}
-              disabled={!nextBookingExist}
-            >
-              Move next booking to current
+              Add new booking
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -183,18 +84,10 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
           resetParent={resetParent}
         />
       )}
-      {openCurrentBookingModal && (
-        <AccountCurrentBookModal
-          open={openCurrentBookingModal}
-          onOpenChange={setOpenCurrentBookingModal}
-          data={data}
-          resetParent={resetParent}
-        />
-      )}
-      {openNextBookingModal && (
-        <AccountNextBookModal
-          open={openNextBookingModal}
-          onOpenChange={setOpenNextBookingModal}
+      {openAddBookingModal && (
+        <AddBookingModal
+          open={openAddBookingModal}
+          onOpenChange={setOpenAddBookingModal}
           data={data}
           resetParent={resetParent}
         />
