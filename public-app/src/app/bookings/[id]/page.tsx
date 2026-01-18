@@ -121,7 +121,7 @@ export default function BookingDetailPage() {
       });
 
       if (payment) {
-        router.push(`/payments/${payment.paymentId}`);
+        router.push(`/payments/${payment.id}`);
       }
     } catch (error) {
       handleAsyncError(error, "Payment failed", "Payment failed");
@@ -161,6 +161,10 @@ export default function BookingDetailPage() {
 
   if (booking.status !== BOOKING_STATUS.HOLD) {
     return <BookingStatusView booking={booking} />;
+  }
+
+  if (booking.payments && booking.payments.length > 0) {
+    router.push(`/payments/${booking.payments[0].id}`);
   }
 
   return (

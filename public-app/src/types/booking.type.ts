@@ -70,10 +70,11 @@ export type BookingWithAccountEntity = BookingEntity & {
     username?: string;
     password?: string;
   };
+  payments?: PaymentEntity[];
 };
 
 export type PaymentEntity = {
-  paymentId: string;
+  id: string;
   bookingId: string;
   status: PAYMENT_STATUS;
   value: number;
