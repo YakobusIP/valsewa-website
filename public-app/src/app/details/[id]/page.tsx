@@ -29,6 +29,9 @@ import Image from "next/image";
 import { notFound, useParams, useRouter } from "next/navigation";
 import NavbarMobile from "@/components/NavbarMobile";
 
+import { useAuth } from "@/hooks/useAuth"
+import LoginPage from "@/components/LoginPage"
+
 export default function AccountDetailPage() {
   const router = useRouter();
 
@@ -50,6 +53,8 @@ export default function AccountDetailPage() {
   const [bookDate, setBookDate] = useState<Date | null>(new Date());
   const [startTime, setStartTime] = useState<string>(""); // "09:00"
   const [endTime, setEndTime] = useState<string>("");
+  const { isAuthenticated, isAuthChecked } = useAuth()
+  const [showLogin, setShowLogin] = useState(false)
 
   useEffect(() => {
     fetchAccountById(id)
@@ -63,7 +68,21 @@ export default function AccountDetailPage() {
   }, [mode]);
 
   const onSubmit = async () => {
+    if (!isAuthChecked) {
+      toast({
+        title: "Please wait",
+        description: "Checking login status..."
+      })
+      return
+    }
+
+    // 🔒 not logged in → open login modal
+    if (!isAuthenticated) {
+      setShowLogin(true)
+      return
+    }
     try {
+
       if (!selectedDuration) return;
       const booking = await bookingService.createBooking({
         // TODO: userId
@@ -585,6 +604,9 @@ export default function AccountDetailPage() {
           </div>
         </div>
       </div>
+      {showLogin && (
+        <LoginPage onClose={() => setShowLogin(false)} />
+      )}
     </main>
   );
 }
