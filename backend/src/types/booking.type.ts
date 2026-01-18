@@ -86,7 +86,7 @@ export type UpdateBookingRequest = {
 };
 
 export type PaymentResponse = {
-  paymentId: string;
+  id: string;
   bookingId: string;
   status: PaymentStatus;
   value: number;

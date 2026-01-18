@@ -4,8 +4,8 @@ import SnapBiConfig from "../lib/snapbi/snapbi.config";
 import { BadRequestError, InternalServerError } from "../lib/error";
 import { format, isValid, parse } from "date-fns";
 import { randomBytes } from "crypto";
-import dayjs from "dayjs";
 import { BankCodes } from "../types/booking.type";
+import { parseToDate, parseToLocalDateStr } from "../lib/utils";
 
 export type CreateQrisPaymentRequest = {
   bookingId: string;
@@ -52,27 +52,6 @@ export const BANK_CODE_TO_PREFIX_MAP: Record<BankCodes, string> = {
   [BankCodes.PERMATA]: "365901",
   [BankCodes.BRI]: "365905"
 };
-
-export const FASPAY_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
-export function parseFaspayDate(dateStr?: string): Date | null {
-  if (!dateStr) return null;
-
-  const parsedDate = parse(dateStr, FASPAY_DATE_FORMAT, new Date());
-  return isValid(parsedDate) ? parsedDate : null;
-}
-
-export function toFaspayDate(date: Date): string {
-  return format(date, FASPAY_DATE_FORMAT);
-}
-
-export function parseFaspayLocalDate(dateStr: string): Date {
-  return dayjs(dateStr).toDate();
-}
-
-export function toFaspayLocalDate(date: Date): string {
-  return dayjs(date).format("YYYY-MM-DDTHH:mm:ssZ");
-}
 
 export function generateLargeNumericId(): string {
   const buf = randomBytes(16);
@@ -121,7 +100,7 @@ export class FaspayClient {
   }
 
   createQrisPayment = async (request: CreateQrisPaymentRequest) => {
-    const dateNow = toFaspayLocalDate(new Date());
+    const dateNow = parseToLocalDateStr(new Date());
     const payload = {
       partnerReferenceNo: request.paymentId,
       merchantId: SnapBiConfig.snapBiMerchantId,
@@ -129,7 +108,7 @@ export class FaspayClient {
         value: request.amount.toFixed(2),
         currency: "IDR"
       },
-      validityPeriod: toFaspayLocalDate(request.expiredAt),
+      validityPeriod: parseToLocalDateStr(request.expiredAt),
       additionalInfo: {
         billDate: dateNow,
         billDescription: `Booking #${request.bookingId}`,
@@ -157,7 +136,7 @@ export class FaspayClient {
   };
 
   createVaPayment = async (request: CreateVaPaymentRequest) => {
-    const dateNow = toFaspayLocalDate(new Date());
+    const dateNow = parseToLocalDateStr(new Date());
     const virtualAccountNo = generateBankAccountNo(
       request.bankCode,
       request.customerId
@@ -170,7 +149,7 @@ export class FaspayClient {
         value: request.amount.toFixed(2),
         currency: "IDR"
       },
-      expiredDate: toFaspayLocalDate(request.expiredAt),
+      expiredDate: parseToLocalDateStr(request.expiredAt),
       additionalInfo: {
         billDate: dateNow,
         billDescription: `Booking #${request.bookingId}`,
@@ -226,7 +205,7 @@ export class FaspayClient {
         }
       };
       response = await SnapBi.qris()
-        .withTimeStamp(toFaspayLocalDate(new Date()))
+        .withTimeStamp(parseToLocalDateStr(new Date()))
         .withBody(payload)
         .getStatus(generateLargeNumericId());
     } else if (payment.paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT) {
@@ -257,7 +236,7 @@ export class FaspayClient {
         }
       };
       response = await SnapBi.va()
-        .withTimeStamp(toFaspayLocalDate(new Date()))
+        .withTimeStamp(parseToLocalDateStr(new Date()))
         .withBody(payload)
         .getStatus(generateLargeNumericId());
     }
@@ -273,7 +252,7 @@ export class FaspayClient {
       paymentId: response?.partnerReferenceNo,
       providerPaymentId: response?.referenceNo,
       paymentStatus,
-      paidAt: parseFaspayDate(response?.paidTime),
+      paidAt: parseToDate(response?.paidTime),
       metadata: response
     };
   };

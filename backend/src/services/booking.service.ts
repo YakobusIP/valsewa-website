@@ -146,7 +146,8 @@ export class BookingService {
               priceTier: true,
               thumbnail: true
             }
-          }
+          },
+          payments: true
         }
       });
 
@@ -1169,6 +1170,7 @@ export class BookingService {
         priceTier: PriceTier;
         thumbnail: ImageUpload | null;
       };
+      payments?: Payment[];
     },
     active?: boolean
   ): BookingResponse => {
@@ -1201,7 +1203,8 @@ export class BookingService {
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
         username: active ? booking.account.username : undefined,
         password: active ? booking.account.password : undefined
-      }
+      },
+      payments: booking.payments
     };
   };
 
@@ -1209,7 +1212,7 @@ export class BookingService {
     payment: Payment
   ): PaymentResponse => {
     return {
-      paymentId: payment.id,
+      id: payment.id,
       bookingId: payment.bookingId,
       status: payment.status,
       value: payment.value,
@@ -1230,7 +1233,7 @@ export class BookingService {
     payment: Payment & { booking: Booking | null }
   ): PaymentResponse => {
     return {
-      paymentId: payment.id,
+      id: payment.id,
       bookingId: payment.bookingId,
       status: payment.status,
       value: payment.value,
