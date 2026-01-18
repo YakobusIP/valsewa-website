@@ -85,78 +85,78 @@ const tiers = [
 ];
 
 const ranks = [
-  {
-    id: "iron",
-    name: "IRON",
-    color: "text-[#7A7A7A]",
-    bgGradient: "from-[#7A7A7A]/30 to-transparent",
-    price: "Rp 25k",
-    image: "/rank/iron 3.svg"
-  },
-  {
-    id: "bronze",
-    name: "BRONZE",
-    color: "text-[#C69C6D]",
-    bgGradient: "from-[#C69C6D]/30 to-transparent",
-    price: "Rp 25k",
-    image: "/rank/bronze 3.svg"
-  },
-  {
-    id: "silver",
-    name: "SILVER",
-    color: "text-[#A6A6A6]",
-    bgGradient: "from-[#A6A6A6]/30 to-transparent",
-    price: "Rp 25k",
-    image: "/rank/silver 3.svg"
-  },
-  {
-    id: "gold",
-    name: "GOLD",
-    color: "text-[#FFD166]",
-    bgGradient: "from-[#FFD166]/30 to-transparent",
-    price: "Rp 25k",
-    image: "/rank/gold 3.svg"
-  },
-  {
-    id: "platinum",
-    name: "PLATINUM",
-    color: "text-[#3CCFCF]",
-    bgGradient: "from-[#3CCFCF]/30 to-transparent",
-    price: "Rp 25k",
-    image: "/rank/platinum 3.svg"
-  },
-  {
-    id: "diamond",
-    name: "DIAMOND",
-    color: "text-[#B983FF]",
-    bgGradient: "from-[#B983FF]/30 to-transparent",
-    price: "Rp 25k",
-    image: "/rank/diamond 3.svg"
-  },
-  {
-    id: "ascendant",
-    name: "ASCENDANT",
-    color: "text-[#2EE59D]",
-    bgGradient: "from-[#2EE59D]/30 to-transparent",
-    price: "Rp 25k",
-    image: "/rank/ascendant 3.svg"
-  },
-  {
-    id: "immortal",
-    name: "IMMORTAL",
-    color: "text-[#FF4D6D]",
-    bgGradient: "from-[#FF4D6D]/30 to-transparent",
-    price: "Rp 25k",
-    image: "/rank/immortal 3.svg"
-  },
-  {
-    id: "radiant",
-    name: "RADIANT",
-    color: "text-[#FFD700]",
-    bgGradient: "from-[#FFD700]/30 to-transparent",
-    price: "Rp 25k",
-    image: "/rank/radiant.svg"
-  }
+    {
+        id: "iron",
+        name: "IRON",
+        color: "text-[#7A7A7A]",
+        bgGradient: "from-[#7A7A7A]/30 to-transparent",
+        price: "Rp 25k",
+        image: "/rank/Iron 3.svg",
+    },
+    {
+        id: "bronze",
+        name: "BRONZE",
+        color: "text-[#C69C6D]",
+        bgGradient: "from-[#C69C6D]/30 to-transparent",
+        price: "Rp 25k",
+        image: "/rank/Bronze 3.svg",
+    },
+    {
+        id: "silver",
+        name: "SILVER",
+        color: "text-[#A6A6A6]",
+        bgGradient: "from-[#A6A6A6]/30 to-transparent",
+        price: "Rp 25k",
+        image: "/rank/Silver 3.svg",
+    },
+    {
+        id: "gold",
+        name: "GOLD",
+        color: "text-[#FFD166]",
+        bgGradient: "from-[#FFD166]/30 to-transparent",
+        price: "Rp 25k",
+        image: "/rank/Gold 3.svg",
+    },
+    {
+        id: "platinum",
+        name: "PLATINUM",
+        color: "text-[#3CCFCF]",
+        bgGradient: "from-[#3CCFCF]/30 to-transparent",
+        price: "Rp 25k",
+        image: "/rank/Platinum 3.svg",
+    },
+    {
+        id: "diamond",
+        name: "DIAMOND",
+        color: "text-[#B983FF]",
+        bgGradient: "from-[#B983FF]/30 to-transparent",
+        price: "Rp 25k",
+        image: "/rank/Diamond 3.svg",
+    },
+    {
+        id: "ascendant",
+        name: "ASCENDANT",
+        color: "text-[#2EE59D]",
+        bgGradient: "from-[#2EE59D]/30 to-transparent",
+        price: "Rp 25k",
+        image: "/rank/Ascendant 3.svg",
+    },
+    {
+        id: "immortal",
+        name: "IMMORTAL",
+        color: "text-[#FF4D6D]",
+        bgGradient: "from-[#FF4D6D]/30 to-transparent",
+        price: "Rp 25k",
+        image: "/rank/Immortal 3.svg",
+    },
+    {
+        id: "radiant",
+        name: "RADIANT",
+        color: "text-[#FFD700]",
+        bgGradient: "from-[#FFD700]/30 to-transparent",
+        price: "Rp 25k",
+        image: "/rank/Radiant.svg",
+    },
 ];
 
 type FilterType = "LR-TIER" | "TIER" | "RANK";
