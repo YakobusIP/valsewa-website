@@ -505,7 +505,9 @@ export class BookingService {
     }
   };
 
-  overrideBooking = async (data: OverrideBookingRequest): Promise<BookingResponse> => {
+  overrideBooking = async (
+    data: OverrideBookingRequest
+  ): Promise<BookingResponse> => {
     try {
       const { bookingId, accountId } = data;
 
@@ -536,7 +538,7 @@ export class BookingService {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
-  }
+  };
 
   payBooking = async (data: PayBookingRequest): Promise<PaymentResponse> => {
     try {
@@ -1030,7 +1032,7 @@ export class BookingService {
         data: {
           status: PaymentStatus.FAILED
         }
-      })
+      });
       return await prisma.payment.update({
         where: { id: payment.id },
         data: {

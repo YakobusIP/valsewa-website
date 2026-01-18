@@ -35,6 +35,7 @@ model Account {
   // skinList               String[]  // EXPAND: Temporarily added back for migration (old column)
   // skins                  Skin[]     // EXPAND: Temporarily renamed relation (was skinList)
   skinList               Skin[] // CONTRACT: Enable this once migration is complete
+  skinCount              Int       @default(0)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
   isLowRank              Boolean   @default(false)
@@ -50,6 +51,7 @@ model Account {
 
   resetLogs AccountResetLog[]
   Booking   Booking[]
+  @@index([skinCount])
 }
 
 model AccountResetLog {

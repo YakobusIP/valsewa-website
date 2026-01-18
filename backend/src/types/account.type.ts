@@ -19,6 +19,7 @@ type AccountEntityRequest = {
   thumbnail: number;
   otherImages: number[] | null;
   priceTier: number;
+  skinCount: number;
   skinList: number[];
   isLowRank: boolean;
   isRecommended: boolean;
@@ -38,6 +39,7 @@ type PublicAccount = Prisma.AccountGetPayload<{
     currentExpireAt: true;
     totalRentHour: true;
     skinList: true;
+    skinCount: true;
     priceTier: true;
     thumbnail: true;
     otherImages: true;
@@ -55,7 +57,19 @@ type UpdateResetLogRequest = {
 type GetAvailableAccountsRequest = {
   startAt: Date;
   endAt: Date;
-}
+};
+
+type AccountSearchFilters = {
+  query?: string;
+  lowTierOnly?: boolean;
+  tiers?: string[];
+  skinCounts?: string[];
+  ranks?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: string;
+  direction?: Prisma.SortOrder;
+};
 
 export type {
   AccountEntityRequest,
@@ -63,4 +77,5 @@ export type {
   PublicAccount,
   UpdateResetLogRequest,
   GetAvailableAccountsRequest,
+  AccountSearchFilters
 };

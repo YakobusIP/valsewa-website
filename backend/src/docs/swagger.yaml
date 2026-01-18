@@ -664,6 +664,195 @@ paths:
                   metadata:
                     $ref: "#/components/schemas/Metadata"
 
+  
+/api/accounts/public:
+  get:
+    tags:
+      - Accounts
+    summary: "Get public accounts with optional filters, sorting, fuzzy search, and optional pagination."
+    description: >
+      Retrieves a list of public accounts with optional filters and sorting.
+
+      Pagination is optional:
+      - If `page` and `limit` are provided, returns paginated results and `metadata`.
+      - If `page` and `limit` are omitted, returns all matching results and `metadata: null`.
+
+      Supports:
+      - Fuzzy search via `q` (matches `accountCode`, `skinList.name`, `skinList.keyword`)
+      - Filtering by ranks, tiers, skin count buckets, low-rank flag, and price range
+      - Sorting by `availability`, `rank`, `price_tier`, or `id_tier`
+
+    parameters:
+      - in: query
+        name: page
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+        example: 1
+        description: >
+          Optional page number (1-based). If provided, `limit` should also be provided.
+
+      - in: query
+        name: limit
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+        example: 12
+        description: >
+          Optional number of items per page. If provided, `page` should also be provided.
+
+      - in: query
+        name: q
+        required: false
+        schema:
+          type: string
+        example: "reaver"
+        description: >
+          Optional fuzzy search query (Fuse.js).
+          Matches: accountCode, skinList.name, skinList.keyword.
+
+      - in: query
+        name: low_tier_only
+        required: false
+        schema:
+          type: boolean
+        example: false
+        description: >
+          Low-rank tier filter:
+          - true: low-rank only
+          - false: normal only
+          - omitted: all
+
+      - in: query
+        name: tiers
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+        examples:
+          singleTier:
+            summary: "Single tier"
+            value: ["S"]
+          multipleTiers:
+            summary: "Multiple tiers"
+            value: ["S", "V", "B"]
+        description: >
+          Filter by tier codes. Example:
+          ?tiers=S&tiers=V
+
+      - in: query
+        name: skin_counts
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+            example: "0-5"
+        examples:
+          oneBucket:
+            summary: "Single bucket"
+            value: ["0-5"]
+          multipleBuckets:
+            summary: "Multiple buckets"
+            value: ["0-5", "6-10"]
+        description: >
+          Filter by skin count buckets. Example:
+          ?skin_counts=0-5&skin_counts=6-10
+
+      - in: query
+        name: ranks
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: array
+          items:
+            type: string
+        examples:
+          singleRank:
+            summary: "Single rank"
+            value: ["gold 1"]
+          multipleRanks:
+            summary: "Multiple ranks"
+            value: ["gold 1", "gold 2", "platinum 1"]
+        description: >
+          Filter by rank(s). Example:
+          ?ranks=gold%201&ranks=gold%202
+
+      - in: query
+        name: min_price
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        example: 0
+        description: "Minimum price filter."
+
+      - in: query
+        name: max_price
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+        example: 50000
+        description: "Maximum price filter."
+
+      - in: query
+        name: sortBy
+        required: false
+        schema:
+          type: string
+          enum: ["availability", "rank", "price_tier", "id_tier"]
+        example: "availability"
+        description: >
+          Field to sort by:
+          - availability: uses Prisma orderBy on availabilityStatus + direction
+          - rank: custom sort in service
+          - price_tier: custom sort in service
+          - id_tier: custom sort in service
+          If omitted: defaults to createdAt desc.
+
+      - in: query
+        name: direction
+        required: false
+        schema:
+          type: string
+          enum: ["asc", "desc"]
+          default: "asc"
+        example: "asc"
+        description: >
+          Sort direction. Defaults to asc in service when not provided.
+
+    responses:
+      "200":
+        description: "List of public accounts. Metadata is null if pagination is not used."
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PublicAccount"
+                metadata:
+                  nullable: true
+                  allOf:
+                    - $ref: "#/components/schemas/Metadata"
+
+      "400":
+        description: "Invalid query parameters."
+      "500":
+        description: "Internal server error."
+
+
   /api/accounts/{id}:
     get:
       tags:
