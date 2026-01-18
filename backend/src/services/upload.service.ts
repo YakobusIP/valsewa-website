@@ -10,6 +10,7 @@ import {
   InternalServerError,
   NotFoundError
 } from "../lib/error";
+import { bucket } from "../lib/storage";
 
 export class UploadService {
   private static readonly IMAGES_ROOT = "/srv/images";
@@ -45,6 +46,22 @@ export class UploadService {
           }
 
           url = `${UploadService.IMAGES_CDN}/${filePath}`;
+        } else if (env.NODE_ENV === "staging" && bucket) {
+          const blob = bucket.file(filePath);
+          const blobStream = blob.createWriteStream({
+            resumable: false,
+            contentType: file.mimetype
+          });
+
+          await new Promise<void>((resolve, reject) => {
+            blobStream.on("error", (error) => {
+              reject(new FileStorageError(error.message));
+            });
+            blobStream.on("finish", () => resolve());
+            blobStream.end(file.buffer);
+          });
+
+          url = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
         } else {
           const localPath = path.join(__dirname, "../uploads/", filePath);
           mkdirSync(path.dirname(localPath), { recursive: true });
@@ -93,6 +110,13 @@ export class UploadService {
         const diskPath = path.join(UploadService.IMAGES_ROOT, filename);
         try {
           if (existsSync(diskPath)) unlinkSync(diskPath);
+        } catch (error) {
+          throw new FileStorageError((error as Error).message);
+        }
+      } else if (env.NODE_ENV === "staging" && bucket) {
+        const file = bucket.file(filename);
+        try {
+          await file.delete();
         } catch (error) {
           throw new FileStorageError((error as Error).message);
         }

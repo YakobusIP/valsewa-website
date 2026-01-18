@@ -527,19 +527,21 @@ export class AccountService {
 
   createAccount = async (data: AccountEntityRequest) => {
     try {
+      const { skinList, thumbnail, otherImages, priceTier, ...scalars } = data;
+
       const skinConnect =
-        Array.isArray(data.skinList) && data.skinList.length > 0
-          ? { connect: data.skinList.map((id) => ({ id })) }
+        Array.isArray(skinList) && skinList.length > 0
+          ? { connect: skinList.map((id) => ({ id })) }
           : undefined;
 
       return await prisma.account.create({
         data: {
-          ...data,
+          ...scalars,
           skinList: skinConnect,
-          thumbnail: { connect: { id: data.thumbnail } },
-          availabilityStatus: data.availabilityStatus as Status,
-          otherImages: { connect: data.otherImages?.map((id) => ({ id })) },
-          priceTier: { connect: { id: data.priceTier } }
+          thumbnail: { connect: { id: thumbnail } },
+          availabilityStatus: scalars.availabilityStatus as Status,
+          otherImages: { connect: otherImages?.map((id) => ({ id })) },
+          priceTier: { connect: { id: priceTier } }
         }
       });
     } catch (error) {

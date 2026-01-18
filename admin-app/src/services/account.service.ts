@@ -104,7 +104,7 @@ const createAccountService = () => {
         {
           params: {
             startAt,
-            endAt,
+            endAt
           }
         }
       );
