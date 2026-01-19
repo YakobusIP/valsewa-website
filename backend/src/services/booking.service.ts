@@ -774,6 +774,11 @@ export class BookingService {
           where: { id: booking.id },
           data: { status: BookingStatus.CANCELLED }
         });
+
+        await prisma.payment.updateMany({
+          where: { bookingId, status: PaymentStatus.PENDING },
+          data: { status: PaymentStatus.CANCELLED }
+        })
       }
 
       return this.mapBookingDataToBookingResponse(booking);
@@ -1166,11 +1171,16 @@ export class BookingService {
   private mapBookingDataToBookingResponse = (
     booking: Booking & { payments?: Payment[] }
   ): BookingResponse => {
+    let status = booking.status;
+    if (status === BookingStatus.HOLD && booking.expiredAt && booking.expiredAt < new Date()) {
+      status = BookingStatus.EXPIRED;
+    }
+
     return {
       id: booking.id,
       customerId: booking.customerId,
       accountId: booking.accountId,
-      status: booking.status,
+      status,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
@@ -1202,11 +1212,16 @@ export class BookingService {
     },
     active?: boolean
   ): BookingResponse => {
+    let status = booking.status;
+    if (status === BookingStatus.HOLD && booking.expiredAt && booking.expiredAt < new Date()) {
+      status = BookingStatus.EXPIRED;
+    }
+
     return {
       id: booking.id,
       customerId: booking.customerId,
       accountId: booking.accountId,
-      status: booking.status,
+      status,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
@@ -1260,10 +1275,15 @@ export class BookingService {
   private mapPaymentWithBookingDataToPaymentResponse = (
     payment: Payment & { booking: Booking | null }
   ): PaymentResponse => {
+    let status = payment.status;
+    if (status === PaymentStatus.PENDING && payment.booking?.expiredAt && payment.booking?.expiredAt < new Date()) {
+      status = PaymentStatus.EXPIRED;
+    }
+
     return {
       id: payment.id,
       bookingId: payment.bookingId,
-      status: payment.status,
+      status,
       value: payment.value,
       currency: payment.currency,
       provider: payment.provider,

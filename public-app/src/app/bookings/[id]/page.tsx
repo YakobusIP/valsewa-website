@@ -27,7 +27,7 @@ import { BOOKING_STATUS_MAP } from "@/lib/constants";
 import { instrumentSans, staatliches } from "@/lib/fonts";
 import { calculateVoucherDiscount, cn } from "@/lib/utils";
 
-import { CheckIcon, XIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 import { notFound, useParams, useRouter } from "next/navigation";
 
 function LoadingState() {
@@ -42,38 +42,37 @@ function LoadingState() {
 }
 
 function BookingStatusView({ booking }: { booking: BookingWithAccountEntity }) {
+  const router = useRouter();
+
   const statusLabel =
     BOOKING_STATUS_MAP[booking.status] || booking.status.toLowerCase();
-  const isReserved = booking.status === BOOKING_STATUS.RESERVED;
 
   return (
-    <div className="flex items-center justify-center min-h-screen text-white bg-black">
+    <div className="flex flex-col items-center justify-center h-full gap-6 text-center">
       <div
+        role="img"
+        aria-label={statusLabel}
+      >
+        <XIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
+      </div>
+
+      <h1
         className={cn(
-          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] items-center flex flex-col gap-4 px-4 lg:px-10 w-full",
-          instrumentSans.className
+          "text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase",
+          staatliches.className
         )}
       >
-        <div
-          className="flex items-center justify-center"
-          role="img"
-          aria-label={isReserved ? "Reserved" : "Failed"}
-        >
-          {isReserved ? (
-            <CheckIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
-          ) : (
-            <XIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
-          )}
-        </div>
-        <h1
-          className={cn(
-            "text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-center font-bold mb-4 leading-[1.2] uppercase",
-            staatliches.className
-          )}
-        >
-          Order {statusLabel}!
-        </h1>
-      </div>
+        Order {statusLabel}!
+      </h1>
+
+      <button
+        onClick={() =>
+          router.push(`/details/${booking.accountId}`)
+        }
+        className="mt-4 px-6 py-3 text-base sm:text-lg font-semibold rounded bg-neutral-700 hover:bg-neutral-600 transition"
+      >
+        Back to Account
+      </button>
     </div>
   );
 }
@@ -149,6 +148,13 @@ export default function BookingDetailPage() {
     return booking.totalValue - discount;
   }, [booking, discount]);
 
+  const isFailed = booking && (
+    [
+      BOOKING_STATUS.CANCELLED,
+      BOOKING_STATUS.EXPIRED,
+      BOOKING_STATUS.FAILED
+    ].includes(booking.status));
+
   useEffect(() => {
     if (!id) return;
 
@@ -170,16 +176,12 @@ export default function BookingDetailPage() {
 
   if (!booking || !booking.account) return notFound();
 
-  if (booking.status !== BOOKING_STATUS.HOLD) {
-    return <BookingStatusView booking={booking} />;
-  }
-
   if (booking.payments && booking.payments.length > 0) {
     router.push(`/payments/${booking.payments[0].id}`);
   }
 
   return (
-    <main className="min-h-screen text-white bg-black">
+    <main className="min-h-screen flex text-white bg-black">
       <div className="relative max-lg:hidden">
         <Navbar />
       </div>
@@ -189,82 +191,88 @@ export default function BookingDetailPage() {
 
       <div
         className={cn(
-          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10",
+          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10 items-center w-full",
           instrumentSans.className
         )}
       >
-        <ProgressStepper
-          stepIdx={1}
-          handleCancelBooking={handleCancelBooking}
-          isLoadingCancelBooking={isLoadingCancelBooking}
-        />
-
-        {booking.expiredAt && (
-          <PaymentCountdown expiredAt={booking.expiredAt} />
-        )}
-
-        <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-32 mt-6 sm:mt-8 lg:mt-10">
-          <div className="w-full space-y-6 sm:space-y-8 lg:space-y-10">
-            <BookingDetail booking={booking} />
-            <PaymentMethods
-              paymentMethod={paymentMethod}
-              setPaymentMethod={setPaymentMethod}
+        {isFailed ? (
+          <BookingStatusView booking={booking} />
+        ) : (
+          <>
+            <ProgressStepper
+              stepIdx={1}
+              handleCancelBooking={handleCancelBooking}
+              isLoadingCancelBooking={isLoadingCancelBooking}
             />
-          </div>
 
-          <PaymentSummary
-            booking={booking}
-            paymentMethod={paymentMethod}
-            voucher={voucher}
-            setVoucher={setVoucher}
-            fetchVoucher={fetchVoucher}
-            onSubmit={onSubmit}
-          />
-        </div>
+            {booking.expiredAt && (
+              <PaymentCountdown expiredAt={booking.expiredAt} />
+            )}
 
-        <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
-          <BookingDetail booking={booking} />
+            <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-32 mt-6 sm:mt-8 lg:mt-10">
+              <div className="w-full space-y-6 sm:space-y-8 lg:space-y-10">
+                <BookingDetail booking={booking} />
+                <PaymentMethods
+                  paymentMethod={paymentMethod}
+                  setPaymentMethod={setPaymentMethod}
+                />
+              </div>
 
-          <PaymentSummary
-            booking={booking}
-            paymentMethod={paymentMethod}
-            voucher={voucher}
-            setVoucher={setVoucher}
-            fetchVoucher={fetchVoucher}
-            onSubmit={onSubmit}
-          />
+              <PaymentSummary
+                booking={booking}
+                paymentMethod={paymentMethod}
+                voucher={voucher}
+                setVoucher={setVoucher}
+                fetchVoucher={fetchVoucher}
+                onSubmit={onSubmit}
+              />
+            </div>
 
-          <PaymentMethods
-            paymentMethod={paymentMethod}
-            setPaymentMethod={setPaymentMethod}
-          />
+            <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
+              <BookingDetail booking={booking} />
 
-          <div className="flex flex-col gap-2 space-y-2 text-center text-white">
-            <button
-              type="button"
-              onClick={onSubmit}
-              disabled={!booking || !paymentMethod || loading}
-              className={cn(
-                "w-full text-base sm:text-lg lg:text-xl transition py-2.5 sm:py-3 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black",
-                !booking || !paymentMethod || loading
-                  ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-                  : "bg-red-600 hover:bg-red-700"
-              )}
-              aria-label={`Pay IDR ${totalPayment.toLocaleString()} and rent now`}
-            >
-              {loading
-                ? "Loading..."
-                : `IDR ${totalPayment.toLocaleString()} | Rent Now`}
-            </button>
-            <p className="text-xs sm:text-sm">Any Questions?</p>
-            <button
-              type="button"
-              className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
-            >
-              Ask Our Team
-            </button>
-          </div>
-        </div>
+              <PaymentSummary
+                booking={booking}
+                paymentMethod={paymentMethod}
+                voucher={voucher}
+                setVoucher={setVoucher}
+                fetchVoucher={fetchVoucher}
+                onSubmit={onSubmit}
+              />
+
+              <PaymentMethods
+                paymentMethod={paymentMethod}
+                setPaymentMethod={setPaymentMethod}
+              />
+
+              <div className="flex flex-col gap-2 space-y-2 text-center text-white">
+                <button
+                  type="button"
+                  onClick={onSubmit}
+                  disabled={!booking || !paymentMethod || loading}
+                  className={cn(
+                    "w-full text-base sm:text-lg lg:text-xl transition py-2.5 sm:py-3 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black",
+                    !booking || !paymentMethod || loading
+                      ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700"
+                  )}
+                  aria-label={`Pay IDR ${totalPayment.toLocaleString()} and rent now`}
+                >
+                  {loading
+                    ? "Loading..."
+                    : `IDR ${totalPayment.toLocaleString()} | Rent Now`}
+                </button>
+                <p className="text-xs sm:text-sm">Any Questions?</p>
+                <button
+                  type="button"
+                  className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
+                >
+                  Ask Our Team
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </main>
   );
