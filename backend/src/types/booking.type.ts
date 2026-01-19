@@ -36,6 +36,13 @@ export type CreateManualBookingRequest = {
   startAt?: Date;
 };
 
+export type CreateAdminBookingRequest = {
+  accountId: number;
+  startAt: Date;
+  duration: string;
+  totalValue: number;
+};
+
 export type OverrideBookingRequest = {
   bookingId: string;
   accountId: number;
@@ -86,7 +93,7 @@ export type UpdateBookingRequest = {
 };
 
 export type PaymentResponse = {
-  paymentId: string;
+  id: string;
   bookingId: string;
   status: PaymentStatus;
   value: number;

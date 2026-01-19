@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "debit-sandbox.faspay.co.id",
         pathname: "/__assets/qr/**"
+      },
+      {
+        protocol: "https",
+        hostname: "images.valsewa.com"
       }
     ]
   }

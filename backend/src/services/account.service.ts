@@ -1,4 +1,11 @@
-import { Account, AccountResetLog, BookingStatus, Prisma, Skin, Status } from "@prisma/client";
+import {
+  Account,
+  AccountResetLog,
+  BookingStatus,
+  Prisma,
+  Skin,
+  Status
+} from "@prisma/client";
 import { addHours, subDays } from "date-fns";
 import Fuse, { IFuseOptions } from "fuse.js";
 import {
@@ -510,12 +517,12 @@ export class AccountService {
         },
         distinct: ["accountId"],
         select: { accountId: true }
-      })
+      });
 
       const availableAccounts = await prisma.account.findMany({
         where: {
           availabilityStatus: { not: Status.NOT_AVAILABLE },
-          id: { notIn: unavailableAccounts.map(v => v.accountId) }
+          id: { notIn: unavailableAccounts.map((v) => v.accountId) }
         }
       });
 
@@ -523,7 +530,7 @@ export class AccountService {
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
-  }
+  };
 
   createAccount = async (data: AccountEntityRequest) => {
     try {
@@ -680,45 +687,6 @@ export class AccountService {
         throw new BadRequestError("Invalid request body!");
       }
 
-      throw new InternalServerError((error as Error).message);
-    }
-  };
-
-  updateExpireAt = async () => {
-    try {
-      const expiredAccounts = await prisma.account.findMany({
-        where: { currentExpireAt: { lt: new Date() } }
-      });
-
-      await prisma.$transaction(async (tx) => {
-        for (const account of expiredAccounts) {
-          await tx.account.update({
-            where: { id: account.id },
-            data: {
-              currentBookingDate: null,
-              currentExpireAt: null,
-              currentBookingDuration: null,
-              passwordResetRequired: true,
-              availabilityStatus: "AVAILABLE",
-              totalRentHour: {
-                increment: account.currentBookingDuration || 0
-              }
-            }
-          });
-
-          await tx.accountResetLog.create({
-            data: {
-              accountId: account.id,
-              previousExpireAt: account.currentExpireAt
-            }
-          });
-        }
-
-        await tx.accountResetLog.deleteMany({
-          where: { resetAt: { lt: subDays(new Date(), 2) } }
-        });
-      });
-    } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
   };

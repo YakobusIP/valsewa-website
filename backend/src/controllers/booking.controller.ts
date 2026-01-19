@@ -6,13 +6,9 @@ import {
   ForbiddenError,
   UnprocessableEntityError
 } from "../lib/error";
-import {
-  FASPAY_STATUS_MAP,
-  FaspayClient,
-  parseFaspayDate,
-  toFaspayDate
-} from "../faspay/faspay.client";
+import { FASPAY_STATUS_MAP, FaspayClient } from "../faspay/faspay.client";
 import { PaymentMethodRequest } from "../types/booking.type";
+import { parseToDate, parseToDateStr } from "../lib/utils";
 
 export class BookingController {
   constructor(
@@ -209,6 +205,31 @@ export class BookingController {
     }
   };
 
+  createAdminBooking = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { accountId, startAt, duration, totalValue } = req.body;
+
+      if (!accountId || !startAt || !duration || totalValue === undefined) {
+        throw new BadRequestError("Missing required fields.");
+      }
+
+      const result = await this.bookingService.createAdminBooking({
+        accountId,
+        startAt: new Date(startAt),
+        duration,
+        totalValue
+      });
+
+      return res.status(201).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   overrideBooking = async (
     req: Request,
     res: Response,
@@ -363,7 +384,7 @@ export class BookingController {
 
       await this.bookingService.callbackFaspayPayment({
         providerPaymentId: trx_id,
-        paidAt: payment_date ? parseFaspayDate(payment_date) : null,
+        paidAt: payment_date ? parseToDate(payment_date) : null,
         paymentStatus: FASPAY_STATUS_MAP[payment_status_code]
       });
 
@@ -375,7 +396,7 @@ export class BookingController {
         bill_no,
         response_code: "00",
         response_desc: "Success",
-        response_date: toFaspayDate(new Date())
+        response_date: parseToDateStr(new Date())
       });
     } catch (error) {
       if (error instanceof ForbiddenError) {
@@ -391,7 +412,7 @@ export class BookingController {
         bill_no: "",
         response_code: "00",
         response_desc: "Success",
-        response_date: toFaspayDate(new Date())
+        response_date: parseToDateStr(new Date())
       });
     }
   };

@@ -2,8 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import CancelBookingButton from "./bookings/CancelBookingButton";
 
-const NavbarMobile = () => {
+type Props = {
+  onBack?: () => Promise<void>;
+  isLoading: boolean;
+}
+
+const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
   return (
     <div
       className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 
@@ -12,27 +18,30 @@ const NavbarMobile = () => {
     >
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center justify-between px-4 sm:px-6">
         {/* LEFT - Back Button */}
-        <Link
-          href="/"
-          className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
-        >
-          {/* Solid Left Triangle Custom SVG for precise look */}
-          <svg
-            width="10"
-            height="12"
-            viewBox="0 0 10 12"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className=""
+        {!onBack ? (
+          <Link
+            href="/"
+            className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
           >
-            <path d="M0 6L9.75 11.6292L9.75 0.370835L0 6Z" fill="white" />
-          </svg>
+            {/* Solid Left Triangle Custom SVG for precise look */}
+            <svg
+              width="10"
+              height="12"
+              viewBox="0 0 10 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className=""
+            >
+              <path d="M0 6L9.75 11.6292L9.75 0.370835L0 6Z" fill="white" />
+            </svg>
 
-          <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
-            ALL ACCOUNTS
-          </span>
-        </Link>
-
+            <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
+              ALL ACCOUNTS
+            </span>
+          </Link>
+        ) : (
+          <CancelBookingButton cancelBooking={onBack} isLoadingCancelBooking={isLoading} />
+        )}
         {/* RIGHT - Logo */}
         <figure className="w-[160px] sm:w-[200px]">
           <Image

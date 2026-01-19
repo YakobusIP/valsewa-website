@@ -280,11 +280,8 @@ async function migratePriceTiers(): Promise<void> {
 
       // Create PriceList entries for each duration found in the parsed prices
       // Get all unique durations from both normal and low prices
-      const durations = new Set([
-        ...normalPrices.keys(),
-        ...lowPrices.keys()
-      ]);
-      
+      const durations = new Set([...normalPrices.keys(), ...lowPrices.keys()]);
+
       const priceListEntries: Array<{
         duration: string;
         normalPrice: number;
@@ -405,7 +402,7 @@ async function migratePriceTiers(): Promise<void> {
     for (let i = 0; i < accountsToUpdate.length; i += batchSize) {
       const batch = accountsToUpdate.slice(i, i + batchSize);
       console.log(`Updating batch ${i}-${i + batch.length}...`);
-      
+
       // Use Promise.all for parallel updates within each batch
       try {
         await Promise.all(
@@ -482,11 +479,11 @@ async function migrateSkins(): Promise<void> {
 
     // Create Skin records using batch insert (assumes table is empty)
     console.log("Creating Skin records...");
-    
+
     // Build skin data for batch insert, deduplicating by canonical name
     const skinDataMap = new Map<string, { name: string; imageUrl: string }>();
     const originalToCanonical = new Map<string, string>(); // Maps normalized original name to canonical name
-    
+
     for (const skinName of uniqueSkinNames) {
       const normalizedOriginal = normalize(skinName);
       const skinData = findSkinImageUrl(skinName, apiSkins);
@@ -511,7 +508,7 @@ async function migrateSkins(): Promise<void> {
     // Batch insert all skins at once
     const skinsToCreate = Array.from(skinDataMap.values());
     console.log(`Batch inserting ${skinsToCreate.length} skins...`);
-    
+
     await prisma.skin.createMany({
       data: skinsToCreate,
       skipDuplicates: true
@@ -520,15 +517,15 @@ async function migrateSkins(): Promise<void> {
     // Fetch all created skins to build the skinMap with IDs
     const createdSkins = await prisma.skin.findMany({
       where: {
-        name: { in: skinsToCreate.map(s => s.name) }
+        name: { in: skinsToCreate.map((s) => s.name) }
       },
       select: { id: true, name: true }
     });
 
     // Build skinMap: normalized original name -> { id, name }
     const skinMap = new Map<string, { id: number; name: string }>();
-    const nameToSkin = new Map(createdSkins.map(s => [s.name, s]));
-    
+    const nameToSkin = new Map(createdSkins.map((s) => [s.name, s]));
+
     for (const [normalizedOriginal, canonicalName] of originalToCanonical) {
       const skin = nameToSkin.get(canonicalName);
       if (skin) {
@@ -541,14 +538,17 @@ async function migrateSkins(): Promise<void> {
       }
     }
 
-    console.log(`Created ${createdSkins.length} Skin records, mapped ${skinMap.size} names`);
+    console.log(
+      `Created ${createdSkins.length} Skin records, mapped ${skinMap.size} names`
+    );
 
     // Link skins to accounts
     console.log("Linking skins to accounts...");
-    
+
     // Build account-to-skinIds mapping
-    const accountSkinLinks: Array<{ accountId: number; skinIds: number[] }> = [];
-    
+    const accountSkinLinks: Array<{ accountId: number; skinIds: number[] }> =
+      [];
+
     for (const account of accounts) {
       if (!Array.isArray(account.skinList) || account.skinList.length === 0) {
         continue;
@@ -577,11 +577,13 @@ async function migrateSkins(): Promise<void> {
     // Process in parallel batches
     const batchSize = 50;
     let linkedCount = 0;
-    
+
     for (let i = 0; i < accountSkinLinks.length; i += batchSize) {
       const batch = accountSkinLinks.slice(i, i + batchSize);
-      console.log(`Linking batch ${i}-${i + batch.length} of ${accountSkinLinks.length}...`);
-      
+      console.log(
+        `Linking batch ${i}-${i + batch.length} of ${accountSkinLinks.length}...`
+      );
+
       const results = await Promise.allSettled(
         batch.map(({ accountId, skinIds }) =>
           prisma.account.update({
@@ -594,7 +596,7 @@ async function migrateSkins(): Promise<void> {
           })
         )
       );
-      
+
       for (let j = 0; j < results.length; j++) {
         if (results[j].status === "fulfilled") {
           linkedCount++;

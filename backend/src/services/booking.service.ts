@@ -19,11 +19,14 @@ import {
   PrismaUniqueError
 } from "../lib/error";
 import { addHours, addMinutes } from "../lib/utils";
+import { subDays } from "date-fns";
+import parseDuration from "parse-duration";
 import { prisma } from "../lib/prisma";
 import {
   BankCodes,
   BookingResponse,
   CallbackNotificationRequest,
+  CreateAdminBookingRequest,
   CreateBookingRequest,
   CreateManualBookingRequest,
   OverrideBookingRequest,
@@ -146,7 +149,8 @@ export class BookingService {
               priceTier: true,
               thumbnail: true
             }
-          }
+          },
+          payments: true
         }
       });
 
@@ -276,26 +280,13 @@ export class BookingService {
     }
   };
 
-  private parseDurationToHours = (duration: string): number => {
-    const lower = duration.toLowerCase().trim();
-
-    if (lower.endsWith("h")) {
-      return Number(lower.replace("h", ""));
-    }
-
-    if (lower.endsWith("d")) {
-      return Number(lower.replace("d", "")) * 24;
-    }
-
-    return 0;
-  };
-
   private calculateValues = (
     normalPrice: number,
     lowPrice: number,
     isLowRank: boolean,
     duration: string,
     voucher: VoucherResponse | null,
+    paymentMethod: PaymentMethodType | null,
     quantity: number
   ) => {
     const mainValue = normalPrice * quantity;
@@ -323,9 +314,26 @@ export class BookingService {
       discount = Math.min(discount, mainValue);
     }
 
-    const totalValue = mainValue + othersValue - discount;
+    const subtotalValue = mainValue + othersValue - discount;
+    let adminFee = 0;
+    switch (paymentMethod) {
+      case PaymentMethodType.QRIS:
+        adminFee = Math.ceil(0.00705 * subtotalValue);
+        break;
 
-    const durationInHours = this.parseDurationToHours(duration);
+      case PaymentMethodType.VIRTUAL_ACCOUNT:
+        adminFee = 4000;
+        break;
+
+      default:
+        adminFee = 0;
+    }
+
+    const totalValue = subtotalValue + adminFee;
+
+    const durationMs = parseDuration(duration);
+    const durationInHours =
+      durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
 
     return {
       voucherType,
@@ -336,6 +344,7 @@ export class BookingService {
       duration,
       durationInHours,
       discount,
+      adminFee,
       totalValue
     };
   };
@@ -387,12 +396,23 @@ export class BookingService {
         ? await this.getValidVoucherById(voucherId)
         : null;
 
-      const bookingPriceValues = this.calculateValues(
+      const {
+        voucherType,
+        voucherAmount,
+        voucherMaxDiscount,
+        mainValue,
+        othersValue,
+        duration,
+        durationInHours,
+        discount,
+        totalValue
+      } = this.calculateValues(
         priceList.normalPrice,
         priceList.lowPrice,
         account.isLowRank,
         priceList.duration,
         voucher,
+        null,
         quantity
       );
 
@@ -401,10 +421,7 @@ export class BookingService {
       const now = new Date();
       const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
       const bookingStartAt = immediate ? bookingExpiredAt : startAt;
-      const bookingEndAt = addHours(
-        bookingStartAt,
-        bookingPriceValues.durationInHours * quantity
-      );
+      const bookingEndAt = addHours(bookingStartAt, durationInHours * quantity);
 
       const booking = await prisma.$transaction(async (tx) => {
         // Prevent race condition
@@ -432,7 +449,7 @@ export class BookingService {
             customerId,
             accountId,
             status: BookingStatus.HOLD,
-            duration: bookingPriceValues.duration,
+            duration,
             quantity,
             immediate,
             startAt: bookingStartAt,
@@ -441,13 +458,13 @@ export class BookingService {
             mainValuePerUnit: priceList.normalPrice,
             othersValuePerUnit: account.isLowRank ? priceList.lowPrice : 0,
             voucherName: voucher?.voucherName,
-            voucherType: bookingPriceValues.voucherType,
-            voucherAmount: bookingPriceValues.voucherAmount,
-            voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
-            mainValue: bookingPriceValues.mainValue,
-            othersValue: bookingPriceValues.othersValue,
-            discount: bookingPriceValues.discount,
-            totalValue: bookingPriceValues.totalValue,
+            voucherType,
+            voucherAmount,
+            voucherMaxDiscount,
+            mainValue,
+            othersValue,
+            discount,
+            totalValue,
             version: 1
           }
         });
@@ -505,7 +522,59 @@ export class BookingService {
     }
   };
 
-  overrideBooking = async (data: OverrideBookingRequest): Promise<BookingResponse> => {
+  createAdminBooking = async (
+    data: CreateAdminBookingRequest
+  ): Promise<BookingResponse> => {
+    try {
+      const { accountId, startAt, duration, totalValue } = data;
+
+      const account = await prisma.account.findUnique({
+        where: {
+          id: accountId,
+          availabilityStatus: { not: Status.NOT_AVAILABLE }
+        }
+      });
+      if (!account)
+        throw new NotFoundError("Account not found or not available!");
+
+      const durationMs = parseDuration(duration);
+      if (durationMs === null || durationMs <= 0) {
+        throw new BadRequestError("Invalid duration format");
+      }
+      const durationInHours = durationMs / (1000 * 60 * 60);
+
+      const endAt = addHours(startAt, durationInHours);
+
+      const booking = await prisma.booking.create({
+        data: {
+          accountId: account.id,
+          status: BookingStatus.RESERVED,
+          duration: duration,
+          quantity: 1,
+          immediate: false,
+          startAt: startAt,
+          endAt: endAt,
+          mainValuePerUnit: totalValue,
+          othersValuePerUnit: 0,
+          mainValue: totalValue,
+          othersValue: 0,
+          discount: 0,
+          totalValue: totalValue
+        }
+      });
+
+      return this.mapBookingDataToBookingResponse(booking);
+    } catch (error) {
+      if (error instanceof PrismaUniqueError) throw error;
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  overrideBooking = async (
+    data: OverrideBookingRequest
+  ): Promise<BookingResponse> => {
     try {
       const { bookingId, accountId } = data;
 
@@ -536,7 +605,7 @@ export class BookingService {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
-  }
+  };
 
   payBooking = async (data: PayBookingRequest): Promise<PaymentResponse> => {
     try {
@@ -579,17 +648,27 @@ export class BookingService {
         ? await this.getValidVoucherById(voucherId)
         : null;
 
-      const bookingPriceValues = this.calculateValues(
+      const { paymentMethodType, bankCode } =
+        PAYMENT_METHODS_MAP[paymentMethod];
+
+      const {
+        voucherType,
+        voucherAmount,
+        voucherMaxDiscount,
+        mainValue,
+        othersValue,
+        discount,
+        adminFee,
+        totalValue
+      } = this.calculateValues(
         booking.mainValuePerUnit,
         booking.othersValuePerUnit ?? 0,
         account.isLowRank,
         booking.duration,
         voucher,
+        paymentMethodType,
         booking.quantity
       );
-
-      const { paymentMethodType, bankCode } =
-        PAYMENT_METHODS_MAP[paymentMethod];
 
       const { payment, isPaymentNew } = await prisma.$transaction(
         async (tx) => {
@@ -601,13 +680,14 @@ export class BookingService {
             where: { id: booking.id },
             data: {
               voucherName: voucher?.voucherName,
-              voucherType: bookingPriceValues.voucherType,
-              voucherAmount: bookingPriceValues.voucherAmount,
-              voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
-              mainValue: bookingPriceValues.mainValue,
-              othersValue: bookingPriceValues.othersValue,
-              discount: bookingPriceValues.discount,
-              totalValue: bookingPriceValues.totalValue,
+              voucherType,
+              voucherAmount,
+              voucherMaxDiscount,
+              mainValue,
+              othersValue,
+              discount,
+              adminFee,
+              totalValue,
               version: { increment: 1 }
             }
           });
@@ -810,19 +890,29 @@ export class BookingService {
   syncCompletedBookings = async () => {
     try {
       const count = await prisma.$transaction(async (tx) => {
+        const now = new Date();
         const completedBookings = await tx.booking.findMany({
           where: {
             status: BookingStatus.RESERVED,
-            endAt: { lte: new Date() }
+            endAt: { lte: now }
           },
           select: {
-            id: true
+            id: true,
+            accountId: true,
+            endAt: true,
+            duration: true,
+            quantity: true
           }
+        });
+
+        await tx.accountResetLog.deleteMany({
+          where: { resetAt: { lt: subDays(now, 2) } }
         });
 
         if (completedBookings.length === 0) return 0;
 
         const bookingIds = completedBookings.map((b) => b.id);
+        const accountIds = completedBookings.map((b) => b.accountId);
 
         await tx.booking.updateMany({
           where: {
@@ -832,6 +922,47 @@ export class BookingService {
             status: BookingStatus.COMPLETED
           }
         });
+
+        await tx.account.updateMany({
+          where: {
+            id: { in: accountIds }
+          },
+          data: {
+            passwordResetRequired: true
+          }
+        });
+
+        await tx.accountResetLog.createMany({
+          data: completedBookings.map((booking) => ({
+            accountId: booking.accountId,
+            previousExpireAt: booking.endAt ?? null
+          }))
+        });
+
+        const rentHourByAccount = new Map<number, number>();
+        for (const booking of completedBookings) {
+          const durationMs = parseDuration(booking.duration);
+          const durationHours =
+            durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
+          const incrementHours = Math.round(durationHours) * booking.quantity;
+          if (incrementHours <= 0) continue;
+
+          rentHourByAccount.set(
+            booking.accountId,
+            (rentHourByAccount.get(booking.accountId) || 0) + incrementHours
+          );
+        }
+
+        await Promise.all(
+          Array.from(rentHourByAccount.entries()).map(([accountId, hours]) =>
+            tx.account.update({
+              where: { id: accountId },
+              data: {
+                totalRentHour: { increment: hours }
+              }
+            })
+          )
+        );
 
         return bookingIds.length;
       });
@@ -1030,7 +1161,7 @@ export class BookingService {
         data: {
           status: PaymentStatus.FAILED
         }
-      })
+      });
       return await prisma.payment.update({
         where: { id: payment.id },
         data: {
@@ -1067,7 +1198,12 @@ export class BookingService {
         startAt: actualStart,
         endAt: addHours(
           actualStart,
-          this.parseDurationToHours(booking.duration) * booking.quantity
+          (() => {
+            const durationMs = parseDuration(booking.duration);
+            const durationHours =
+              durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
+            return durationHours * booking.quantity;
+          })()
         )
       })
     };
@@ -1085,8 +1221,12 @@ export class BookingService {
         },
         data: {
           totalRentHour: {
-            increment:
-              this.parseDurationToHours(booking.duration) * booking.quantity
+            increment: (() => {
+              const durationMs = parseDuration(booking.duration);
+              const durationHours =
+                durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
+              return durationHours * booking.quantity;
+            })()
           },
           rentHourUpdated: true
         }
@@ -1131,6 +1271,7 @@ export class BookingService {
         priceTier: PriceTier;
         thumbnail: ImageUpload | null;
       };
+      payments?: Payment[];
     },
     active?: boolean
   ): BookingResponse => {
@@ -1163,7 +1304,8 @@ export class BookingService {
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
         username: active ? booking.account.username : undefined,
         password: active ? booking.account.password : undefined
-      }
+      },
+      payments: booking.payments
     };
   };
 
@@ -1171,7 +1313,7 @@ export class BookingService {
     payment: Payment
   ): PaymentResponse => {
     return {
-      paymentId: payment.id,
+      id: payment.id,
       bookingId: payment.bookingId,
       status: payment.status,
       value: payment.value,
@@ -1192,7 +1334,7 @@ export class BookingService {
     payment: Payment & { booking: Booking | null }
   ): PaymentResponse => {
     return {
-      paymentId: payment.id,
+      id: payment.id,
       bookingId: payment.bookingId,
       status: payment.status,
       value: payment.value,

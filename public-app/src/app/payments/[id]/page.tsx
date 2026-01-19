@@ -98,7 +98,7 @@ export default function PaymentDetailPage() {
       const a = document.createElement("a");
 
       a.href = url;
-      a.download = `QRIS-${payment.paymentId}.png`;
+      a.download = `QRIS-${payment.id}.png`;
       document.body.appendChild(a);
       a.click();
 
