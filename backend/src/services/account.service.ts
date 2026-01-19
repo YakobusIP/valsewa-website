@@ -24,6 +24,7 @@ import {
 } from "../types/account.type";
 import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
+import { parseDurationToHours } from "../lib/utils";
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
@@ -315,7 +316,58 @@ export class AccountService {
         filteredData = fuseResults.map((result) => result.item);
       }
 
-      const itemCount = filteredData.length;
+      const accountIds = filteredData.map(a => a.id);
+
+      const bookings = await prisma.booking.findMany({
+        where: {
+          accountId: { in: accountIds },
+          status: BookingStatus.RESERVED,
+          endAt: { gt: new Date() }
+        },
+        orderBy: {
+          endAt: "asc"
+        },
+        select: {
+          accountId: true,
+          startAt: true,
+          endAt: true,
+          duration: true
+        }
+      });
+
+      const bookingMap = new Map<number, typeof bookings>();
+
+      for (const booking of bookings) {
+        if (!bookingMap.has(booking.accountId)) {
+          bookingMap.set(booking.accountId, []);
+        }
+
+        const list = bookingMap.get(booking.accountId)!;
+        if (list.length < 2) {
+          list.push(booking);
+        }
+      }
+
+      const filteredDataWithBookings = filteredData.map(datum => {
+        const b = bookingMap.get(datum.id) ?? [];
+
+        return {
+          ...datum,
+          currentBookingDate: b[0]?.startAt ?? null,
+          currentBookingDuration: b[0]
+            ? parseDurationToHours(b[0].duration)
+            : null,
+          currentExpireAt: b[0]?.endAt ?? null,
+
+          nextBookingDate: b[1]?.startAt ?? null,
+          nextBookingDuration: b[1]
+            ? parseDurationToHours(b[1].duration)
+            : null,
+          nextExpireAt: b[1]?.endAt ?? null
+        };
+      });
+
+      const itemCount = filteredDataWithBookings.length;
       const pageCount = Math.ceil(itemCount / limit);
 
       const metadata = {
@@ -325,7 +377,7 @@ export class AccountService {
         total: itemCount
       };
 
-      const paginatedData = filteredData.slice(
+      const paginatedData = filteredDataWithBookings.slice(
         (page - 1) * limit,
         page * limit
       );
@@ -471,7 +523,37 @@ export class AccountService {
         throw new NotFoundError("Account not found!");
       }
 
-      return account;
+      const bookings = await prisma.booking.findMany({
+        where: {
+          accountId: account.id,
+          status: BookingStatus.RESERVED,
+          endAt: { gt: new Date() }
+        },
+        orderBy: {
+          endAt: "asc"
+        },
+        select: {
+          id: true,
+          duration: true,
+          startAt: true,
+          endAt: true,
+        },
+        take: 2
+      });
+
+      return {
+        ...account,
+        currentBookingDate: bookings[0]?.startAt ?? null,
+        currentBookingDuration: bookings[0]
+          ? parseDurationToHours(bookings[0]?.duration)
+          : null,
+        currentExpireAt: bookings[0]?.endAt ?? null,
+        nextBookingDate: bookings[1]?.startAt ?? null,
+        nextBookingDuration: bookings[1]
+          ? parseDurationToHours(bookings[1]?.duration)
+          : null,
+        nextExpireAt: bookings[1]?.endAt ?? null,
+      };
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;

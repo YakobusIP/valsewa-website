@@ -36,6 +36,20 @@ export const addMinutes = (date: Date, minutesToAdd: number) => {
   return d;
 };
 
+export const parseDurationToHours = (duration: string): number => {
+  const lower = duration.toLowerCase().trim();
+
+  if (lower.endsWith("h")) {
+    return Number(lower.replace("h", ""));
+  }
+
+  if (lower.endsWith("d")) {
+    return Number(lower.replace("d", "")) * 24;
+  }
+
+  return 0;
+};
+
 export const parseToDate = (dateStr?: string): Date | null => {
   if (!dateStr) return null;
 

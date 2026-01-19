@@ -18,7 +18,7 @@ import {
   NotFoundError,
   PrismaUniqueError
 } from "../lib/error";
-import { addHours, addMinutes } from "../lib/utils";
+import { addHours, addMinutes, parseDurationToHours } from "../lib/utils";
 import { prisma } from "../lib/prisma";
 import {
   BankCodes,
@@ -278,20 +278,6 @@ export class BookingService {
     }
   };
 
-  private parseDurationToHours = (duration: string): number => {
-    const lower = duration.toLowerCase().trim();
-
-    if (lower.endsWith("h")) {
-      return Number(lower.replace("h", ""));
-    }
-
-    if (lower.endsWith("d")) {
-      return Number(lower.replace("d", "")) * 24;
-    }
-
-    return 0;
-  };
-
   private calculateValues = (
     normalPrice: number,
     lowPrice: number,
@@ -343,7 +329,7 @@ export class BookingService {
 
     const totalValue = subtotalValue + adminFee;
 
-    const durationInHours = this.parseDurationToHours(duration);
+    const durationInHours = parseDurationToHours(duration);
 
     return {
       voucherType,
@@ -445,7 +431,8 @@ export class BookingService {
               { startAt: { lt: bookingEndAt } },
               { endAt: { gt: bookingStartAt } }
             ]
-          }
+          },
+          select: { id: true }
         });
 
         if (overlapping) {
@@ -547,7 +534,7 @@ export class BookingService {
       if (!account)
         throw new NotFoundError("Account not found or not available!");
 
-      const durationInHours = this.parseDurationToHours(duration);
+      const durationInHours = parseDurationToHours(duration);
 
       const endAt = addHours(startAt, durationInHours);
 
@@ -1151,7 +1138,7 @@ export class BookingService {
         startAt: actualStart,
         endAt: addHours(
           actualStart,
-          this.parseDurationToHours(booking.duration) * booking.quantity
+          parseDurationToHours(booking.duration) * booking.quantity
         )
       })
     };
@@ -1170,7 +1157,7 @@ export class BookingService {
         data: {
           totalRentHour: {
             increment:
-              this.parseDurationToHours(booking.duration) * booking.quantity
+              parseDurationToHours(booking.duration) * booking.quantity
           },
           rentHourUpdated: true
         }
