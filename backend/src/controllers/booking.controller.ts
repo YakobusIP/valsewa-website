@@ -84,6 +84,7 @@ export class BookingController {
       return next(error);
     }
   };
+
   getBookingsByCustomerId = async (
     req: Request,
     res: Response,
@@ -318,6 +319,7 @@ export class BookingController {
       return next(error);
     }
   };
+
   syncCompletedBookings = async (
     req: Request,
     res: Response,
@@ -352,6 +354,7 @@ export class BookingController {
     next: NextFunction
   ) => {
     try {
+      console.log("[callbackFaspayPayment] Processing faspay callback payment with request:", req);
       const payload = req.body;
       const {
         trx_id,
@@ -384,7 +387,7 @@ export class BookingController {
         paymentStatus: FASPAY_STATUS_MAP[payment_status_code]
       });
 
-      return res.status(200).json({
+      const result = {
         response: "Payment Notification",
         trx_id,
         merchant_id,
@@ -393,7 +396,11 @@ export class BookingController {
         response_code: "00",
         response_desc: "Success",
         response_date: parseToDateStr(new Date())
-      });
+      }
+
+      console.log("[vaInquiry] Processed faspay callback payment with result:", result);
+
+      return res.status(200).json(result);
     } catch (error) {
       if (error instanceof ForbiddenError) {
         return res.status(403).send("Signature Invalid");
