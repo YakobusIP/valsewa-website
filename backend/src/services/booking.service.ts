@@ -20,6 +20,7 @@ import {
 } from "../lib/error";
 import { addHours, addMinutes } from "../lib/utils";
 import { subDays } from "date-fns";
+import parseDuration from "parse-duration";
 import { prisma } from "../lib/prisma";
 import {
   BankCodes,
@@ -279,20 +280,6 @@ export class BookingService {
     }
   };
 
-  private parseDurationToHours = (duration: string): number => {
-    const lower = duration.toLowerCase().trim();
-
-    if (lower.endsWith("h")) {
-      return Number(lower.replace("h", ""));
-    }
-
-    if (lower.endsWith("d")) {
-      return Number(lower.replace("d", "")) * 24;
-    }
-
-    return 0;
-  };
-
   private calculateValues = (
     normalPrice: number,
     lowPrice: number,
@@ -344,7 +331,9 @@ export class BookingService {
 
     const totalValue = subtotalValue + adminFee;
 
-    const durationInHours = this.parseDurationToHours(duration);
+    const durationMs = parseDuration(duration);
+    const durationInHours =
+      durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
 
     return {
       voucherType,
@@ -548,7 +537,11 @@ export class BookingService {
       if (!account)
         throw new NotFoundError("Account not found or not available!");
 
-      const durationInHours = this.parseDurationToHours(duration);
+      const durationMs = parseDuration(duration);
+      if (durationMs === null || durationMs <= 0) {
+        throw new BadRequestError("Invalid duration format");
+      }
+      const durationInHours = durationMs / (1000 * 60 * 60);
 
       const endAt = addHours(startAt, durationInHours);
 
@@ -566,7 +559,7 @@ export class BookingService {
           mainValue: totalValue,
           othersValue: 0,
           discount: 0,
-          totalValue: totalValue,
+          totalValue: totalValue
         }
       });
 
@@ -579,7 +572,9 @@ export class BookingService {
     }
   };
 
-  overrideBooking = async (data: OverrideBookingRequest): Promise<BookingResponse> => {
+  overrideBooking = async (
+    data: OverrideBookingRequest
+  ): Promise<BookingResponse> => {
     try {
       const { bookingId, accountId } = data;
 
@@ -947,10 +942,9 @@ export class BookingService {
         const rentHourByAccount = new Map<number, number>();
         for (const booking of completedBookings) {
           const durationMs = parseDuration(booking.duration);
-          const durationHours = durationMs
-            ? Math.round(durationMs / (1000 * 60 * 60))
-            : 0;
-          const incrementHours = durationHours * booking.quantity;
+          const durationHours =
+            durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
+          const incrementHours = Math.round(durationHours) * booking.quantity;
           if (incrementHours <= 0) continue;
 
           rentHourByAccount.set(
@@ -1204,7 +1198,12 @@ export class BookingService {
         startAt: actualStart,
         endAt: addHours(
           actualStart,
-          this.parseDurationToHours(booking.duration) * booking.quantity
+          (() => {
+            const durationMs = parseDuration(booking.duration);
+            const durationHours =
+              durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
+            return durationHours * booking.quantity;
+          })()
         )
       })
     };
@@ -1222,8 +1221,12 @@ export class BookingService {
         },
         data: {
           totalRentHour: {
-            increment:
-              this.parseDurationToHours(booking.duration) * booking.quantity
+            increment: (() => {
+              const durationMs = parseDuration(booking.duration);
+              const durationHours =
+                durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
+              return durationHours * booking.quantity;
+            })()
           },
           rentHourUpdated: true
         }
