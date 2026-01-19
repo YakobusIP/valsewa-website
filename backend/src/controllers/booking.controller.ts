@@ -205,7 +205,36 @@ export class BookingController {
     }
   };
 
-  overrideBooking = async (req: Request, res: Response, next: NextFunction) => {
+  createAdminBooking = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { accountId, startAt, duration, totalValue } = req.body;
+
+      if (!accountId || !startAt || !duration || totalValue === undefined) {
+        throw new BadRequestError("Missing required fields.");
+      }
+
+      const result = await this.bookingService.createAdminBooking({
+        accountId,
+        startAt: new Date(startAt),
+        duration,
+        totalValue
+      });
+
+      return res.status(201).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  overrideBooking = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const { bookingId, accountId } = req.body;
 

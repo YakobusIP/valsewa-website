@@ -195,10 +195,10 @@ export default function Navbar({
                         onClick={() => onOpenUserList()}
                       >
                         <div className="text-sm font-medium leading-none">
-                          User Account List
+                          Customer List
                         </div>
                         <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                          View and manage user accounts.
+                          View and manage customer accounts.
                         </p>
                       </a>
                     </NavigationMenuLink>
@@ -324,7 +324,7 @@ export default function Navbar({
                       onClick={onOpenUserList}
                     >
                       <UserRoundCogIcon />
-                      User Account List
+                      Customer List
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>

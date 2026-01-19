@@ -90,6 +90,13 @@ export type CreateBookingRequest = {
   startAt?: Date;
 };
 
+export type CreateAdminBookingRequest = {
+  accountId: number;
+  startAt: Date;
+  duration: string;
+  totalValue: number;
+};
+
 export type UpdateBookingRequest = {
   totalValue: number;
 };

@@ -24,6 +24,7 @@ import {
   BankCodes,
   BookingResponse,
   CallbackNotificationRequest,
+  CreateAdminBookingRequest,
   CreateBookingRequest,
   CreateManualBookingRequest,
   OverrideBookingRequest,
@@ -531,9 +532,53 @@ export class BookingService {
     }
   };
 
-  overrideBooking = async (
-    data: OverrideBookingRequest
+  createAdminBooking = async (
+    data: CreateAdminBookingRequest
   ): Promise<BookingResponse> => {
+    try {
+      const { accountId, startAt, duration, totalValue } = data;
+
+      const account = await prisma.account.findUnique({
+        where: {
+          id: accountId,
+          availabilityStatus: { not: Status.NOT_AVAILABLE }
+        }
+      });
+      if (!account)
+        throw new NotFoundError("Account not found or not available!");
+
+      const durationInHours = this.parseDurationToHours(duration);
+
+      const endAt = addHours(startAt, durationInHours);
+
+      const booking = await prisma.booking.create({
+        data: {
+          accountId: account.id,
+          status: BookingStatus.RESERVED,
+          duration: duration,
+          quantity: 1,
+          immediate: false,
+          startAt: startAt,
+          endAt: endAt,
+          mainValuePerUnit: totalValue,
+          othersValuePerUnit: 0,
+          mainValue: totalValue,
+          othersValue: 0,
+          discount: 0,
+          totalValue: totalValue,
+        }
+      });
+
+      return this.mapBookingDataToBookingResponse(booking);
+    } catch (error) {
+      if (error instanceof PrismaUniqueError) throw error;
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  overrideBooking = async (data: OverrideBookingRequest): Promise<BookingResponse> => {
     try {
       const { bookingId, accountId } = data;
 

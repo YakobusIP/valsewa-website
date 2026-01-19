@@ -31,12 +31,8 @@ const Card: React.FC<CardProps> = ({ data }) => {
   const processedData = processCardData(data);
 
   function getRankImage(rank: string): string {
-    if (!rank) return "/rank/default.svg";
-
-    const baseRankRaw = rank.trim().split(" ")[0].toLowerCase();
-    const baseRank =
-      baseRankRaw.charAt(0).toUpperCase() + baseRankRaw.slice(1);
-
+    if (!rank) return "/rank/unranked.webp";
+    const baseRank = rank.trim().split(" ")[0].toLowerCase();
     return `/rank/${baseRank} 3.svg`;
   }
 

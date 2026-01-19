@@ -66,14 +66,14 @@ export default function UserListModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full xl:w-3/5 max-h-[100dvh] overflow-y-auto">
         <DialogHeader className="space-y-1">
-          <DialogTitle>User List</DialogTitle>
+          <DialogTitle>Customer List</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Manage registered users
+            Manage registered customers
           </p>
         </DialogHeader>
 
         {/* TABLE CONTAINER */}
-        <div className="mt-4 border rounded-lg overflow-hidden bg-background">
+        <div className="mt-4 border rounded-lg overflow-y-hidden bg-background">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 border-b">
               <tr>
@@ -92,7 +92,7 @@ export default function UserListModal({
                     colSpan={5}
                     className="py-6 text-center text-muted-foreground"
                   >
-                    Loading users...
+                    Loading customers...
                   </td>
                 </tr>
               )}
@@ -111,7 +111,7 @@ export default function UserListModal({
                     colSpan={5}
                     className="py-6 text-center text-muted-foreground"
                   >
-                    No users found
+                    No customers found
                   </td>
                 </tr>
               )}

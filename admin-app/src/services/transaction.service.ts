@@ -1,6 +1,7 @@
 import { ApiResponseList, MessageResponse } from "@/types/api.type";
 import {
   BOOKING_STATUS,
+  CreateAdminBookingRequest,
   CreateBookingRequest,
   PaymentEntity,
   UpdateBookingRequest
@@ -105,12 +106,25 @@ const createBookingService = () => {
     }
   };
 
+  const createAdminBooking = async (data: CreateAdminBookingRequest) => {
+    try {
+      const response = await interceptedAxios.post<MessageResponse>(
+        `${BASE_BOOKING_URL}/create-admin`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
   return {
     fetchAll,
     create,
     update,
     getAccountRented,
-    overrideBooking
+    overrideBooking,
+    createAdminBooking
   };
 };
 

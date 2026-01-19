@@ -35,6 +35,11 @@ class BookingRouter {
       authMiddleware,
       this.bookingController.createManualBooking
     );
+    this.router.post(
+      "/create-admin",
+      authMiddleware,
+      this.bookingController.createAdminBooking
+    );
     this.router.get(
       "/rented",
       authMiddleware,
