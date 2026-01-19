@@ -486,7 +486,7 @@ components:
     PaymentResponse:
       type: object
       properties:
-        paymentId: { type: string, format: cuid }
+        id: { type: string, format: cuid }
         bookingId: { type: string, format: cuid }
         status: { $ref: "#/components/schemas/PaymentStatus" }
         value: { type: integer }
@@ -2059,6 +2059,8 @@ paths:
     post:
       tags: [Bookings]
       summary: Sync expired bookings
+      security:
+        - apiKeyAuth: []
       responses:
         "200":
           content:
@@ -2072,6 +2074,8 @@ paths:
     post:
       tags: [Bookings]
       summary: Sync completed bookings
+      security:
+        - apiKeyAuth: []
       responses:
         "200":
           content:
@@ -2085,6 +2089,8 @@ paths:
     post:
       tags: [Bookings]
       summary: Sync account availabilities
+      security:
+        - apiKeyAuth: []
       responses:
         "200":
           content:

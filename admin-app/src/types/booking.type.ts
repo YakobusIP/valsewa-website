@@ -67,7 +67,7 @@ export type BookingWithAccountEntity = BookingEntity & {
 };
 
 export type PaymentEntity = {
-  paymentId: string;
+  id: string;
   bookingId: string;
   status: PAYMENT_STATUS;
   value: number;

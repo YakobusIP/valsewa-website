@@ -8,7 +8,7 @@ import { VoucherEntity } from "@/types/voucher.type";
 
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { instrumentSans, staatliches } from "@/lib/fonts";
-import { calculateVoucherDiscount, cn } from "@/lib/utils";
+import { calculateAdminFee, calculateVoucherDiscount, cn } from "@/lib/utils";
 
 type PaymentSummaryProps = {
   booking: BookingWithAccountEntity;
@@ -38,9 +38,19 @@ function PaymentSummary({
     [voucher, booking.mainValue]
   );
 
-  const totalPayment = useMemo(
+  const subtotalPayment = useMemo(
     () => booking.totalValue - discount,
     [booking.totalValue, discount]
+  );
+
+  const adminFee = useMemo(
+    () => calculateAdminFee(subtotalPayment, paymentMethod),
+    [subtotalPayment, paymentMethod]
+  );
+
+  const totalPayment = useMemo(
+    () => subtotalPayment + adminFee,
+    [adminFee, subtotalPayment]
   );
 
   const paymentMethodLabel = useMemo(() => {
@@ -152,6 +162,12 @@ function PaymentSummary({
           <span>Other Fee</span>
           <span>IDR {booking.othersValue?.toLocaleString() ?? "0"}</span>
         </div>
+        {adminFee && (
+          <div className="flex justify-between">
+            <span>Admin Fee</span>
+            <span>IDR {adminFee?.toLocaleString() ?? "0"}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span>Payment Method</span>
           <span>{paymentMethodLabel}</span>

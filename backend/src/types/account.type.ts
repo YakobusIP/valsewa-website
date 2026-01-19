@@ -55,12 +55,12 @@ type UpdateResetLogRequest = {
 type GetAvailableAccountsRequest = {
   startAt: Date;
   endAt: Date;
-}
+};
 
 export type {
   AccountEntityRequest,
   AccountWithSkins,
   PublicAccount,
   UpdateResetLogRequest,
-  GetAvailableAccountsRequest,
+  GetAvailableAccountsRequest
 };

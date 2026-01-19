@@ -1,5 +1,4 @@
 import { PaymentStatus, Prisma } from "@prisma/client";
-import { parseFaspayLocalDate } from "../faspay/faspay.client";
 import { NotFoundError } from "../lib/error";
 import { prisma } from "../lib/prisma";
 import {
@@ -9,6 +8,7 @@ import {
   VaPaymentResponse
 } from "../types/faspay.type";
 import { BookingService } from "./booking.service";
+import { parseToLocalDate } from "../lib/utils";
 
 export class FaspayService {
   constructor(private readonly bookingService: BookingService) {}
@@ -110,7 +110,7 @@ export class FaspayService {
             payment,
             payment.booking!,
             PaymentStatus.SUCCESS,
-            parseFaspayLocalDate(trxDateTime),
+            parseToLocalDate(trxDateTime),
             referenceNo
           );
         }

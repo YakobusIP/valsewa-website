@@ -55,6 +55,7 @@ export type BookingEntity = {
   voucherMaxDiscount: number | null;
   mainValue: number;
   othersValue: number | null;
+  adminFee: number | null;
   discount: number | null;
   totalValue: number;
   active: boolean | null;
@@ -69,10 +70,11 @@ export type BookingWithAccountEntity = BookingEntity & {
     username?: string;
     password?: string;
   };
+  payments?: PaymentEntity[];
 };
 
 export type PaymentEntity = {
-  paymentId: string;
+  id: string;
   bookingId: string;
   status: PAYMENT_STATUS;
   value: number;
