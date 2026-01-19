@@ -894,31 +894,14 @@ export class BookingService {
 
   syncCompletedBookings = async () => {
     try {
-      const count = await prisma.$transaction(async (tx) => {
-        const completedBookings = await tx.booking.findMany({
-          where: {
-            status: BookingStatus.RESERVED,
-            endAt: { lte: new Date() }
-          },
-          select: {
-            id: true
-          }
-        });
-
-        if (completedBookings.length === 0) return 0;
-
-        const bookingIds = completedBookings.map((b) => b.id);
-
-        await tx.booking.updateMany({
-          where: {
-            id: { in: bookingIds }
-          },
-          data: {
-            status: BookingStatus.COMPLETED
-          }
-        });
-
-        return bookingIds.length;
+      const count = await prisma.booking.updateMany({
+        where: {
+          status: BookingStatus.RESERVED,
+          endAt: { lte: new Date() }
+        },
+        data: {
+          status: BookingStatus.COMPLETED
+        }
       });
 
       return { count };
