@@ -86,7 +86,7 @@ export default function BookingDetailPage() {
   const [booking, setBooking] = useState<BookingWithAccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] =
-    useState<PAYMENT_METHOD_REQUEST | null>(null);
+    useState<PAYMENT_METHOD_REQUEST>(PAYMENT_METHOD_REQUEST.QRIS);
   const [voucher, setVoucher] = useState<VoucherEntity | null>(null);
   const [isLoadingCancelBooking, setIsLoadingCancelBooking] = useState(false);
   const { handleAsyncError } = useErrorHandler();

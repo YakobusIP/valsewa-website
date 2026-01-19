@@ -329,7 +329,7 @@ export class BookingService {
     let adminFee = 0;
     switch (paymentMethod) {
       case PaymentMethodType.QRIS:
-        adminFee = 0.007 * subtotalValue;
+        adminFee = Math.ceil(0.00705 * subtotalValue);
         break;
 
       case PaymentMethodType.VIRTUAL_ACCOUNT:

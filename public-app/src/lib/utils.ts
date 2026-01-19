@@ -67,7 +67,7 @@ export function calculateAdminFee(
   if (!totalValue || !paymentMethod) return 0;
 
   if (paymentMethod === PAYMENT_METHOD_REQUEST.QRIS) {
-    return totalValue * 0.007;
+    return Math.ceil(totalValue * 0.00705);
   }
   
   if ([PAYMENT_METHOD_REQUEST.VA_BNI, PAYMENT_METHOD_REQUEST.VA_PERMATA, PAYMENT_METHOD_REQUEST.VA_BRI].includes(paymentMethod)) {
