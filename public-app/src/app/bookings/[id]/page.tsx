@@ -88,6 +88,7 @@ export default function BookingDetailPage() {
   const [paymentMethod, setPaymentMethod] =
     useState<PAYMENT_METHOD_REQUEST | null>(null);
   const [voucher, setVoucher] = useState<VoucherEntity | null>(null);
+  const [isLoadingCancelBooking, setIsLoadingCancelBooking] = useState(false);
   const { handleAsyncError } = useErrorHandler();
 
   const fetchVoucher = useCallback(
@@ -105,9 +106,19 @@ export default function BookingDetailPage() {
     [handleAsyncError]
   );
 
-  const onBack = useCallback(() => {
-    router.push("/");
-  }, [router]);
+  const handleCancelBooking = useCallback(async () => {
+    if (!booking || isLoadingCancelBooking) return;
+
+    try {
+      setIsLoadingCancelBooking(true);
+      await bookingService.cancelBooking({ bookingId: booking.id });
+    } catch (error) {
+      handleAsyncError(error, "Cancel booking failed", "Cancel booking failed");
+    } finally {
+      setIsLoadingCancelBooking(false);
+      router.push("/");
+    }
+  }, [booking, isLoadingCancelBooking, handleAsyncError, router]);
 
   const onSubmit = useCallback(async () => {
     if (!booking || !paymentMethod) return;
@@ -173,7 +184,7 @@ export default function BookingDetailPage() {
         <Navbar />
       </div>
       <div className="lg:hidden">
-        <NavbarMobile />
+        <NavbarMobile onBack={handleCancelBooking} isLoading={isLoadingCancelBooking} />
       </div>
 
       <div
@@ -182,7 +193,11 @@ export default function BookingDetailPage() {
           instrumentSans.className
         )}
       >
-        <ProgressStepper bookingId={id!} stepIdx={1} onBack={onBack} />
+        <ProgressStepper
+          stepIdx={1}
+          handleCancelBooking={handleCancelBooking}
+          isLoadingCancelBooking={isLoadingCancelBooking}
+        />
 
         {booking.expiredAt && (
           <PaymentCountdown expiredAt={booking.expiredAt} />
