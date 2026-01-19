@@ -6,7 +6,7 @@ import CancelBookingButton from "./bookings/CancelBookingButton";
 
 type Props = {
   onBack?: () => Promise<void>;
-  isLoading: boolean;
+  isLoading?: boolean;
 }
 
 const NavbarMobile = ({ onBack, isLoading = false }: Props) => {

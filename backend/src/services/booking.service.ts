@@ -18,9 +18,8 @@ import {
   NotFoundError,
   PrismaUniqueError
 } from "../lib/error";
-import { addHours, addMinutes } from "../lib/utils";
+import { addHours, addMinutes, parseDurationToHours } from "../lib/utils";
 import { subDays } from "date-fns";
-import parseDuration from "parse-duration";
 import { prisma } from "../lib/prisma";
 import {
   BankCodes,
@@ -331,9 +330,7 @@ export class BookingService {
 
     const totalValue = subtotalValue + adminFee;
 
-    const durationMs = parseDuration(duration);
-    const durationInHours =
-      durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
+    const durationInHours = parseDurationToHours(duration);
 
     return {
       voucherType,
@@ -362,39 +359,67 @@ export class BookingService {
         startAt
       } = data;
 
-      if (customerId) {
-        const customer = await prisma.customer.findUnique({
-          where: { id: customerId }
-        });
-        if (!customer) throw new NotFoundError("Customer not found");
+      const [customer, ongoingHoldBooking, account, priceList, voucher] =
+        await Promise.all([
+          // customer
+          customerId
+            ? prisma.customer.findUnique({
+                where: { id: customerId },
+                select: { id: true }
+              })
+            : Promise.resolve(null),
+          // ongoing hold booking
+          customerId
+            ? prisma.booking.findFirst({
+                where: {
+                  customerId,
+                  status: BookingStatus.HOLD
+                },
+                select: { id: true }
+              })
+            : Promise.resolve(null),
+          // account
+          prisma.account.findUnique({
+            where: {
+              id: accountId,
+              availabilityStatus: { not: Status.NOT_AVAILABLE }
+            },
+            select: {
+              id: true,
+              isLowRank: true
+            }
+          }),
+          // price list
+          prisma.priceList.findUnique({
+            where: { id: priceListId },
+            select: {
+              id: true,
+              normalPrice: true,
+              lowPrice: true,
+              duration: true
+            }
+          }),
+          // voucher
+          voucherId
+            ? this.getValidVoucherById(voucherId)
+            : Promise.resolve(null)
+        ]);
 
-        const ongoingHoldBooking = prisma.booking.findFirst({
-          where: {
-            customerId,
-            status: BookingStatus.HOLD
-          }
-        });
-        if (!ongoingHoldBooking)
-          throw new PrismaUniqueError("Customer has ongoing hold booking.");
+      if (customerId && !customer) {
+        throw new NotFoundError("Customer not found.");
       }
 
-      const account = await prisma.account.findUnique({
-        where: {
-          id: accountId,
-          availabilityStatus: { not: Status.NOT_AVAILABLE }
-        }
-      });
-      if (!account)
-        throw new NotFoundError("Account not found or not available!");
+      if (ongoingHoldBooking) {
+        throw new PrismaUniqueError("Customer has ongoing hold booking.");
+      }
 
-      const priceList = await prisma.priceList.findUnique({
-        where: { id: priceListId }
-      });
-      if (!priceList) throw new NotFoundError("Price list not found!");
+      if (!account) {
+        throw new NotFoundError("Account not found or not available.");
+      }
 
-      const voucher = voucherId
-        ? await this.getValidVoucherById(voucherId)
-        : null;
+      if (!priceList) {
+        throw new NotFoundError("Price list not found.");
+      }
 
       const {
         voucherType,
@@ -435,7 +460,8 @@ export class BookingService {
               { startAt: { lt: bookingEndAt } },
               { endAt: { gt: bookingStartAt } }
             ]
-          }
+          },
+          select: { id: true }
         });
 
         if (overlapping) {
@@ -537,11 +563,7 @@ export class BookingService {
       if (!account)
         throw new NotFoundError("Account not found or not available!");
 
-      const durationMs = parseDuration(duration);
-      if (durationMs === null || durationMs <= 0) {
-        throw new BadRequestError("Invalid duration format");
-      }
-      const durationInHours = durationMs / (1000 * 60 * 60);
+      const durationInHours = parseDurationToHours(duration);
 
       const endAt = addHours(startAt, durationInHours);
 
@@ -614,7 +636,8 @@ export class BookingService {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
         include: {
-          customer: true
+          customer: true,
+          account: true
         }
       });
 
@@ -639,11 +662,6 @@ export class BookingService {
         throw new BadRequestError("Booking is expired!");
       }
 
-      const account = await prisma.account.findUnique({
-        where: { id: booking.accountId }
-      });
-      if (!account) throw new NotFoundError("Account not found!");
-
       const voucher = voucherId
         ? await this.getValidVoucherById(voucherId)
         : null;
@@ -663,7 +681,7 @@ export class BookingService {
       } = this.calculateValues(
         booking.mainValuePerUnit,
         booking.othersValuePerUnit ?? 0,
-        account.isLowRank,
+        booking.account.isLowRank,
         booking.duration,
         voucher,
         paymentMethodType,
@@ -673,8 +691,8 @@ export class BookingService {
       const { payment, isPaymentNew } = await prisma.$transaction(
         async (tx) => {
           await tx.$executeRaw`
-          SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE
-        `;
+            SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE
+          `;
 
           const updatedBooking = await tx.booking.update({
             where: { id: booking.id },
@@ -757,6 +775,11 @@ export class BookingService {
           where: { id: booking.id },
           data: { status: BookingStatus.CANCELLED }
         });
+
+        await prisma.payment.updateMany({
+          where: { bookingId, status: PaymentStatus.PENDING },
+          data: { status: PaymentStatus.CANCELLED }
+        })
       }
 
       return this.mapBookingDataToBookingResponse(booking);
@@ -842,43 +865,31 @@ export class BookingService {
       const nowWithGrace = new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS);
 
       const count = await prisma.$transaction(async (tx) => {
-        const expiredBookings = await tx.booking.findMany({
+        const expired = await tx.booking.updateMany({
           where: {
             status: BookingStatus.HOLD,
-            expiredAt: {
-              lte: nowWithGrace
-            }
-          },
-          select: {
-            id: true
-          }
-        });
-
-        if (expiredBookings.length === 0) return 0;
-
-        const bookingIds = expiredBookings.map((b) => b.id);
-
-        await tx.booking.updateMany({
-          where: {
-            id: { in: bookingIds },
-            status: BookingStatus.HOLD
+            expiredAt: { lte: nowWithGrace }
           },
           data: {
             status: BookingStatus.EXPIRED
           }
         });
 
+        if (expired.count === 0) return 0;
+
         await tx.payment.updateMany({
           where: {
-            bookingId: { in: bookingIds },
-            status: PaymentStatus.PENDING
+            status: PaymentStatus.PENDING,
+            booking: {
+              status: BookingStatus.EXPIRED
+            }
           },
           data: {
             status: PaymentStatus.EXPIRED
           }
         });
 
-        return bookingIds.length;
+        return expired.count;
       });
 
       return { count };
@@ -941,9 +952,7 @@ export class BookingService {
 
         const rentHourByAccount = new Map<number, number>();
         for (const booking of completedBookings) {
-          const durationMs = parseDuration(booking.duration);
-          const durationHours =
-            durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
+          const durationHours = parseDurationToHours(booking.duration);
           const incrementHours = Math.round(durationHours) * booking.quantity;
           if (incrementHours <= 0) continue;
 
@@ -1198,12 +1207,7 @@ export class BookingService {
         startAt: actualStart,
         endAt: addHours(
           actualStart,
-          (() => {
-            const durationMs = parseDuration(booking.duration);
-            const durationHours =
-              durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
-            return durationHours * booking.quantity;
-          })()
+          parseDurationToHours(booking.duration) * booking.quantity
         )
       })
     };
@@ -1221,12 +1225,7 @@ export class BookingService {
         },
         data: {
           totalRentHour: {
-            increment: (() => {
-              const durationMs = parseDuration(booking.duration);
-              const durationHours =
-                durationMs === null ? 0 : durationMs / (1000 * 60 * 60);
-              return durationHours * booking.quantity;
-            })()
+            increment: parseDurationToHours(booking.duration) * booking.quantity
           },
           rentHourUpdated: true
         }
@@ -1239,11 +1238,16 @@ export class BookingService {
   private mapBookingDataToBookingResponse = (
     booking: Booking & { payments?: Payment[] }
   ): BookingResponse => {
+    let status = booking.status;
+    if (status === BookingStatus.HOLD && booking.expiredAt && booking.expiredAt < new Date()) {
+      status = BookingStatus.EXPIRED;
+    }
+
     return {
       id: booking.id,
       customerId: booking.customerId,
       accountId: booking.accountId,
-      status: booking.status,
+      status,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
@@ -1275,11 +1279,16 @@ export class BookingService {
     },
     active?: boolean
   ): BookingResponse => {
+    let status = booking.status;
+    if (status === BookingStatus.HOLD && booking.expiredAt && booking.expiredAt < new Date()) {
+      status = BookingStatus.EXPIRED;
+    }
+
     return {
       id: booking.id,
       customerId: booking.customerId,
       accountId: booking.accountId,
-      status: booking.status,
+      status,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
@@ -1333,10 +1342,15 @@ export class BookingService {
   private mapPaymentWithBookingDataToPaymentResponse = (
     payment: Payment & { booking: Booking | null }
   ): PaymentResponse => {
+    let status = payment.status;
+    if (status === PaymentStatus.PENDING && payment.booking?.expiredAt && payment.booking?.expiredAt < new Date()) {
+      status = PaymentStatus.EXPIRED;
+    }
+
     return {
       id: payment.id,
       bookingId: payment.bookingId,
-      status: payment.status,
+      status,
       value: payment.value,
       currency: payment.currency,
       provider: payment.provider,
