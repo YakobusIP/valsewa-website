@@ -358,45 +358,51 @@ export class BookingService {
         startAt
       } = data;
 
-      const [customer, ongoingHoldBooking, account, priceList, voucher] = await Promise.all([
-        // customer
-        customerId
-          ? prisma.customer.findUnique({ where: { id: customerId }, select: { id: true } })
-          : Promise.resolve(null),
-        // ongoing hold booking
-        customerId
-          ? prisma.booking.findFirst({
-              where: {
-                customerId,
-                status: BookingStatus.HOLD
-              },
-              select: { id: true }
-            })
-          : Promise.resolve(null),
-        // account
-        prisma.account.findUnique({
-          where: {
-            id: accountId,
-            availabilityStatus: { not: Status.NOT_AVAILABLE } 
-          },
-          select: {
-            id: true,
-            isLowRank: true
-          }
-        }),
-        // price list
-        prisma.priceList.findUnique({
-          where: { id: priceListId },
-          select: {
-            id: true,
-            normalPrice: true,
-            lowPrice: true,
-            duration: true
-          }
-        }),
-        // voucher
-        voucherId ? this.getValidVoucherById(voucherId) : Promise.resolve(null)
-      ]);
+      const [customer, ongoingHoldBooking, account, priceList, voucher] =
+        await Promise.all([
+          // customer
+          customerId
+            ? prisma.customer.findUnique({
+                where: { id: customerId },
+                select: { id: true }
+              })
+            : Promise.resolve(null),
+          // ongoing hold booking
+          customerId
+            ? prisma.booking.findFirst({
+                where: {
+                  customerId,
+                  status: BookingStatus.HOLD
+                },
+                select: { id: true }
+              })
+            : Promise.resolve(null),
+          // account
+          prisma.account.findUnique({
+            where: {
+              id: accountId,
+              availabilityStatus: { not: Status.NOT_AVAILABLE }
+            },
+            select: {
+              id: true,
+              isLowRank: true
+            }
+          }),
+          // price list
+          prisma.priceList.findUnique({
+            where: { id: priceListId },
+            select: {
+              id: true,
+              normalPrice: true,
+              lowPrice: true,
+              duration: true
+            }
+          }),
+          // voucher
+          voucherId
+            ? this.getValidVoucherById(voucherId)
+            : Promise.resolve(null)
+        ]);
 
       if (customerId && !customer) {
         throw new NotFoundError("Customer not found.");
@@ -574,7 +580,7 @@ export class BookingService {
           mainValue: totalValue,
           othersValue: 0,
           discount: 0,
-          totalValue: totalValue,
+          totalValue: totalValue
         }
       });
 
@@ -587,7 +593,9 @@ export class BookingService {
     }
   };
 
-  overrideBooking = async (data: OverrideBookingRequest): Promise<BookingResponse> => {
+  overrideBooking = async (
+    data: OverrideBookingRequest
+  ): Promise<BookingResponse> => {
     try {
       const { bookingId, accountId } = data;
 
@@ -643,7 +651,9 @@ export class BookingService {
         throw new BadRequestError("Booking expiredAt is missing!");
       }
 
-      if (booking.expiredAt < new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS)) {
+      if (
+        booking.expiredAt < new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS)
+      ) {
         await prisma.booking.update({
           where: { id: booking.id },
           data: { status: BookingStatus.EXPIRED }
@@ -849,43 +859,31 @@ export class BookingService {
       const nowWithGrace = new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS);
 
       const count = await prisma.$transaction(async (tx) => {
-        const expiredBookings = await tx.booking.findMany({
+        const expired = await tx.booking.updateMany({
           where: {
             status: BookingStatus.HOLD,
-            expiredAt: {
-              lte: nowWithGrace
-            }
-          },
-          select: {
-            id: true
-          }
-        });
-
-        if (expiredBookings.length === 0) return 0;
-
-        const bookingIds = expiredBookings.map((b) => b.id);
-
-        await tx.booking.updateMany({
-          where: {
-            id: { in: bookingIds },
-            status: BookingStatus.HOLD
+            expiredAt: { lte: nowWithGrace }
           },
           data: {
             status: BookingStatus.EXPIRED
           }
         });
 
+        if (expired.count === 0) return 0;
+
         await tx.payment.updateMany({
           where: {
-            bookingId: { in: bookingIds },
-            status: PaymentStatus.PENDING
+            status: PaymentStatus.PENDING,
+            booking: {
+              status: BookingStatus.EXPIRED
+            }
           },
           data: {
             status: PaymentStatus.EXPIRED
           }
         });
 
-        return bookingIds.length;
+        return expired.count;
       });
 
       return { count };
@@ -1172,8 +1170,7 @@ export class BookingService {
         },
         data: {
           totalRentHour: {
-            increment:
-              parseDurationToHours(booking.duration) * booking.quantity
+            increment: parseDurationToHours(booking.duration) * booking.quantity
           },
           rentHourUpdated: true
         }

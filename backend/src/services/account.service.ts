@@ -316,7 +316,7 @@ export class AccountService {
         filteredData = fuseResults.map((result) => result.item);
       }
 
-      const accountIds = filteredData.map(a => a.id);
+      const accountIds = filteredData.map((a) => a.id);
 
       const bookings = await prisma.booking.findMany({
         where: {
@@ -348,7 +348,7 @@ export class AccountService {
         }
       }
 
-      const filteredDataWithBookings = filteredData.map(datum => {
+      const filteredDataWithBookings = filteredData.map((datum) => {
         const b = bookingMap.get(datum.id) ?? [];
 
         return {
@@ -536,7 +536,7 @@ export class AccountService {
           id: true,
           duration: true,
           startAt: true,
-          endAt: true,
+          endAt: true
         },
         take: 2
       });
@@ -552,7 +552,7 @@ export class AccountService {
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
           : null,
-        nextExpireAt: bookings[1]?.endAt ?? null,
+        nextExpireAt: bookings[1]?.endAt ?? null
       };
     } catch (error) {
       if (error instanceof NotFoundError) {
