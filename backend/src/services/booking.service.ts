@@ -19,6 +19,7 @@ import {
   PrismaUniqueError
 } from "../lib/error";
 import { addHours, addMinutes } from "../lib/utils";
+import { subDays } from "date-fns";
 import { prisma } from "../lib/prisma";
 import {
   BankCodes,
@@ -862,19 +863,29 @@ export class BookingService {
   syncCompletedBookings = async () => {
     try {
       const count = await prisma.$transaction(async (tx) => {
+        const now = new Date();
         const completedBookings = await tx.booking.findMany({
           where: {
             status: BookingStatus.RESERVED,
-            endAt: { lte: new Date() }
+            endAt: { lte: now }
           },
           select: {
-            id: true
+            id: true,
+            accountId: true,
+            endAt: true,
+            duration: true,
+            quantity: true
           }
+        });
+
+        await tx.accountResetLog.deleteMany({
+          where: { resetAt: { lt: subDays(now, 2) } }
         });
 
         if (completedBookings.length === 0) return 0;
 
         const bookingIds = completedBookings.map((b) => b.id);
+        const accountIds = completedBookings.map((b) => b.accountId);
 
         await tx.booking.updateMany({
           where: {
@@ -884,6 +895,48 @@ export class BookingService {
             status: BookingStatus.COMPLETED
           }
         });
+
+        await tx.account.updateMany({
+          where: {
+            id: { in: accountIds }
+          },
+          data: {
+            passwordResetRequired: true
+          }
+        });
+
+        await tx.accountResetLog.createMany({
+          data: completedBookings.map((booking) => ({
+            accountId: booking.accountId,
+            previousExpireAt: booking.endAt ?? null
+          }))
+        });
+
+        const rentHourByAccount = new Map<number, number>();
+        for (const booking of completedBookings) {
+          const durationMs = parseDuration(booking.duration);
+          const durationHours = durationMs
+            ? Math.round(durationMs / (1000 * 60 * 60))
+            : 0;
+          const incrementHours = durationHours * booking.quantity;
+          if (incrementHours <= 0) continue;
+
+          rentHourByAccount.set(
+            booking.accountId,
+            (rentHourByAccount.get(booking.accountId) || 0) + incrementHours
+          );
+        }
+
+        await Promise.all(
+          Array.from(rentHourByAccount.entries()).map(([accountId, hours]) =>
+            tx.account.update({
+              where: { id: accountId },
+              data: {
+                totalRentHour: { increment: hours }
+              }
+            })
+          )
+        );
 
         return bookingIds.length;
       });
