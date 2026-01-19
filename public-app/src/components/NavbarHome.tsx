@@ -8,11 +8,15 @@ import Image from "next/image";
 import Link from "next/link";
 
 import LoginPage from "./LoginPage";
-import SearchPage from "./SearchPage";
 
-const Navbar = () => {
+type SearchModalProps = React.ComponentProps<"div"> & {
+  onOpenChange: (open: boolean) => void;
+};
+
+function Navbar({
+  onOpenChange
+}: SearchModalProps){
   const [isComponentOpen, setIsComponentOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeBrand, setActiveBrand] = useState<
     "valsewa" | "valjubel" | "valjoki"
   >("valsewa");
@@ -21,7 +25,7 @@ const Navbar = () => {
     setIsComponentOpen(true); // open login modal
   };
   const handleSearchClick = () => {
-    setIsSearchOpen(true);
+    onOpenChange(true);
   };
   const { isAuthenticated, username } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -199,14 +203,6 @@ const Navbar = () => {
         {/* LOGIN POPUP */}
         {isComponentOpen && (
           <LoginPage onClose={() => setIsComponentOpen(false)} />
-        )}
-
-        {isSearchOpen && (
-          <SearchPage
-            onClose={() => {
-              setIsSearchOpen(false);
-            }}
-          />
         )}
       </div>
     </div>

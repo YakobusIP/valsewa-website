@@ -85,10 +85,12 @@ export function useAccountController(initialAccount: AccountEntity[]) {
 
   const selectTier = async (id: string, isLowTier: string) => {
     setTierFilter({ id, isLowTier });
+    setRankFilter("");
   };
 
   const selectRank = async (rank: string) => {
     setRankFilter(rank);
+    setTierFilter(null);
   };
 
   const clearTier = () => setTierFilter(null);

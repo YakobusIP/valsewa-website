@@ -14,6 +14,7 @@ type SearchPageProps = {
 export default function SearchPage({ onClose }: SearchPageProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [openDesktop, setOpenDesktop] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -70,6 +71,8 @@ export default function SearchPage({ onClose }: SearchPageProps) {
         >
           <div className="relative pt-4">
             <SearchModal
+              open={openDesktop}
+              onOpenChange={setOpenDesktop}
               onSelectAccount={handleCardClick}
               className="h-full w-full"
             />
