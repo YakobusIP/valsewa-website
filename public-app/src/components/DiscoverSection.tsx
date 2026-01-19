@@ -290,7 +290,7 @@ export default function DiscoverSection({
                       type="button"
                       disabled={loading}
                       onClick={() =>
-                        onSelectTier(lrtiers.id.toUpperCase(), "true")
+                        onSelectTier(lrtiers.id.toUpperCase().concat("-LRTIER"), "true")
                       }
                       className={cn(
                         "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
