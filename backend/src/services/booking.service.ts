@@ -358,39 +358,61 @@ export class BookingService {
         startAt
       } = data;
 
-      if (customerId) {
-        const customer = await prisma.customer.findUnique({
-          where: { id: customerId }
-        });
-        if (!customer) throw new NotFoundError("Customer not found");
-
-        const ongoingHoldBooking = prisma.booking.findFirst({
+      const [customer, ongoingHoldBooking, account, priceList, voucher] = await Promise.all([
+        // customer
+        customerId
+          ? prisma.customer.findUnique({ where: { id: customerId }, select: { id: true } })
+          : Promise.resolve(null),
+        // ongoing hold booking
+        customerId
+          ? prisma.booking.findFirst({
+              where: {
+                customerId,
+                status: BookingStatus.HOLD
+              },
+              select: { id: true }
+            })
+          : Promise.resolve(null),
+        // account
+        prisma.account.findUnique({
           where: {
-            customerId,
-            status: BookingStatus.HOLD
+            id: accountId,
+            availabilityStatus: { not: Status.NOT_AVAILABLE } 
+          },
+          select: {
+            id: true,
+            isLowRank: true
           }
-        });
-        if (!ongoingHoldBooking)
-          throw new PrismaUniqueError("Customer has ongoing hold booking.");
+        }),
+        // price list
+        prisma.priceList.findUnique({
+          where: { id: priceListId },
+          select: {
+            id: true,
+            normalPrice: true,
+            lowPrice: true,
+            duration: true
+          }
+        }),
+        // voucher
+        voucherId ? this.getValidVoucherById(voucherId) : Promise.resolve(null)
+      ]);
+
+      if (customerId && !customer) {
+        throw new NotFoundError("Customer not found.");
       }
 
-      const account = await prisma.account.findUnique({
-        where: {
-          id: accountId,
-          availabilityStatus: { not: Status.NOT_AVAILABLE }
-        }
-      });
-      if (!account)
-        throw new NotFoundError("Account not found or not available!");
+      if (ongoingHoldBooking) {
+        throw new PrismaUniqueError("Customer has ongoing hold booking.");
+      }
 
-      const priceList = await prisma.priceList.findUnique({
-        where: { id: priceListId }
-      });
-      if (!priceList) throw new NotFoundError("Price list not found!");
+      if (!account) {
+        throw new NotFoundError("Account not found or not available.");
+      }
 
-      const voucher = voucherId
-        ? await this.getValidVoucherById(voucherId)
-        : null;
+      if (!priceList) {
+        throw new NotFoundError("Price list not found.");
+      }
 
       const {
         voucherType,
@@ -605,7 +627,8 @@ export class BookingService {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
         include: {
-          customer: true
+          customer: true,
+          account: true
         }
       });
 
@@ -620,20 +643,13 @@ export class BookingService {
         throw new BadRequestError("Booking expiredAt is missing!");
       }
 
-      if (
-        booking.expiredAt < new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS)
-      ) {
+      if (booking.expiredAt < new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS)) {
         await prisma.booking.update({
           where: { id: booking.id },
           data: { status: BookingStatus.EXPIRED }
         });
         throw new BadRequestError("Booking is expired!");
       }
-
-      const account = await prisma.account.findUnique({
-        where: { id: booking.accountId }
-      });
-      if (!account) throw new NotFoundError("Account not found!");
 
       const voucher = voucherId
         ? await this.getValidVoucherById(voucherId)
@@ -654,7 +670,7 @@ export class BookingService {
       } = this.calculateValues(
         booking.mainValuePerUnit,
         booking.othersValuePerUnit ?? 0,
-        account.isLowRank,
+        booking.account.isLowRank,
         booking.duration,
         voucher,
         paymentMethodType,
@@ -664,8 +680,8 @@ export class BookingService {
       const { payment, isPaymentNew } = await prisma.$transaction(
         async (tx) => {
           await tx.$executeRaw`
-          SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE
-        `;
+            SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE
+          `;
 
           const updatedBooking = await tx.booking.update({
             where: { id: booking.id },
