@@ -75,7 +75,7 @@ export class FaspayService {
       } = data;
 
       const payment = await prisma.payment.findFirst({
-        where: { bankAccountNo: virtualAccountNo },
+        where: { bankAccountNo: virtualAccountNo.trim() },
         include: {
           booking: true
         }
