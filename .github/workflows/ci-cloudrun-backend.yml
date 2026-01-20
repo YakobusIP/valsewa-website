@@ -83,5 +83,7 @@ jobs:
                   --set-env-vars=SNAP_BI_PARTNER_ID=${{ secrets.SNAP_BI_PARTNER_ID }} \
                   --set-env-vars=SNAP_BI_CHANNEL_ID=${{ secrets.SNAP_BI_CHANNEL_ID }} \
                   --set-env-vars=SNAP_BI_PUBLIC_KEY=${{ secrets.SNAP_BI_PUBLIC_KEY }} \
+                  --set-env-vars=PAYMENT_NOTIFICATION_USER_ID=${{ secrets.PAYMENT_NOTIFICATION_USER_ID }} \
+                  --set-env-vars=PAYMENT_NOTIFICATION_PASSWORD=${{ secrets.PAYMENT_NOTIFICATION_PASSWORD }} \
                   --set-env-vars=BOOKING_HOLD_TIME_MINUTES=${{ vars.BOOKING_HOLD_TIME_MINUTES }} \
                   --set-env-vars=BOOKING_GRACE_TIME_MILLIS=${{ vars.BOOKING_GRACE_TIME_MILLIS }}

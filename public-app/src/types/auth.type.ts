@@ -11,6 +11,7 @@ type LoginResponse = {
 };
 
 type ValidateResponse = {
+  id: number;
   username: string;
 };
 

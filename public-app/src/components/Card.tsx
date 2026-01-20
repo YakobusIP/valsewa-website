@@ -33,9 +33,10 @@ const Card: React.FC<CardProps> = ({ data }) => {
   function getRankImage(rank: string): string {
     if (!rank) return "/rank/unranked.webp";
     const baseRank = rank.trim().split(" ")[0].toLowerCase();
-    return `/rank/${baseRank} 3.svg`;
+    if (baseRank === "unrated") return "/rank/unranked.webp";
+    const normalizedRank = baseRank.charAt(0).toUpperCase() + baseRank.slice(1);
+    return `/rank/${normalizedRank} 3.svg`;
   }
-
 
   return (
     <section className="w-full flex justify-center">
