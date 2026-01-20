@@ -1037,26 +1037,34 @@ export class BookingService {
 
   callbackFaspayPayment = async (data: CallbackNotificationRequest) => {
     try {
+      const {
+        billNo,
+        paymentStatus,
+        paidAt,
+      } = data;
+
       let payment = await prisma.payment.findFirst({
-        where: { providerPaymentId: data.providerPaymentId },
+        where: {
+          OR: [
+            { id: billNo },
+            { bankAccountNo: billNo }
+          ],
+          status: PaymentStatus.PENDING,
+        },
         include: { booking: true }
       });
 
-      if (!payment || !payment.booking)
-        throw new NotFoundError("Record not found!");
+      // If payment is not found/pending, we simply ignore
+      if (!payment || !payment.booking) return;
 
-      if (this.isPaymentFinal(payment.status)) {
-        return this.mapPaymentDataToPaymentResponse(payment);
-      }
-
-      if (this.isPaymentFinal(data.paymentStatus)) {
+      if (this.isPaymentFinal(paymentStatus)) {
         return await prisma.$transaction(async (tx) => {
           return await this.finalizeStatus(
             tx,
             payment,
             payment.booking!,
-            data.paymentStatus,
-            data.paidAt
+            paymentStatus,
+            paidAt
           );
         });
       }
