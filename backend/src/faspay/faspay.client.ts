@@ -39,6 +39,16 @@ export type VerifyWebhookVirtualAccountRequest = {
 };
 
 export const FASPAY_STATUS_MAP: Record<string, PaymentStatus> = {
+  "00": PaymentStatus.SUCCESS,
+  "01": PaymentStatus.PENDING,
+  "03": PaymentStatus.PENDING,
+  "04": PaymentStatus.REFUNDED,
+  "05": PaymentStatus.CANCELLED,
+  "06": PaymentStatus.FAILED,
+  "07": PaymentStatus.EXPIRED
+};
+
+export const FASPAY_NOTIFICATION_STATUS_MAP: Record<string, PaymentStatus> = {
   "0": PaymentStatus.PENDING,
   "1": PaymentStatus.PENDING,
   "2": PaymentStatus.SUCCESS,

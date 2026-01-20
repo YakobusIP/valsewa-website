@@ -5,7 +5,7 @@ import {
   BadRequestError,
   ForbiddenError,
 } from "../lib/error";
-import { FASPAY_STATUS_MAP, FaspayClient } from "../faspay/faspay.client";
+import { FASPAY_NOTIFICATION_STATUS_MAP, FaspayClient } from "../faspay/faspay.client";
 import { PaymentMethodRequest } from "../types/booking.type";
 import { parseToDate, parseToDateStr } from "../lib/utils";
 
@@ -389,7 +389,7 @@ export class BookingController {
       await this.bookingService.callbackFaspayPayment({
         billNo: bill_no,
         paidAt: payment_date ? parseToDate(payment_date) : null,
-        paymentStatus: FASPAY_STATUS_MAP[payment_status_code]
+        paymentStatus: FASPAY_NOTIFICATION_STATUS_MAP[payment_status_code]
       });
 
       const result = {

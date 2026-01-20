@@ -67,6 +67,17 @@ export default function AccountDetailPage() {
     setSelectedDuration(null);
   }, [mode]);
 
+  const getStartDateTime = (): Date | null => {
+    if (!bookDate || !startTime) return null;
+
+    const [hours, minutes] = startTime.split(":").map(Number);
+
+    const result = new Date(bookDate);
+    result.setHours(hours, minutes, 0, 0);
+
+    return result;
+  }
+
   const onSubmit = async () => {
     if (!isAuthChecked) {
       toast({
@@ -84,12 +95,15 @@ export default function AccountDetailPage() {
     if (!selectedDuration) return;
     try {
       setSubmitting(true);
+      const startAt = getStartDateTime();
       const booking = await bookingService.createBooking({
         customerId: customerId ?? undefined,
         accountId: parseInt(id),
         priceListId: selectedDuration.value.id,
         quantity: qty,
-        ...(bookDate ? { startAt: bookDate } : {})
+        ...((mode === "BOOK" && startAt)
+          ? { startAt }
+          : {}),
       });
 
       if (booking) {

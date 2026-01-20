@@ -359,7 +359,7 @@ export class BookingService {
         startAt
       } = data;
 
-      const [customer, ongoingHoldBooking, account, priceList, voucher] =
+      const [customer, ongoingHoldBooking, reservedBookingCount, account, priceList, voucher] =
         await Promise.all([
           // customer
           customerId
@@ -378,6 +378,15 @@ export class BookingService {
                 select: { id: true }
               })
             : Promise.resolve(null),
+          // reserved booking
+          customerId
+            ? prisma.booking.count({
+                where: {
+                  customerId,
+                  status: BookingStatus.RESERVED
+                }
+              })
+            : Promise.resolve(0),
           // account
           prisma.account.findUnique({
             where: {
@@ -411,6 +420,10 @@ export class BookingService {
 
       if (ongoingHoldBooking) {
         throw new PrismaUniqueError("Customer has ongoing hold booking.");
+      }
+
+      if (reservedBookingCount >= 2) {
+        throw new PrismaUniqueError("Customer already has 2 reserved bookings.");
       }
 
       if (!account) {
