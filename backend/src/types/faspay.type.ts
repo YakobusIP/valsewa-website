@@ -16,10 +16,10 @@ export type VaInquiryResponse = {
     virtualAccountEmail: string;
     virtualAccountPhone: string;
     inquiryRequestId: string;
-  };
-  totalAmount?: {
-    value: string;
-    currency: string;
+    totalAmount: {
+      value: string;
+      currency: string;
+    };
   };
 };
 
