@@ -301,24 +301,39 @@ export default class SnapBi {
   /* ==========================
    * WEBHOOK VERIFICATION
    * ========================== */
-  isWebhookNotificationVerified(billNo: string, paymentStatusCode: string): boolean {
+  isWebhookNotificationVerified(
+    billNo: string,
+    paymentStatusCode: string
+  ): boolean {
     if (!SnapBiConfig.paymentNotificationUserId) {
-      throw new Error("SnapBi public key is not configured");
+      throw new Error("SnapBi notification user id is not configured");
     }
 
     if (!SnapBiConfig.paymentNotificationPassword) {
-      throw new Error("SnapBi public key is not configured");
+      throw new Error("SnapBi notification password is not configured");
     }
 
-    const payload = SnapBiConfig.paymentNotificationUserId + SnapBiConfig.paymentNotificationPassword + billNo + paymentStatusCode;
+    const payload =
+      SnapBiConfig.paymentNotificationUserId +
+      SnapBiConfig.paymentNotificationPassword +
+      billNo +
+      paymentStatusCode;
 
-    const calculatedSignature = crypto
+    // Step 1: MD5
+    const md5Hash = crypto
       .createHash("md5")
       .update(payload)
       .digest("hex")
       .toLowerCase();
 
-    return calculatedSignature === this.signature;
+    // Step 2: SHA1(md5)
+    const sha1Hash = crypto
+      .createHash("sha1")
+      .update(md5Hash)
+      .digest("hex")
+      .toLowerCase();
+
+    return sha1Hash === this.signature.toLowerCase();
   }
 
   isWebhookVirtualAccountVerified(): boolean {
