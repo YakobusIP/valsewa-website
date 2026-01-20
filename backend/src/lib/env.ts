@@ -51,6 +51,8 @@ const envSchema = z.object({
   SNAP_BI_PARTNER_ID: z.string(),
   SNAP_BI_CHANNEL_ID: z.string(),
   SNAP_BI_PUBLIC_KEY: z.string(),
+  PAYMENT_NOTIFICATION_USER_ID: z.string(),
+  PAYMENT_NOTIFICATION_PASSWORD: z.string(),
 
   BOOKING_HOLD_TIME_MINUTES: z
     .string()

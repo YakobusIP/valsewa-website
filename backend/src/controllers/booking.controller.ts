@@ -354,7 +354,14 @@ export class BookingController {
     next: NextFunction
   ) => {
     try {
-      console.log("[callbackFaspayPayment] Processing faspay callback payment with request:", req);
+      console.log("[callbackFaspayPayment] Processing faspay callback payment with request:",  JSON.stringify({ 
+        method: req.method,
+        path: req.originalUrl,
+        headers: req.headers, 
+        body: req.body,
+        query: req.query,
+        params: req.params,
+      }));
       const payload = req.body;
       const {
         trx_id,
@@ -362,18 +369,17 @@ export class BookingController {
         merchant,
         bill_no,
         payment_date,
-        payment_status_code
+        payment_status_code,
+        signature
       } = payload;
-      const signature = req.header("x-signature");
-      const timestamp = req.header("x-timestamp");
 
-      if (!trx_id || !payment_status_code || !signature || !timestamp)
+      if (!trx_id || !payment_status_code || !signature)
         throw new BadRequestError("Missing required fields.");
 
       if (
         !this.faspayClient.verifyWebhookNotification({
-          payload,
-          timestamp,
+          billNo: bill_no,
+          paymentStatusCode: payment_status_code,
           signature,
           notificationUrlPath: "/api/bookings/faspay/callback"
         })
@@ -398,7 +404,7 @@ export class BookingController {
         response_date: parseToDateStr(new Date())
       }
 
-      console.log("[vaInquiry] Processed faspay callback payment with result:", result);
+      console.log("[vaInquiry] Processed faspay callback payment with result:", JSON.stringify(result));
 
       return res.status(200).json(result);
     } catch (error) {
