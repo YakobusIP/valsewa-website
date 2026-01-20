@@ -52,7 +52,7 @@ export class FaspayService {
             value: payment.value.toFixed(2),
             currency: payment.currency
           }
-        },
+        }
       };
     } catch (error) {
       return {
@@ -122,7 +122,7 @@ export class FaspayService {
         virtualAccountData: {
           partnerServiceId,
           customerNo,
-          virtualAccountNo: virtualAccountNo,
+          virtualAccountNo,
           virtualAccountName: updatedPayment.bankAccountName!,
           paymentRequestId,
           paidAmount
