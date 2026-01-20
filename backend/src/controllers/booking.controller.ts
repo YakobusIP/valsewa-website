@@ -1,10 +1,9 @@
-import { Request, Response, NextFunction, response } from "express";
-import { Provider, PaymentMethodType } from "@prisma/client";
+import { Request, Response, NextFunction } from "express";
+import { Provider } from "@prisma/client";
 import { BookingService } from "../services/booking.service";
 import {
   BadRequestError,
   ForbiddenError,
-  UnprocessableEntityError
 } from "../lib/error";
 import { FASPAY_STATUS_MAP, FaspayClient } from "../faspay/faspay.client";
 import { PaymentMethodRequest } from "../types/booking.type";

@@ -39,13 +39,15 @@ export type VerifyWebhookVirtualAccountRequest = {
 };
 
 export const FASPAY_STATUS_MAP: Record<string, PaymentStatus> = {
-  "00": PaymentStatus.SUCCESS,
-  "01": PaymentStatus.PENDING,
-  "03": PaymentStatus.PENDING,
-  "04": PaymentStatus.REFUNDED,
-  "05": PaymentStatus.CANCELLED,
-  "06": PaymentStatus.FAILED,
-  "07": PaymentStatus.EXPIRED
+  "0": PaymentStatus.PENDING,
+  "1": PaymentStatus.PENDING,
+  "2": PaymentStatus.SUCCESS,
+  "3": PaymentStatus.FAILED,
+  "4": PaymentStatus.REFUNDED,
+  "5": PaymentStatus.FAILED,
+  "7": PaymentStatus.EXPIRED,
+  "8": PaymentStatus.CANCELLED,
+  "9": PaymentStatus.FAILED,
 };
 
 export const BANK_CODE_TO_CHANNEL_CODE_MAP: Record<BankCodes, string> = {
