@@ -1,5 +1,5 @@
 import { PaymentStatus, Prisma } from "@prisma/client";
-import { NotFoundError } from "../lib/error";
+import { ForbiddenError, NotFoundError } from "../lib/error";
 import { prisma } from "../lib/prisma";
 import {
   VaInquiryRequest,
@@ -24,7 +24,7 @@ export class FaspayService {
 
       const payment = await prisma.payment.findFirst({
         where: {
-          bankAccountNo: virtualAccountNo,
+          bankAccountNo: virtualAccountNo.trim(),
           status: PaymentStatus.PENDING
         },
         include: {

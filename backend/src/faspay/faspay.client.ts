@@ -25,10 +25,17 @@ export type CreateVaPaymentRequest = {
 };
 
 export type VerifyWebhookNotificationRequest = {
+  billNo: string;
+  paymentStatusCode: string;
+  signature: string;
+  notificationUrlPath: string;
+};
+
+export type VerifyWebhookVirtualAccountRequest = {
   payload: any;
   signature: string;
   timestamp: string;
-  notificationUrlPath: string;
+  vaUrlPath: string;
 };
 
 export const FASPAY_STATUS_MAP: Record<string, PaymentStatus> = {
@@ -261,10 +268,19 @@ export class FaspayClient {
     request: VerifyWebhookNotificationRequest
   ): boolean => {
     return SnapBi.notification()
+      .withSignature(request.signature)
+      .withNotificationUrlPath(request.notificationUrlPath)
+      .isWebhookVirtualAccountVerified(request.billNo, request.paymentStatusCode);
+  };
+
+  verifyWebhookVirtualAccount = (
+    request: VerifyWebhookVirtualAccountRequest
+  ): boolean => {
+    return SnapBi.notification()
       .withNotificationPayload(request.payload)
       .withSignature(request.signature)
       .withTimeStamp(request.timestamp)
-      .withNotificationUrlPath(request.notificationUrlPath)
+      .withNotificationUrlPath(request.vaUrlPath)
       .isWebhookNotificationVerified();
   };
 }

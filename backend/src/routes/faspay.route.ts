@@ -16,7 +16,7 @@ class faspayServiceRouter {
     this.faspayClient = new FaspayClient();
     this.bookingService = new BookingService(this.faspayClient);
     this.faspayService = new FaspayService(this.bookingService);
-    this.faspayController = new FaspayController(this.faspayService);
+    this.faspayController = new FaspayController(this.faspayService, this.faspayClient);
     this.initializeRoutes();
   }
 
