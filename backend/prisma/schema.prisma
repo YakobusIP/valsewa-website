@@ -218,7 +218,8 @@ model Booking {
   customer Customer? @relation(fields: [customerId], references: [id])
   account  Account   @relation(fields: [accountId], references: [id])
 
-  @@index([accountId, startAt, endAt]) // availability check
+  @@index([accountId, status, startAt])
+  @@index([accountId, status, endAt]) // availability check
   @@index([customerId, createdAt(sort: Desc)]) // history
   @@index([status, expiredAt]) // cleanup
 }
@@ -251,7 +252,7 @@ model Payment {
 
   booking Booking? @relation(fields: [bookingId], references: [id])
 
-  @@index([bookingId]) // verify payment lookup
+  @@index([bookingId, status]) // verify payment lookup
   @@index([providerPaymentId]) // callback lookup
 }
 

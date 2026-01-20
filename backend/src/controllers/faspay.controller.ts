@@ -7,6 +7,8 @@ export class FaspayController {
 
   vaInquiry = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log("[vaInquiry] Processing faspay virtual account inquiry with request:", req);
+
       const {
         partnerServiceId,
         customerNo,
@@ -14,13 +16,21 @@ export class FaspayController {
         inquiryRequestId
       } = req.body;
 
-      if (
-        !partnerServiceId ||
-        !customerNo ||
-        !virtualAccountNo ||
-        !inquiryRequestId
-      ) {
-        throw new BadRequestError("Missing required fields.");
+      const requiredFields = {
+        partnerServiceId,
+        customerNo,
+        virtualAccountNo,
+        inquiryRequestId
+      };
+
+      const missingFields = Object.entries(requiredFields)
+        .filter(([_, value]) => value === undefined || value === null || value === "")
+        .map(([key]) => key);
+
+      if (missingFields.length > 0) {
+        throw new BadRequestError(
+          `Missing required field(s): ${missingFields.join(", ")}`
+        );
       }
 
       const result = await this.faspayService.vaInquiry({
@@ -30,6 +40,8 @@ export class FaspayController {
         inquiryRequestId
       });
 
+      console.log("[vaInquiry] Processed faspay virtual account inquiry with result:", result);
+
       return res.status(200).json(result);
     } catch (error) {
       return next(error);
@@ -38,6 +50,8 @@ export class FaspayController {
 
   vaPayment = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log("[vaPayment] Processing faspay virtual account payment with request:", req);
+
       const {
         partnerServiceId,
         customerNo,
@@ -48,16 +62,24 @@ export class FaspayController {
         referenceNo
       } = req.body;
 
-      if (
-        !partnerServiceId ||
-        !customerNo ||
-        !virtualAccountNo ||
-        !paymentRequestId ||
-        !paidAmount ||
-        !trxDateTime ||
-        !referenceNo
-      ) {
-        throw new BadRequestError("Missing required fields.");
+      const requiredFields = {
+        partnerServiceId,
+        customerNo,
+        virtualAccountNo,
+        paymentRequestId,
+        paidAmount,
+        trxDateTime,
+        referenceNo,
+      };
+
+      const missingFields = Object.entries(requiredFields)
+        .filter(([_, value]) => value === undefined || value === null || value === "")
+        .map(([key]) => key);
+
+      if (missingFields.length > 0) {
+        throw new BadRequestError(
+          `Missing required field(s): ${missingFields.join(", ")}`
+        );
       }
 
       const result = await this.faspayService.vaPayment({
@@ -69,6 +91,8 @@ export class FaspayController {
         trxDateTime,
         referenceNo
       });
+
+      console.log("[vaPayment] Processed faspay virtual account payment with result:", result);
 
       return res.status(200).json(result);
     } catch (error) {
