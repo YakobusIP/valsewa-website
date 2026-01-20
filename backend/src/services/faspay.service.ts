@@ -39,11 +39,11 @@ export class FaspayService {
       }
       return {
         responseCode: "2002400",
-        responseMessage: "success",
+        responseMessage: "Success",
         virtualAccountData: {
           partnerServiceId,
           customerNo,
-          virtualAccountNo: virtualAccountNo,
+          virtualAccountNo,
           virtualAccountName: payment.bankAccountName,
           virtualAccountEmail: "",
           virtualAccountPhone: "",
@@ -90,12 +90,12 @@ export class FaspayService {
 
       if (this.bookingService.isPaymentFinal(payment.status)) {
         return {
-          responseCode: "2002600",
-          responseMessage: "success",
+          responseCode: "2002500",
+          responseMessage: "Success",
           virtualAccountData: {
             partnerServiceId,
             customerNo,
-            virtualAccountNo: virtualAccountNo,
+            virtualAccountNo,
             virtualAccountName: payment.bankAccountName,
             paymentRequestId,
             paidAmount
@@ -117,8 +117,8 @@ export class FaspayService {
       );
 
       return {
-        responseCode: "2002600",
-        responseMessage: "success",
+        responseCode: "2002500",
+        responseMessage: "Success",
         virtualAccountData: {
           partnerServiceId,
           customerNo,
@@ -130,7 +130,7 @@ export class FaspayService {
       };
     } catch (error) {
       return {
-        responseCode: "5002601",
+        responseCode: "5002501",
         responseMessage: (error as Error).message
       };
     }
