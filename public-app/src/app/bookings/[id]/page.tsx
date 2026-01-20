@@ -205,7 +205,7 @@ export default function BookingDetailPage() {
               isLoadingCancelBooking={isLoadingCancelBooking}
             />
 
-            {booking.expiredAt && (
+            {(booking && booking.expiredAt) && (
               <PaymentCountdown expiredAt={booking.expiredAt} />
             )}
 
