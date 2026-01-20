@@ -47,12 +47,12 @@ export class FaspayService {
           virtualAccountName: payment.bankAccountName,
           virtualAccountEmail: "",
           virtualAccountPhone: "",
-          inquiryRequestId
+          inquiryRequestId,
+          totalAmount: {
+            value: payment.value.toFixed(2),
+            currency: payment.currency
+          }
         },
-        totalAmount: {
-          value: payment.value.toFixed(2),
-          currency: payment.currency
-        }
       };
     } catch (error) {
       return {
