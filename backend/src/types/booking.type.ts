@@ -60,6 +60,7 @@ export type BookingResponse = {
   customerId: number | null;
   accountId: number;
   status: BookingStatus;
+  adminFee: number | null;
   duration: string;
   quantity: number;
   startAt: Date | null;

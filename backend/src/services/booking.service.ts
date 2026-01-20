@@ -359,60 +359,64 @@ export class BookingService {
         startAt
       } = data;
 
-      const [customer, ongoingHoldBooking, reservedBookingCount, account, priceList, voucher] =
-        await Promise.all([
-          // customer
-          customerId
-            ? prisma.customer.findUnique({
-                where: { id: customerId },
-                select: { id: true }
-              })
-            : Promise.resolve(null),
-          // ongoing hold booking
-          customerId
-            ? prisma.booking.findFirst({
-                where: {
-                  customerId,
-                  status: BookingStatus.HOLD
-                },
-                select: { id: true }
-              })
-            : Promise.resolve(null),
-          // reserved booking
-          customerId
-            ? prisma.booking.count({
-                where: {
-                  customerId,
-                  status: BookingStatus.RESERVED
-                }
-              })
-            : Promise.resolve(0),
-          // account
-          prisma.account.findUnique({
-            where: {
-              id: accountId,
-              availabilityStatus: { not: Status.NOT_AVAILABLE }
-            },
-            select: {
-              id: true,
-              isLowRank: true
-            }
-          }),
-          // price list
-          prisma.priceList.findUnique({
-            where: { id: priceListId },
-            select: {
-              id: true,
-              normalPrice: true,
-              lowPrice: true,
-              duration: true
-            }
-          }),
-          // voucher
-          voucherId
-            ? this.getValidVoucherById(voucherId)
-            : Promise.resolve(null)
-        ]);
+      const [
+        customer,
+        ongoingHoldBooking,
+        reservedBookingCount,
+        account,
+        priceList,
+        voucher
+      ] = await Promise.all([
+        // customer
+        customerId
+          ? prisma.customer.findUnique({
+              where: { id: customerId },
+              select: { id: true }
+            })
+          : Promise.resolve(null),
+        // ongoing hold booking
+        customerId
+          ? prisma.booking.findFirst({
+              where: {
+                customerId,
+                status: BookingStatus.HOLD
+              },
+              select: { id: true }
+            })
+          : Promise.resolve(null),
+        // reserved booking
+        customerId
+          ? prisma.booking.count({
+              where: {
+                customerId,
+                status: BookingStatus.RESERVED
+              }
+            })
+          : Promise.resolve(0),
+        // account
+        prisma.account.findUnique({
+          where: {
+            id: accountId,
+            availabilityStatus: { not: Status.NOT_AVAILABLE }
+          },
+          select: {
+            id: true,
+            isLowRank: true
+          }
+        }),
+        // price list
+        prisma.priceList.findUnique({
+          where: { id: priceListId },
+          select: {
+            id: true,
+            normalPrice: true,
+            lowPrice: true,
+            duration: true
+          }
+        }),
+        // voucher
+        voucherId ? this.getValidVoucherById(voucherId) : Promise.resolve(null)
+      ]);
 
       if (customerId && !customer) {
         throw new NotFoundError("Customer not found.");
@@ -423,7 +427,9 @@ export class BookingService {
       }
 
       if (reservedBookingCount >= 2) {
-        throw new PrismaUniqueError("Customer already has 2 reserved bookings.");
+        throw new PrismaUniqueError(
+          "Customer already has 2 reserved bookings."
+        );
       }
 
       if (!account) {
@@ -792,7 +798,7 @@ export class BookingService {
         await prisma.payment.updateMany({
           where: { bookingId, status: PaymentStatus.PENDING },
           data: { status: PaymentStatus.CANCELLED }
-        })
+        });
       }
 
       return this.mapBookingDataToBookingResponse(booking);
@@ -1050,19 +1056,12 @@ export class BookingService {
 
   callbackFaspayPayment = async (data: CallbackNotificationRequest) => {
     try {
-      const {
-        billNo,
-        paymentStatus,
-        paidAt,
-      } = data;
+      const { billNo, paymentStatus, paidAt } = data;
 
       let payment = await prisma.payment.findFirst({
         where: {
-          OR: [
-            { id: billNo },
-            { bankAccountNo: billNo }
-          ],
-          status: PaymentStatus.PENDING,
+          OR: [{ id: billNo }, { bankAccountNo: billNo }],
+          status: PaymentStatus.PENDING
         },
         include: { booking: true }
       });
@@ -1260,7 +1259,11 @@ export class BookingService {
     booking: Booking & { payments?: Payment[] }
   ): BookingResponse => {
     let status = booking.status;
-    if (status === BookingStatus.HOLD && booking.expiredAt && booking.expiredAt < new Date()) {
+    if (
+      status === BookingStatus.HOLD &&
+      booking.expiredAt &&
+      booking.expiredAt < new Date()
+    ) {
       status = BookingStatus.EXPIRED;
     }
 
@@ -1269,6 +1272,7 @@ export class BookingService {
       customerId: booking.customerId,
       accountId: booking.accountId,
       status,
+      adminFee: booking.adminFee,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
@@ -1301,7 +1305,11 @@ export class BookingService {
     active?: boolean
   ): BookingResponse => {
     let status = booking.status;
-    if (status === BookingStatus.HOLD && booking.expiredAt && booking.expiredAt < new Date()) {
+    if (
+      status === BookingStatus.HOLD &&
+      booking.expiredAt &&
+      booking.expiredAt < new Date()
+    ) {
       status = BookingStatus.EXPIRED;
     }
 
@@ -1310,6 +1318,7 @@ export class BookingService {
       customerId: booking.customerId,
       accountId: booking.accountId,
       status,
+      adminFee: booking.adminFee,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
@@ -1364,7 +1373,11 @@ export class BookingService {
     payment: Payment & { booking: Booking | null }
   ): PaymentResponse => {
     let status = payment.status;
-    if (status === PaymentStatus.PENDING && payment.booking?.expiredAt && payment.booking?.expiredAt < new Date()) {
+    if (
+      status === PaymentStatus.PENDING &&
+      payment.booking?.expiredAt &&
+      payment.booking?.expiredAt < new Date()
+    ) {
       status = PaymentStatus.EXPIRED;
     }
 
