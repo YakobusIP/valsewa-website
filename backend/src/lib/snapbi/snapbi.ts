@@ -301,7 +301,7 @@ export default class SnapBi {
   /* ==========================
    * WEBHOOK VERIFICATION
    * ========================== */
-  isWebhookVirtualAccountVerified(billNo: string, paymentStatusCode: string): boolean {
+  isWebhookNotificationVerified(billNo: string, paymentStatusCode: string): boolean {
     if (!SnapBiConfig.paymentNotificationUserId) {
       throw new Error("SnapBi public key is not configured");
     }
@@ -321,7 +321,7 @@ export default class SnapBi {
     return calculatedSignature === this.signature;
   }
 
-  isWebhookNotificationVerified(): boolean {
+  isWebhookVirtualAccountVerified(): boolean {
     if (!SnapBiConfig.snapBiPublicKey) {
       throw new Error("SnapBi public key is not configured");
     }
