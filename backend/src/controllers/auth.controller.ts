@@ -260,7 +260,7 @@ export class AuthController {
         );
 
         const refreshToken = jwt.sign(
-          { username: payload.username },
+          { id: payload.id, username: payload.username },
           PUB_REFRESH_TOKEN_SECRET,
           {
             expiresIn: env.PUB_REFRESH_TOKEN_DURATION as StringValue

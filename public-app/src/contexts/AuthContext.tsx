@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       await authService.logout();
-    } catch { }
+    } catch {}
 
     localStorage.removeItem("refreshToken");
     setAccessToken(null);
@@ -93,6 +93,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const response = await authService.validateToken();
 
       setUsername(response.username);
+      setCustomerId(response.id);
       setIsAuthenticated(true);
     } catch {
       // Not authenticated
