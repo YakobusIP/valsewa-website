@@ -200,6 +200,18 @@ export class FaspayClient {
   };
 
   getPaymentStatus = async (payment: Payment) => {
+    if (payment.paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT) {
+      return {
+        responseCode: "2002600",
+        responseMessage: "Success",
+        paymentId: payment.id,
+        providerPaymentId: null,
+        paymentStatus: PaymentStatus.PENDING,
+        paidAt: null,
+        metadata: null
+      };
+    }
+
     let response = null;
     if (payment.paymentMethod === PaymentMethodType.QRIS) {
       const payload = {
@@ -212,37 +224,6 @@ export class FaspayClient {
         }
       };
       response = await SnapBi.qris()
-        .withTimeStamp(parseToLocalDateStr(new Date()))
-        .withBody(payload)
-        .getStatus(generateLargeNumericId());
-    } else if (payment.paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT) {
-      const bankAccountNo = payment.bankAccountNo!;
-      const bankCode = payment.bankCode as BankCodes;
-
-      if (bankCode === BankCodes.BNI) {
-        // No inquiry status for BNI
-        return {
-          responseCode: "2002600",
-          responseMessage: "Success",
-          paymentId: payment.id,
-          providerPaymentId: null,
-          paymentStatus: PaymentStatus.PENDING,
-          paidAt: null,
-          metadata: null
-        };
-      }
-
-      const payload = {
-        partnerServiceId: generatePartnerServiceId(bankCode),
-        customerNo: bankAccountNoToCustomerNo(bankAccountNo, bankCode),
-        virtualAccountNo: bankAccountNo,
-        inquiryRequestId: generateLargeNumericId(),
-        additionalInfo: {
-          channelCode: BANK_CODE_TO_CHANNEL_CODE_MAP[bankCode],
-          trxId: bankAccountNo
-        }
-      };
-      response = await SnapBi.va()
         .withTimeStamp(parseToLocalDateStr(new Date()))
         .withBody(payload)
         .getStatus(generateLargeNumericId());
