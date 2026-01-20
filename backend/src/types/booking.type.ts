@@ -118,7 +118,7 @@ export type BookingPriceValues = {
 };
 
 export type CallbackNotificationRequest = {
-  providerPaymentId: string;
+  billNo: string;
   paymentStatus: PaymentStatus;
   paidAt: Date | null;
 };

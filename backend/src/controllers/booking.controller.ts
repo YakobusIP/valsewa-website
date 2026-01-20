@@ -388,7 +388,7 @@ export class BookingController {
       }
 
       await this.bookingService.callbackFaspayPayment({
-        providerPaymentId: trx_id,
+        billNo: bill_no,
         paidAt: payment_date ? parseToDate(payment_date) : null,
         paymentStatus: FASPAY_STATUS_MAP[payment_status_code]
       });
