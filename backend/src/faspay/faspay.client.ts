@@ -270,7 +270,7 @@ export class FaspayClient {
     return SnapBi.notification()
       .withSignature(request.signature)
       .withNotificationUrlPath(request.notificationUrlPath)
-      .isWebhookVirtualAccountVerified(request.billNo, request.paymentStatusCode);
+      .isWebhookNotificationVerified(request.billNo, request.paymentStatusCode);
   };
 
   verifyWebhookVirtualAccount = (
@@ -281,6 +281,6 @@ export class FaspayClient {
       .withSignature(request.signature)
       .withTimeStamp(request.timestamp)
       .withNotificationUrlPath(request.vaUrlPath)
-      .isWebhookNotificationVerified();
+      .isWebhookVirtualAccountVerified();
   };
 }
