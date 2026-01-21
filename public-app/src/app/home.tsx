@@ -38,26 +38,26 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
 
   const handleSelectRank = (rank: string) => {
     selectRank(rank);
-    setShouldScroll(true)
+    setShouldScroll(true);
   };
 
   useEffect(() => {
     if (!loading && shouldScroll) {
-    setTimeout(() => {
-      if (accountList.length > 0) {
-        document.getElementById('card-section')?.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-      } else {
-        document.getElementById('results-section')?.scrollIntoView({
-          behavior: "smooth",
-          block: "center"
-        });
-      }
-      setShouldScroll(false);
-    }, 100);
-  }
+      setTimeout(() => {
+        if (accountList.length > 0) {
+          document.getElementById("card-section")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+        } else {
+          document.getElementById("results-section")?.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+        }
+        setShouldScroll(false);
+      }, 100);
+    }
   }, [loading, shouldScroll, accountList.length]);
 
   return (

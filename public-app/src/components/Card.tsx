@@ -32,7 +32,6 @@ const Card: React.FC<CardProps> = ({ data }) => {
     return `/rank/${baseRank} 3.svg`;
   }
 
-
   return (
     <section className="w-full flex justify-center">
       <div className="w-full max-w-[1920px] xl:px-12">

@@ -6,21 +6,26 @@ import { fetchAccountsPublic } from "@/services/accountService";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
-import { Checkbox } from "./ui/checkbox";
 
 import { AccountEntity } from "@/types/account.type";
 
 import { cn } from "@/lib/utils";
 
+import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
 import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import Image from "next/image";
-
-import { Slider } from "./ui/slider";
-import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
-import { Label } from "./ui/label";
 import Link from "next/link";
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger
+} from "./ui/accordion";
+import { Checkbox } from "./ui/checkbox";
 import { DialogOverlay } from "./ui/dialog";
+import { Label } from "./ui/label";
+import { Slider } from "./ui/slider";
 
 type SearchModalProps = React.ComponentProps<"div"> & {
   onSelectAccount?: (id: string) => void;
@@ -104,7 +109,6 @@ const TIER_CODES = [
 const clamp = (n: number, min: number, max: number) =>
   Math.min(Math.max(n, min), max);
 
-
 function useDebouncedValue<T>(value: T, delay = 350) {
   const [debounced, setDebounced] = useState(value);
 
@@ -115,7 +119,6 @@ function useDebouncedValue<T>(value: T, delay = 350) {
 
   return debounced;
 }
-
 
 export function SearchModal({
   onSelectAccount,
@@ -160,11 +163,11 @@ export function SearchModal({
               .trim()
               .replace(/\s*-\s*/g, "-")
               .replace(/\s+/g, "");
-            
+
             if (processed.includes("NORMAL")) {
               return processed.split("-")[0];
             }
-            
+
             return processed;
           })
         : undefined,
@@ -216,16 +219,16 @@ export function SearchModal({
 
   return (
     <Fragment>
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogOverlay
-        className="
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogOverlay
+          className="
           fixed inset-0 z-50
           bg-black/60
           backdrop-blur-sm
         "
-      />
-      <DialogContent 
-        className="
+        />
+        <DialogContent
+          className="
           !fixed !left-[50%] !top-[50%] 
           !-translate-x-1/2 !-translate-y-1/2
           !z-[100]
@@ -233,9 +236,9 @@ export function SearchModal({
           p-0 overflow-y-auto
           bg-neutral-950 border-white
         "
-      >   
-      <DialogTitle className="sr-only">Search Accounts</DialogTitle>
-        <div className="w-full h-full flex flex-col">
+        >
+          <DialogTitle className="sr-only">Search Accounts</DialogTitle>
+          <div className="w-full h-full flex flex-col">
             {/* search bar */}
             <div
               className="rounded-2xl border border-neutral-800
@@ -263,8 +266,15 @@ export function SearchModal({
                       Filters
                     </div>
 
-                    <Accordion type="multiple" defaultValue={["price", "ranks", "skins", "tiers"]} className="space-y-3">
-                      <AccordionItem value="price" className="rounded-xl bg-black border-0">
+                    <Accordion
+                      type="multiple"
+                      defaultValue={["price", "ranks", "skins", "tiers"]}
+                      className="space-y-3"
+                    >
+                      <AccordionItem
+                        value="price"
+                        className="rounded-xl bg-black border-0"
+                      >
                         <AccordionTrigger className="px-4 py-3 text-sm font-medium text-white hover:no-underline">
                           Price
                         </AccordionTrigger>
@@ -275,18 +285,20 @@ export function SearchModal({
                               const newMin = clamp(next, PRICE_MIN, maxVal);
                               setPriceRange([newMin, maxVal]);
                             };
-                          
+
                             const setMax = (next: number) => {
                               const newMax = clamp(next, minVal, PRICE_MAX);
                               setPriceRange([minVal, newMax]);
                             };
-                          
+
                             return (
                               <div className="space-y-3">
                                 {/* Inputs on top */}
                                 <div className="grid grid-cols-2 gap-2">
                                   <div className="space-y-1">
-                                    <p className="text-[11px] text-neutral-400">Min</p>
+                                    <p className="text-[11px] text-neutral-400">
+                                      Min
+                                    </p>
                                     <Input
                                       type="number"
                                       inputMode="numeric"
@@ -300,9 +312,11 @@ export function SearchModal({
                                       className="h-10 rounded-lg bg-neutral-900 border-neutral-800 text-white"
                                     />
                                   </div>
-                                    
+
                                   <div className="space-y-1">
-                                    <p className="text-[11px] text-neutral-400">Max</p>
+                                    <p className="text-[11px] text-neutral-400">
+                                      Max
+                                    </p>
                                     <Input
                                       type="number"
                                       inputMode="numeric"
@@ -317,7 +331,7 @@ export function SearchModal({
                                     />
                                   </div>
                                 </div>
-                                    
+
                                 {/* One slider with TWO thumbs */}
                                 <Slider
                                   value={[minVal, maxVal]}
@@ -327,23 +341,33 @@ export function SearchModal({
                                   onValueChange={(v) => {
                                     const a = v[0] ?? PRICE_MIN;
                                     const b = v[1] ?? PRICE_MAX;
-                                    setPriceRange([Math.min(a, b), Math.max(a, b)]);
+                                    setPriceRange([
+                                      Math.min(a, b),
+                                      Math.max(a, b)
+                                    ]);
                                   }}
                                 />
 
                                 {/* Helper text */}
                                 <div className="flex items-center justify-between text-xs text-neutral-400">
-                                  <span>Rp {minVal.toLocaleString("id-ID")}</span>
-                                  <span>Rp {maxVal.toLocaleString("id-ID")}</span>
+                                  <span>
+                                    Rp {minVal.toLocaleString("id-ID")}
+                                  </span>
+                                  <span>
+                                    Rp {maxVal.toLocaleString("id-ID")}
+                                  </span>
                                 </div>
                               </div>
                             );
                           })()}
                         </AccordionContent>
                       </AccordionItem>
-                        
+
                       {/* Ranks */}
-                      <AccordionItem value="ranks" className="rounded-xl bg-black border-0">
+                      <AccordionItem
+                        value="ranks"
+                        className="rounded-xl bg-black border-0"
+                      >
                         <AccordionTrigger className="px-4 py-3 text-sm font-medium text-white hover:no-underline">
                           Ranks
                         </AccordionTrigger>
@@ -351,14 +375,21 @@ export function SearchModal({
                           <div className="space-y-2">
                             {RANKS.map((r) => {
                               const checked = selectedRanks.includes(r.id);
-                            
+
                               return (
-                                <div key={r.id} className="flex items-center gap-3 rounded-lg p-3 py-2">
+                                <div
+                                  key={r.id}
+                                  className="flex items-center gap-3 rounded-lg p-3 py-2"
+                                >
                                   <Checkbox
                                     id={`rank-${r.id}`}
                                     checked={checked}
                                     onCheckedChange={() =>
-                                      toggle(selectedRanks, r.id, setSelectedRanks)
+                                      toggle(
+                                        selectedRanks,
+                                        r.id,
+                                        setSelectedRanks
+                                      )
                                     }
                                     className="h-4 w-4 border-neutral-700 bg-white data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                                   />
@@ -384,9 +415,12 @@ export function SearchModal({
                           </div>
                         </AccordionContent>
                       </AccordionItem>
-                          
+
                       {/* Total Skin */}
-                      <AccordionItem value="skins" className="rounded-xl bg-black border-0">
+                      <AccordionItem
+                        value="skins"
+                        className="rounded-xl bg-black border-0"
+                      >
                         <AccordionTrigger className="px-4 py-3 text-sm font-medium text-white hover:no-underline">
                           Skins
                         </AccordionTrigger>
@@ -394,9 +428,12 @@ export function SearchModal({
                           <div className="space-y-2">
                             {SKIN_COUNTS.map((s) => {
                               const checked = selectedSkins.includes(s);
-                            
+
                               return (
-                                <div key={s} className="flex items-center gap-3 rounded-lg p-3 py-2">
+                                <div
+                                  key={s}
+                                  className="flex items-center gap-3 rounded-lg p-3 py-2"
+                                >
                                   <Checkbox
                                     id={`skin-${s}`}
                                     checked={checked}
@@ -417,9 +454,12 @@ export function SearchModal({
                           </div>
                         </AccordionContent>
                       </AccordionItem>
-                          
+
                       {/* Tier Code */}
-                      <AccordionItem value="tiers" className="rounded-xl bg-black border-0">
+                      <AccordionItem
+                        value="tiers"
+                        className="rounded-xl bg-black border-0"
+                      >
                         <AccordionTrigger className="px-4 py-3 text-sm font-medium text-white hover:no-underline">
                           Tiers
                         </AccordionTrigger>
@@ -427,9 +467,12 @@ export function SearchModal({
                           <div className="space-y-2">
                             {TIER_CODES.map((t) => {
                               const checked = selectedTiers.includes(t);
-                            
+
                               return (
-                                <div key={t} className="flex items-center gap-3 rounded-lg p-3 py-2">
+                                <div
+                                  key={t}
+                                  className="flex items-center gap-3 rounded-lg p-3 py-2"
+                                >
                                   <Checkbox
                                     id={`tier-${t}`}
                                     checked={checked}
@@ -452,7 +495,7 @@ export function SearchModal({
                       </AccordionItem>
                     </Accordion>
                   </aside>
-                      
+
                   {/* RIGHT RESULTS */}
                   <section className="h-[800px] flex flex-col rounded-2xl bg-neutral-950/40">
                     {/* Tabs */}
@@ -470,7 +513,7 @@ export function SearchModal({
                         >
                           All
                         </Button>
-                        
+
                         <Button
                           type="button"
                           onClick={() => setTierTab("low")}
@@ -483,7 +526,7 @@ export function SearchModal({
                         >
                           Low Rank Tier
                         </Button>
-                        
+
                         <Button
                           type="button"
                           onClick={() => setTierTab("normal")}
@@ -498,7 +541,7 @@ export function SearchModal({
                         </Button>
                       </div>
                     </div>
-                        
+
                     {/* List */}
                     <div className="flex-1 overflow-y-auto overscroll-contain p-3 md:p-4 space-y-3">
                       {isLoading ? (
@@ -514,7 +557,7 @@ export function SearchModal({
                           return (
                             <Link
                               key={acc.id}
-                              href={`/details/${acc.id}`} 
+                              href={`/details/${acc.id}`}
                               onClick={() => {
                                 onSelectAccount?.(acc.id.toString());
                               }}
@@ -541,14 +584,14 @@ export function SearchModal({
                                       <p className="text-white font-semibold text-[0.7rem] sm:text-sm truncate">
                                         {acc.accountRank} | {acc.accountCode}
                                       </p>
-                                  
+
                                       {acc.isRecommended && (
                                         <span className="shrink-0 text-[11px] px-2 py-[2px] rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
                                           Recommended
                                         </span>
                                       )}
                                     </div>
-                                    
+
                                     {/* Tier pill row (below) */}
                                     <span className="flex items-start justify-start mt-1">
                                       <span
@@ -563,7 +606,7 @@ export function SearchModal({
                                     </span>
                                   </div>
                                 </div>
-                                    
+
                                 {/* RIGHT thumbnail (unchanged positioning, far right) */}
                                 <div className="relative w-72 h-40 rounded-lg border border-neutral-800 bg-neutral-950 shrink-0">
                                   {acc.thumbnail.imageUrl ? (
@@ -592,8 +635,8 @@ export function SearchModal({
               </div>
             </div>
           </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
     </Fragment>
   );
 }
