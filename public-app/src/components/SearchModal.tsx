@@ -232,7 +232,7 @@ export function SearchModal({
           !fixed !left-[50%] !top-[50%] 
           !-translate-x-1/2 !-translate-y-1/2
           !z-[100]
-          max-w-screen-large w-[95vw] max-h-[90vh] 
+          max-w-screen-large w-[95vw] h-[90vh] 
           p-0 overflow-y-auto
           bg-neutral-950 border-white
         "
@@ -259,9 +259,9 @@ export function SearchModal({
 
               {/* MAIN */}
               <div className="flex-1">
-                <div className="w-full h-[800px] grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 px-4 md:px-4 py-4">
+                <div className="w-full h-[70vh] grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4 px-4 md:px-4 py-4">
                   {/* LEFT FILTERS */}
-                  <aside className="h-[800px] overflow-y-auto overscroll-contain pr-1 space-y-3">
+                  <aside className=" h-[80vh] overflow-y-auto overscroll-contain pr-1 space-y-3">
                     <div className="text-sm text-neutral-300 font-medium">
                       Filters
                     </div>
@@ -497,7 +497,7 @@ export function SearchModal({
                   </aside>
 
                   {/* RIGHT RESULTS */}
-                  <section className="h-[800px] flex flex-col rounded-2xl bg-neutral-950/40">
+                  <section className="h-[80vh] flex flex-col rounded-2xl bg-neutral-950/40">
                     {/* Tabs */}
                     <div className="p-3 md:p-4 border-b border-neutral-800">
                       <div className="grid grid-cols-3 gap-2 w-full">
