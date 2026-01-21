@@ -76,3 +76,30 @@ export function calculateAdminFee(
 
   return 0;
 }
+
+export function calculateTimeRemaining(endAt: Date | null): string {
+  if (!endAt) return 'N/A';
+
+  const now = new Date();
+  const end = new Date(endAt);
+  const diffMs = end.getTime() - now.getTime();
+
+  if (diffMs <= 0) return 'Expired';
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  return `${hours}h ${minutes}m`;
+}
+
+export function calculateDaysRented(startAt: Date | null, endAt: Date | null): number {
+  if (!startAt) return 0;
+  if (!endAt) return 0;
+
+  const end = new Date(endAt);
+  const start = new Date(startAt);
+  const diffMs = end.getTime() - start.getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  return Math.max(0, days);
+}

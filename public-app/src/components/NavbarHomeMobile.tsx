@@ -9,6 +9,8 @@ import Link from "next/link";
 
 import LoginPage from "./LoginPage";
 import SearchPage from "./SearchPage";
+import { ListPlus, MoreHorizontal, User } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 const NavbarHomeMobile = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
@@ -21,9 +23,10 @@ const NavbarHomeMobile = () => {
   const handleSearchClick = () => {
     setIsSearchOpen(true);
   };
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, username } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
-
+  const [isOpen, setIsOpen] = useState(false);
+  
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 60);
@@ -99,14 +102,60 @@ const NavbarHomeMobile = () => {
           )}
 
           {isAuthenticated && (
-            <button className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#C70515] hover:bg-[#a90411] transition">
-              <Image
-                src="/header/SignUp Icon.svg"
-                alt="User"
-                width={18}
-                height={18}
-              />
-            </button>
+            <Popover open={isOpen} onOpenChange={setIsOpen}>
+              <PopoverTrigger asChild>
+                <button 
+                  onClick={() => setIsOpen(!isOpen)}
+                  onMouseEnter={() => setIsOpen(true)} // Hover on desktop
+                  className="flex items-center px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer"
+                >
+                  <Image
+                    src="/header/SignUp Icon.svg"
+                    alt="User"
+                    width={18}
+                    height={18}
+                  />
+                </button>
+              </PopoverTrigger>
+
+              <PopoverContent 
+                className="w-56 p-4 bg-[#C70515] border border-white/30 text-white"
+                align="end"
+                sideOffset={8}
+              >
+                <div className="space-y-4">
+                  {/* User Info */}
+                  <div className="flex items-center gap-3 cursor-default">
+                    <User className="w-5 h-5" />
+                    <span className="font-semibold text-l">{username}</span>
+                  </div>
+
+                  {/* Ongoing Order */}
+                  <div className="space-y-2 cursor-default">
+                    <div className="flex items-center gap-3">
+                      <ListPlus className="w-4 h-4" />
+                      <span className="font-semibold text-sm">On Going Order</span>
+                    </div>
+
+                    {/* Order Details */}
+                    <div className="space-y-1 cursor-default px-8">
+                      <div className="text-xs font-medium text-white/70">
+                        V-23 (Rented 3 days)
+                      </div>
+                      <div className="text-xs font-medium text-white/70">
+                        23d 1m left
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* See More */}
+                  <Link href="/dashboard" className="flex items-center gap-3 w-full rounded-lg transition" onClick={() => setIsOpen(false)}>
+                    <MoreHorizontal className="w-4 h-4" />
+                    <span className="font-semibold text-sm">See More</span>
+                  </Link>
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
 

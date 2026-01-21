@@ -10,6 +10,7 @@ import {
 } from "@/types/booking.type";
 
 import { interceptedAxios } from "@/lib/axios";
+import axios from "axios";
 
 const createBookingService = () => {
   const fetchBookingById = async (
@@ -98,9 +99,24 @@ const createBookingService = () => {
     }
   };
 
+  const fetchBookingByCustId  = async (
+  id: string
+  ): Promise<BookingWithAccountEntity | null> => {
+    try {
+      const response = await interceptedAxios.get<BookingWithAccountEntity>(
+        `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/customers/${id}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error when creating booking:", error);
+      throw error;
+    }
+  }
+
   return {
     fetchBookingById,
     fetchPaymentById,
+    fetchBookingByCustId,
     createBooking,
     cancelBooking,
     payBooking,
