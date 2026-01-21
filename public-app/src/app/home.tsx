@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 import Card from "@/components/Card";
 import DiscoverSection from "@/components/DiscoverSection";
@@ -22,17 +22,10 @@ interface Props {
 }
 export default function Home({ initialAccount, initialCarousel }: Props) {
   const router = useRouter();
-  const cardsRef = useRef<HTMLDivElement | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [shouldScroll, setShouldScroll] = useState(false);
   const { accountList, loading, selectTier, selectRank } =
     useAccountController(initialAccount);
-
-  const scrollToAccounts = () => {
-    cardsRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-  };
 
   const handleCardClick = (id: string) => {
     router?.push(`/details/${id}`);
@@ -40,13 +33,32 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
 
   const handleSelectTier = (tierId: string, isLowTier: string) => {
     selectTier(tierId, isLowTier);
-    if (loading == false) scrollToAccounts();
+    setShouldScroll(true);
   };
 
   const handleSelectRank = (rank: string) => {
     selectRank(rank);
-    if (loading == false) scrollToAccounts();
+    setShouldScroll(true)
   };
+
+  useEffect(() => {
+    if (!loading && shouldScroll) {
+    setTimeout(() => {
+      if (accountList.length > 0) {
+        document.getElementById('card-section')?.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      } else {
+        document.getElementById('results-section')?.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }
+      setShouldScroll(false);
+    }, 100);
+  }
+  }, [loading, shouldScroll, accountList.length]);
 
   return (
     <Fragment>
@@ -93,7 +105,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
               </div>
               {accountList.length > 0 ? (
                 <div id="card-section" className="mt-9 mx-0 pt-10">
-                  <Card data={accountList} gridRef={cardsRef} />
+                  <Card data={accountList} />
                 </div>
               ) : (
                 <div id="results-section" className=" mt-48">

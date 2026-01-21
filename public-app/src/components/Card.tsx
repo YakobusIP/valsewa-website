@@ -1,7 +1,5 @@
 "use client";
 
-import { useRef } from "react";
-
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 import { AccountEntity } from "@/types/account.type";
@@ -13,12 +11,9 @@ import CountdownTimer from "./CountdownTimer";
 
 interface CardProps {
   data?: AccountEntity[];
-  gridRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const Card: React.FC<CardProps> = ({ data }) => {
-  const ref = useRef<HTMLDivElement>(null);
-
   const processCardData = (items?: AccountEntity[]) => {
     return items?.map((item) => ({
       ...item,
@@ -53,7 +48,6 @@ const Card: React.FC<CardProps> = ({ data }) => {
           </p>
         </div>
         <div
-          ref={ref}
           className="
               grid grid-cols-12 
               gap-x-3 gap-y-4
