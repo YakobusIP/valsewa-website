@@ -221,9 +221,9 @@ export function SearchModal({
           !fixed !left-[50%] !top-[50%] 
           !-translate-x-1/2 !-translate-y-1/2
           !z-[100]
-          max-w-7xl w-[95vw] max-h-[90vh] 
+          max-w-screen-large w-[95vw] max-h-[90vh] 
           p-0 overflow-y-auto
-          bg-neutral-950 border-neutral-800
+          bg-neutral-950 border-white
         "
       >   
       <DialogTitle className="sr-only">Search Accounts</DialogTitle>
@@ -454,7 +454,7 @@ export function SearchModal({
                           type="button"
                           onClick={() => setTierTab("all")}
                           className={cn(
-                            "h-10 w-full rounded-md px-5",
+                            "h-16 w-full rounded-md px-5",
                             tierTab === "all"
                               ? "bg-white hover:bg-white text-black"
                               : "bg-black hover:bg-white hover:text-black text-neutral-200"
@@ -467,7 +467,7 @@ export function SearchModal({
                           type="button"
                           onClick={() => setTierTab("low")}
                           className={cn(
-                            "h-10 w-full rounded-md px-5",
+                            "h-16 w-full rounded-md px-5",
                             tierTab === "low"
                               ? "bg-white hover:bg-white text-black"
                               : "bg-black hover:bg-white hover:text-black text-neutral-200"
@@ -480,7 +480,7 @@ export function SearchModal({
                           type="button"
                           onClick={() => setTierTab("normal")}
                           className={cn(
-                            "h-10 w-full rounded-md px-5",
+                            "h-16 w-full rounded-md px-5",
                             tierTab === "normal"
                               ? "bg-white hover:bg-white text-black"
                               : "bg-black hover:bg-white hover:text-black text-neutral-200"

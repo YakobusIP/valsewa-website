@@ -13,6 +13,9 @@ import { ChevronDown, ChevronUp, ListFilter, Search } from "lucide-react";
 import Image from "next/image";
 
 import { Slider } from "./ui/slider";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import { Checkbox } from "./ui/checkbox";
+import { Label } from "./ui/label";
 
 type TierTab = "all" | "low" | "normal";
 
@@ -90,36 +93,6 @@ const TIER_CODES = [
 const clamp = (n: number, min: number, max: number) =>
   Math.min(Math.max(n, min), max);
 
-function Section({
-  title,
-  open,
-  onToggle,
-  children
-}: {
-  title: string;
-  open: boolean;
-  onToggle: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-xl bg-black overflow-hidden">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="w-full flex items-center justify-between pr-4 py-3 text-left"
-      >
-        <span className="text-sm font-medium text-white">{title}</span>
-        {open ? (
-          <ChevronUp className="h-4 w-4 text-neutral-300" />
-        ) : (
-          <ChevronDown className="h-4 w-4 text-neutral-300" />
-        )}
-      </button>
-
-      {open && <div className="px-4 pb-4">{children}</div>}
-    </div>
-  );
-}
 
 function useDebouncedValue<T>(value: T, delay = 350) {
   const [debounced, setDebounced] = useState(value);
@@ -132,42 +105,9 @@ function useDebouncedValue<T>(value: T, delay = 350) {
   return debounced;
 }
 
-function CheckboxRow({
-  checked,
-  onCheckedChange,
-  children
-}: {
-  checked: boolean;
-  onCheckedChange: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <label
-      className="flex items-center gap-3 rounded-lg p-3 py-2
-        cursor-pointer select-none transition"
-    >
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onCheckedChange}
-        className="h-4 w-4 accent-red-600"
-      />
-      <div className="flex items-center gap-3 min-w-0">{children}</div>
-    </label>
-  );
-}
-
 function FiltersPanel({
   onClose,
   onBack,
-  openPrice,
-  setOpenPrice,
-  openRanks,
-  setOpenRanks,
-  openSkins,
-  setOpenSkins,
-  openTier,
-  setOpenTier,
   priceRange,
   setPriceRange,
   selectedRanks,
@@ -238,159 +178,194 @@ function FiltersPanel({
 
       {/* Filters content (scrolls) */}
       <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 pb-6 space-y-3">
-        {/* Price */}
-        <Section
-          title="Price"
-          open={openPrice}
-          onToggle={() => setOpenPrice((v) => !v)}
-        >
-          {(() => {
-            const [minVal, maxVal] = priceRange;
-            const setMin = (next: number) => {
-              // clamp min to [PRICE_MIN .. current maxVal]
-              const newMin = clamp(next, PRICE_MIN, maxVal);
-              setPriceRange([newMin, maxVal]);
-            };
+        <Accordion type="multiple" defaultValue={["price", "ranks", "skins", "tiers"]} className="space-y-3">
+                      <AccordionItem value="price" className="rounded-xl bg-black border-0">
+                        <AccordionTrigger className="px-4 py-3 text-sm font-medium text-white hover:no-underline">
+                          Price
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                          {(() => {
+                            const [minVal, maxVal] = priceRange;
+                            const setMin = (next: number) => {
+                              const newMin = clamp(next, PRICE_MIN, maxVal);
+                              setPriceRange([newMin, maxVal]);
+                            };
+                          
+                            const setMax = (next: number) => {
+                              const newMax = clamp(next, minVal, PRICE_MAX);
+                              setPriceRange([minVal, newMax]);
+                            };
+                          
+                            return (
+                              <div className="space-y-3">
+                                {/* Inputs on top */}
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="space-y-1">
+                                    <p className="text-[11px] text-neutral-400">Min</p>
+                                    <Input
+                                      type="number"
+                                      inputMode="numeric"
+                                      value={minVal}
+                                      min={PRICE_MIN}
+                                      max={maxVal}
+                                      step={5000}
+                                      onChange={(e) =>
+                                        setMin(Number(e.target.value || 0))
+                                      }
+                                      className="h-10 rounded-lg bg-neutral-900 border-neutral-800 text-white"
+                                    />
+                                  </div>
+                                    
+                                  <div className="space-y-1">
+                                    <p className="text-[11px] text-neutral-400">Max</p>
+                                    <Input
+                                      type="number"
+                                      inputMode="numeric"
+                                      value={maxVal}
+                                      min={minVal}
+                                      max={PRICE_MAX}
+                                      step={5000}
+                                      onChange={(e) =>
+                                        setMax(Number(e.target.value || 0))
+                                      }
+                                      className="h-10 rounded-lg bg-neutral-900 border-neutral-800 text-white"
+                                    />
+                                  </div>
+                                </div>
+                                    
+                                {/* One slider with TWO thumbs */}
+                                <Slider
+                                  value={[minVal, maxVal]}
+                                  min={PRICE_MIN}
+                                  max={PRICE_MAX}
+                                  step={5000}
+                                  onValueChange={(v) => {
+                                    const a = v[0] ?? PRICE_MIN;
+                                    const b = v[1] ?? PRICE_MAX;
+                                    setPriceRange([Math.min(a, b), Math.max(a, b)]);
+                                  }}
+                                />
 
-            const setMax = (next: number) => {
-              // clamp max to [current minVal .. PRICE_MAX]
-              const newMax = clamp(next, minVal, PRICE_MAX);
-              setPriceRange([minVal, newMax]);
-            };
-
-            return (
-              <div className="space-y-3">
-                {/* Inputs on top */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-neutral-400">Min</p>
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      value={minVal}
-                      min={PRICE_MIN}
-                      max={maxVal}
-                      step={5000}
-                      onChange={(e) => setMin(Number(e.target.value || 0))}
-                      className="h-10 rounded-lg bg-neutral-900 border-neutral-800 text-white"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className="text-[11px] text-neutral-400">Max</p>
-                    <Input
-                      type="number"
-                      inputMode="numeric"
-                      value={maxVal}
-                      min={minVal}
-                      max={PRICE_MAX}
-                      step={5000}
-                      onChange={(e) => setMax(Number(e.target.value || 0))}
-                      className="h-10 rounded-lg bg-neutral-900 border-neutral-800 text-white"
-                    />
-                  </div>
-                </div>
-
-                {/* One slider with TWO thumbs */}
-                <Slider
-                  value={[minVal, maxVal]}
-                  min={PRICE_MIN}
-                  max={PRICE_MAX}
-                  step={5000}
-                  onValueChange={(v) => {
-                    const a = v[0] ?? PRICE_MIN;
-                    const b = v[1] ?? PRICE_MAX;
-                    setPriceRange([Math.min(a, b), Math.max(a, b)]);
-                  }}
-                />
-                {/* Helper text */}
-                <div className="flex items-center justify-between text-xs text-neutral-400">
-                  <span>Rp {minVal.toLocaleString("id-ID")}</span>
-                  <span>Rp {maxVal.toLocaleString("id-ID")}</span>
-                </div>
-              </div>
-            );
-          })()}
-        </Section>
-        {/* Ranks */}
-        <Section
-          title="Ranks"
-          open={openRanks}
-          onToggle={() => setOpenRanks((v) => !v)}
-        >
-          <div className="space-y-2">
-            {RANKS.map((r) => {
-              const checked = selectedRanks.includes(r.id);
-              return (
-                <CheckboxRow
-                  key={r.id}
-                  checked={checked}
-                  onCheckedChange={() =>
-                    toggle(selectedRanks, r.id, setSelectedRanks)
-                  }
-                >
-                  <div className="relative w-6 h-6 shrink-0">
-                    <Image
-                      src={r.image}
-                      alt={r.id}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
-                  <span className="text-sm text-neutral-100 truncate">
-                    {r.id}
-                  </span>
-                </CheckboxRow>
-              );
-            })}
-          </div>
-        </Section>
-        {/* Total Skin */}
-        <Section
-          title="Skins"
-          open={openSkins}
-          onToggle={() => setOpenSkins((v) => !v)}
-        >
-          <div className="space-y-2">
-            {SKIN_COUNTS.map((s) => {
-              const checked = selectedSkins.includes(s);
-              return (
-                <CheckboxRow
-                  key={s}
-                  checked={checked}
-                  onCheckedChange={() =>
-                    toggle(selectedSkins, s, setSelectedSkins)
-                  }
-                >
-                  <span className="text-sm text-neutral-100 truncate">{s}</span>
-                </CheckboxRow>
-              );
-            })}
-          </div>
-        </Section>
-        {/* Tier Code */}
-        <Section
-          title="Tiers"
-          open={openTier}
-          onToggle={() => setOpenTier((v) => !v)}
-        >
-          <div className="space-y-2">
-            {TIER_CODES.map((t) => {
-              const checked = selectedTiers.includes(t);
-              return (
-                <CheckboxRow
-                  key={t}
-                  checked={checked}
-                  onCheckedChange={() =>
-                    toggle(selectedTiers, t, setSelectedTiers)
-                  }
-                >
-                  <span className="text-sm text-neutral-100 truncate">{t}</span>
-                </CheckboxRow>
-              );
-            })}
-          </div>
-        </Section>
+                                {/* Helper text */}
+                                <div className="flex items-center justify-between text-xs text-neutral-400">
+                                  <span>Rp {minVal.toLocaleString("id-ID")}</span>
+                                  <span>Rp {maxVal.toLocaleString("id-ID")}</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </AccordionContent>
+                      </AccordionItem>
+                        
+                      {/* Ranks */}
+                      <AccordionItem value="ranks" className="rounded-xl bg-black border-0">
+                        <AccordionTrigger className="px-4 py-3 text-sm font-medium text-white hover:no-underline">
+                          Ranks
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                          <div className="space-y-2">
+                            {RANKS.map((r) => {
+                              const checked = selectedRanks.includes(r.id);
+                            
+                              return (
+                                <div key={r.id} className="flex items-center gap-3 rounded-lg p-3 py-2">
+                                  <Checkbox
+                                    id={`rank-${r.id}`}
+                                    checked={checked}
+                                    onCheckedChange={() =>
+                                      toggle(selectedRanks, r.id, setSelectedRanks)
+                                    }
+                                    className="h-4 w-4 border-neutral-700 bg-white data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                                  />
+                                  <Label
+                                    htmlFor={`rank-${r.id}`}
+                                    className="flex items-center gap-3 cursor-pointer flex-1 min-w-0"
+                                  >
+                                    <div className="relative w-6 h-6 shrink-0">
+                                      <Image
+                                        src={r.image}
+                                        alt={r.id}
+                                        fill
+                                        className="object-contain"
+                                      />
+                                    </div>
+                                    <span className="text-sm text-neutral-100 truncate">
+                                      {r.id}
+                                    </span>
+                                  </Label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                          
+                      {/* Total Skin */}
+                      <AccordionItem value="skins" className="rounded-xl bg-black border-0">
+                        <AccordionTrigger className="px-4 py-3 text-sm font-medium text-white hover:no-underline">
+                          Skins
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                          <div className="space-y-2">
+                            {SKIN_COUNTS.map((s) => {
+                              const checked = selectedSkins.includes(s);
+                            
+                              return (
+                                <div key={s} className="flex items-center gap-3 rounded-lg p-3 py-2">
+                                  <Checkbox
+                                    id={`skin-${s}`}
+                                    checked={checked}
+                                    onCheckedChange={() =>
+                                      toggle(selectedSkins, s, setSelectedSkins)
+                                    }
+                                    className="h-4 w-4 border-neutral-700 bg-white data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                                  />
+                                  <Label
+                                    htmlFor={`skin-${s}`}
+                                    className="text-sm text-neutral-100 truncate cursor-pointer flex-1"
+                                  >
+                                    {s}
+                                  </Label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                          
+                      {/* Tier Code */}
+                      <AccordionItem value="tiers" className="rounded-xl bg-black border-0">
+                        <AccordionTrigger className="px-4 py-3 text-sm font-medium text-white hover:no-underline">
+                          Tiers
+                        </AccordionTrigger>
+                        <AccordionContent className="px-4 pb-4">
+                          <div className="space-y-2">
+                            {TIER_CODES.map((t) => {
+                              const checked = selectedTiers.includes(t);
+                            
+                              return (
+                                <div key={t} className="flex items-center gap-3 rounded-lg p-3 py-2">
+                                  <Checkbox
+                                    id={`tier-${t}`}
+                                    checked={checked}
+                                    onCheckedChange={() =>
+                                      toggle(selectedTiers, t, setSelectedTiers)
+                                    }
+                                    className="h-4 w-4 border-neutral-700 bg-white data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                                  />
+                                  <Label
+                                    htmlFor={`tier-${t}`}
+                                    className="text-sm text-neutral-100 truncate cursor-pointer flex-1"
+                                  >
+                                    {t}
+                                  </Label>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
       </div>
     </div>
   );
@@ -405,7 +380,6 @@ function ResultsPanel({
   isLoading,
   onClose,
   onOpenFilters,
-  activeFilterCount,
   onSelectAccount
 }: {
   q: string;
