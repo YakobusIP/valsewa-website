@@ -20,6 +20,7 @@ import { Slider } from "./ui/slider";
 import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
 import { Label } from "./ui/label";
 import Link from "next/link";
+import { DialogOverlay } from "./ui/dialog";
 
 type SearchModalProps = React.ComponentProps<"div"> & {
   onSelectAccount?: (id: string) => void;
@@ -137,7 +138,7 @@ export function SearchModal({
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<AccountEntity[]>([]);
   const [page] = useState(undefined);
-  const [limit] = useState(undefined);
+  const [limit] = useState(50);
 
   useEffect(() => {
     document.title = "Search | Valsewa";
@@ -216,6 +217,13 @@ export function SearchModal({
   return (
     <Fragment>
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogOverlay
+        className="
+          fixed inset-0 z-50
+          bg-black/60
+          backdrop-blur-sm
+        "
+      />
       <DialogContent 
         className="
           !fixed !left-[50%] !top-[50%] 

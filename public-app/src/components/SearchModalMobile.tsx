@@ -643,8 +643,8 @@ export function SearchModalMobile({
 
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<AccountEntity[]>([]);
-  const [page] = useState(1);
-  const [limit] = useState(12);
+  const [page] = useState(undefined);
+  const [limit] = useState(50);
 
   // close resets panel
   useEffect(() => {
