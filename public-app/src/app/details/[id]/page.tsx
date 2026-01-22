@@ -88,11 +88,6 @@ export default function AccountDetailPage() {
       return
     }
 
-    // 🔒 not logged in → open login modal
-    if (!isAuthenticated) {
-      setShowLogin(true)
-      return
-    }
     if (!selectedDuration) return;
     try {
       setSubmitting(true);
