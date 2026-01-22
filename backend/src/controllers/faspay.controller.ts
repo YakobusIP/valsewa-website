@@ -66,6 +66,10 @@ export class FaspayController {
 
       console.log("[vaInquiry] Processed faspay virtual account inquiry with result:", JSON.stringify(result));
 
+      if (result.responseCode.startsWith("404")) {
+        return res.status(404).json(result);
+      }
+
       return res.status(200).json(result);
     } catch (error) {
       if (error instanceof ForbiddenError) {

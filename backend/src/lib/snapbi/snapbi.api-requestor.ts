@@ -67,6 +67,7 @@ export default class SnapBiApiRequestor {
       (error: AxiosError) => {
         if (SnapBiConfig.enableLogging) {
           console.error(`❌ Response Error: ${error.message}`);
+          console.error(`❌ Response Body:\n${JSON.stringify(error.response?.data, null, 2)}`);
         }
         return Promise.reject(error);
       }
