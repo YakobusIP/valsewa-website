@@ -114,8 +114,8 @@ const NavbarHomeMobile = () => {
               <PopoverTrigger asChild>
                 <button 
                   onClick={() => setIsOpen(!isOpen)}
-                  onMouseEnter={() => setIsOpen(true)} // Hover on desktop
-                  className="flex items-center px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer"
+                  onMouseEnter={() => setIsOpen(true)}
+                  className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#C70515] hover:bg-[#a90411] transition"
                 >
                   <Image
                     src="/header/SignUp Icon.svg"
@@ -139,7 +139,7 @@ const NavbarHomeMobile = () => {
                   </div>
 
                   {/* Ongoing Order */}
-                  <div className="space-y-2 cursor-default">
+                  {bookingReserved && <div className="space-y-2 cursor-default">
                     <div className="flex items-center gap-3">
                       <ListPlus className="w-4 h-4" />
                       <span className="font-semibold text-sm">On Going Order</span>
@@ -154,7 +154,7 @@ const NavbarHomeMobile = () => {
                         {remainingTime} left
                       </div>
                     </div>
-                  </div>
+                  </div>}
 
                   {/* See More */}
                   <Link href="/dashboard" className="flex items-center gap-3 w-full rounded-lg transition" onClick={() => setIsOpen(false)}>
