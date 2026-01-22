@@ -1,38 +1,12 @@
 import { ApiResponseList, MessageResponse } from "@/types/api.type";
 import {
-  BOOKING_STATUS,
+  BookingEntity,
   CreateAdminBookingRequest,
   CreateBookingRequest,
-  PaymentEntity,
   UpdateBookingRequest
 } from "@/types/booking.type";
-import { VoucherType } from "@/types/voucher.type";
 
 import { handleAxiosError, interceptedAxios } from "@/lib/axios";
-
-export type BookingEntity = {
-  id: string;
-  customerId: number | null;
-  accountId: number;
-  status: BOOKING_STATUS;
-  duration: string;
-  quantity: number;
-  startAt: Date | null;
-  endAt: Date | null;
-  createdAt: Date | null;
-  expiredAt: Date | null;
-  mainValuePerUnit: number;
-  othersValuePerUnit: number | null;
-  voucherName: string | null;
-  voucherType: VoucherType | null;
-  voucherAmount: number | null;
-  voucherMaxDiscount: number | null;
-  mainValue: number;
-  othersValue: number | null;
-  discount: number | null;
-  totalValue: number;
-  payments: PaymentEntity[];
-};
 
 const BASE_BOOKING_URL = "/api/bookings";
 
@@ -43,7 +17,6 @@ const createBookingService = () => {
         await interceptedAxios.get<ApiResponseList<BookingEntity>>(
           BASE_BOOKING_URL
         );
-
       return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));

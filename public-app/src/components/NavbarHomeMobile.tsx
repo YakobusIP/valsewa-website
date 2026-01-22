@@ -21,7 +21,7 @@ const NavbarHomeMobile = () => {
   const handleSearchClick = () => {
     setIsSearchOpen(true);
   };
-  const { isAuthenticated } = useAuth();
+  const { isAuthChecked } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -35,9 +35,8 @@ const NavbarHomeMobile = () => {
 
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
-        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-      }`}
+      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+        }`}
     >
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-3 sm:px-6 lg:px-12">
         {/* LEFT */}
@@ -83,7 +82,7 @@ const NavbarHomeMobile = () => {
           </Link>
 
           {/* SIGN IN */}
-          {!isAuthenticated && (
+          {!isAuthChecked && (
             <button
               onClick={handleLoginClick}
               className="flex items-center justify-center w-10 h-10 rounded-lg bg-white hover:bg-gray-200 transition"
@@ -98,7 +97,7 @@ const NavbarHomeMobile = () => {
             </button>
           )}
 
-          {isAuthenticated && (
+          {isAuthChecked && (
             <button className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#C70515] hover:bg-[#a90411] transition">
               <Image
                 src="/header/SignUp Icon.svg"

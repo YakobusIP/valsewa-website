@@ -78,6 +78,9 @@ export type BookingResponse = {
   discount: number | null;
   totalValue: number;
   active: boolean | null;
+  customer?: {
+    username: string;
+  };
   account?: {
     accountRank: string;
     accountCode: string;

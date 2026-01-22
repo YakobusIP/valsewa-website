@@ -60,6 +60,13 @@ export type BookingEntity = {
   discount: number | null;
   totalValue: number;
   payments: PaymentEntity[];
+  customer: {
+    username: string;
+  };
+  account: {
+    accountCode: string;
+  };
+  adminFee: number;
 };
 
 export type BookingWithAccountEntity = BookingEntity & {

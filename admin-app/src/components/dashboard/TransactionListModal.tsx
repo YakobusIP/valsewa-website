@@ -250,9 +250,9 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     v == null
       ? "-"
       : new Intl.NumberFormat("id-ID", {
-          style: "currency",
-          currency: "IDR"
-        }).format(v);
+        style: "currency",
+        currency: "IDR"
+      }).format(v);
 
   const formatDateTime = (d: Date | string | null) =>
     d ? new Date(d).toLocaleString("id-ID") : "-";
@@ -383,7 +383,9 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                   <th className="px-3 py-2 text-left">Account</th>
                   <th className="px-3 py-2 text-left">Main Value</th>
                   <th className="px-3 py-2 text-left">Others Value</th>
+                  <th className="px-3 py-2 text-left">Admin Fee</th>
                   <th className="px-3 py-2 text-left">Total</th>
+                  <th className="px-3 py-2 text-left">Payment Method</th>
                   <th className="px-3 py-2 text-left">Duration</th>
                   <th className="px-3 py-2 text-left">Booking Status</th>
                   <th className="px-3 py-2 text-left">Payment Status</th>
@@ -395,14 +397,20 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                   <tr key={b.id} className="border-b hover:bg-muted">
                     <td className="px-3 py-2 font-mono text-xs">{b.id}</td>
                     <td className="px-3 py-2">{formatDateTime(b.createdAt)}</td>
-                    <td className="px-3 py-2">{b.customerId ?? "-"}</td>
-                    <td className="px-3 py-2">{b.accountId ?? "-"}</td>
+                    <td className="px-3 py-2">{b.customer?.username ?? "-"}</td>
+                    <td className="px-3 py-2">{b.account?.accountCode ?? "-"}</td>
                     <td className="px-3 py-2">{formatCurrency(b.mainValue)}</td>
                     <td className="px-3 py-2">
                       {formatCurrency(b.othersValue)}
                     </td>
+                    <td className="px-3 py-2">
+                      {formatCurrency(b.adminFee) ?? "-"}
+                    </td>
                     <td className="px-3 py-2 font-semibold">
                       {formatCurrency(b.totalValue)}
+                    </td>
+                    <td className="px-3 py-2 font-semibold">
+                      {getLatestPayment(b.payments)?.paymentMethod ?? "-"}
                     </td>
                     <td className="px-3 py-2 font-semibold">
                       {b.duration ?? "-"}
@@ -413,8 +421,8 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                     <td className="px-3 py-2 text-xs text-muted-foreground">
                       {getLatestPayment(b.payments)?.paidAt
                         ? renderPaymentStatus(
-                            getLatestPayment(b.payments)!.status
-                          )
+                          getLatestPayment(b.payments)!.status
+                        )
                         : "-"}
                     </td>
                     <td className="px-3 py-2">

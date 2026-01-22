@@ -15,7 +15,7 @@ const Navbar = () => {
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
   };
-  const { isAuthenticated, username } = useAuth();
+  const { isAuthChecked, username } = useAuth();
 
   return (
     <div className="fixed top-0 z-50 w-full bg-[#000000] shadow-md shadow-black/5">
@@ -63,7 +63,7 @@ const Navbar = () => {
           </Link>
 
           {/* SIGN IN */}
-          {!isAuthenticated && (
+          {!isAuthChecked && (
             <button
               onClick={handleLoginClick}
               className="flex items-center gap-2 px-4 py-2 border border-black rounded-xl bg-white hover:bg-gray-100 transition"
@@ -81,8 +81,8 @@ const Navbar = () => {
             </button>
           )}
 
-          {isAuthenticated && (
-            <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition">
+          {isAuthChecked && (
+            <div className="flex items-center px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition">
               <Image
                 src="/header/SignUp Icon.svg"
                 alt="User"
