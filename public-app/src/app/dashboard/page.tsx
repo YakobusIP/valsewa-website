@@ -23,12 +23,13 @@ import { calculateDaysRented, calculateTimeRemaining, cn } from "@/lib/utils";
 import { CopyIcon, LogOut } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { setAccessToken } from "@/lib/axios";
 
 export default function Dashboard() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const limit = 5;
-  const { username, customerId } = useAuth();
+  const { username, customerId, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
   const now = new Date();
@@ -78,13 +79,6 @@ export default function Dashboard() {
       title: "Copied",
       description: "Copied to Clipboard!"
     });
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("refreshToken");
-
-    router.replace("/");
-    router.refresh();
   };
 
   return (
@@ -141,7 +135,7 @@ export default function Dashboard() {
 
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={logout}
               className="inline-flex text-sm lg:text-xl font-normal items-center gap-2 rounded-md bg-[#C70515] px-4 py-2 text-white font-semibold hover:bg-[#a90412] transition focus:outline-none focus:ring-2 focus:ring-[#C70515] focus:ring-offset-2 focus:ring-offset-black"
             >
               <LogOut className="w-5 h-5" />
