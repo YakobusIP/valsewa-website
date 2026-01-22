@@ -14,17 +14,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { toast } from "@/hooks/useToast";
 
-import {
-  AspectRatio,
-  CarouselSlide,
-  CarouselSlideRequest
-} from "@/types/carousel.type";
+import { CarouselSlide, CarouselSlideRequest } from "@/types/carousel.type";
 
-import { CheckIcon, Loader2Icon, TrashIcon, UploadIcon } from "lucide-react";
+import { Loader2Icon, TrashIcon, UploadIcon } from "lucide-react";
 
 type Props = {
   isOpen: boolean;
@@ -42,109 +37,90 @@ export default function CarouselDetailModal({
   const isEditMode = !!slide;
   const title = isEditMode ? "Edit Slide" : "Add New Slide";
 
-  const [files, setFiles] = useState<Partial<Record<AspectRatio, File>>>({});
-  const [previews, setPreviews] = useState<
-    Partial<Record<AspectRatio, string>>
-  >({});
-  const [selectedTab, setSelectedTab] = useState<AspectRatio>("126");
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [duration, setDuration] = useState<number>(10);
   const [isLoadingSave, setIsLoadingSave] = useState(false);
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
 
   useEffect(() => {
     if (slide) {
-      setPreviews({
-        "123": slide.image123.imageUrl,
-        "126": slide.image126.imageUrl,
-        "129": slide.image129.imageUrl
-      });
+      setPreview(slide.image.imageUrl);
+      setDuration(slide.duration);
     } else {
-      setPreviews({});
+      setPreview(null);
+      setDuration(10);
     }
 
-    setFiles({});
+    setFile(null);
   }, [slide]);
 
-  const handleFileChange = (aspect: AspectRatio, file: File) => {
-    setFiles((f) => ({ ...f, [aspect]: file }));
-    const url = URL.createObjectURL(file);
-    setPreviews((p) => ({ ...p, [aspect]: url }));
+  const handleFileChange = (selectedFile: File) => {
+    setFile(selectedFile);
+    const url = URL.createObjectURL(selectedFile);
+    setPreview(url);
   };
 
-  const getPlaceholder = (aspect: AspectRatio) => {
-    switch (aspect) {
-      case "123":
-        return "/1200x300.webp";
-      case "126":
-        return "/1200x600.webp";
-      case "129":
-        return "/1200x900.webp";
+  const getMediaType = () => {
+    if (file) {
+      return file.type.startsWith("video/") ? "VIDEO" : "IMAGE";
     }
-  };
-
-  const getAspectRatioLabel = (aspect: AspectRatio) => {
-    switch (aspect) {
-      case "123":
-        return "Wide (12:3)";
-      case "126":
-        return "Medium (12:6)";
-      case "129":
-        return "Standard (12:9)";
+    if (slide) {
+      return slide.image.type;
     }
+    return "IMAGE";
   };
 
-  const allReady = !!(previews["123"] && previews["126"] && previews["129"]);
+  const allReady = !!preview && duration > 0;
 
   const handleSave = async () => {
-    if (!isEditMode && (!files["123"] || !files["126"] || !files["129"])) {
+    if (!isEditMode && !file) {
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong!",
-        description: "Please select files for all three ratios."
+        description: "Please select an image file."
+      });
+      return;
+    }
+
+    if (!duration) {
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: "Duration is required."
       });
       return;
     }
 
     setIsLoadingSave(true);
     try {
-      const aspects: AspectRatio[] = ["123", "126", "129"];
-      const changed = aspects.filter((ar) => files[ar] instanceof File);
+      let imageId: number | undefined;
 
-      const uploadMap: Partial<Record<AspectRatio, number>> = {};
-      if (changed.length) {
-        const orderedFiles = aspects
-          .map((ar) => files[ar])
-          .filter((f): f is File => !!f);
-
-        const responses =
-          await uploadService.uploadCarouselImages(orderedFiles);
-        let idx = 0;
-        for (const ar of aspects) {
-          if (files[ar]) {
-            uploadMap[ar] = responses[idx++].id;
-          }
-        }
+      if (file) {
+        const responses = await uploadService.uploadCarouselImages([file]);
+        imageId = responses[0].id;
       }
 
       if (isEditMode) {
-        const payload: Partial<CarouselSlideRequest> = {};
-        for (const ar of changed) {
-          payload[`image${ar}Id`] = uploadMap[ar]!;
+        const payload: Partial<CarouselSlideRequest> = {
+          duration
+        };
+        if (imageId !== undefined) {
+          payload.imageId = imageId;
         }
         await carouselSlideService.update(slide!.id, payload);
       } else {
         const payload: CarouselSlideRequest = {
-          image123Id: uploadMap["123"]!,
-          image126Id: uploadMap["126"]!,
-          image129Id: uploadMap["129"]!
+          imageId: imageId!,
+          duration
         };
         await carouselSlideService.create(payload);
       }
 
       resetParent();
 
-      setFiles({});
-      setPreviews({});
-      setSelectedTab("123");
+      setFile(null);
+      setPreview(null);
 
       onOpenChange(false);
     } catch (error) {
@@ -191,121 +167,106 @@ export default function CarouselDetailModal({
           </div>
           <DialogDescription>
             {isEditMode
-              ? "Atur ketiga gambar untuk slide ini."
-              : "Upload gambar untuk ketiga jenis aspect-ratio."}
+              ? "Atur gambar untuk slide ini (4:5 aspect ratio, 1080px × 1350px)."
+              : "Upload gambar untuk slide ini (4:5 aspect ratio, 1080px × 1350px)."}
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs
-          defaultValue="123"
-          value={selectedTab}
-          onValueChange={(value) => setSelectedTab(value as AspectRatio)}
-          className="mt-4"
-        >
-          <TabsList className="grid grid-cols-3">
-            {(["123", "126", "129"] as AspectRatio[]).map((ar) => (
-              <TabsTrigger key={ar} value={ar}>
-                {ar === "123" ? "12:3" : ar === "126" ? "12:6" : "12:9"}
-                {previews[ar] && (
-                  <CheckIcon className="inline ml-1 h-4 w-4 text-green-600" />
+        <div className="grid w-full max-w-sm items-center gap-1.5 mb-4">
+          <Label htmlFor="duration">Duration (Seconds)</Label>
+          <Input
+            type="number"
+            id="duration"
+            placeholder="Duration in seconds"
+            value={duration}
+            onChange={(e) => setDuration(Number(e.target.value))}
+          />
+        </div>
+
+        <div className="space-y-4 mt-4">
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1">
+              <div className="relative overflow-hidden aspect-[4/5] max-w-[432px] mx-auto">
+                {preview ? (
+                  getMediaType() === "VIDEO" ? (
+                    <video
+                      src={preview}
+                      className="w-full h-full object-contain"
+                      muted
+                      autoPlay
+                      loop
+                    />
+                  ) : (
+                    <img
+                      src={preview}
+                      alt="Carousel slide"
+                      className="w-full h-full object-contain"
+                    />
+                  )
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full gap-2 border-2 border-dashed border-gray-300 rounded-lg">
+                    <div className="text-center text-gray-500 mb-4">
+                      <p className="text-sm font-medium">4:5 Aspect Ratio</p>
+                      <p className="text-xs">1080px × 1350px</p>
+                    </div>
+                    <Input
+                      id="upload-image"
+                      type="file"
+                      accept="image/*,video/*"
+                      className="sr-only"
+                      onChange={(e) => handleFileChange(e.target.files![0])}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-2"
+                      onClick={() =>
+                        document.getElementById("upload-image")?.click()
+                      }
+                    >
+                      <UploadIcon className="h-4 w-4" />
+                      Upload Media
+                    </Button>
+                  </div>
                 )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+              </div>
+            </div>
 
-          {(["123", "126", "129"] as AspectRatio[]).map((aspect) => (
-            <TabsContent key={aspect} value={aspect}>
-              <div className="space-y-4">
-                <div className="flex flex-col md:flex-row gap-6">
-                  <div className="flex-1">
-                    <div className="relative overflow-hidden">
-                      {previews[aspect] ? (
-                        <img
-                          src={previews[aspect]}
-                          alt={`Ratio ${aspect}`}
-                          className="object-contain"
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-full gap-2">
-                          <img
-                            src={getPlaceholder(aspect)}
-                            alt={`Placeholder ${aspect}`}
-                            className="object-contain"
-                          />
-                          <Input
-                            id={`upload-${aspect}`}
-                            type="file"
-                            accept="image/*"
-                            className="sr-only"
-                            onChange={(e) =>
-                              handleFileChange(aspect, e.target.files![0])
-                            }
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-2"
-                            onClick={() =>
-                              document
-                                .getElementById(`upload-${aspect}`)
-                                ?.click()
-                            }
-                          >
-                            <UploadIcon className="h-4 w-4" />
-                            Upload Image
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex-1 space-y-4">
-                    <div>
-                      <Label htmlFor={`image-type-${aspect}`}>Image Type</Label>
-                      <div className="mt-1 text-sm" id={`image-type-${aspect}`}>
-                        {getAspectRatioLabel(aspect)}
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor={`dimensions-${aspect}`}>Dimensions</Label>
-                      <div className="mt-1 text-sm" id={`dimensions-${aspect}`}>
-                        {aspect === "123"
-                          ? "1200px × 300px"
-                          : aspect === "126"
-                            ? "1200px × 600px"
-                            : "1200px × 900px"}
-                      </div>
-                    </div>
-
-                    {previews[aspect] && (
-                      <div className="pt-2">
-                        <Label
-                          htmlFor={`upload-${aspect}`}
-                          className="cursor-pointer"
-                        >
-                          <div className="flex items-center gap-2 text-sm text-primary hover:underline">
-                            <UploadIcon className="h-4 w-4" />
-                            Change image
-                          </div>
-                        </Label>
-                        <Input
-                          id={`upload-${aspect}`}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) =>
-                            handleFileChange(aspect, e.target.files![0])
-                          }
-                        />
-                      </div>
-                    )}
-                  </div>
+            <div className="flex-1 space-y-4">
+              <div>
+                <Label htmlFor="image-type">Image Type</Label>
+                <div className="mt-1 text-sm" id="image-type">
+                  Instagram Post (4:5)
                 </div>
               </div>
-            </TabsContent>
-          ))}
-        </Tabs>
+
+              <div>
+                <Label htmlFor="dimensions">Dimensions</Label>
+                <div className="mt-1 text-sm" id="dimensions">
+                  1080px × 1350px
+                </div>
+              </div>
+
+              {preview && (
+                <div className="pt-2">
+                  <Label htmlFor="upload-image" className="cursor-pointer">
+                    <div className="flex items-center gap-2 text-sm text-primary hover:underline">
+                      <UploadIcon className="h-4 w-4" />
+                      Change media
+                    </div>
+                  </Label>
+                  <Input
+                    id="upload-image"
+                    type="file"
+                    accept="image/*,video/*"
+                    className="hidden"
+                    onChange={(e) => handleFileChange(e.target.files![0])}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
 
         <DialogFooter className="flex justify-between">
           {isEditMode && (

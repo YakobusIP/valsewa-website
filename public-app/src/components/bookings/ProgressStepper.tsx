@@ -1,74 +1,42 @@
-import { bookingService } from "@/services/booking.service";
+import { memo, useCallback } from "react";
 
-import { toast } from "@/hooks/useToast";
+import { instrumentSans } from "@/lib/fonts";
+import { cn } from "@/lib/utils";
 
-import { isAxiosError } from "axios";
 import {
   CheckIcon,
-  ChevronLeftIcon,
   DollarSign,
   MoreHorizontal
 } from "lucide-react";
-import { Instrument_Sans } from "next/font/google";
-
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap"
-});
+import CancelBookingButton from "./CancelBookingButton";
 
 type ProgressStepperProps = {
-  bookingId: string;
   stepIdx: number;
-  onBack: () => void;
+  handleCancelBooking: () => Promise<void>;
+  isLoadingCancelBooking: boolean;
 };
 
-export default function ProgressStepper({
-  bookingId,
-  stepIdx,
-  onBack
-}: ProgressStepperProps) {
-  const isActive = (idx: number) => {
-    return idx <= stepIdx;
-  };
-
-  const handleBack = async () => {
-    try {
-      await bookingService.cancelBooking({ bookingId });
-    } catch (error) {
-      let message = "Cancel booking failed";
-
-      if (isAxiosError(error)) {
-        message = error.response?.data?.error || error.message || message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
-
-      toast({
-        variant: "destructive",
-        title: "Cancel booking failed",
-        description: message
-      });
-    } finally {
-      onBack();
-    }
-  };
+function ProgressStepper({ stepIdx, handleCancelBooking, isLoadingCancelBooking }: ProgressStepperProps) {
+  const isActive = useCallback((idx: number) => idx <= stepIdx, [stepIdx]);
 
   return (
-    <div
-      className={`flex gap-6 text-sm font-bold items-center text-white ${instrumentSans.className}`}
+    <nav
+      className={cn(
+        "flex gap-3 sm:gap-4 lg:gap-6 text-xs sm:text-sm font-bold items-center text-white",
+        instrumentSans.className
+      )}
+      aria-label="Booking progress"
     >
-      <button onClick={handleBack} className="cursor-pointer w-fit rounded-xl">
-        <div className="flex items-center gap-2 p-4 transition border cursor-pointer border-white/30 rounded-xl hover:border-white bg-white/30">
-          <ChevronLeftIcon className="w-6 h-6 text-white" />
-        </div>
-      </button>
-      <div className="flex flex-col w-full gap-2">
-        <div className="flex items-center gap-4">
+      <div className="hidden lg:flex">
+        <CancelBookingButton cancelBooking={handleCancelBooking} isLoadingCancelBooking={isLoadingCancelBooking} />
+      </div>
+
+      <div className="flex flex-col w-full gap-1 sm:gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
           <div
             className={`flex items-center justify-center ${isActive(0) ? "" : "opacity-50"}`}
           >
-            <CheckIcon className="w-8 h-8 p-1 text-black bg-white rounded-full" />
+            <CheckIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-black bg-white rounded-full" />
           </div>
 
           <div className="flex-1 h-px bg-gray-600" />
@@ -76,7 +44,7 @@ export default function ProgressStepper({
           <div
             className={`flex items-center justify-center ${isActive(1) ? "" : "opacity-50"}`}
           >
-            <MoreHorizontal className="w-8 h-8 p-1 text-black bg-white rounded-full" />
+            <MoreHorizontal className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-black bg-white rounded-full" />
           </div>
 
           <div className="flex-1 h-px bg-gray-700" />
@@ -84,23 +52,31 @@ export default function ProgressStepper({
           <div
             className={`flex items-center justify-center ${isActive(2) ? "" : "opacity-50"}`}
           >
-            <DollarSign className="w-8 h-8 p-1 text-black bg-white rounded-full" />
+            <DollarSign className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-black bg-white rounded-full" />
           </div>
         </div>
-        <div className="grid items-center grid-cols-3 font-semibold text-white">
-          <span className={`text-left ${isActive(0) ? "" : "opacity-50"}`}>
+        <div className="grid items-center grid-cols-3 font-semibold text-white text-[10px] sm:text-xs lg:text-sm">
+          <span
+            className={`text-left break-words ${isActive(0) ? "" : "opacity-50"}`}
+          >
             Choose Booking
           </span>
 
-          <span className={`text-center ${isActive(0) ? "" : "opacity-50"}`}>
+          <span
+            className={`text-center break-words ${isActive(0) ? "" : "opacity-50"}`}
+          >
             Purchase Details
           </span>
 
-          <span className={`text-right ${isActive(0) ? "" : "opacity-50"}`}>
+          <span
+            className={`text-right break-words ${isActive(0) ? "" : "opacity-50"}`}
+          >
             Payment
           </span>
         </div>
       </div>
-    </div>
+    </nav>
   );
 }
+
+export default memo(ProgressStepper);

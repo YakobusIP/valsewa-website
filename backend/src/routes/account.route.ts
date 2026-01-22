@@ -51,17 +51,17 @@ class AccountRouter {
       authMiddleware,
       this.accountController.getAccountResetLogs
     );
+    this.router.get(
+      "/available",
+      authMiddleware,
+      this.accountController.getAvailableAccounts
+    );
     this.router.get("/:id", this.accountController.getAccountById);
     this.router.post("/", authMiddleware, this.accountController.createAccount);
     this.router.post(
       "/update-rank",
       schedulerMiddleware,
       this.accountController.updateAllAccountsRank
-    );
-    this.router.post(
-      "/update-expire-at",
-      schedulerMiddleware,
-      this.accountController.updateExpireAt
     );
     this.router.put(
       "/finish-booking/:id",
@@ -82,16 +82,6 @@ class AccountRouter {
       "/",
       authMiddleware,
       this.accountController.deleteManyAccounts
-    );
-    this.router.post(
-      "/:id/skins",
-      authMiddleware,
-      this.accountController.addSkinsToAccount
-    );
-    this.router.delete(
-      "/:id/skins",
-      authMiddleware,
-      this.accountController.removeSkinsFromAccount
     );
   }
 }

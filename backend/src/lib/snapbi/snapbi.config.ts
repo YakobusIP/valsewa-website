@@ -10,6 +10,8 @@ export interface SnapBiConfigOptions {
   partnerId: string;
   channelId: string;
   publicKey: string;
+  paymentNotificationUserId: string;
+  paymentNotificationPassword: string;
 }
 
 export default class SnapBiConfig {
@@ -22,6 +24,8 @@ export default class SnapBiConfig {
   static snapBiChannelId: string;
   static snapBiPublicKey: string; // provider public key
   static snapBiPrivateKey: string; // valsewa private key
+  static paymentNotificationUserId: string;
+  static paymentNotificationPassword: string;
 
   private static readonly SNAP_BI_SANDBOX_BASE_URL =
     "https://debit-sandbox.faspay.co.id";
@@ -47,10 +51,16 @@ export default class SnapBiConfig {
 
     this.snapBiChannelId = env.SNAP_BI_CHANNEL_ID || "snap_bi_channel_id";
 
-    this.snapBiPublicKey = env.SNAP_BI_PUBLIC_KEY || "snap_bi_public_key";
+    this.snapBiPublicKey = env.SNAP_BI_PUBLIC_KEY.replace(/\\n/g, "\n") || "snap_bi_public_key";
 
     this.snapBiPrivateKey =
       env.SNAP_BI_PRIVATE_KEY.replace(/\\n/g, "\n") || "snap_bi_private_key";
+
+    this.paymentNotificationUserId =
+      env.PAYMENT_NOTIFICATION_USER_ID || "payment_notification_user_id";
+
+    this.paymentNotificationPassword =
+      env.PAYMENT_NOTIFICATION_PASSWORD || "payment_notification_password";
 
     this.isProduction = env.NODE_ENV === "production";
 

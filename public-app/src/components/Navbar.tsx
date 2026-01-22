@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
+
+import { useAuth } from "@/hooks/useAuth";
+
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+
 import LoginPage from "./LoginPage";
-import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
@@ -17,7 +20,6 @@ const Navbar = () => {
   return (
     <div className="fixed top-0 z-50 w-full bg-[#000000] shadow-md shadow-black/5">
       <div className="mx-auto max-w-[1920px] pt-5 h-[84px] md:h-[80px] flex items-center justify-between px-5 md:px-14">
-
         {/* LOGO */}
         <div className="relative md:pl-14">
           <figure className="relative top-0 lg:max-w-[200px] sm:max-w-[150px] max-w-[150px] left-5">
@@ -33,22 +35,32 @@ const Navbar = () => {
 
         {/* NAV RIGHT SIDE */}
         <div className="md:pr-14 pr-7 flex items-center gap-4">
-
           {/* SEARCH */}
           <Link href="https://valforum.com/top-up">
             <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
-              <Image src="/header/Search Icon.svg" alt="Search" width={16} height={16} />
+              <Image
+                src="/header/Search Icon.svg"
+                alt="Search"
+                width={16}
+                height={16}
+              />
             </div>
           </Link>
 
           {/* TOP UP */}
           <Link href="https://valforum.com/top-up">
             <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl hover:border-white transition cursor-pointer">
-              <Image src="/header/Diamond.svg" alt="Top Up" width={18} height={18} />
-              <span className="text-white text-sm font-bold font-instrumentSans">Top Up</span>
+              <Image
+                src="/header/Diamond.svg"
+                alt="Top Up"
+                width={18}
+                height={18}
+              />
+              <span className="text-white text-sm font-bold font-instrumentSans">
+                Top Up
+              </span>
             </div>
           </Link>
-
 
           {/* SIGN IN */}
           {!isAuthenticated && (
@@ -63,10 +75,11 @@ const Navbar = () => {
                 height={18}
                 className="filter invert"
               />
-              <span className="text-black text-sm font-semibold">Login/Sign Up</span>
+              <span className="text-black text-sm font-semibold">
+                Login/Sign Up
+              </span>
             </button>
           )}
-
 
           {isAuthenticated && (
             <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition">
@@ -81,12 +94,7 @@ const Navbar = () => {
               </span>
             </div>
           )}
-
-
-
-
         </div>
-
 
         {/* LOGIN POPUP */}
         {isComponentOpen && (

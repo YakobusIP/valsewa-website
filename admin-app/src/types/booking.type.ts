@@ -67,7 +67,7 @@ export type BookingWithAccountEntity = BookingEntity & {
 };
 
 export type PaymentEntity = {
-  paymentId: string;
+  id: string;
   bookingId: string;
   status: PAYMENT_STATUS;
   value: number;
@@ -88,6 +88,13 @@ export type CreateBookingRequest = {
   accountCode: string;
   totalValue: number;
   startAt?: Date;
+};
+
+export type CreateAdminBookingRequest = {
+  accountId: number;
+  startAt: Date;
+  duration: string;
+  totalValue: number;
 };
 
 export type UpdateBookingRequest = {

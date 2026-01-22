@@ -36,6 +36,18 @@ export type CreateManualBookingRequest = {
   startAt?: Date;
 };
 
+export type CreateAdminBookingRequest = {
+  accountId: number;
+  startAt: Date;
+  duration: string;
+  totalValue: number;
+};
+
+export type OverrideBookingRequest = {
+  bookingId: string;
+  accountId: number;
+};
+
 export type PayBookingRequest = {
   bookingId: string;
   voucherId?: number;
@@ -48,6 +60,7 @@ export type BookingResponse = {
   customerId: number | null;
   accountId: number;
   status: BookingStatus;
+  adminFee: number | null;
   duration: string;
   quantity: number;
   startAt: Date | null;
@@ -64,7 +77,15 @@ export type BookingResponse = {
   othersValue: number | null;
   discount: number | null;
   totalValue: number;
-  account?: any;
+  active: boolean | null;
+  account?: {
+    accountRank: string;
+    accountCode: string;
+    priceTierCode: string;
+    thumbnailImageUrl: string;
+    username?: string;
+    password?: string;
+  };
   payments?: Payment[];
 };
 
@@ -73,7 +94,7 @@ export type UpdateBookingRequest = {
 };
 
 export type PaymentResponse = {
-  paymentId: string;
+  id: string;
   bookingId: string;
   status: PaymentStatus;
   value: number;
@@ -82,9 +103,9 @@ export type PaymentResponse = {
   providerPaymentId: string | null;
   paymentMethod: PaymentMethodType | null;
   qrUrl: string | null;
-  bankCode?: BankCodes | null;
-  bankAccountNo?: string | null;
-  bankAccountName?: string | null;
+  bankCode: BankCodes | string | null;
+  bankAccountNo: string | null;
+  bankAccountName: string | null;
   paidAt: Date | null;
   refundedAt: Date | null;
   booking?: any;
@@ -98,7 +119,7 @@ export type BookingPriceValues = {
 };
 
 export type CallbackNotificationRequest = {
-  providerPaymentId: string;
+  billNo: string;
   paymentStatus: PaymentStatus;
   paidAt: Date | null;
 };

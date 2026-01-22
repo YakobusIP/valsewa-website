@@ -18,6 +18,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
@@ -56,14 +57,9 @@ import { ranks } from "@/lib/constants";
 import { cn, convertHoursToDays, generatePassword } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  CirclePlusIcon,
-  CopyIcon,
-  Loader2Icon,
-  LockIcon,
-  Trash2Icon
-} from "lucide-react";
-import { FieldErrors, useFieldArray, useForm, useWatch } from "react-hook-form";
+import { CopyIcon, Loader2Icon, LockIcon, Trash2Icon } from "lucide-react";
+import parse from "parse-duration";
+import { FieldErrors, useForm, useWatch } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
 import { z } from "zod";
 
@@ -95,9 +91,18 @@ const formSchema = z.object({
       ])
     )
     .optional(),
+  totalRentHour: z
+    .string()
+    .nonempty("Total rent duration is required"),
   isLowRank: z.boolean().optional().default(false),
   isRecommended: z.boolean().optional().default(false)
 });
+
+type FormValues = z.infer<typeof formSchema>;
+type SubmitValues = Omit<FormValues, "totalRentHour"> & { totalRentHour: number };
+
+const getDefaultTotalRentHour = (hours?: number | null) =>
+  convertHoursToDays(hours ?? undefined) ?? "0d 0h";
 
 type Props = {
   open: boolean;
@@ -164,40 +169,42 @@ export default function AccountDetailModal({
     }
   }, []);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues:
       mode === "edit" && data
         ? {
-          username: data.username,
-          nickname: data.nickname,
-          accountCode: data.accountCode,
-          description: data.description ?? undefined,
-          priceTier: data.priceTier.id,
-          accountRank: data.accountRank,
-          password: data.password,
-          passwordResetRequired: data.passwordResetRequired,
-          skinList: data.skinList.map((skin) => skin.id),
-          thumbnail: data.thumbnail,
-          otherImages: data.otherImages ? data.otherImages : [],
-          isLowRank: data.isLowRank,
-          isRecommended: data.isRecommended
-        }
+            username: data.username,
+            nickname: data.nickname,
+            accountCode: data.accountCode,
+            description: data.description ?? undefined,
+            priceTier: data.priceTier.id,
+            accountRank: data.accountRank,
+            password: data.password,
+            passwordResetRequired: data.passwordResetRequired,
+            skinList: data.skinList.map((skin) => skin.id),
+            thumbnail: data.thumbnail,
+            otherImages: data.otherImages ? data.otherImages : [],
+            totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
+            isLowRank: data.isLowRank,
+            isRecommended: data.isRecommended
+          }
         : {
-          username: "",
-          nickname: "",
-          accountCode: "",
-          description: "",
-          priceTier: undefined,
-          accountRank: "",
-          password: "",
-          passwordResetRequired: false,
-          skinList: [],
-          thumbnail: undefined,
-          otherImages: [],
-          isLowRank: false,
-          isRecommended: false
-        },
+            username: "",
+            nickname: "",
+            accountCode: "",
+            description: "",
+            priceTier: undefined,
+            accountRank: "",
+            password: "",
+            passwordResetRequired: false,
+            skinList: [],
+            thumbnail: undefined,
+            otherImages: [],
+            totalRentHour: "0d 0h",
+            isLowRank: false,
+            isRecommended: false
+          },
     mode: "onSubmit",
     reValidateMode: "onChange"
   });
@@ -285,7 +292,7 @@ export default function AccountDetailModal({
   };
 
   const handleAddAccount = async (
-    values: z.infer<typeof formSchema>,
+    values: SubmitValues,
     thumbnail_id: number,
     other_image_ids: number[]
   ) => {
@@ -320,7 +327,7 @@ export default function AccountDetailModal({
 
   const handleEditAccount = async (
     id: number,
-    values: z.infer<typeof formSchema>,
+    values: SubmitValues,
     thumbnail_id?: number,
     other_image_ids?: number[]
   ) => {
@@ -353,7 +360,25 @@ export default function AccountDetailModal({
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const parseDurationToHours = useCallback(
+    (duration: string, shouldSetError = true) => {
+      const ms = parse(duration);
+      if (ms === null) {
+        if (shouldSetError) {
+          form.setError("totalRentHour", {
+            type: "validate",
+            message: "Invalid duration format"
+          });
+        }
+        return null;
+      }
+
+      return ms / (1000 * 60 * 60);
+    },
+    [form]
+  );
+
+  const onSubmit = async (values: FormValues) => {
     if (accountDuplicate) {
       toast({
         variant: "destructive",
@@ -363,7 +388,16 @@ export default function AccountDetailModal({
 
       return;
     }
+    const parsedTotalRentHour = parseDurationToHours(values.totalRentHour);
+    if (parsedTotalRentHour === null) {
+      return;
+    }
+
     setIsLoadingSubmit(true);
+    const normalizedValues: SubmitValues = {
+      ...values,
+      totalRentHour: parsedTotalRentHour
+    };
 
     let thumbnail_id: number;
     if (values.thumbnail instanceof File) {
@@ -396,27 +430,40 @@ export default function AccountDetailModal({
     }
 
     if (mode === "edit" && data) {
-      await handleEditAccount(data.id, values, thumbnail_id, otherImageIds);
+      await handleEditAccount(
+        data.id,
+        normalizedValues,
+        thumbnail_id,
+        otherImageIds
+      );
     } else if (mode === "add") {
-      await handleAddAccount(values, thumbnail_id, otherImageIds);
+      await handleAddAccount(normalizedValues, thumbnail_id, otherImageIds);
     }
 
     form.reset();
     setThumbnailInputKey(Date.now());
   };
 
-  const handleError = (errors: FieldErrors<z.infer<typeof formSchema>>) => {
+  const handleError = (errors: FieldErrors<FormValues>) => {
     console.log(errors);
   };
 
   const hasPasswordError = !!form.formState.errors.password;
-  const hasSkinsError = !!form.formState.errors.skinList;
   const hasThumbnail = !!form.getValues("thumbnail");
   const isPasswordUpdated = form.watch("passwordResetRequired");
 
   const nicknameValue = form.watch("nickname");
   const usernameValue = form.watch("username");
   const accountCodeValue = form.watch("accountCode");
+  const totalRentHourValue = form.watch("totalRentHour");
+
+  const totalRentHourPreview = useMemo(() => {
+    if (!totalRentHourValue) return "0d 0h";
+    const parsedHours = parseDurationToHours(totalRentHourValue, false);
+    if (parsedHours === null) return "0d 0h";
+
+    return convertHoursToDays(parsedHours) ?? "0d 0h";
+  }, [parseDurationToHours, totalRentHourValue]);
 
   useEffect(() => {
     if (isFirstRenderRank.current) {
@@ -499,6 +546,7 @@ export default function AccountDetailModal({
         skinList: data.skinList.map((skin) => skin.id),
         thumbnail: data.thumbnail,
         otherImages: data.otherImages || [],
+        totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
         isLowRank: data.isLowRank,
         isRecommended: data.isRecommended
       });
@@ -514,6 +562,7 @@ export default function AccountDetailModal({
         skinList: [],
         thumbnail: undefined,
         otherImages: [],
+        totalRentHour: "0d 0h",
         isLowRank: undefined,
         isRecommended: undefined
       });
@@ -531,6 +580,11 @@ export default function AccountDetailModal({
           <DialogTitle>
             {mode === "add" ? "Add New Account" : "Edit Account"}
           </DialogTitle>
+          <DialogDescription>
+            {mode === "add"
+              ? "Create a new account with all required details"
+              : "Edit account information and settings"}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -669,7 +723,9 @@ export default function AccountDetailModal({
                       <FormControl>
                         <Checkbox
                           checked={!!field.value}
-                          onCheckedChange={(checked) => field.onChange(checked === true)}
+                          onCheckedChange={(checked) =>
+                            field.onChange(checked === true)
+                          }
                         />
                       </FormControl>
 
@@ -772,35 +828,48 @@ export default function AccountDetailModal({
               </p>
             )}
 
-            <div>
-              <FormField
-                control={form.control}
-                name="isRecommended"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
-                    <FormControl>
-                      <Checkbox
-                        checked={!!field.value}
-                        onCheckedChange={(checked) =>
-                          field.onChange(checked === true)
-                        }
-                      />
-                    </FormControl>
+            <div className="col-span-1 xl:col-span-3 flex flex-col xl:flex-row items-start xl:items-end gap-3">
+              <div className="order-2 xl:order-1 xl:flex-[2] min-w-0">
+                <FormField
+                  control={form.control}
+                  name="totalRentHour"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Total Rent Duration{" "}
+                        <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. 1d 4h 30m" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-                    <FormLabel className="font-normal cursor-pointer">
-                      Recommended
-                    </FormLabel>
-                  </FormItem>
-                )}
-              />
-            </div>
+              <div className="order-1 xl:order-2 xl:ml-auto">
+                <FormField
+                  control={form.control}
+                  name="isRecommended"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                      <FormControl>
+                        <Checkbox
+                          checked={!!field.value}
+                          onCheckedChange={(checked) =>
+                            field.onChange(checked === true)
+                          }
+                        />
+                      </FormControl>
 
-            <div className="flex flex-col col-span-1 xl:col-span-3 gap-2">
-              <p className="font-semibold">Skins</p>
-              <hr />
-              <p className="text-sm">
-                3 entri pertama akan ditampilkan di halaman utama
-              </p>
+                      <FormLabel className="font-normal cursor-pointer">
+                        Recommended
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <div className="relative col-span-1 xl:col-span-3 gap-2">
@@ -817,6 +886,7 @@ export default function AccountDetailModal({
                       </FormLabel>
                       <FormControl>
                         <MultiSelect
+                          modalPopover={true}
                           options={skinOptions}
                           value={selectedValue}
                           onValueChange={(value: string[]) => {
@@ -832,7 +902,7 @@ export default function AccountDetailModal({
                                 : "Select one or more skins"
                           }
                           searchable={true}
-                          maxCount={100}
+                          maxCount={25}
                           className="w-full"
                           animationConfig={{
                             badgeAnimation: "slide",
@@ -1001,9 +1071,7 @@ export default function AccountDetailModal({
               <p className="text-sm">
                 Akun ini sudah pernah disewa selama{" "}
                 <b>
-                  {data?.totalRentHour
-                    ? convertHoursToDays(data?.totalRentHour)
-                    : "0d 0h"}
+                  {totalRentHourPreview}
                 </b>
               </p>
 

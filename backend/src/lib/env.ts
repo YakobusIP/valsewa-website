@@ -4,7 +4,7 @@ import { z } from "zod";
 dotenv.config();
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "production", "test"]),
+  NODE_ENV: z.enum(["development", "production", "staging"]),
   PORT: z.string().transform((value) => {
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) throw new Error("Server port must be a number");
@@ -18,6 +18,11 @@ const envSchema = z.object({
   REFRESH_TOKEN_SECRET: z.string(),
   ACCESS_TOKEN_DURATION: z.string(),
   REFRESH_TOKEN_DURATION: z.string(),
+
+  GCS_BUCKET_NAME: z.string(),
+
+  GCP_PROJECT_ID: z.string().optional(),
+  GOOGLE_APPLICATION_CREDENTIALS: z.string().optional(),
 
   PUB_ACCESS_TOKEN_SECRET: z.string(),
   PUB_REFRESH_TOKEN_SECRET: z.string(),
@@ -45,7 +50,26 @@ const envSchema = z.object({
   SNAP_BI_CLIENT_SECRET: z.string(),
   SNAP_BI_PARTNER_ID: z.string(),
   SNAP_BI_CHANNEL_ID: z.string(),
-  SNAP_BI_PUBLIC_KEY: z.string()
+  SNAP_BI_PUBLIC_KEY: z.string(),
+  PAYMENT_NOTIFICATION_USER_ID: z.string(),
+  PAYMENT_NOTIFICATION_PASSWORD: z.string(),
+
+  BOOKING_HOLD_TIME_MINUTES: z
+    .string()
+    .optional()
+    .transform((value) => {
+      const parsed = parseInt(value ?? "15", 10);
+      if (isNaN(parsed)) throw new Error("Booking hold time must be a number");
+      return parsed;
+    }),
+  BOOKING_GRACE_TIME_MILLIS: z
+    .string()
+    .optional()
+    .transform((value) => {
+      const parsed = parseInt(value ?? "30000", 10);
+      if (isNaN(parsed)) throw new Error("Booking grace time must be a number");
+      return parsed;
+    })
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

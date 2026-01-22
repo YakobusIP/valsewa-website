@@ -1,252 +1,326 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { bookingService } from "@/services/booking.service";
 
 import Navbar from "@/components/Navbar";
+import NavbarMobile from "@/components/NavbarMobile";
 import PaymentCountdown from "@/components/bookings/PaymentCountdown";
 import ProgressStepper from "@/components/bookings/ProgressStepper";
 
-import { toast } from "@/hooks/useToast";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 
-import { PAYMENT_STATUS, PaymentWithBookingEntity } from "@/types/booking.type";
+import {
+  BOOKING_STATUS,
+  PAYMENT_METHOD_TYPE,
+  PAYMENT_STATUS,
+  PaymentWithBookingEntity
+} from "@/types/booking.type";
 
-import { isAxiosError } from "axios";
-import { ArrowDownToLineIcon, CheckIcon, XIcon } from "lucide-react";
-import { Instrument_Sans, Staatliches } from "next/font/google";
+import { PAYMENT_STATUS_MAP } from "@/lib/constants";
+import { instrumentSans, staatliches } from "@/lib/fonts";
+import { cn } from "@/lib/utils";
+
+import { ArrowDownToLineIcon, CheckIcon, CopyIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import { notFound, useParams, useRouter } from "next/navigation";
 
-const staatliches = Staatliches({
-  subsets: ["latin"],
-  weight: ["400"],
-  display: "swap"
-});
+function LoadingState() {
+  return (
+    <div className="flex items-center justify-center min-h-screen text-white bg-black">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+        <p className="text-lg">Loading payment details...</p>
+      </div>
+    </div>
+  );
+}
 
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap"
-});
-
-export default function BookingDetailPage() {
+function PaymentStatusView({ payment }: { payment: PaymentWithBookingEntity }) {
   const router = useRouter();
 
+  const statusLabel =
+    PAYMENT_STATUS_MAP[payment.status] || payment.status.toLowerCase();
+
+  return (
+    <div className="flex flex-col items-center justify-center h-full gap-6 text-center">
+      <div
+        role="img"
+        aria-label={statusLabel}
+      >
+        <XIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
+      </div>
+
+      <h1
+        className={cn(
+          "text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase",
+          staatliches.className
+        )}
+      >
+        Order {statusLabel}!
+      </h1>
+
+      <button
+        onClick={() =>
+          router.push(`/details/${payment.booking.accountId}`)
+        }
+        className="mt-4 px-6 py-3 text-base sm:text-lg font-semibold rounded bg-neutral-700 hover:bg-neutral-600 transition"
+      >
+        Back to Account
+      </button>
+    </div>
+  );
+}
+
+export default function PaymentDetailPage() {
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = params?.id;
 
   const [payment, setPayment] = useState<PaymentWithBookingEntity | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoadingCancelBooking, setIsLoadingCancelBooking] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [vaNoCopied, setVaNoCopied] = useState(false);
+  const { handleAsyncError } = useErrorHandler();
 
   const onDownloadQR = useCallback(async () => {
     if (!payment?.qrUrl) return;
 
     try {
       const res = await fetch(payment.qrUrl);
-      const blob = await res.blob();
+      if (!res.ok) throw new Error("Failed to fetch QR code");
 
+      const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
 
       a.href = url;
-      a.download = `QRIS-${payment.paymentId}.png`;
+      a.download = `QRIS-${payment.id}.png`;
       document.body.appendChild(a);
       a.click();
 
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      let message = "Download QR failed";
-
-      if (isAxiosError(error)) {
-        message = error.response?.data?.error || error.message || message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
-
-      toast({
-        variant: "destructive",
-        title: "Download QR failed",
-        description: message
-      });
+      handleAsyncError(error, "Download QR failed", "Download QR failed");
     }
-  }, [payment]);
+  }, [payment, handleAsyncError]);
+
+  const handlePaymentUpdate = useCallback(
+    (updatedPayment: PaymentWithBookingEntity) => {
+      setPayment(updatedPayment);
+      // Redirect to success page if payment is successful and booking is reserved
+      if (
+        updatedPayment.status === PAYMENT_STATUS.SUCCESS &&
+        updatedPayment.booking.status === BOOKING_STATUS.RESERVED
+      ) {
+        router.push(`/payments/${id}/success`);
+      }
+    },
+    [id, router]
+  );
+
+  const handleCopyVaNo = async (vaNo: string) => {
+    await navigator.clipboard.writeText(vaNo.trim());
+    setVaNoCopied(true);
+    setTimeout(() => setVaNoCopied(false), 1500);
+  };
+
+  const { verifyPayment } = usePaymentVerification({
+    payment,
+    paymentId: id,
+    onPaymentUpdate: handlePaymentUpdate
+  });
 
   const onVerify = useCallback(async () => {
-    if (verifying || !payment) return;
-    if (payment.status !== PAYMENT_STATUS.PENDING) return;
+    if (verifying || !payment || payment.status !== PAYMENT_STATUS.PENDING)
+      return;
 
     try {
       setVerifying(true);
-
-      const verifiedPayment = await bookingService.verifyPayment({
-        paymentId: id
-      });
-      setPayment(verifiedPayment);
+      await verifyPayment();
     } catch (error) {
-      let message = "Payment confirmation failed";
-
-      if (isAxiosError(error)) {
-        message = error.response?.data?.error || error.message || message;
-      } else if (error instanceof Error) {
-        message = error.message;
-      }
-
-      toast({
-        variant: "destructive",
-        title: "Payment verification failed",
-        description: message
-      });
+      handleAsyncError(
+        error,
+        "Payment confirmation failed",
+        "Payment verification failed"
+      );
     } finally {
       setVerifying(false);
     }
-  }, [id, payment, verifying]);
+  }, [payment, verifying, verifyPayment, handleAsyncError]);
 
-  const onBack = () => {
-    router.push("/");
-  };
+  const handleCancelBooking = useCallback(async () => {
+    if (!payment || isLoadingCancelBooking) return;
+
+    try {
+      setIsLoadingCancelBooking(true);
+      await bookingService.cancelBooking({ bookingId: payment.bookingId });
+    } catch (error) {
+      handleAsyncError(error, "Cancel booking failed", "Cancel booking failed");
+    } finally {
+      setIsLoadingCancelBooking(false);
+      router.push("/");
+    }
+  }, [payment, isLoadingCancelBooking, handleAsyncError, router]);
+
+  const isFailed = payment && (
+    [
+      PAYMENT_STATUS.CANCELLED,
+      PAYMENT_STATUS.EXPIRED,
+      PAYMENT_STATUS.FAILED
+    ].includes(payment.status));
 
   useEffect(() => {
+    if (!id) return;
+
     bookingService
       .fetchPaymentById(id)
       .then((res) => {
         setPayment(res);
+        // Redirect to success page if payment is successful and booking is reserved
+        if (
+          res &&
+          res.status === PAYMENT_STATUS.SUCCESS &&
+          res.booking.status === BOOKING_STATUS.RESERVED
+        ) {
+          router.push(`/payments/${id}/success`);
+        }
       })
       .catch((error) => {
-        let message = "Fetch payment failed";
-
-        if (isAxiosError(error)) {
-          message = error.response?.data?.error || error.message || message;
-        } else if (error instanceof Error) {
-          message = error.message;
-        }
-
+        handleAsyncError(error, "Fetch payment failed", "Fetch payment failed");
         setPayment(null);
-        toast({
-          variant: "destructive",
-          title: "Fetch payment failed",
-          description: message
-        });
       })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, handleAsyncError, router]);
 
-  useEffect(() => {
-    if (!payment) return;
-    if (payment.status !== PAYMENT_STATUS.PENDING) return;
-
-    const interval = setInterval(() => {
-      onVerify();
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [payment, onVerify]);
+  const paymentMethodLabel = useMemo(() => {
+    if (!payment) return "";
+    return payment.paymentMethod === PAYMENT_METHOD_TYPE.QRIS
+      ? "QRIS"
+      : `VA ${payment.bankCode || ""}`;
+  }, [payment]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen text-white bg-black">
-        Loading...
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (!payment) return notFound();
 
-  if (payment.status !== PAYMENT_STATUS.PENDING) {
-    const statusMap = {
-      [PAYMENT_STATUS.SUCCESS]: "success",
-      [PAYMENT_STATUS.EXPIRED]: "expired",
-      [PAYMENT_STATUS.FAILED]: "failed",
-      [PAYMENT_STATUS.CANCELLED]: "cancelled",
-      [PAYMENT_STATUS.REFUNDED]: "refunded"
-    };
-    return (
-      <div className="flex items-center justify-center min-h-screen text-white bg-black">
-        <div
-          className={`py-[110px] items-center flex flex-col gap-4 px-4 lg:px-10 w-full ${instrumentSans.className}`}
-        >
-          <div className="flex items-center justify-center">
-            {payment.status === PAYMENT_STATUS.SUCCESS ? (
-              <CheckIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
-            ) : (
-              <XIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
-            )}
-          </div>
-          <h1
-            className={`text-6xl text-center font-bold mb-4 leading-[1.2] uppercase ${staatliches.className}`}
-          >
-            Order {statusMap[payment.status]}!
-          </h1>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <main className="min-h-screen text-white bg-black">
-      <Navbar />
+    <main className="min-h-screen flex text-white bg-black">
+      <div className="relative max-lg:hidden">
+        <Navbar />
+      </div>
+      <div className="lg:hidden">
+        <NavbarMobile />
+      </div>
 
       <div
-        className={`py-[110px] items-center px-4 lg:px-10 w-full ${instrumentSans.className}`}
-      >
-        <ProgressStepper
-          bookingId={payment.booking.id}
-          stepIdx={2}
-          onBack={onBack}
-        />
-
-        {payment.booking.expiredAt && (
-          <PaymentCountdown expiredAt={payment.booking.expiredAt} />
+        className={cn(
+          "py-[90px] lg:py-[110px] items-center px-4 lg:px-10 w-full",
+          instrumentSans.className
         )}
+      >
+        {isFailed ? (
+          <PaymentStatusView payment={payment} />
+        ) : (
+          <>
+            <ProgressStepper
+              stepIdx={2}
+              handleCancelBooking={handleCancelBooking}
+              isLoadingCancelBooking={isLoadingCancelBooking}
+            />
 
-        <div className="flex flex-col items-center w-full gap-4 mx-auto mt-8 max-w-96">
-          {payment.qrUrl && (
-            <div className="w-full p-4 overflow-hidden bg-white rounded-md max-w-72 max-h-72">
-              <Image
-                src={payment.qrUrl}
-                alt="QRIS"
-                width={300}
-                height={300}
-                className="object-cover w-full h-auto"
-              />
+            {payment.booking.expiredAt && (
+              <PaymentCountdown expiredAt={payment.booking.expiredAt} />
+            )}
+
+            <div className="flex flex-col items-center w-full gap-4 mx-auto mt-4 lg:mt-8 max-w-96">
+              {payment.qrUrl && (
+                <div className="w-full p-3 sm:p-4 overflow-hidden bg-white rounded-md max-w-64 sm:max-w-72 max-h-64 sm:max-h-72">
+                  <Image
+                    src={payment.qrUrl}
+                    alt="QRIS payment code"
+                    width={300}
+                    height={300}
+                    className="object-cover w-full h-auto"
+                    priority
+                  />
+                </div>
+              )}
+
+              <h1
+                className={cn(
+                  "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl text-center font-bold mb-4 leading-[1.2]",
+                  staatliches.className
+                )}
+              >
+                IDR {payment.value.toLocaleString()}
+              </h1>
+
+              <div className="w-full mt-auto space-y-2 sm:space-y-1">
+                <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                  <p className="font-semibold text-sm sm:text-base">
+                    Selected Payment Method
+                  </p>
+                  <p className="text-sm sm:text-base">{paymentMethodLabel}</p>
+                </div>
+                {payment.bankAccountNo && (
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                    <p className="font-semibold text-sm sm:text-base">VA Number</p>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyVaNo(payment.bankAccountNo!)}
+                      className="flex items-center gap-2 font-medium text-white hover:text-red-600 text-sm sm:text-base"
+                    >
+                      <span className="select-text break-all">
+                        {payment.bankAccountNo}
+                      </span>
+
+                      {vaNoCopied ? (
+                        <CheckIcon className="w-4 h-4 flex-shrink-0" />
+                      ) : (
+                        <CopyIcon className="w-4 h-4 flex-shrink-0" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col w-full gap-2 space-y-2 text-center text-white">
+                {payment.qrUrl && (
+                  <button
+                    type="button"
+                    onClick={onDownloadQR}
+                    className="flex items-center justify-center w-full gap-2 py-2.5 sm:py-3 mb-4 text-base sm:text-lg lg:text-xl font-semibold transition bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
+                    aria-label="Download QR code"
+                  >
+                    <p>Download QR</p>
+                    <ArrowDownToLineIcon
+                      className="w-5 h-5 sm:w-6 sm:h-6 text-white"
+                      strokeWidth={3}
+                    />
+                  </button>
+                )}
+                <p className="text-xs sm:text-sm">
+                  No payment confirmation received?
+                </p>
+                <button
+                  type="button"
+                  onClick={onVerify}
+                  disabled={verifying}
+                  className="w-full py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
+                >
+                  {verifying ? "Verifying..." : "Confirm Payment Manually"}
+                </button>
+              </div>
             </div>
-          )}
-
-          <h1
-            className={`text-8xl text-center font-bold mb-4 leading-[1.2] ${staatliches.className}`}
-          >
-            IDR {payment.value.toLocaleString()}
-          </h1>
-
-          <div className="w-full mt-auto space-y-1">
-            <div className="flex justify-between">
-              <p className="font-semibold">Selected Payment Method</p>
-              <p>{payment.paymentMethod}</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col w-full gap-2 space-y-2 text-center text-white">
-            <button
-              onClick={onDownloadQR}
-              className="flex items-center justify-center w-full gap-2 py-3 mb-4 text-xl font-semibold transition bg-red-600 rounded hover:bg-red-700"
-            >
-              <p>Download QR</p>
-              <ArrowDownToLineIcon
-                className="w-6 h-6 text-white"
-                strokeWidth={3}
-              />
-            </button>
-            <p className="text-xs">No payment confirmation received?</p>
-            <button
-              onClick={onVerify}
-              className="w-full py-2 text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600"
-            >
-              Confirm Payment Manually
-            </button>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </main>
   );

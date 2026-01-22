@@ -1,6 +1,5 @@
-import { PaymentStatus } from "@prisma/client";
-import { parseFaspayLocalDate } from "../faspay/faspay.client";
-import { NotFoundError } from "../lib/error";
+import { PaymentStatus, Prisma } from "@prisma/client";
+import { ForbiddenError, NotFoundError } from "../lib/error";
 import { prisma } from "../lib/prisma";
 import {
   VaInquiryRequest,
@@ -9,49 +8,101 @@ import {
   VaPaymentResponse
 } from "../types/faspay.type";
 import { BookingService } from "./booking.service";
+import { parseToLocalDate } from "../lib/utils";
+import { env } from "../lib/env";
 
 export class FaspayService {
   constructor(private readonly bookingService: BookingService) {}
 
-  vaInquiry = async (data: VaInquiryRequest): Promise<VaInquiryResponse> => {
+  vaInquiry = async (
+    data: VaInquiryRequest
+  ): Promise<VaInquiryResponse> => {
     try {
       const {
         partnerServiceId,
         customerNo,
         virtualAccountNo,
-        inquiryRequestId
+        inquiryRequestId,
       } = data;
 
-      const payment = await prisma.payment.findFirst({
-        where: { bankAccountNo: virtualAccountNo },
-        include: {
-          booking: true
+      const trimmedVaNo = virtualAccountNo.trim();
+      const now = Date.now();
+      const bookingExpiryThreshold = new Date(
+        now - env.BOOKING_GRACE_TIME_MILLIS
+      );
+
+      const latestPayment = await prisma.payment.findFirst({
+        where: { bankAccountNo: trimmedVaNo },
+        include: { booking: true },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (!latestPayment) {
+        return {
+          responseCode: "4042412",
+          responseMessage: "Payment not found",
+        };
+      }
+
+      if (!latestPayment.bankAccountName) {
+        throw new NotFoundError("Payment bank account name not found");
+      }
+
+      if (latestPayment.status === PaymentStatus.SUCCESS) {
+        return {
+          responseCode: "4042414",
+          responseMessage: "Payment has been paid",
+        };
+      }
+
+      const isExpired =
+        latestPayment.status === PaymentStatus.EXPIRED ||
+        (latestPayment.booking?.expiredAt &&
+          latestPayment.booking.expiredAt < bookingExpiryThreshold);
+
+      if (isExpired) {
+        return {
+          responseCode: "4042419",
+          responseMessage: "Payment expired",
+        };
+      }
+
+      if (latestPayment.status !== PaymentStatus.PENDING) {
+        return {
+          responseCode: "4042412",
+          responseMessage: "Payment not found",
+        };
+      }
+
+      const updatedPayment = await prisma.payment.update({
+        where: { id: latestPayment.id },
+        data: {
+          providerPaymentId: inquiryRequestId,
         }
       });
-      if (!payment) {
-        throw new NotFoundError("Payment not found");
-      }
+
       return {
         responseCode: "2002400",
-        responseMessage: "success",
+        responseMessage: "Success",
         virtualAccountData: {
           partnerServiceId,
           customerNo,
-          virtualAccountNo: virtualAccountNo,
-          virtualAccountName: payment.bankAccountName!,
+          virtualAccountNo: trimmedVaNo,
+          virtualAccountName: latestPayment.bankAccountName,
           virtualAccountEmail: "",
           virtualAccountPhone: "",
-          inquiryRequestId
+          inquiryRequestId: updatedPayment.providerPaymentId!,
+          totalAmount: {
+            value: latestPayment.value.toFixed(2),
+            currency: latestPayment.currency,
+          },
         },
-        totalAmount: {
-          value: payment.value.toFixed(2),
-          currency: payment.currency
-        }
       };
     } catch (error) {
       return {
         responseCode: "5002401",
-        responseMessage: (error as Error).message
+        responseMessage:
+          error instanceof Error ? error.message : "Internal server error",
       };
     }
   };
@@ -69,48 +120,64 @@ export class FaspayService {
       } = data;
 
       const payment = await prisma.payment.findFirst({
-        where: { bankAccountNo: virtualAccountNo },
-        include: {
-          booking: true
-        }
+        where: { bankAccountNo: virtualAccountNo.trim() },
+        include: { booking: true },
+        orderBy: { createdAt: "desc" },
       });
 
-      if (!payment || !payment.booking)
-        throw new NotFoundError("Record not found!");
+      if (!payment || !payment.booking) {
+        return {
+          responseCode: "4042512",
+          responseMessage: "Payment not found",
+        };
+      }
+
+      if (!payment.bankAccountName) {
+        throw new NotFoundError("Payment bank account name not found");
+      }
+
+      if (payment.booking.totalValue.toFixed(2) !== paidAmount.value) {
+        return {
+          responseCode: "4042513",
+          responseMessage: "Invalid amount",
+        };
+      }
 
       if (this.bookingService.isPaymentFinal(payment.status)) {
         return {
-          responseCode: "2002600",
-          responseMessage: "success",
+          responseCode: "2002500",
+          responseMessage: "Success",
           virtualAccountData: {
             partnerServiceId,
             customerNo,
-            virtualAccountNo: virtualAccountNo,
-            virtualAccountName: payment.bankAccountName!,
+            virtualAccountNo,
+            virtualAccountName: payment.bankAccountName,
             paymentRequestId,
             paidAmount
           }
         };
       }
 
-      const updatedPayment = await prisma.$transaction(async (tx) => {
-        return await this.bookingService.finalizeStatus(
-          tx,
-          payment,
-          payment.booking!,
-          PaymentStatus.SUCCESS,
-          parseFaspayLocalDate(trxDateTime),
-          referenceNo
-        );
-      });
+      const updatedPayment = await prisma.$transaction(
+        async (tx: Prisma.TransactionClient) => {
+          return await this.bookingService.finalizeStatus(
+            tx,
+            payment,
+            payment.booking!,
+            PaymentStatus.SUCCESS,
+            parseToLocalDate(trxDateTime),
+            referenceNo
+          );
+        }
+      );
 
       return {
-        responseCode: "2002600",
-        responseMessage: "success",
+        responseCode: "2002500",
+        responseMessage: "Success",
         virtualAccountData: {
           partnerServiceId,
           customerNo,
-          virtualAccountNo: virtualAccountNo,
+          virtualAccountNo,
           virtualAccountName: updatedPayment.bankAccountName!,
           paymentRequestId,
           paidAmount
@@ -118,7 +185,7 @@ export class FaspayService {
       };
     } catch (error) {
       return {
-        responseCode: "5002601",
+        responseCode: "5002501",
         responseMessage: (error as Error).message
       };
     }

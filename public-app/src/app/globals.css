@@ -147,7 +147,8 @@ body {
 
 @font-face {
   font-family: "instrumentSansItalic";
-  src: url("/fonts/InstrumentSans-Italic-VariableFont_wdth,wght.ttf") format("truetype");
+  src: url("/fonts/InstrumentSans-Italic-VariableFont_wdth,wght.ttf")
+    format("truetype");
   font-weight: normal;
   font-style: normal;
   font-display: swap;

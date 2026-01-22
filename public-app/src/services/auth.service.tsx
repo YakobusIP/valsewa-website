@@ -5,7 +5,11 @@ import {
   ValidateResponse
 } from "@/types/auth.type";
 
-import { handleAxiosError, interceptedAxios, setAccessToken } from "@/lib/axios";
+import {
+  handleAxiosError,
+  interceptedAxios,
+  setAccessToken
+} from "@/lib/axios";
 
 const BASE_AUTH_URL = "/api/auth";
 
@@ -16,10 +20,10 @@ const createAuthService = () => {
         `${BASE_AUTH_URL}/publogin`,
         data
       );
-      
+
       const { pubAccessToken, pubRefreshToken } = response.data;
       localStorage.setItem("refreshToken", pubRefreshToken);
-      setAccessToken(pubAccessToken)
+      setAccessToken(pubAccessToken);
 
       return response.data;
     } catch (error) {

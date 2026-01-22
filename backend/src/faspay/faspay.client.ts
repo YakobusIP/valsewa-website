@@ -2,10 +2,9 @@ import { Payment, PaymentMethodType, PaymentStatus } from "@prisma/client";
 import SnapBi from "../lib/snapbi/snapbi";
 import SnapBiConfig from "../lib/snapbi/snapbi.config";
 import { BadRequestError, InternalServerError } from "../lib/error";
-import { format, isValid, parse } from "date-fns";
 import { randomBytes } from "crypto";
-import dayjs from "dayjs";
 import { BankCodes } from "../types/booking.type";
+import { parseToDate, parseToLocalDate, parseToLocalDateStr } from "../lib/utils";
 
 export type CreateQrisPaymentRequest = {
   bookingId: string;
@@ -25,10 +24,17 @@ export type CreateVaPaymentRequest = {
 };
 
 export type VerifyWebhookNotificationRequest = {
+  billNo: string;
+  paymentStatusCode: string;
+  signature: string;
+  notificationUrlPath: string;
+};
+
+export type VerifyWebhookVirtualAccountRequest = {
   payload: any;
   signature: string;
   timestamp: string;
-  notificationUrlPath: string;
+  vaUrlPath: string;
 };
 
 export const FASPAY_STATUS_MAP: Record<string, PaymentStatus> = {
@@ -39,6 +45,18 @@ export const FASPAY_STATUS_MAP: Record<string, PaymentStatus> = {
   "05": PaymentStatus.CANCELLED,
   "06": PaymentStatus.FAILED,
   "07": PaymentStatus.EXPIRED
+};
+
+export const FASPAY_NOTIFICATION_STATUS_MAP: Record<string, PaymentStatus> = {
+  "0": PaymentStatus.PENDING,
+  "1": PaymentStatus.PENDING,
+  "2": PaymentStatus.SUCCESS,
+  "3": PaymentStatus.FAILED,
+  "4": PaymentStatus.REFUNDED,
+  "5": PaymentStatus.FAILED,
+  "7": PaymentStatus.EXPIRED,
+  "8": PaymentStatus.CANCELLED,
+  "9": PaymentStatus.FAILED,
 };
 
 export const BANK_CODE_TO_CHANNEL_CODE_MAP: Record<BankCodes, string> = {
@@ -53,27 +71,6 @@ export const BANK_CODE_TO_PREFIX_MAP: Record<BankCodes, string> = {
   [BankCodes.BRI]: "365905"
 };
 
-export const FASPAY_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
-export function parseFaspayDate(dateStr?: string): Date | null {
-  if (!dateStr) return null;
-
-  const parsedDate = parse(dateStr, FASPAY_DATE_FORMAT, new Date());
-  return isValid(parsedDate) ? parsedDate : null;
-}
-
-export function toFaspayDate(date: Date): string {
-  return format(date, FASPAY_DATE_FORMAT);
-}
-
-export function parseFaspayLocalDate(dateStr: string): Date {
-  return dayjs(dateStr).toDate();
-}
-
-export function toFaspayLocalDate(date: Date): string {
-  return dayjs(date).format("YYYY-MM-DDTHH:mm:ssZ");
-}
-
 export function generateLargeNumericId(): string {
   const buf = randomBytes(16);
   return BigInt("0x" + buf.toString("hex"))
@@ -81,19 +78,31 @@ export function generateLargeNumericId(): string {
     .slice(0, 32);
 }
 
-export function toCustomerNo(customerId: number): string {
-  return String(customerId).padStart(6, "0");
+export function toCustomerNo(customerId: number, padStart: number): string {
+  return String(customerId).padStart(padStart, "0");
 }
 
-export function parseCustomerNo(bankAccountNo: string): number {
-  return Number(bankAccountNo.slice(-6));
+export function virtualAccountNoToCustomerNo(
+  bankAccountNo: string,
+  bankCode: BankCodes
+): string {
+  return bankAccountNo.slice(BANK_CODE_TO_PREFIX_MAP[bankCode].length);
 }
 
 export function generateBankAccountNo(
   bankCode: BankCodes,
   customerId: number
 ): string {
-  return BANK_CODE_TO_PREFIX_MAP[bankCode] + toCustomerNo(customerId);
+  let prefix = BANK_CODE_TO_PREFIX_MAP[bankCode];
+  if (prefix.length < 8) {
+    prefix = prefix.padStart(8 - prefix.length, " ");
+  }
+  const customerNo = toCustomerNo(customerId, 16 - prefix.length);
+  return prefix + customerNo;
+}
+
+export function generatePartnerServiceId(bankCode: BankCodes): string {
+  return BANK_CODE_TO_PREFIX_MAP[bankCode].padStart(8, " ");
 }
 
 export class FaspayClient {
@@ -108,7 +117,7 @@ export class FaspayClient {
   }
 
   createQrisPayment = async (request: CreateQrisPaymentRequest) => {
-    const dateNow = toFaspayLocalDate(new Date());
+    const dateNow = parseToLocalDateStr(new Date());
     const payload = {
       partnerReferenceNo: request.paymentId,
       merchantId: SnapBiConfig.snapBiMerchantId,
@@ -116,7 +125,7 @@ export class FaspayClient {
         value: request.amount.toFixed(2),
         currency: "IDR"
       },
-      validityPeriod: toFaspayLocalDate(request.expiredAt),
+      validityPeriod: parseToLocalDateStr(request.expiredAt),
       additionalInfo: {
         billDate: dateNow,
         billDescription: `Booking #${request.bookingId}`,
@@ -144,23 +153,24 @@ export class FaspayClient {
   };
 
   createVaPayment = async (request: CreateVaPaymentRequest) => {
-    const dateNow = toFaspayLocalDate(new Date());
+    const dateNow = parseToLocalDateStr(new Date());
+    const virtualAccountNo = generateBankAccountNo(
+      request.bankCode,
+      request.customerId
+    );
     const payload = {
-      virtualAccountNo: generateBankAccountNo(
-        request.bankCode,
-        request.customerId
-      ),
+      virtualAccountNo,
       virtualAccountName: request.bankAccountName,
-      trxId: request.paymentId,
+      trxId: virtualAccountNo,
       totalAmount: {
         value: request.amount.toFixed(2),
         currency: "IDR"
       },
-      expiredDate: toFaspayLocalDate(request.expiredAt),
+      expiredDate: parseToLocalDateStr(request.expiredAt),
       additionalInfo: {
         billDate: dateNow,
         billDescription: `Booking #${request.bookingId}`,
-        channelCode: request.bankCode
+        channelCode: BANK_CODE_TO_CHANNEL_CODE_MAP[request.bankCode]
       }
     };
 
@@ -189,18 +199,29 @@ export class FaspayClient {
     return {
       responseCode: response.responseCode,
       responseMessage: response.responseMessage,
-      paymentId: response.partnerReferenceNo,
-      providerPaymentId: response.referenceNo,
-      bankCode: response.additionalInfo.channelCode,
-      bankAccountNo: response.virtualAccountNo,
-      bankAccountName: response.virtualAccountName,
-      additionalInfo: response.additionalInfo,
+      paymentId: response.virtualAccountData.partnerReferenceNo,
+      providerPaymentId: null,
+      bankCode: response.virtualAccountData.additionalInfo.channelCode,
+      bankAccountNo: response.virtualAccountData.virtualAccountNo.trim(),
+      bankAccountName: response.virtualAccountData.virtualAccountName,
+      additionalInfo: response.virtualAccountData.additionalInfo,
       metadata: response
     };
   };
 
   getPaymentStatus = async (payment: Payment) => {
-    let response = null;
+    if (payment.paymentMethod === PaymentMethodType.MANUAL) {
+      return {
+        responseCode: "2002600",
+        responseMessage: "Success",
+        paymentId: payment.id,
+        providerPaymentId: null,
+        paymentStatus: PaymentStatus.PENDING,
+        paidAt: null,
+        metadata: null
+      };
+    }
+
     if (payment.paymentMethod === PaymentMethodType.QRIS) {
       const payload = {
         originalReferenceNo: payment.providerPaymentId,
@@ -211,39 +232,72 @@ export class FaspayClient {
           channelCode: "711"
         }
       };
-      response = await SnapBi.qris()
-        .withTimeStamp(toFaspayLocalDate(new Date()))
-        .withBody(payload)
-        .getStatus(generateLargeNumericId());
-    } else if (payment.paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT) {
-      const payload = {
-        partnerServiceId: "",
-        customerNo: payment.bankAccountName?.slice(-8),
-        virtualAccountNo: payment.bankAccountNo,
-        inquiryRequestId: SnapBiConfig.snapBiMerchantId,
-        additionalInfo: {
-          channelCode: "711",
-          trxId: payment.id
-        }
+      const response = await SnapBi.qris()
+          .withTimeStamp(parseToLocalDateStr(new Date()))
+          .withBody(payload)
+          .getStatus(generateLargeNumericId());
+
+      this.validateResponseCode(response);
+
+      const paymentStatus =
+        FASPAY_STATUS_MAP[response.latestTransactionStatus] ??
+        PaymentStatus.FAILED;
+
+      return {
+        responseCode: response?.responseCode,
+        responseMessage: response?.responseMessage,
+        paymentId: response?.partnerReferenceNo,
+        providerPaymentId: response?.referenceNo,
+        paymentStatus,
+        paidAt: parseToDate(response?.paidTime),
+        metadata: response
       };
-      response = await SnapBi.va()
-        .withTimeStamp(toFaspayLocalDate(new Date()))
-        .withBody(payload)
-        .getStatus(generateLargeNumericId());
     }
+
+    const bankAccountNo = payment.bankAccountNo!;
+    const inquiryRequestId = payment.providerPaymentId;
+    const bankCode = payment.bankCode as BankCodes;
+
+    if (bankCode === BankCodes.BNI || !inquiryRequestId) {
+      // No inquiry status for BNI/missing provider payment id (if faspay hasn't called the inquiry yet)
+      return {
+        responseCode: "2002600",
+        responseMessage: "Success",
+        paymentId: payment.id,
+        providerPaymentId: null,
+        paymentStatus: PaymentStatus.PENDING,
+        paidAt: null,
+        metadata: null
+      };
+    }
+
+    const payload = {
+      partnerServiceId: generatePartnerServiceId(bankCode),
+      customerNo: virtualAccountNoToCustomerNo(bankAccountNo, bankCode),
+      virtualAccountNo: bankAccountNo.padStart(18, " "),
+      inquiryRequestId,
+      additionalInfo: {
+        channelCode: BANK_CODE_TO_CHANNEL_CODE_MAP[bankCode],
+      }
+    };
+    const response = await SnapBi.va()
+      .withTimeStamp(parseToLocalDateStr(new Date()))
+      .withBody(payload)
+      .getStatus(generateLargeNumericId());
+  
     this.validateResponseCode(response);
 
     const paymentStatus =
-      FASPAY_STATUS_MAP[response.latestTransactionStatus] ??
+      FASPAY_STATUS_MAP[response.virtualAccountData.paymentFlagStatus] ??
       PaymentStatus.FAILED;
 
     return {
       responseCode: response?.responseCode,
       responseMessage: response?.responseMessage,
-      paymentId: response?.partnerReferenceNo,
-      providerPaymentId: response?.referenceNo,
+      paymentId: payment.id,
+      providerPaymentId: response?.virtualAccountData.inquiryRequestId,
       paymentStatus,
-      paidAt: parseFaspayDate(response?.paidTime),
+      paidAt: parseToLocalDate(response?.virtualAccountData.transactionDate),
       metadata: response
     };
   };
@@ -252,10 +306,19 @@ export class FaspayClient {
     request: VerifyWebhookNotificationRequest
   ): boolean => {
     return SnapBi.notification()
+      .withSignature(request.signature)
+      .withNotificationUrlPath(request.notificationUrlPath)
+      .isWebhookNotificationVerified(request.billNo, request.paymentStatusCode);
+  };
+
+  verifyWebhookVirtualAccount = (
+    request: VerifyWebhookVirtualAccountRequest
+  ): boolean => {
+    return SnapBi.notification()
       .withNotificationPayload(request.payload)
       .withSignature(request.signature)
       .withTimeStamp(request.timestamp)
-      .withNotificationUrlPath(request.notificationUrlPath)
-      .isWebhookNotificationVerified();
+      .withNotificationUrlPath(request.vaUrlPath)
+      .isWebhookVirtualAccountVerified();
   };
 }

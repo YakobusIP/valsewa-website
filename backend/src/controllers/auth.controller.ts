@@ -151,17 +151,25 @@ export class AuthController {
       if (!username || !password) {
         throw new BadRequestError("Invalid request body!");
       }
-      
+
       const { valid, id } = await this.authService.publogin(username, password);
 
       if (valid) {
-        const accessToken = jwt.sign({ id, username }, PUB_ACCESS_TOKEN_SECRET, {
-          expiresIn: env.PUB_ACCESS_TOKEN_DURATION as StringValue
-        });
+        const accessToken = jwt.sign(
+          { id, username },
+          PUB_ACCESS_TOKEN_SECRET,
+          {
+            expiresIn: env.PUB_ACCESS_TOKEN_DURATION as StringValue
+          }
+        );
 
-        const refreshToken = jwt.sign({ id, username }, PUB_REFRESH_TOKEN_SECRET, {
-          expiresIn: env.PUB_REFRESH_TOKEN_DURATION as StringValue
-        });
+        const refreshToken = jwt.sign(
+          { id, username },
+          PUB_REFRESH_TOKEN_SECRET,
+          {
+            expiresIn: env.PUB_REFRESH_TOKEN_DURATION as StringValue
+          }
+        );
 
         res.status(200).json({
           pubAccessToken: accessToken,
@@ -213,7 +221,7 @@ export class AuthController {
 
         const payload = decoded as PubTokenPayload;
 
-        return res.json({ username: payload.username });
+        return res.json({ id: payload.id, username: payload.username });
       });
     } catch (error) {
       if (error instanceof UnauthorizedError) {
@@ -244,7 +252,7 @@ export class AuthController {
         const payload = decoded as PubTokenPayload;
 
         const accessToken = jwt.sign(
-          { username: payload.username },
+          { id: payload.id, username: payload.username },
           PUB_ACCESS_TOKEN_SECRET,
           {
             expiresIn: env.PUB_ACCESS_TOKEN_DURATION as StringValue
@@ -252,7 +260,7 @@ export class AuthController {
         );
 
         const refreshToken = jwt.sign(
-          { username: payload.username },
+          { id: payload.id, username: payload.username },
           PUB_REFRESH_TOKEN_SECRET,
           {
             expiresIn: env.PUB_REFRESH_TOKEN_DURATION as StringValue

@@ -1,0 +1,12 @@
+[Unit]
+Description=Timer for backend cron job %i
+
+[Timer]
+Persistent=true
+Unit=backend-cron@%i.service
+
+# Default schedule (MUST be cleared in overrides)
+OnCalendar=*-*-* *:00
+
+[Install]
+WantedBy=timers.target

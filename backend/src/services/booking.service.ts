@@ -2,12 +2,13 @@ import {
   Account,
   Booking,
   BookingStatus,
+  ImageUpload,
   Payment,
   PaymentMethodType,
   PaymentStatus,
-  PriceList,
+  PriceTier,
   Prisma,
-  Provider,
+  Status,
   Type,
   Voucher
 } from "@prisma/client";
@@ -17,22 +18,25 @@ import {
   NotFoundError,
   PrismaUniqueError
 } from "../lib/error";
-import { addDays, addHours, addMinutes } from "../lib/utils";
+import { addHours, addMinutes, parseDurationToHours } from "../lib/utils";
+import { subDays } from "date-fns";
 import { prisma } from "../lib/prisma";
 import {
   BankCodes,
   BookingResponse,
   CallbackNotificationRequest,
+  CreateAdminBookingRequest,
   CreateBookingRequest,
   CreateManualBookingRequest,
+  OverrideBookingRequest,
   PayBookingRequest,
   PaymentMethodRequest,
   PaymentResponse,
-  UpdateBookingRequest,
   VoucherResponse
 } from "../types/booking.type";
 import { FaspayClient } from "../faspay/faspay.client";
 import { Metadata } from "../types/metadata.type";
+import { env } from "../lib/env";
 
 export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<
   PaymentStatus,
@@ -72,9 +76,6 @@ export const PAYMENT_METHODS_MAP: Record<
 };
 
 export class BookingService {
-  private readonly holdBookingTimeInMinutes: number = 15;
-  private readonly gracePeriodInMillis: number = 30000;
-
   constructor(private readonly faspayClient: FaspayClient) {}
 
   getAllBookings = async (
@@ -116,7 +117,7 @@ export class BookingService {
         data = await prisma.booking.findMany({
           where: whereCriteria,
           include: {
-            payments: true,
+            payments: true
           }
         });
         metadata = {
@@ -145,18 +146,27 @@ export class BookingService {
           account: {
             include: {
               priceTier: true,
-              thumbnail: true,
-              otherImages: true,
-              skinList: true
+              thumbnail: true
             }
-          }
+          },
+          payments: true
         }
       });
 
       if (!booking) {
         throw new NotFoundError(`Booking with ID ${bookingId} not found.`);
       }
-      return this.mapBookingWithAccountDataToBookingResponse(booking);
+
+      const now = new Date();
+      const isActive =
+        booking.status === BookingStatus.RESERVED &&
+        booking.startAt! < now &&
+        booking.endAt! > now;
+
+      return this.mapBookingWithAccountDataToBookingWithAccountResponse(
+        booking,
+        isActive
+      );
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
@@ -177,31 +187,31 @@ export class BookingService {
   };
 
   getAccountRented = async (startDate?: Date, endDate?: Date) => {
-  try {
-    const stats = await prisma.booking.aggregate({
-      where: {
-        status: "COMPLETED",
-        createdAt: {
-          gte: startDate,
-          lte: endDate
+    try {
+      const stats = await prisma.booking.aggregate({
+        where: {
+          status: "COMPLETED",
+          createdAt: {
+            gte: startDate,
+            lte: endDate
+          }
+        },
+        _count: {
+          id: true
+        },
+        _sum: {
+          totalValue: true
         }
-      },
-      _count: {
-        id: true
-      },
-      _sum: {
-        totalValue: true
-      }
-    });
+      });
 
-    return {
-      completedBookingCount: stats._count.id,
-      totalIncome: stats._sum.totalValue ?? 0
-    };
-  } catch (error) {
-    throw new InternalServerError((error as Error).message);
-  }
-};
+      return {
+        completedBookingCount: stats._count.id,
+        totalIncome: stats._sum.totalValue ?? 0
+      };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
   getBookingsByCustomerId = async (
     customerId: number
   ): Promise<BookingResponse[]> => {
@@ -269,26 +279,13 @@ export class BookingService {
     }
   };
 
-  private parseDurationToHours = (duration: string): number => {
-    const lower = duration.toLowerCase().trim();
-
-    if (lower.endsWith("h")) {
-      return Number(lower.replace("h", ""));
-    }
-
-    if (lower.endsWith("d")) {
-      return Number(lower.replace("d", "")) * 24;
-    }
-
-    return 0;
-  };
-
   private calculateValues = (
     normalPrice: number,
     lowPrice: number,
     isLowRank: boolean,
     duration: string,
     voucher: VoucherResponse | null,
+    paymentMethod: PaymentMethodType | null,
     quantity: number
   ) => {
     const mainValue = normalPrice * quantity;
@@ -316,9 +313,24 @@ export class BookingService {
       discount = Math.min(discount, mainValue);
     }
 
-    const totalValue = mainValue + othersValue - discount;
+    const subtotalValue = mainValue + othersValue - discount;
+    let adminFee = 0;
+    switch (paymentMethod) {
+      case PaymentMethodType.QRIS:
+        adminFee = Math.ceil(0.00705 * subtotalValue);
+        break;
 
-    const durationInHours = this.parseDurationToHours(duration);
+      case PaymentMethodType.VIRTUAL_ACCOUNT:
+        adminFee = 4000;
+        break;
+
+      default:
+        adminFee = 0;
+    }
+
+    const totalValue = subtotalValue + adminFee;
+
+    const durationInHours = parseDurationToHours(duration);
 
     return {
       voucherType,
@@ -329,6 +341,7 @@ export class BookingService {
       duration,
       durationInHours,
       discount,
+      adminFee,
       totalValue
     };
   };
@@ -346,45 +359,113 @@ export class BookingService {
         startAt
       } = data;
 
-      if (customerId) {
-        const customer = await prisma.customer.findUnique({
-          where: { id: customerId }
-        });
-        if (!customer) throw new NotFoundError("Customer not found!");
+      const [
+        customer,
+        ongoingHoldBooking,
+        reservedBookingCount,
+        account,
+        priceList,
+        voucher
+      ] = await Promise.all([
+        // customer
+        customerId
+          ? prisma.customer.findUnique({
+              where: { id: customerId },
+              select: { id: true }
+            })
+          : Promise.resolve(null),
+        // ongoing hold booking
+        customerId
+          ? prisma.booking.findFirst({
+              where: {
+                customerId,
+                status: BookingStatus.HOLD
+              },
+              select: { id: true }
+            })
+          : Promise.resolve(null),
+        // reserved booking
+        customerId
+          ? prisma.booking.count({
+              where: {
+                customerId,
+                status: BookingStatus.RESERVED
+              }
+            })
+          : Promise.resolve(0),
+        // account
+        prisma.account.findUnique({
+          where: {
+            id: accountId,
+            availabilityStatus: { not: Status.NOT_AVAILABLE }
+          },
+          select: {
+            id: true,
+            isLowRank: true
+          }
+        }),
+        // price list
+        prisma.priceList.findUnique({
+          where: { id: priceListId },
+          select: {
+            id: true,
+            normalPrice: true,
+            lowPrice: true,
+            duration: true
+          }
+        }),
+        // voucher
+        voucherId ? this.getValidVoucherById(voucherId) : Promise.resolve(null)
+      ]);
+
+      if (customerId && !customer) {
+        throw new NotFoundError("Customer not found.");
       }
 
-      const account = await prisma.account.findUnique({
-        where: { id: accountId }
-      });
-      if (!account) throw new NotFoundError("Account not found!");
+      if (ongoingHoldBooking) {
+        throw new PrismaUniqueError("Customer has ongoing hold booking.");
+      }
 
-      const priceList = await prisma.priceList.findUnique({
-        where: { id: priceListId }
-      });
-      if (!priceList) throw new NotFoundError("Price list not found!");
+      if (reservedBookingCount >= 2) {
+        throw new PrismaUniqueError(
+          "Customer already has 2 reserved bookings."
+        );
+      }
 
-      const voucher = voucherId
-        ? await this.getValidVoucherById(voucherId)
-        : null;
+      if (!account) {
+        throw new NotFoundError("Account not found or not available.");
+      }
 
-      const bookingPriceValues = this.calculateValues(
+      if (!priceList) {
+        throw new NotFoundError("Price list not found.");
+      }
+
+      const {
+        voucherType,
+        voucherAmount,
+        voucherMaxDiscount,
+        mainValue,
+        othersValue,
+        duration,
+        durationInHours,
+        discount,
+        totalValue
+      } = this.calculateValues(
         priceList.normalPrice,
         priceList.lowPrice,
         account.isLowRank,
         priceList.duration,
         voucher,
+        null,
         quantity
       );
 
       const immediate = !startAt;
 
       const now = new Date();
-      const bookingExpiredAt = addMinutes(now, this.holdBookingTimeInMinutes);
+      const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
       const bookingStartAt = immediate ? bookingExpiredAt : startAt;
-      const bookingEndAt = addHours(
-        bookingStartAt,
-        bookingPriceValues.durationInHours * quantity
-      );
+      const bookingEndAt = addHours(bookingStartAt, durationInHours * quantity);
 
       const booking = await prisma.$transaction(async (tx) => {
         // Prevent race condition
@@ -398,7 +479,8 @@ export class BookingService {
               { startAt: { lt: bookingEndAt } },
               { endAt: { gt: bookingStartAt } }
             ]
-          }
+          },
+          select: { id: true }
         });
 
         if (overlapping) {
@@ -412,7 +494,7 @@ export class BookingService {
             customerId,
             accountId,
             status: BookingStatus.HOLD,
-            duration: bookingPriceValues.duration,
+            duration,
             quantity,
             immediate,
             startAt: bookingStartAt,
@@ -421,13 +503,13 @@ export class BookingService {
             mainValuePerUnit: priceList.normalPrice,
             othersValuePerUnit: account.isLowRank ? priceList.lowPrice : 0,
             voucherName: voucher?.voucherName,
-            voucherType: bookingPriceValues.voucherType,
-            voucherAmount: bookingPriceValues.voucherAmount,
-            voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
-            mainValue: bookingPriceValues.mainValue,
-            othersValue: bookingPriceValues.othersValue,
-            discount: bookingPriceValues.discount,
-            totalValue: bookingPriceValues.totalValue,
+            voucherType,
+            voucherAmount,
+            voucherMaxDiscount,
+            mainValue,
+            othersValue,
+            discount,
+            totalValue,
             version: 1
           }
         });
@@ -445,11 +527,7 @@ export class BookingService {
     data: CreateManualBookingRequest
   ): Promise<BookingResponse> => {
     try {
-      const {
-        accountCode,
-        totalValue,
-        startAt
-      } = data;
+      const { accountCode, totalValue, startAt } = data;
 
       const account = await prisma.account.findUnique({
         where: { accountCode: accountCode }
@@ -459,31 +537,112 @@ export class BookingService {
       const immediate = !startAt;
 
       const now = new Date();
-      const bookingExpiredAt = addMinutes(now, this.holdBookingTimeInMinutes);
+      const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
       const bookingStartAt = immediate ? bookingExpiredAt : startAt;
       const bookingEndAt = new Date();
 
       const booking = await prisma.booking.create({
-          data: {
-            accountId: account.id,
-            status: BookingStatus.COMPLETED,
-            duration: '-',
-            quantity: 1,
-            immediate,
-            startAt: bookingStartAt,
-            endAt: bookingEndAt,
-            expiredAt: bookingExpiredAt,
-            mainValuePerUnit: totalValue,
-            othersValuePerUnit: 0,
-            mainValue: totalValue,
-            totalValue: totalValue,
-            version: 1
-          }
-        });
+        data: {
+          accountId: account.id,
+          status: BookingStatus.COMPLETED,
+          duration: "-",
+          quantity: 1,
+          immediate,
+          startAt: bookingStartAt,
+          endAt: bookingEndAt,
+          expiredAt: bookingExpiredAt,
+          mainValuePerUnit: totalValue,
+          othersValuePerUnit: 0,
+          mainValue: totalValue,
+          totalValue: totalValue,
+          version: 1
+        }
+      });
 
       return this.mapBookingDataToBookingResponse(booking);
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  createAdminBooking = async (
+    data: CreateAdminBookingRequest
+  ): Promise<BookingResponse> => {
+    try {
+      const { accountId, startAt, duration, totalValue } = data;
+
+      const account = await prisma.account.findUnique({
+        where: {
+          id: accountId,
+          availabilityStatus: { not: Status.NOT_AVAILABLE }
+        }
+      });
+      if (!account)
+        throw new NotFoundError("Account not found or not available!");
+
+      const durationInHours = parseDurationToHours(duration);
+
+      const endAt = addHours(startAt, durationInHours);
+
+      const booking = await prisma.booking.create({
+        data: {
+          accountId: account.id,
+          status: BookingStatus.RESERVED,
+          duration: duration,
+          quantity: 1,
+          immediate: false,
+          startAt: startAt,
+          endAt: endAt,
+          mainValuePerUnit: totalValue,
+          othersValuePerUnit: 0,
+          mainValue: totalValue,
+          othersValue: 0,
+          discount: 0,
+          totalValue: totalValue
+        }
+      });
+
+      return this.mapBookingDataToBookingResponse(booking);
+    } catch (error) {
+      if (error instanceof PrismaUniqueError) throw error;
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  overrideBooking = async (
+    data: OverrideBookingRequest
+  ): Promise<BookingResponse> => {
+    try {
+      const { bookingId, accountId } = data;
+
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId, status: BookingStatus.RESERVED }
+      });
+      if (!booking) throw new NotFoundError("Booking not found");
+
+      const account = await prisma.account.findUnique({
+        where: {
+          id: accountId,
+          availabilityStatus: { not: Status.NOT_AVAILABLE }
+        }
+      });
+      if (!account)
+        throw new NotFoundError("Account not found or not available!");
+
+      const updatedBooking = await prisma.booking.update({
+        where: { id: booking.id },
+        data: {
+          accountId,
+          version: { increment: 1 }
+        }
+      });
+
+      return this.mapBookingDataToBookingResponse(updatedBooking);
+    } catch (error) {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
@@ -496,7 +655,8 @@ export class BookingService {
       const booking = await prisma.booking.findUnique({
         where: { id: bookingId },
         include: {
-          customer: true
+          customer: true,
+          account: true
         }
       });
 
@@ -507,8 +667,12 @@ export class BookingService {
         );
       }
 
+      if (!booking.expiredAt) {
+        throw new BadRequestError("Booking expiredAt is missing!");
+      }
+
       if (
-        booking.expiredAt! < new Date(Date.now() - this.gracePeriodInMillis)
+        booking.expiredAt < new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS)
       ) {
         await prisma.booking.update({
           where: { id: booking.id },
@@ -517,44 +681,50 @@ export class BookingService {
         throw new BadRequestError("Booking is expired!");
       }
 
-      const account = await prisma.account.findUnique({
-        where: { id: booking.accountId }
-      });
-      if (!account) throw new NotFoundError("Account not found!");
-
       const voucher = voucherId
         ? await this.getValidVoucherById(voucherId)
         : null;
 
-      const bookingPriceValues = this.calculateValues(
-        booking.mainValuePerUnit,
-        booking.othersValuePerUnit ?? 0,
-        account.isLowRank,
-        booking.duration,
-        voucher,
-        booking.quantity
-      );
-
       const { paymentMethodType, bankCode } =
         PAYMENT_METHODS_MAP[paymentMethod];
+
+      const {
+        voucherType,
+        voucherAmount,
+        voucherMaxDiscount,
+        mainValue,
+        othersValue,
+        discount,
+        adminFee,
+        totalValue
+      } = this.calculateValues(
+        booking.mainValuePerUnit,
+        booking.othersValuePerUnit ?? 0,
+        booking.account.isLowRank,
+        booking.duration,
+        voucher,
+        paymentMethodType,
+        booking.quantity
+      );
 
       const { payment, isPaymentNew } = await prisma.$transaction(
         async (tx) => {
           await tx.$executeRaw`
-          SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE
-        `;
+            SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE
+          `;
 
           const updatedBooking = await tx.booking.update({
             where: { id: booking.id },
             data: {
               voucherName: voucher?.voucherName,
-              voucherType: bookingPriceValues.voucherType,
-              voucherAmount: bookingPriceValues.voucherAmount,
-              voucherMaxDiscount: bookingPriceValues.voucherMaxDiscount,
-              mainValue: bookingPriceValues.mainValue,
-              othersValue: bookingPriceValues.othersValue,
-              discount: bookingPriceValues.discount,
-              totalValue: bookingPriceValues.totalValue,
+              voucherType,
+              voucherAmount,
+              voucherMaxDiscount,
+              mainValue,
+              othersValue,
+              discount,
+              adminFee,
+              totalValue,
               version: { increment: 1 }
             }
           });
@@ -590,12 +760,17 @@ export class BookingService {
         return this.mapPaymentDataToPaymentResponse(payment);
       }
 
+      const bankAccountName =
+        paymentMethodType === PaymentMethodType.VIRTUAL_ACCOUNT
+          ? (booking.customer?.username ?? undefined)
+          : undefined;
+
       const updatedPayment = await this.processPaymentProvider(
         booking,
         payment,
         paymentMethodType,
         bankCode,
-        booking.customer?.username
+        bankAccountName
       );
       return this.mapPaymentDataToPaymentResponse(updatedPayment);
     } catch (error) {
@@ -618,6 +793,11 @@ export class BookingService {
         booking = await prisma.booking.update({
           where: { id: booking.id },
           data: { status: BookingStatus.CANCELLED }
+        });
+
+        await prisma.payment.updateMany({
+          where: { bookingId, status: PaymentStatus.PENDING },
+          data: { status: PaymentStatus.CANCELLED }
         });
       }
 
@@ -701,44 +881,116 @@ export class BookingService {
 
   syncExpiredBookings = async () => {
     try {
-      const nowWithGrace = new Date(Date.now() - this.gracePeriodInMillis);
+      const nowWithGrace = new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS);
 
       const count = await prisma.$transaction(async (tx) => {
-        const expiredBookings = await tx.booking.findMany({
+        const expired = await tx.booking.updateMany({
           where: {
             status: BookingStatus.HOLD,
-            expiredAt: {
-              lte: nowWithGrace
-            }
-          },
-          select: {
-            id: true
-          }
-        });
-
-        if (expiredBookings.length === 0) return 0;
-
-        const bookingIds = expiredBookings.map((b) => b.id);
-
-        await tx.booking.updateMany({
-          where: {
-            id: { in: bookingIds },
-            status: BookingStatus.HOLD
+            expiredAt: { lte: nowWithGrace }
           },
           data: {
             status: BookingStatus.EXPIRED
           }
         });
 
+        if (expired.count === 0) return 0;
+
         await tx.payment.updateMany({
           where: {
-            bookingId: { in: bookingIds },
-            status: PaymentStatus.PENDING
+            status: PaymentStatus.PENDING,
+            booking: {
+              status: BookingStatus.EXPIRED
+            }
           },
           data: {
             status: PaymentStatus.EXPIRED
           }
         });
+
+        return expired.count;
+      });
+
+      return { count };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  syncCompletedBookings = async () => {
+    try {
+      const count = await prisma.$transaction(async (tx) => {
+        const now = new Date();
+        const completedBookings = await tx.booking.findMany({
+          where: {
+            status: BookingStatus.RESERVED,
+            endAt: { lte: now }
+          },
+          select: {
+            id: true,
+            accountId: true,
+            endAt: true,
+            duration: true,
+            quantity: true
+          }
+        });
+
+        await tx.accountResetLog.deleteMany({
+          where: { resetAt: { lt: subDays(now, 2) } }
+        });
+
+        if (completedBookings.length === 0) return 0;
+
+        const bookingIds = completedBookings.map((b) => b.id);
+        const accountIds = completedBookings.map((b) => b.accountId);
+
+        await tx.booking.updateMany({
+          where: {
+            id: { in: bookingIds }
+          },
+          data: {
+            status: BookingStatus.COMPLETED
+          }
+        });
+
+        await tx.account.updateMany({
+          where: {
+            id: { in: accountIds }
+          },
+          data: {
+            passwordResetRequired: true
+          }
+        });
+
+        await tx.accountResetLog.createMany({
+          data: completedBookings.map((booking) => ({
+            accountId: booking.accountId,
+            previousExpireAt: booking.endAt ?? null
+          }))
+        });
+
+        const rentHourByAccount = new Map<number, number>();
+        for (const booking of completedBookings) {
+          const durationHours = parseDurationToHours(booking.duration);
+          const incrementHours = Math.round(durationHours) * booking.quantity;
+          if (incrementHours <= 0) continue;
+
+          rentHourByAccount.set(
+            booking.accountId,
+            (rentHourByAccount.get(booking.accountId) || 0) + incrementHours
+          );
+        }
+
+        await Promise.all(
+          Array.from(rentHourByAccount.entries()).map(([accountId, hours]) =>
+            tx.account.update({
+              where: { id: accountId },
+              data: {
+                totalRentHour: { increment: hours }
+              }
+            })
+          )
+        );
 
         return bookingIds.length;
       });
@@ -749,28 +1001,82 @@ export class BookingService {
     }
   };
 
+  syncAccountAvailability = async () => {
+    try {
+      const now = new Date();
+
+      const reservedAccountIds = await prisma.booking.findMany({
+        where: {
+          status: BookingStatus.RESERVED,
+          startAt: { lt: now },
+          endAt: { gt: now }
+        },
+        distinct: ["accountId"],
+        select: { accountId: true }
+      });
+
+      const activeAccountIds = reservedAccountIds.map((v) => v.accountId);
+
+      // Mark reserved accounts as IN_USE (only if not already)
+      const markedInUse =
+        activeAccountIds.length > 0
+          ? (
+              await prisma.account.updateMany({
+                where: {
+                  id: { in: activeAccountIds },
+                  availabilityStatus: { not: Status.IN_USE }
+                },
+                data: {
+                  availabilityStatus: Status.IN_USE
+                }
+              })
+            ).count
+          : 0;
+
+      // Mark accounts as AVAILABLE if they are IN_USE but no longer reserved
+      const markedAvailable = (
+        await prisma.account.updateMany({
+          where: {
+            availabilityStatus: Status.IN_USE,
+            ...(activeAccountIds.length > 0 && {
+              id: { notIn: activeAccountIds }
+            })
+          },
+          data: {
+            availabilityStatus: Status.AVAILABLE
+          }
+        })
+      ).count;
+
+      return { markedInUse, markedAvailable };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   callbackFaspayPayment = async (data: CallbackNotificationRequest) => {
     try {
+      const { billNo, paymentStatus, paidAt } = data;
+
       let payment = await prisma.payment.findFirst({
-        where: { providerPaymentId: data.providerPaymentId },
+        where: {
+          OR: [{ id: billNo }, { bankAccountNo: billNo }],
+          status: PaymentStatus.PENDING
+        },
         include: { booking: true }
       });
 
-      if (!payment || !payment.booking)
-        throw new NotFoundError("Record not found!");
+      // If payment is not found/pending, we simply ignore
+      if (!payment || !payment.booking) return;
 
-      if (this.isPaymentFinal(payment.status)) {
-        return this.mapPaymentDataToPaymentResponse(payment);
-      }
-
-      if (this.isPaymentFinal(data.paymentStatus)) {
+      if (this.isPaymentFinal(paymentStatus)) {
         return await prisma.$transaction(async (tx) => {
           return await this.finalizeStatus(
             tx,
             payment,
             payment.booking!,
-            data.paymentStatus,
-            data.paidAt
+            paymentStatus,
+            paidAt
           );
         });
       }
@@ -810,12 +1116,16 @@ export class BookingService {
     bankAccountName?: string
   ): Promise<Payment> => {
     try {
+      if (!booking.expiredAt) {
+        throw new BadRequestError("Booking expiredAt is missing!");
+      }
+
       if (paymentMethod === PaymentMethodType.QRIS) {
         const providerResponse = await this.faspayClient.createQrisPayment({
           bookingId: booking.id,
           paymentId: payment.id,
           amount: payment.value,
-          expiredAt: booking.expiredAt!
+          expiredAt: booking.expiredAt
         });
 
         return await prisma.payment.update({
@@ -828,21 +1138,37 @@ export class BookingService {
       }
 
       if (paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT) {
+        if (!booking.customerId) {
+          throw new BadRequestError(
+            "Customer ID is required for Virtual Account payment!"
+          );
+        }
+        if (!bankCode) {
+          throw new BadRequestError(
+            "Bank code is required for Virtual Account payment!"
+          );
+        }
+        if (!bankAccountName) {
+          throw new BadRequestError(
+            "Bank account name is required for Virtual Account payment!"
+          );
+        }
+
         const providerResponse = await this.faspayClient.createVaPayment({
           bookingId: booking.id,
           paymentId: payment.id,
-          customerId: booking.customerId!,
+          customerId: booking.customerId,
           amount: payment.value,
-          bankCode: bankCode!,
-          bankAccountName: bankAccountName!,
-          expiredAt: booking.expiredAt!
+          bankCode,
+          bankAccountName,
+          expiredAt: booking.expiredAt
         });
 
         return await prisma.payment.update({
           where: { id: payment.id },
           data: {
             providerPaymentId: providerResponse.providerPaymentId,
-            bankCode: bankCode!,
+            bankCode,
             bankAccountNo: providerResponse.bankAccountNo,
             bankAccountName: providerResponse.bankAccountName
           }
@@ -859,6 +1185,12 @@ export class BookingService {
       throw new BadRequestError("Payment method is not supported!");
     } catch (error) {
       console.error("Process payment to provider failed:", error);
+      await prisma.booking.update({
+        where: { id: payment.bookingId },
+        data: {
+          status: PaymentStatus.FAILED
+        }
+      });
       return await prisma.payment.update({
         where: { id: payment.id },
         data: {
@@ -869,37 +1201,36 @@ export class BookingService {
   };
 
   finalizeStatus = async (
-    tx: any,
+    tx: Prisma.TransactionClient,
     payment: Payment,
     booking: Booking,
     paymentStatus: PaymentStatus,
     paidAt: Date | null,
     providerPaymentId?: string
   ): Promise<PaymentResponse> => {
-    const paymentUpdate = {
+    const paymentUpdate: Prisma.PaymentUpdateInput = {
       status: paymentStatus,
-      paidAt: paidAt,
-      providerPaymentId
+      ...(paidAt && { paidAt }),
+      ...(providerPaymentId && { providerPaymentId })
     };
 
     const bookingStatus = PAYMENT_TO_BOOKING_STATUS_MAP[paymentStatus];
-    let bookingUpdate: any = {
+    const actualStart =
+      paymentStatus === PaymentStatus.SUCCESS && booking.immediate
+        ? new Date()
+        : undefined;
+    const bookingUpdate: Prisma.BookingUpdateInput = {
       status: bookingStatus,
       expiredAt: null,
-      version: { increment: 1 }
+      version: { increment: 1 },
+      ...(actualStart && {
+        startAt: actualStart,
+        endAt: addHours(
+          actualStart,
+          parseDurationToHours(booking.duration) * booking.quantity
+        )
+      })
     };
-
-    if (paymentStatus === PaymentStatus.SUCCESS && booking.immediate) {
-      const actualStart = new Date();
-      const durationInHours = this.parseDurationToHours(booking.duration);
-      const actualEnd = addHours(
-        actualStart,
-        durationInHours * booking.quantity
-      );
-
-      bookingUpdate.startAt = actualStart;
-      bookingUpdate.endAt = actualEnd;
-    }
 
     const updatedPayment = await tx.payment.update({
       where: { id: payment.id },
@@ -907,17 +1238,41 @@ export class BookingService {
     });
     await tx.booking.update({ where: { id: booking.id }, data: bookingUpdate });
 
+    if (paymentStatus === PaymentStatus.SUCCESS) {
+      await tx.account.update({
+        where: {
+          id: booking.accountId
+        },
+        data: {
+          totalRentHour: {
+            increment: parseDurationToHours(booking.duration) * booking.quantity
+          },
+          rentHourUpdated: true
+        }
+      });
+    }
+
     return this.mapPaymentDataToPaymentResponse(updatedPayment);
   };
 
   private mapBookingDataToBookingResponse = (
     booking: Booking & { payments?: Payment[] }
   ): BookingResponse => {
+    let status = booking.status;
+    if (
+      status === BookingStatus.HOLD &&
+      booking.expiredAt &&
+      booking.expiredAt < new Date()
+    ) {
+      status = BookingStatus.EXPIRED;
+    }
+
     return {
       id: booking.id,
       customerId: booking.customerId,
       accountId: booking.accountId,
-      status: booking.status,
+      status,
+      adminFee: booking.adminFee,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
@@ -934,18 +1289,36 @@ export class BookingService {
       othersValue: booking.othersValue,
       discount: booking.discount,
       totalValue: booking.totalValue,
+      active: null,
       payments: booking.payments
     };
   };
 
-  private mapBookingWithAccountDataToBookingResponse = (
-    booking: Booking & { account: Account }
+  private mapBookingWithAccountDataToBookingWithAccountResponse = (
+    booking: Booking & {
+      account: Account & {
+        priceTier: PriceTier;
+        thumbnail: ImageUpload | null;
+      };
+      payments?: Payment[];
+    },
+    active?: boolean
   ): BookingResponse => {
+    let status = booking.status;
+    if (
+      status === BookingStatus.HOLD &&
+      booking.expiredAt &&
+      booking.expiredAt < new Date()
+    ) {
+      status = BookingStatus.EXPIRED;
+    }
+
     return {
       id: booking.id,
       customerId: booking.customerId,
       accountId: booking.accountId,
-      status: booking.status,
+      status,
+      adminFee: booking.adminFee,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
@@ -962,7 +1335,16 @@ export class BookingService {
       othersValue: booking.othersValue,
       discount: booking.discount,
       totalValue: booking.totalValue,
-      account: booking.account
+      active: active ?? false,
+      account: {
+        accountRank: booking.account.accountRank,
+        accountCode: booking.account.accountCode,
+        priceTierCode: booking.account.priceTier.code,
+        thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
+        username: active ? booking.account.username : undefined,
+        password: active ? booking.account.password : undefined
+      },
+      payments: booking.payments
     };
   };
 
@@ -970,7 +1352,7 @@ export class BookingService {
     payment: Payment
   ): PaymentResponse => {
     return {
-      paymentId: payment.id,
+      id: payment.id,
       bookingId: payment.bookingId,
       status: payment.status,
       value: payment.value,
@@ -979,6 +1361,9 @@ export class BookingService {
       providerPaymentId: payment.providerPaymentId,
       paymentMethod: payment.paymentMethod,
       qrUrl: payment.qrUrl,
+      bankCode: payment.bankCode,
+      bankAccountNo: payment.bankAccountNo,
+      bankAccountName: payment.bankAccountName,
       paidAt: payment.paidAt,
       refundedAt: payment.refundedAt
     };
@@ -987,16 +1372,28 @@ export class BookingService {
   private mapPaymentWithBookingDataToPaymentResponse = (
     payment: Payment & { booking: Booking | null }
   ): PaymentResponse => {
+    let status = payment.status;
+    if (
+      status === PaymentStatus.PENDING &&
+      payment.booking?.expiredAt &&
+      payment.booking?.expiredAt < new Date()
+    ) {
+      status = PaymentStatus.EXPIRED;
+    }
+
     return {
-      paymentId: payment.id,
+      id: payment.id,
       bookingId: payment.bookingId,
-      status: payment.status,
+      status,
       value: payment.value,
       currency: payment.currency,
       provider: payment.provider,
       providerPaymentId: payment.providerPaymentId,
       paymentMethod: payment.paymentMethod,
       qrUrl: payment.qrUrl,
+      bankCode: payment.bankCode,
+      bankAccountNo: payment.bankAccountNo,
+      bankAccountName: payment.bankAccountName,
       paidAt: payment.paidAt,
       refundedAt: payment.refundedAt,
       booking: payment.booking

@@ -1,4 +1,3 @@
-import { AccountEntity } from "./account.type";
 import { TYPE } from "./voucher.type";
 
 export enum BOOKING_STATUS {
@@ -56,16 +55,26 @@ export type BookingEntity = {
   voucherMaxDiscount: number | null;
   mainValue: number;
   othersValue: number | null;
+  adminFee: number | null;
   discount: number | null;
   totalValue: number;
+  active: boolean | null;
 };
 
 export type BookingWithAccountEntity = BookingEntity & {
-  account: AccountEntity;
+  account: {
+    accountRank: string;
+    accountCode: string;
+    priceTierCode: string;
+    thumbnailImageUrl: string;
+    username?: string;
+    password?: string;
+  };
+  payments?: PaymentEntity[];
 };
 
 export type PaymentEntity = {
-  paymentId: string;
+  id: string;
   bookingId: string;
   status: PAYMENT_STATUS;
   value: number;
@@ -74,6 +83,9 @@ export type PaymentEntity = {
   providerPaymentId: string | null;
   paymentMethod: PAYMENT_METHOD_TYPE | null;
   qrUrl: string | null;
+  bankCode: string | null;
+  bankAccountNo: string | null;
+  bankAccountName: string | null;
   paidAt: Date | null;
   refundedAt: Date | null;
 };

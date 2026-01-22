@@ -1,18 +1,21 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-
 import { customerService } from "@/services/customer.service";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+
 import { useToast } from "@/hooks/useToast";
+
 import { generatePassword } from "@/lib/utils";
-import { LockIcon, CopyIcon } from "lucide-react";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { CopyIcon, LockIcon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 const schema = z.object({
   username: z.string().min(3, "Username minimal 3 karakter"),

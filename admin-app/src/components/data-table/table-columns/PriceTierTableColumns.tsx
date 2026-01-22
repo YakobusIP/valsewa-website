@@ -5,7 +5,6 @@ import { PriceTier } from "@/types/pricetier.type";
 
 import { ColumnDef } from "@tanstack/react-table";
 
-
 const formatShortIDR = (value: number) => {
   if (!Number.isFinite(value)) return "-";
 
@@ -50,19 +49,16 @@ export const priceTierColumns: ColumnDef<PriceTier>[] = [
     cell: ({ row }) => {
       const data = row.original;
 
-      const text =
-      Array.isArray(data.priceList)
+      const text = Array.isArray(data.priceList)
         ? data.priceList
-            .map((item) => `${item.duration} = ${formatShortIDR(Number(item.normalPrice))}`)
+            .map(
+              (item) =>
+                `${item.duration} = ${formatShortIDR(Number(item.normalPrice))}`
+            )
             .join("\n")
         : "";
 
-
-      return (
-        <span className="whitespace-pre-wrap line-clamp-5">
-          {text}
-        </span>
-      );
+      return <span className="whitespace-pre-wrap line-clamp-5">{text}</span>;
     },
     size: "auto" as unknown as number
   },
@@ -72,19 +68,16 @@ export const priceTierColumns: ColumnDef<PriceTier>[] = [
     cell: ({ row }) => {
       const data = row.original;
 
-      const text =
-      Array.isArray(data.priceList)
+      const text = Array.isArray(data.priceList)
         ? data.priceList
-            .map((item) => `${item.duration} = ${formatShortIDR(Number(item.lowPrice))}`)
+            .map(
+              (item) =>
+                `${item.duration} = ${formatShortIDR(Number(item.lowPrice))}`
+            )
             .join("\n")
         : "";
 
-
-      return (
-        <span className="whitespace-pre-wrap line-clamp-5">
-          {text}
-        </span>
-      );
+      return <span className="whitespace-pre-wrap line-clamp-5">{text}</span>;
     },
     size: "auto" as unknown as number
   },

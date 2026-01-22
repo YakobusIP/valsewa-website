@@ -1,7 +1,9 @@
 import { fetchAccounts, fetchCarousel } from "@/services/accountService";
+
 import type { Metadata } from "next";
 
 import Home from "./home";
+
 // import ValJubelHero from "./hero"
 
 export const metadata: Metadata = {

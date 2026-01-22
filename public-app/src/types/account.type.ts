@@ -23,6 +23,7 @@ export type { PriceList, PriceTier, PriceTierRequest };
 type UploadResponse = {
   id: number;
   imageUrl: string;
+  type: "IMAGE" | "VIDEO";
 };
 
 export type { UploadResponse };
@@ -41,6 +42,7 @@ type AccountEntity = {
   totalRentHour: number;
   password: string;
   skinList: Skin[];
+  skinCount: number;
   stale_password: boolean;
   thumbnail: UploadResponse;
   otherImages: UploadResponse[] | null;
@@ -52,9 +54,8 @@ type AccountEntity = {
 
 export type CarouselSlide = {
   id: number;
-  image123: UploadResponse;
-  image126: UploadResponse;
-  image129: UploadResponse;
+  image: UploadResponse;
+  duration: number;
 };
 
 type AccountEntityRequest = Omit<
@@ -97,9 +98,30 @@ type MetadataResponse = {
   total: number;
 };
 
+type TierFilter = { id: string; isLowTier: string } | null;
+
+type AccountsPublicParams = {
+  page?: number;
+  limit?: number;
+  q?: string;
+
+  low_tier_only?: boolean;
+  tiers?: string[];
+  skin_counts?: string[];
+  ranks?: string[];
+
+  min_price?: number;
+  max_price?: number;
+
+  sortBy?: string;
+  direction?: "asc" | "desc";
+};
+
 export type {
   ApiResponseList,
   ApiResponseError,
   MessageResponse,
-  MetadataResponse
+  MetadataResponse,
+  TierFilter,
+  AccountsPublicParams
 };

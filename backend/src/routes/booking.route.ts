@@ -2,6 +2,8 @@ import { Router } from "express";
 import { BookingService } from "../services/booking.service";
 import { BookingController } from "../controllers/booking.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { customerMiddleware } from "../middleware/customer.middleware";
+import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 import { FaspayClient } from "../faspay/faspay.client";
 
 class BookingRouter {
@@ -23,12 +25,29 @@ class BookingRouter {
 
   private initializeRoutes() {
     this.router.get("/", authMiddleware, this.bookingController.getAllBookings);
-    this.router.put("/update/:id", authMiddleware, this.bookingController.updateBooking);
-    this.router.post("/create", authMiddleware, this.bookingController.createManualBooking);
-    this.router.get("/rented", authMiddleware, this.bookingController.getAccountRented);
+    this.router.put(
+      "/update/:id",
+      authMiddleware,
+      this.bookingController.updateBooking
+    );
+    this.router.post(
+      "/create",
+      authMiddleware,
+      this.bookingController.createManualBooking
+    );
+    this.router.post(
+      "/create-admin",
+      authMiddleware,
+      this.bookingController.createAdminBooking
+    );
+    this.router.get(
+      "/rented",
+      authMiddleware,
+      this.bookingController.getAccountRented
+    );
     this.router.get(
       "/:id",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.getBookingById
     );
     this.router.get(
@@ -43,7 +62,7 @@ class BookingRouter {
     );
     this.router.get(
       "/payments/:id",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.getPaymentById
     );
     this.router.get(
@@ -53,18 +72,27 @@ class BookingRouter {
     );
     this.router.post(
       "/book",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.createBooking
     );
-    this.router.post("/pay", authMiddleware, this.bookingController.payBooking);
+    this.router.post(
+      "/pay",
+      customerMiddleware,
+      this.bookingController.payBooking
+    );
+    this.router.post(
+      "/override",
+      authMiddleware,
+      this.bookingController.overrideBooking
+    );
     this.router.post(
       "/cancel",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.cancelBooking
     );
     this.router.post(
       "/verify-payment",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.verifyPayment
     );
     this.router.post(
@@ -74,8 +102,18 @@ class BookingRouter {
     );
     this.router.post(
       "/sync-expired",
-      authMiddleware,
+      schedulerMiddleware,
       this.bookingController.syncExpiredBookings
+    );
+    this.router.post(
+      "/sync-completed",
+      schedulerMiddleware,
+      this.bookingController.syncCompletedBookings
+    );
+    this.router.post(
+      "/sync-account-availability",
+      schedulerMiddleware,
+      this.bookingController.syncAccountAvailability
     );
     this.router.post(
       "/faspay/callback",

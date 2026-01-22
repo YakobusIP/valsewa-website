@@ -6,13 +6,15 @@ import {
   useState
 } from "react";
 
-import { accountService } from "@/services/account.service";
+import { bookingService } from "@/services/transaction.service";
+import { settingService } from "@/services/setting.service";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
@@ -33,6 +35,13 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
 
 import { toast } from "@/hooks/useToast";
 
@@ -42,17 +51,20 @@ import { cn, convertHoursToDays } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addHours, format } from "date-fns";
-import { CalendarIcon, Loader2Icon, Trash2Icon } from "lucide-react";
+import { CalendarIcon, CopyIcon, Loader2Icon, Trash2Icon } from "lucide-react";
 import parse from "parse-duration";
 import { FieldErrors, useForm } from "react-hook-form";
 import { z } from "zod";
 
 const formSchema = z.object({
-  nextBookingDate: z.date().nullish(),
-  nextBookingDuration: z
+  bookingDate: z.date({ required_error: "Booking date is required" }),
+  duration: z
     .string({ required_error: "Duration is required" })
-    .nonempty(),
-  nextExpireAt: z.date().nullish()
+    .nonempty("Duration is required"),
+  totalValue: z
+    .number({ required_error: "Total price is required" })
+    .min(1, "Total price must be greater than 0"),
+  expireAt: z.date().nullish()
 });
 
 type Props = {
@@ -62,23 +74,22 @@ type Props = {
   resetParent: () => Promise<void>;
 };
 
-export default function AccountNextBookModal({
+export default function AddBookingModal({
   open,
   onOpenChange,
   data,
   resetParent
 }: Props) {
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
+  const [reminderText, setReminderText] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      nextBookingDate: data.nextBookingDate
-        ? new Date(data.nextBookingDate)
-        : new Date(),
-      nextBookingDuration:
-        convertHoursToDays(data.nextBookingDuration) || undefined,
-      nextExpireAt: data.nextExpireAt ? new Date(data.nextExpireAt) : undefined
+      bookingDate: new Date(),
+      duration: "",
+      totalValue: 0,
+      expireAt: undefined
     },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -86,12 +97,12 @@ export default function AccountNextBookModal({
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
-      form.setValue("nextBookingDate", date);
+      form.setValue("bookingDate", date);
     }
   };
 
   const handleTimeChange = (type: "hour" | "minute", value: string) => {
-    const currentDate = form.getValues("nextBookingDate") || new Date();
+    const currentDate = form.getValues("bookingDate") || new Date();
     const newDate = new Date(currentDate);
 
     if (type === "hour") {
@@ -102,21 +113,21 @@ export default function AccountNextBookModal({
       newDate.setMinutes(minute);
     }
 
-    form.setValue("nextBookingDate", newDate);
+    form.setValue("bookingDate", newDate);
   };
 
   const handleDeleteBookingDate = () => {
-    form.setValue("nextBookingDate", null);
-    form.setValue("nextBookingDuration", "");
+    form.setValue("bookingDate", new Date());
+    form.setValue("duration", "");
   };
 
   const parseDurationToHours = useCallback(
     (duration: string) => {
       const ms = parse(duration);
       if (ms === null) {
-        form.setError("nextBookingDuration", {
+        form.setError("duration", {
           type: "validate",
-          message: "Invalid date format"
+          message: "Invalid duration format"
         });
 
         return null;
@@ -127,26 +138,31 @@ export default function AccountNextBookModal({
     [form]
   );
 
-  const handleUpdateBooking = async (
-    id: number,
+  const copyReminderToClipboard = async () => {
+    await navigator.clipboard.writeText(reminderText);
+    toast({
+      title: "All set!",
+      description: "Copied to clipboard!"
+    });
+  };
+
+  const handleCreateBooking = async (
+    accountId: number,
     values: z.infer<typeof formSchema>
   ) => {
-    const bookingDurationNumber = parse(values.nextBookingDuration);
-
-    const payload = {
-      ...values,
-      ...{
-        nextBookingDuration: (bookingDurationNumber || 0) / (1000 * 60 * 60)
-      }
-    };
     try {
-      const response = await accountService.update(id, payload);
+      const response = await bookingService.createAdminBooking({
+        accountId,
+        startAt: values.bookingDate,
+        duration: values.duration,
+        totalValue: values.totalValue
+      });
       onOpenChange(false);
       await resetParent();
 
       toast({
         title: "All set!",
-        description: response.message
+        description: response.message || "Booking created successfully"
       });
     } catch (error) {
       const errorMessage =
@@ -165,32 +181,73 @@ export default function AccountNextBookModal({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoadingSubmit(true);
 
-    await handleUpdateBooking(data.id, values);
+    await handleCreateBooking(data.id, values);
   };
 
   const handleError = (errors: FieldErrors<z.infer<typeof formSchema>>) => {
     console.log(errors);
   };
 
-  const durationValue = form.watch("nextBookingDuration");
-  const nextBookingValue = form.watch("nextBookingDate");
-  const expireAtValue = form.watch("nextExpireAt");
+  const durationValue = form.watch("duration");
+  const bookingDateValue = form.watch("bookingDate");
+  const expireAtValue = form.watch("expireAt");
 
   useEffect(() => {
     if (durationValue) {
       const hours = parseDurationToHours(durationValue) || 0;
-      const nextBookingDate = nextBookingValue || new Date();
+      const bookingDate = bookingDateValue || new Date();
 
-      const expireDate = addHours(new Date(nextBookingDate), hours);
-      form.setValue("nextExpireAt", expireDate);
+      const expireDate = addHours(new Date(bookingDate), hours);
+      form.setValue("expireAt", expireDate);
     }
-  }, [durationValue, nextBookingValue, form, parseDurationToHours]);
+  }, [durationValue, bookingDateValue, form, parseDurationToHours]);
+
+  const [reminderTemplate, setReminderTemplate] = useState("");
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const setting = await settingService.getSetting("reminder_text");
+        if (setting && setting.value) {
+          setReminderTemplate(setting.value);
+        } else {
+          setReminderTemplate(
+            `Username Riot: {username}\nPassword Riot: {password}\nKode Akun: {accountCode}\nExpired: {expired} WIB\n\n⚠ HARAP LOGOUT AKUN SEBELUM RENTAL BERAKHIR! ⚠\n\n Pastikan akun sudah logout tepat waktu untuk menghindari penalty yang dapat menyebabkan denda ❗\n\n 📌 Setelah berhasil login, jika berkenan, bisa bantu berikan testimoni dan rekomendasi ke teman-teman kalian yaa 😱\n\n 📢 Join Discord Community Valforum.id & dapatkan role @Juragan Valsewa 👇🏻\n\n https://discord.gg/ywqTZSTwRY`
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch reminder settings", error);
+      }
+    };
+
+    if (open) {
+      fetchSettings();
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!reminderTemplate) return;
+
+    let text = reminderTemplate;
+    text = text.replace(/{username}/g, data.username);
+    text = text.replace(/{password}/g, data.password);
+    text = text.replace(/{accountCode}/g, data.accountCode);
+    text = text.replace(
+      /{expired}/g,
+      format(expireAtValue || new Date(), "dd MMMM yyyy 'at' HH:mm")
+    );
+
+    setReminderText(text);
+  }, [expireAtValue, data, reminderTemplate]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
-          <DialogTitle>Next Booking</DialogTitle>
+          <DialogTitle>Add New Booking</DialogTitle>
+          <DialogDescription>
+            Create a new booking for this account
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -198,14 +255,19 @@ export default function AccountNextBookModal({
             onSubmit={form.handleSubmit(onSubmit, handleError)}
             className="flex flex-col gap-4 p-4"
           >
+            <div className="flex flex-col gap-2">
+              <p className="font-semibold">Booking Details</p>
+              <hr />
+            </div>
+
             <div className="flex flex-col min-[1920px]:flex-row gap-4">
               <FormField
                 control={form.control}
-                name="nextBookingDate"
+                name="bookingDate"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col w-full min-[1920px]:w-3/5">
+                  <FormItem className="flex flex-col w-full min-[1920px]:w-2/5">
                     <FormLabel className="mt-[0.4rem] mb-[0.275rem]">
-                      Next Booking
+                      Booking Date
                     </FormLabel>
                     <div className="flex items-center justify-center gap-2">
                       <Popover modal>
@@ -322,7 +384,7 @@ export default function AccountNextBookModal({
               />
               <FormField
                 control={form.control}
-                name="nextBookingDuration"
+                name="duration"
                 render={({ field }) => (
                   <FormItem className="w-full min-[1920px]:w-2/5">
                     <FormLabel>Duration</FormLabel>
@@ -330,6 +392,35 @@ export default function AccountNextBookModal({
                       <Input placeholder="Enter duration here" {...field} />
                     </FormControl>
                     <FormDescription>Contoh format: 7d 1h</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="totalValue"
+                render={({ field }) => (
+                  <FormItem className="w-full min-[1920px]:w-2/5">
+                    <FormLabel>Total Price</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        placeholder="Enter total price"
+                        value={field.value === 0 ? "" : field.value.toString()}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "") {
+                            field.onChange(0);
+                          } else {
+                            const numValue = parseFloat(value);
+                            if (!isNaN(numValue)) {
+                              field.onChange(numValue);
+                            }
+                          }
+                        }}
+                        onBlur={field.onBlur}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -345,12 +436,54 @@ export default function AccountNextBookModal({
               </Label>
             )}
 
-            <Button type="submit" className="w-full xl:w-fit place-self-end">
-              {isLoadingSubmit && (
-                <Loader2Icon className="w-4 h-4 animate-spin" />
-              )}
-              Submit
-            </Button>
+            <div className="flex flex-col gap-2">
+              <p className="font-semibold">Transactional Info</p>
+              <hr />
+            </div>
+
+            <div className="relative">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      size="icon"
+                      className="absolute top-1 right-1 z-50"
+                      onClick={() => copyReminderToClipboard()}
+                    >
+                      <CopyIcon />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Copy to clipboard</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Textarea
+                rows={16}
+                className="whitespace-pre-wrap"
+                value={reminderText}
+                onChange={(e) => setReminderText(e.target.value)}
+              />
+            </div>
+
+            <div className="sticky bottom-0 bg-background p-4 border rounded-md flex justify-between gap-4 items-center">
+              <p className="text-sm">
+                Akun ini sudah pernah disewa selama{" "}
+                <b>
+                  {data?.totalRentHour
+                    ? convertHoursToDays(data?.totalRentHour)
+                    : "0d 0h"}
+                </b>
+              </p>
+
+              <Button type="submit" className="w-fit">
+                {isLoadingSubmit && (
+                  <Loader2Icon className="w-4 h-4 animate-spin" />
+                )}
+                Submit
+              </Button>
+            </div>
           </form>
         </Form>
       </DialogContent>
