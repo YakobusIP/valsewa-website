@@ -13,9 +13,6 @@ import SearchPage from "./SearchPage";
 const NavbarHomeMobile = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [activeBrand, setActiveBrand] = useState<
-    "valsewa" | "valjubel" | "valjoki"
-  >("valsewa");
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
@@ -24,7 +21,7 @@ const NavbarHomeMobile = () => {
   const handleSearchClick = () => {
     setIsSearchOpen(true);
   };
-  const { isAuthenticated, username } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {

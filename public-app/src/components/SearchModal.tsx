@@ -12,7 +12,7 @@ import { AccountEntity } from "@/types/account.type";
 import { cn } from "@/lib/utils";
 
 import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
-import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
