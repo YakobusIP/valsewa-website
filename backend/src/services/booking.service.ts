@@ -213,14 +213,66 @@ export class BookingService {
     }
   };
   getBookingsByCustomerId = async (
-    customerId: number
-  ): Promise<BookingResponse[]> => {
+    customerId: number,
+    page: number = 1,
+    limit: number = 5
+  ): Promise<{
+    bookings: BookingResponse[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> => {
     try {
-      const bookings = await prisma.booking.findMany({
-        where: { customerId: customerId },
+      const skip = (page - 1) * limit;
+
+      const total = await prisma.booking.count({
+        where: { customerId: customerId }
+      });
+
+      const now = new Date();
+
+      const activeBookings = await prisma.booking.findMany({
+        where: {
+          customerId,
+          status: "RESERVED",
+          startAt: { lte: now },
+          endAt: { gte: now }
+        },
+        include: {
+          account: true,
+          payments: true
+        },
         orderBy: { startAt: "desc" }
       });
-      return bookings.map(this.mapBookingDataToBookingResponse);
+
+      const otherBookings = await prisma.booking.findMany({
+        where: {
+          customerId,
+          NOT: {
+            status: "RESERVED",
+            startAt: { lte: now },
+            endAt: { gte: now }
+          }
+        },
+        include: {
+          account: true,
+          payments: true
+        },
+        orderBy: { startAt: "desc" }
+      });
+
+      const bookings = [...activeBookings, ...otherBookings];
+
+      const paginatedBookings = bookings.slice(skip, skip + limit);
+
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        bookings: paginatedBookings.map(this.mapBookingDataToBookingResponse),
+        total,
+        page,
+        totalPages
+      };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -586,22 +638,42 @@ export class BookingService {
 
       const endAt = addHours(startAt, durationInHours);
 
-      const booking = await prisma.booking.create({
-        data: {
-          accountId: account.id,
-          status: BookingStatus.RESERVED,
-          duration: duration,
-          quantity: 1,
-          immediate: false,
-          startAt: startAt,
-          endAt: endAt,
-          mainValuePerUnit: totalValue,
-          othersValuePerUnit: 0,
-          mainValue: totalValue,
-          othersValue: 0,
-          discount: 0,
-          totalValue: totalValue
+      const booking = await prisma.$transaction(async (tx) => {
+        // Prevent race condition
+        await tx.$executeRaw`SELECT id FROM "Account" WHERE id = ${accountId} FOR UPDATE`;
+
+        const overlapping = await tx.booking.findFirst({
+          where: {
+            accountId,
+            AND: [
+              { status: { in: [BookingStatus.HOLD, BookingStatus.RESERVED] } },
+              { startAt: { lt: endAt } },
+              { endAt: { gt: startAt } }
+            ]
+          },
+          select: { id: true }
+        });
+
+        if (overlapping) {
+          throw new PrismaUniqueError(
+            "Account not available for the requested time."
+          );
         }
+
+        return await tx.booking.create({
+          data: {
+            accountId: account.id,
+            status: BookingStatus.RESERVED,
+            duration: duration,
+            quantity: 1,
+            immediate: false,
+            startAt: startAt,
+            endAt: endAt,
+            mainValuePerUnit: totalValue,
+            mainValue: totalValue,
+            totalValue: totalValue
+          }
+        });
       });
 
       return this.mapBookingDataToBookingResponse(booking);
@@ -1256,7 +1328,7 @@ export class BookingService {
   };
 
   private mapBookingDataToBookingResponse = (
-    booking: Booking & { payments?: Payment[] }
+    booking: Booking & { payments?: Payment[]; account?: Account }
   ): BookingResponse => {
     let status = booking.status;
     if (
@@ -1290,7 +1362,17 @@ export class BookingService {
       discount: booking.discount,
       totalValue: booking.totalValue,
       active: null,
-      payments: booking.payments
+      payments: booking.payments,
+      account: booking.account
+        ? {
+            accountRank: booking.account.accountRank,
+            accountCode: booking.account.accountCode,
+            priceTierCode: booking.account.priceTierId.toString(),
+            thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
+            username: booking.account.nickname,
+            password: booking.account.password
+          }
+        : undefined
     };
   };
 

@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsAuthenticated(false);
     setIsAuthChecked(true);
 
-    router.push("/login");
+    router.push("/");
   };
 
   // ------------ VALIDATE TOKEN ------------
