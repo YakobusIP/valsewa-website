@@ -1,7 +1,5 @@
 "use client";
 
-import { useRef } from "react";
-
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 import { AccountEntity } from "@/types/account.type";
@@ -16,8 +14,6 @@ interface CardProps {
 }
 
 const Card: React.FC<CardProps> = ({ data }) => {
-  const ref = useRef<HTMLDivElement>(null);
-
   const processCardData = (items?: AccountEntity[]) => {
     return items?.map((item) => ({
       ...item,
@@ -52,7 +48,6 @@ const Card: React.FC<CardProps> = ({ data }) => {
           </p>
         </div>
         <div
-          ref={ref}
           className="
               grid grid-cols-12 
               gap-x-3 gap-y-4
@@ -63,7 +58,6 @@ const Card: React.FC<CardProps> = ({ data }) => {
             "
         >
           {processedData?.map((item) => {
-            // {debug(item)}
             const inUse = item.availabilityStatus === "IN_USE";
 
             return (
