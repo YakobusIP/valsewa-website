@@ -54,7 +54,7 @@ export default function AccountDetailPage() {
   const [bookDate, setBookDate] = useState<Date | null>(new Date());
   const [startTime, setStartTime] = useState<string>(""); // "09:00"
   const [endTime, setEndTime] = useState<string>("");
-  const { isAuthenticated, isAuthChecked, customerId } = useAuth()
+  const { isAuthChecked, customerId } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -93,10 +93,6 @@ export default function AccountDetailPage() {
       return
     }
 
-    if (!isAuthenticated) {
-      setShowLogin(true)
-      return
-    }
     if (!selectedDuration) return;
     try {
       setSubmitting(true);
