@@ -142,7 +142,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-md bg-[#C70515] px-4 py-2 text-white font-semibold hover:bg-[#a90412] transition focus:outline-none focus:ring-2 focus:ring-[#C70515] focus:ring-offset-2 focus:ring-offset-black"
+              className="inline-flex text-sm lg:text-xl font-normal items-center gap-2 rounded-md bg-[#C70515] px-4 py-2 text-white font-semibold hover:bg-[#a90412] transition focus:outline-none focus:ring-2 focus:ring-[#C70515] focus:ring-offset-2 focus:ring-offset-black"
             >
               <LogOut className="w-5 h-5" />
               Logout
