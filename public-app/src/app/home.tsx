@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import Card from "@/components/Card";
 import DiscoverSection from "@/components/DiscoverSection";

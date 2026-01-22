@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 
 import { AccountEntity } from "@/types/account.type";
 
-import { ChevronDown, ChevronUp, ListFilter, Search } from "lucide-react";
+import { ListFilter, Search } from "lucide-react";
 import Image from "next/image";
 
 import {
@@ -109,6 +109,30 @@ function useDebouncedValue<T>(value: T, delay = 350) {
   return debounced;
 }
 
+type FiltersPanelProps = {
+  onClose: () => void;
+  onBack: () => void;
+  openPrice: boolean;
+  setOpenPrice: (v: boolean) => void;
+  openRanks: boolean;
+  setOpenRanks: (v: boolean) => void;
+  openSkins: boolean;
+  setOpenSkins: (v: boolean) => void;
+  openTier: boolean;
+  setOpenTier: (v: boolean) => void;
+  priceRange: [number, number];
+  setPriceRange: (v: [number, number]) => void;
+  selectedRanks: string[];
+  setSelectedRanks: (v: string[]) => void;
+  selectedSkins: string[];
+  setSelectedSkins: (v: string[]) => void;
+  selectedTiers: string[];
+  setSelectedTiers: (v: string[]) => void;
+  toggle: (arr: string[], value: string, setArr: (v: string[]) => void) => void;
+  activeFilterCount: number;
+  onClearFilters: () => void;
+};
+
 function FiltersPanel({
   onClose,
   onBack,
@@ -123,7 +147,7 @@ function FiltersPanel({
   toggle,
   activeFilterCount,
   onClearFilters
-}: any) {
+}: FiltersPanelProps) {
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden">
       {/* Header */}
