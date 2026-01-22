@@ -2107,7 +2107,10 @@ paths:
       summary: Faspay Payment Notification Webhook
       requestBody:
         required: true
-        content: application/json
+        content:
+          application/json:
+            schema:
+              type: object
       responses:
         "200":
           description: Acknowledged

@@ -325,7 +325,7 @@ export class AccountService {
           endAt: { gt: new Date() }
         },
         orderBy: {
-          endAt: "asc"
+          startAt: "asc"
         },
         select: {
           accountId: true,

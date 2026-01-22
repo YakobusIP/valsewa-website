@@ -1210,7 +1210,7 @@ export class BookingService {
   ): Promise<PaymentResponse> => {
     const paymentUpdate: Prisma.PaymentUpdateInput = {
       status: paymentStatus,
-      paidAt: paidAt,
+      ...(paidAt && { paidAt }),
       ...(providerPaymentId && { providerPaymentId })
     };
 
