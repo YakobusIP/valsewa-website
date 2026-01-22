@@ -100,11 +100,13 @@ const createBookingService = () => {
   };
 
   const fetchBookingByCustId  = async (
-  id: string
-  ): Promise<BookingWithAccountEntity | null> => {
+  id: string,
+  page: number = 1,
+  limit: number = 5
+  ): Promise<{ bookings: BookingWithAccountEntity[], total: number, page: number, totalPages: number }> => {
     try {
-      const response = await interceptedAxios.get<BookingWithAccountEntity>(
-        `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/customers/${id}`
+      const response = await interceptedAxios.get<{ bookings: BookingWithAccountEntity[], total: number, page: number, totalPages: number }>(
+        `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/customers/${id}?page=${page}&limit=${limit}`
       );
       return response.data;
     } catch (error) {

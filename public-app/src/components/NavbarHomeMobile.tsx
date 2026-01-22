@@ -11,6 +11,8 @@ import LoginPage from "./LoginPage";
 import SearchPage from "./SearchPage";
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { useActiveBooking } from "@/hooks/useActiveBooking";
+import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 
 const NavbarHomeMobile = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
@@ -23,9 +25,15 @@ const NavbarHomeMobile = () => {
   const handleSearchClick = () => {
     setIsSearchOpen(true);
   };
-  const { isAuthenticated, username } = useAuth();
+  const { isAuthenticated, username, customerId } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const {booking} = useActiveBooking(customerId?.toString() ?? "");
+
+  const bookingReserved = booking?.find((i) => i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now());
+  const accountCode = bookingReserved?.account.accountCode;
+  const rentedDays = calculateDaysRented(bookingReserved?.startAt ?? null, bookingReserved?.endAt ?? null);
+  const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
   
   useEffect(() => {
     const handleScroll = () => {
@@ -140,10 +148,10 @@ const NavbarHomeMobile = () => {
                     {/* Order Details */}
                     <div className="space-y-1 cursor-default px-8">
                       <div className="text-xs font-medium text-white/70">
-                        V-23 (Rented 3 days)
+                        {accountCode} (Rented {rentedDays} days)
                       </div>
                       <div className="text-xs font-medium text-white/70">
-                        23d 1m left
+                        {remainingTime} left
                       </div>
                     </div>
                   </div>

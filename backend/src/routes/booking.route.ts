@@ -52,7 +52,7 @@ class BookingRouter {
     );
     this.router.get(
       "/customers/:customerId",
-      authMiddleware,
+      customerMiddleware,
       this.bookingController.getBookingsByCustomerId
     );
     this.router.get(

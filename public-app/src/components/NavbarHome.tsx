@@ -35,15 +35,16 @@ function Navbar({
   const [isScrolled, setIsScrolled] = useState(false);
   const {booking} = useActiveBooking(customerId?.toString() ?? "");
 
-  const accountCode = booking?.account.accountCode;
-  const rentedDays = calculateDaysRented(booking?.startAt ?? null, booking?.endAt ?? null);
-  const remainingTime = calculateTimeRemaining(booking?.endAt ?? null);
+  const bookingReserved = booking?.find((i) => i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now());
+  const accountCode = bookingReserved?.account.accountCode;
+  const rentedDays = calculateDaysRented(bookingReserved?.startAt ?? null, bookingReserved?.endAt ?? null);
+  const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
   const [, setTick] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
       setTick(prev => prev + 1);
-    }, 60000); // Update every minute
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -232,7 +233,7 @@ function Navbar({
                   </div>
 
                   {/* Ongoing Order */}
-                  <div className="space-y-2 cursor-default">
+                  {bookingReserved &&<div className="space-y-2 cursor-default">
                     <div className="flex items-center gap-3">
                       <ListPlus className="w-5 h-5" />
                       <span className="font-semibold">On Going Order</span>
@@ -247,7 +248,7 @@ function Navbar({
                        {remainingTime} left
                       </div>
                     </div>
-                  </div>
+                  </div>}
 
                   {/* See More */}
                   <Link href="/dashboard" className="flex items-center gap-3 w-full rounded-lg transition">
