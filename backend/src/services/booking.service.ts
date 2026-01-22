@@ -213,14 +213,61 @@ export class BookingService {
     }
   };
   getBookingsByCustomerId = async (
-    customerId: number
-  ): Promise<BookingResponse[]> => {
+    customerId: number,
+    page: number = 1,
+    limit: number = 5
+  ): Promise<{ bookings: BookingResponse[], total: number, page: number, totalPages: number }> => {
     try {
-      const bookings = await prisma.booking.findMany({
-        where: { customerId: customerId },
-        orderBy: { startAt: "desc" }
+      const skip = (page - 1) * limit;
+
+      const total = await prisma.booking.count({
+        where: { customerId: customerId }
       });
-      return bookings.map(this.mapBookingDataToBookingResponse);
+
+      const now = new Date();
+
+      const activeBookings = await prisma.booking.findMany({
+        where: {
+          customerId,
+          status: "RESERVED",
+          startAt: { lte: now },
+          endAt: { gte: now },
+        },
+        include: {
+          account: true,
+          payments: true,
+        },
+        orderBy: { startAt: "desc" },
+      });
+
+      const otherBookings = await prisma.booking.findMany({
+        where: {
+          customerId,
+          NOT: {
+            status: "RESERVED",
+            startAt: { lte: now },
+            endAt: { gte: now },
+          },
+        },
+        include: {
+          account: true,
+          payments: true,
+        },
+        orderBy: { startAt: "desc" },
+      });
+
+      const bookings = [...activeBookings, ...otherBookings];
+
+      const paginatedBookings = bookings.slice(skip, skip + limit);
+
+      const totalPages = Math.ceil(total/limit);
+
+      return {
+        bookings: paginatedBookings.map(this.mapBookingDataToBookingResponse),
+        total,
+        page,
+        totalPages,
+      };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -1256,7 +1303,7 @@ export class BookingService {
   };
 
   private mapBookingDataToBookingResponse = (
-    booking: Booking & { payments?: Payment[] }
+    booking: Booking & { payments?: Payment[], account?: Account }
   ): BookingResponse => {
     let status = booking.status;
     if (
@@ -1290,7 +1337,18 @@ export class BookingService {
       discount: booking.discount,
       totalValue: booking.totalValue,
       active: null,
-      payments: booking.payments
+      payments: booking.payments,
+      account: booking.account
+      ? {
+          accountRank: booking.account.accountRank,
+          accountCode: booking.account.accountCode,
+          priceTierCode: booking.account.priceTierId.toString(),
+          thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
+          username: booking.account.nickname,
+          password: booking.account.password
+        }
+      : undefined,
+
     };
   };
 

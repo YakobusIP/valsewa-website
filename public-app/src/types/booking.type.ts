@@ -47,6 +47,7 @@ export type BookingEntity = {
   startAt: Date | null;
   endAt: Date | null;
   expiredAt: Date | null;
+  createdAt: Date | null;
   mainValuePerUnit: number;
   othersValuePerUnit: number | null;
   voucherName: string | null;

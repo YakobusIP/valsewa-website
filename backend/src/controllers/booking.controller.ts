@@ -91,15 +91,28 @@ export class BookingController {
   ) => {
     try {
       const customerId = parseInt(req.params.customerId, 10);
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 5;
 
       if (!customerId) {
         throw new BadRequestError("Customer ID is required.");
       }
 
-      const bookings =
-        await this.bookingService.getBookingsByCustomerId(customerId);
-
-      return res.status(200).json(bookings);
+      if (page < 1) {
+        throw new BadRequestError("Page must be greater than 0.");
+      }
+    
+      if (limit < 1 || limit > 100) {
+        throw new BadRequestError("Limit must be between 1 and 100.");
+      }
+    
+      const result = await this.bookingService.getBookingsByCustomerId(
+        customerId,
+        page,
+        limit
+      );
+    
+      return res.status(200).json(result);
     } catch (error) {
       return next(error);
     }

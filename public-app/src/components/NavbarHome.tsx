@@ -8,6 +8,10 @@ import Image from "next/image";
 import Link from "next/link";
 
 import LoginPage from "./LoginPage";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+import { ListPlus, MoreHorizontal, User } from "lucide-react";
+import { useActiveBooking } from "@/hooks/useActiveBooking";
+import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 
 type SearchModalProps = React.ComponentProps<"div"> & {
   onOpenChange: (open: boolean) => void;
@@ -27,8 +31,23 @@ function Navbar({
   const handleSearchClick = () => {
     onOpenChange(true);
   };
-  const { isAuthenticated, username } = useAuth();
+  const { isAuthenticated, username, customerId } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
+  const {booking} = useActiveBooking(customerId?.toString() ?? "");
+
+  const bookingReserved = booking?.find((i) => i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now());
+  const accountCode = bookingReserved?.account.accountCode;
+  const rentedDays = calculateDaysRented(bookingReserved?.startAt ?? null, bookingReserved?.endAt ?? null);
+  const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
+
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick(prev => prev + 1);
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -186,17 +205,59 @@ function Navbar({
           )}
 
           {isAuthenticated && (
-            <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition">
-              <Image
-                src="/header/SignUp Icon.svg"
-                alt="User"
-                width={18}
-                height={18}
-              />
-              <span className="text-white text-xs md:text-sm font-semibold">
-                {username}
-              </span>
-            </div>
+            <HoverCard openDelay={200}>
+              <HoverCardTrigger asChild>
+                <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer">
+                  <Image
+                    src="/header/SignUp Icon.svg"
+                    alt="User"
+                    width={18}
+                    height={18}
+                  />
+                  <span className="text-white text-xs md:text-sm font-semibold">
+                    {username}
+                  </span>
+                </div>
+              </HoverCardTrigger>
+
+              <HoverCardContent 
+                className="w-72 p-4 bg-[#C70515] border border-white/30 text-white"
+                align="end"
+                sideOffset={8}
+              >
+                <div className="space-y-4">
+                  {/* User Info */}
+                  <div className="flex items-center gap-3 cursor-default">
+                    <User className="w-8 h-8" />
+                    <span className="font-semibold text-xl">{username}</span>
+                  </div>
+
+                  {/* Ongoing Order */}
+                  {bookingReserved &&<div className="space-y-2 cursor-default">
+                    <div className="flex items-center gap-3">
+                      <ListPlus className="w-5 h-5" />
+                      <span className="font-semibold">On Going Order</span>
+                    </div>
+
+                    {/* Order Details */}
+                    <div className="space-y-1 cursor-default px-8">
+                      <div className="text-sm font-medium text-white/70">
+                       {accountCode} (Rented {rentedDays} days)
+                      </div>
+                      <div className="text-sm font-medium text-white/70">
+                       {remainingTime} left
+                      </div>
+                    </div>
+                  </div>}
+
+                  {/* See More */}
+                  <Link href="/dashboard" className="flex items-center gap-3 w-full rounded-lg transition">
+                    <MoreHorizontal className="w-5 h-5" />
+                    <span className="font-semibold">See More</span>
+                  </Link>
+                </div>
+              </HoverCardContent>
+            </HoverCard>
           )}
         </div>
 

@@ -30,6 +30,7 @@ import Image from "next/image";
 import { notFound, useParams, useRouter } from "next/navigation";
 
 import LoginPage from "@/components/LoginPage"
+import { SearchModal } from "@/components/SearchModal";
 
 export default function AccountDetailPage() {
   const router = useRouter();
@@ -55,6 +56,11 @@ export default function AccountDetailPage() {
   const [endTime, setEndTime] = useState<string>("");
   const { isAuthenticated, isAuthChecked, customerId } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const handleCardClick = (id: string) => {
+    router?.push(`/details/${id}`);
+  };
 
   useEffect(() => {
     fetchAccountById(id)
@@ -87,7 +93,6 @@ export default function AccountDetailPage() {
       return
     }
 
-    // 🔒 not logged in → open login modal
     if (!isAuthenticated) {
       setShowLogin(true)
       return
@@ -229,7 +234,7 @@ export default function AccountDetailPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="relative max-lg:hidden">
-        <Navbar />
+        <Navbar onOpenChange={setIsSearchOpen}/>
       </div>
       <div className="lg:hidden">
         <NavbarMobile />
@@ -623,6 +628,12 @@ export default function AccountDetailPage() {
       {showLogin && (
         <LoginPage onClose={() => setShowLogin(false)} />
       )}
+      
+      <SearchModal
+        open={isSearchOpen}
+        onOpenChange={setIsSearchOpen}
+        onSelectAccount={handleCardClick}
+      />
     </main>
   );
 }
