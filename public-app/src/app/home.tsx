@@ -41,6 +41,10 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
     setShouldScroll(true);
   };
 
+  const handleSeeMore = () => {
+    setShouldScroll(true);
+  }
+
   useEffect(() => {
     if (!loading && shouldScroll) {
       setTimeout(() => {
@@ -94,7 +98,9 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
             <div className="xl:mx-12 sm:mx-6 mx-4 pt-4">
               <div>
                 <HowToOrder />
-                <RecommendedSection />
+                <RecommendedSection 
+                  onSeeMore={handleSeeMore}
+                />
               </div>
               <div className="mt-32">
                 <DiscoverSection
