@@ -12,7 +12,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaArrowRight, FaFire } from "react-icons/fa";
 
-export default function RecommendedSection() {
+type RecSectionProps = {
+  onSeeMore: () => void;
+};
+
+export default function RecommendedSection({
+  onSeeMore
+}: RecSectionProps) {
   const [accounts, setAccounts] = useState<AccountEntity[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -189,8 +195,8 @@ export default function RecommendedSection() {
           })}
 
           {/* Discover More Card */}
-          <Link
-            href="/#card-section"
+          <button
+            onClick={onSeeMore}
             className="
                             group relative h-[360px] rounded-2xl overflow-hidden
                             bg-gradient-to-br from-[#770000] to-black
@@ -212,7 +218,7 @@ export default function RecommendedSection() {
             </div>
             {/* Red Glow */}
             <div className="absolute inset-0 bg-red-600/20 blur-3xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" />
-          </Link>
+          </button>
         </div>
       </div>
     </section>
