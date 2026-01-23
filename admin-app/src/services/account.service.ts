@@ -1,6 +1,7 @@
 import {
   AccountEntity,
   AccountEntityRequest,
+  DeleteResetLogRequest,
   FailedJobs,
   RankResponse,
   ResetLogs,
@@ -171,6 +172,19 @@ const createAccountService = () => {
     }
   };
 
+  const deleteResetLogs = async (id: number, data: DeleteResetLogRequest) => {
+    try {
+      const response = await interceptedAxios.delete<MessageResponse>(
+        `${BASE_ACCOUNT_URL}/reset-logs/${id}`,
+        { data }
+      );
+
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
   const deleteMany = async (ids: number[]) => {
     try {
       await interceptedAxios.delete(BASE_ACCOUNT_URL, { data: { ids } });
@@ -190,6 +204,7 @@ const createAccountService = () => {
     finishBooking,
     update,
     updateResetLogs,
+    deleteResetLogs,
     deleteMany
   };
 };

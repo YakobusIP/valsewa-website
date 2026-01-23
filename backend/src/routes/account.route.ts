@@ -73,6 +73,11 @@ class AccountRouter {
       authMiddleware,
       this.accountController.updateResetLogs
     );
+    this.router.delete(
+      "/reset-logs/:id",
+      authMiddleware,
+      this.accountController.deleteResetLogs
+    );
     this.router.put(
       "/:id",
       authMiddleware,
