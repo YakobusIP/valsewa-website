@@ -109,7 +109,8 @@ export class BookingService {
             },
             account: {
               select: {
-                accountCode: true
+                accountCode: true,
+                accountRank: true
               }
             }
           }
@@ -141,7 +142,8 @@ export class BookingService {
             },
             account: {
               select: {
-                accountCode: true
+                accountCode: true,
+                accountRank: true
               }
             }
           }
@@ -1357,7 +1359,14 @@ export class BookingService {
     booking: Booking & {
       payments?: Payment[];
       customer?: { username: string };
-      account?: { accountCode: string };
+      account?: {
+        accountRank: string;
+        accountCode: string;
+        priceTierId?: number;
+        thumbnailId?: number | null;
+        nickname?: string;
+        password?: string;
+      };
     }
   ): BookingResponse => {
     let status = booking.status;
@@ -1398,7 +1407,7 @@ export class BookingService {
         ? {
             accountRank: booking.account.accountRank,
             accountCode: booking.account.accountCode,
-            priceTierCode: booking.account.priceTierId.toString(),
+            priceTierCode: booking.account.priceTierId?.toString() ?? "",
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
             username: booking.account.nickname,
             password: booking.account.password
