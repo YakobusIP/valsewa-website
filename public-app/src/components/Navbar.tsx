@@ -29,7 +29,6 @@ const Navbar = ({ onOpenChange }: SearchModalProps) => {
     onOpenChange(true);
   };
   const { isAuthenticated, username, customerId } = useAuth();
-  const [isScrolled, setIsScrolled] = useState(false);
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
   const bookingReserved = booking?.find(

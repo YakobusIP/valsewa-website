@@ -19,7 +19,7 @@ type SearchModalProps = React.ComponentProps<"div"> & {
 
 function Navbar({
   onOpenChange
-}: SearchModalProps){
+}: SearchModalProps) {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [activeBrand, setActiveBrand] = useState<
     "valsewa" | "valjubel" | "valjoki"
@@ -33,7 +33,7 @@ function Navbar({
   };
   const { isAuthenticated, username, customerId } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
-  const {booking} = useActiveBooking(customerId?.toString() ?? "");
+  const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
   const bookingReserved = booking?.find((i) => i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now());
   const accountCode = bookingReserved?.account.accountCode;
@@ -60,9 +60,8 @@ function Navbar({
 
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
-        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-      }`}
+      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+        }`}
     >
       <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between px-8 sm:px-12 xl:px-24 large:px-16">
         <div className="flex items-center gap-4 lg:gap-6 xl:gap-10 pl-4 lg:pl-6 xl:pl-8">
@@ -93,21 +92,19 @@ function Navbar({
           </div>
           {/* BRAND SWITCHER - scales down on lg, full size on xl+ */}
           <div
-            className={`relative transition-all duration-300 ${
-              isScrolled
-                ? "opacity-0 translate-y-[-10px] pointer-events-none"
-                : "opacity-100 translate-y-0"
-            }`}
+            className={`relative transition-all duration-300 ${isScrolled
+              ? "opacity-0 translate-y-[-10px] pointer-events-none"
+              : "opacity-100 translate-y-0"
+              }`}
           >
             <div className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
               {/* VALSEWA */}
               <div
                 onClick={() => setActiveBrand("valsewa")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valsewa"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
+                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valsewa"
+                  ? "bg-black shadow-md"
+                  : "hover:bg-white/10"
+                  }`}
               >
                 <Image
                   src="/header/VALSEWA.png"
@@ -121,11 +118,10 @@ function Navbar({
               {/* VALJUBEL */}
               <div
                 onClick={() => setActiveBrand("valjubel")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valjubel"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
+                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjubel"
+                  ? "bg-black shadow-md"
+                  : "hover:bg-white/10"
+                  }`}
               >
                 <Image
                   src="/header/VALJUBEL.png"
@@ -139,11 +135,10 @@ function Navbar({
               {/* VALJOKI */}
               <div
                 onClick={() => setActiveBrand("valjoki")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valjoki"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
+                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjoki"
+                  ? "bg-black shadow-md"
+                  : "hover:bg-white/10"
+                  }`}
               >
                 <Image
                   src="/header/VALJOKI.png"
@@ -220,7 +215,7 @@ function Navbar({
                 </div>
               </HoverCardTrigger>
 
-              <HoverCardContent 
+              <HoverCardContent
                 className="w-72 p-4 bg-[#C70515] border border-white/30 text-white"
                 align="end"
                 sideOffset={8}
@@ -233,7 +228,7 @@ function Navbar({
                   </div>
 
                   {/* Ongoing Order */}
-                  {bookingReserved &&<div className="space-y-2 cursor-default">
+                  {bookingReserved && <div className="space-y-2 cursor-default">
                     <div className="flex items-center gap-3">
                       <ListPlus className="w-5 h-5" />
                       <span className="font-semibold">On Going Order</span>
@@ -242,10 +237,10 @@ function Navbar({
                     {/* Order Details */}
                     <div className="space-y-1 cursor-default px-8">
                       <div className="text-sm font-medium text-white/70">
-                       {accountCode} (Rented {rentedDays} days)
+                        {accountCode} (Rented {rentedDays} days)
                       </div>
                       <div className="text-sm font-medium text-white/70">
-                       {remainingTime} left
+                        {remainingTime} left
                       </div>
                     </div>
                   </div>}

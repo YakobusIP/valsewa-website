@@ -31,6 +31,7 @@ import { notFound, useParams, useRouter } from "next/navigation";
 
 import LoginPage from "@/components/LoginPage"
 import { SearchModal } from "@/components/SearchModal";
+import Link from "next/link";
 
 export default function AccountDetailPage() {
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function AccountDetailPage() {
   const [bookDate, setBookDate] = useState<Date | null>(new Date());
   const [startTime, setStartTime] = useState<string>(""); // "09:00"
   const [endTime, setEndTime] = useState<string>("");
-  const { isAuthenticated, isAuthChecked, customerId } = useAuth()
+  const { isAuthChecked, customerId } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -93,10 +94,6 @@ export default function AccountDetailPage() {
       return
     }
 
-    if (!isAuthenticated) {
-      setShowLogin(true)
-      return
-    }
     if (!selectedDuration) return;
     try {
       setSubmitting(true);
@@ -234,13 +231,35 @@ export default function AccountDetailPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="relative max-lg:hidden">
-        <Navbar onOpenChange={setIsSearchOpen}/>
+        <Navbar onOpenChange={setIsSearchOpen} />
       </div>
       <div className="lg:hidden">
         <NavbarMobile />
       </div>
 
       <div className="pt-[110px] px-4 lg:px-10">
+        <div className="hidden lg:flex items-center mb-6">
+          <Link
+            href="/"
+            className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
+          >
+            {/* Solid Left Triangle Custom SVG for precise look */}
+            <svg
+              width="10"
+              height="12"
+              viewBox="0 0 10 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className=""
+            >
+              <path d="M0 6L9.75 11.6292L9.75 0.370835L0 6Z" fill="white" />
+            </svg>
+
+            <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
+              ALL ACCOUNTS
+            </span>
+          </Link>
+        </div>
         <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8">
           {/* LEFT — GALLERY */}
           <div className="col-span-12 lg:col-span-7">
@@ -350,9 +369,8 @@ export default function AccountDetailPage() {
                     <p className="font-semibold">Skin List</p>
 
                     <div
-                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${
-                        showSkins ? "rotate-180" : "rotate-0"
-                      }`}
+                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${showSkins ? "rotate-180" : "rotate-0"
+                        }`}
                     >
                       <ChevronDown className="w-3 h-3 text-white" />
                     </div>
@@ -405,10 +423,9 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("RENT")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${
-                      mode === "RENT"
-                        ? "bg-red-600 text-white"
-                        : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${mode === "RENT"
+                      ? "bg-red-600 text-white"
+                      : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   RENT NOW
@@ -417,10 +434,9 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("BOOK")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${
-                      mode === "BOOK"
-                        ? "bg-red-600 text-white"
-                        : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${mode === "BOOK"
+                      ? "bg-red-600 text-white"
+                      : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   BOOK FOR LATER
@@ -443,10 +459,9 @@ export default function AccountDetailPage() {
                           })
                         }
                         className={`border rounded-md py-2 cursor-pointer transition
-                          ${
-                            isActive
-                              ? "border-red-600 bg-red-600/10"
-                              : "border-neutral-700 hover:border-red-600"
+                          ${isActive
+                            ? "border-red-600 bg-red-600/10"
+                            : "border-neutral-700 hover:border-red-600"
                           }`}
                       >
                         <p className="text-xs font-semibold uppercase">
@@ -479,10 +494,9 @@ export default function AccountDetailPage() {
                             })
                           }
                           className={`border rounded-md py-2 cursor-pointer transition
-                            ${
-                              isActive
-                                ? "border-red-600 bg-red-600/10"
-                                : "border-neutral-700 hover:border-red-600"
+                            ${isActive
+                              ? "border-red-600 bg-red-600/10"
+                              : "border-neutral-700 hover:border-red-600"
                             }`}
                         >
                           <p className="text-xs font-semibold uppercase">
@@ -590,10 +604,9 @@ export default function AccountDetailPage() {
                 onClick={onSubmit}
                 disabled={isDisabled || submitting}
                 className={`w-full font-semibold py-3 rounded-md transition
-                  ${
-                    isDisabled || submitting
-                      ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700 text-white"
+                  ${isDisabled || submitting
+                    ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700 text-white"
                   }`}
               >
                 {submitting && <>Loading...</>}
@@ -628,7 +641,7 @@ export default function AccountDetailPage() {
       {showLogin && (
         <LoginPage onClose={() => setShowLogin(false)} />
       )}
-      
+
       <SearchModal
         open={isSearchOpen}
         onOpenChange={setIsSearchOpen}
