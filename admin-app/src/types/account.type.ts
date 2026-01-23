@@ -66,11 +66,16 @@ type UpdateResetLogRequest = {
   passwordResetRequired: boolean;
 };
 
+type DeleteResetLogRequest = {
+  accountId: number;
+};
+
 export type {
   AccountEntity,
   AccountEntityRequest,
   RankResponse,
   FailedJobs,
   ResetLogs,
-  UpdateResetLogRequest
+  UpdateResetLogRequest,
+  DeleteResetLogRequest
 };

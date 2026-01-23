@@ -312,6 +312,21 @@ export class AccountController {
     }
   };
 
+  deleteResetLogs = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await this.accountService.deleteResetLogs(
+        parseInt(req.params.id),
+        req.body
+      );
+
+      return res
+        .status(200)
+        .json({ message: "Reset log deleted successfully!" });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   deleteManyAccounts = async (
     req: Request,
     res: Response,

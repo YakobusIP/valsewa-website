@@ -25,6 +25,7 @@ import { toast } from "@/hooks/useToast";
 
 import {
   FailedJobs,
+  DeleteResetLogRequest,
   ResetLogs,
   UpdateResetLogRequest
 } from "@/types/account.type";
@@ -32,7 +33,7 @@ import {
 import { generatePassword } from "@/lib/utils";
 
 import { format } from "date-fns";
-import { BellIcon, CopyIcon } from "lucide-react";
+import { BellIcon, CopyIcon, XIcon } from "lucide-react";
 
 import { Button } from "../ui/button";
 
@@ -48,6 +49,7 @@ export default function NotificationsModal({
   resetParent
 }: Props) {
   const [isLoadingSave, setIsLoadingSave] = useState(false);
+  const [isLoadingDelete, setIsLoadingDelete] = useState(false);
   const [passwords, setPasswords] = useState<{ [id: number]: string }>({});
 
   const copyToClipboard = async (value: string) => {
@@ -94,6 +96,37 @@ export default function NotificationsModal({
       });
     } finally {
       setIsLoadingSave(false);
+    }
+  };
+
+  const deleteResetLogs = async (id: number, accountId: number) => {
+    const payload: DeleteResetLogRequest = { accountId };
+
+    setIsLoadingDelete(true);
+    try {
+      const response = await accountService.deleteResetLogs(id, payload);
+      await resetParent();
+      setPasswords((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+
+      toast({
+        title: "All set!",
+        description: response.message
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occured";
+
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: errorMessage
+      });
+    } finally {
+      setIsLoadingDelete(false);
     }
   };
 
@@ -210,12 +243,24 @@ export default function NotificationsModal({
                     {displayResetLogsDate(log.previousExpireAt)}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      onClick={() => saveResetLogs(log.id, log.accountId)}
-                      disabled={!passwords[log.id] || isLoadingSave}
-                    >
-                      Save
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        onClick={() => saveResetLogs(log.id, log.accountId)}
+                        disabled={!passwords[log.id] || isLoadingSave}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        aria-label="Delete reset log"
+                        onClick={() => deleteResetLogs(log.id, log.accountId)}
+                        disabled={isLoadingDelete}
+                      >
+                        <XIcon />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))

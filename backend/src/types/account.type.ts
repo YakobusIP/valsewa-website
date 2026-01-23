@@ -54,6 +54,10 @@ type UpdateResetLogRequest = {
   passwordResetRequired: boolean;
 };
 
+type DeleteResetLogRequest = {
+  accountId: number;
+};
+
 type GetAvailableAccountsRequest = {
   startAt: Date;
   endAt: Date;
@@ -76,6 +80,7 @@ export type {
   AccountWithSkins,
   PublicAccount,
   UpdateResetLogRequest,
+  DeleteResetLogRequest,
   GetAvailableAccountsRequest,
   AccountSearchFilters
 };

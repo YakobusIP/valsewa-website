@@ -19,6 +19,7 @@ import {
   AccountEntityRequest,
   AccountSearchFilters,
   AccountWithSkins,
+  DeleteResetLogRequest,
   GetAvailableAccountsRequest,
   PublicAccount,
   UpdateResetLogRequest
@@ -928,6 +929,25 @@ export class AccountService {
         data: {
           password: data.password,
           passwordResetRequired: data.passwordResetRequired
+        }
+      });
+
+      return await prisma.accountResetLog.delete({ where: { id } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientValidationError) {
+        throw new BadRequestError("Invalid request body!");
+      }
+
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  deleteResetLogs = async (id: number, data: DeleteResetLogRequest) => {
+    try {
+      await prisma.account.update({
+        where: { id: data.accountId },
+        data: {
+          passwordResetRequired: false
         }
       });
 
