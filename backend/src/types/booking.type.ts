@@ -87,6 +87,9 @@ export type BookingResponse = {
     password?: string;
   };
   payments?: Payment[];
+  customer?: {
+    username: string;
+  };
 };
 
 export type UpdateBookingRequest = {
