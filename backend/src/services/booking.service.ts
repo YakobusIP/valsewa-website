@@ -97,8 +97,22 @@ export class BookingService {
           where: whereCriteria,
           take: limit,
           skip: skip,
+          orderBy: {
+            createdAt: "desc"
+          },
           include: {
-            payments: true
+            payments: true,
+            customer: {
+              select: {
+                username: true
+              }
+            },
+            account: {
+              select: {
+                accountCode: true,
+                accountRank: true
+              }
+            }
           }
         });
 
@@ -116,8 +130,22 @@ export class BookingService {
       } else {
         data = await prisma.booking.findMany({
           where: whereCriteria,
+          orderBy: {
+            createdAt: "desc"
+          },
           include: {
-            payments: true
+            payments: true,
+            customer: {
+              select: {
+                username: true
+              }
+            },
+            account: {
+              select: {
+                accountCode: true,
+                accountRank: true
+              }
+            }
           }
         });
         metadata = {
@@ -1328,7 +1356,18 @@ export class BookingService {
   };
 
   private mapBookingDataToBookingResponse = (
-    booking: Booking & { payments?: Payment[]; account?: Account }
+    booking: Booking & {
+      payments?: Payment[];
+      customer?: { username: string };
+      account?: {
+        accountRank: string;
+        accountCode: string;
+        priceTierId?: number;
+        thumbnailId?: number | null;
+        nickname?: string;
+        password?: string;
+      };
+    }
   ): BookingResponse => {
     let status = booking.status;
     if (
@@ -1363,11 +1402,12 @@ export class BookingService {
       totalValue: booking.totalValue,
       active: null,
       payments: booking.payments,
+      customer: booking.customer,
       account: booking.account
         ? {
             accountRank: booking.account.accountRank,
             accountCode: booking.account.accountCode,
-            priceTierCode: booking.account.priceTierId.toString(),
+            priceTierCode: booking.account.priceTierId?.toString() ?? "",
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
             username: booking.account.nickname,
             password: booking.account.password

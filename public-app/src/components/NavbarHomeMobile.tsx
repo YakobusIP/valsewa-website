@@ -28,13 +28,13 @@ const NavbarHomeMobile = () => {
   const { isAuthenticated, username, customerId } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const {booking} = useActiveBooking(customerId?.toString() ?? "");
+  const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
   const bookingReserved = booking?.find((i) => i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now());
   const accountCode = bookingReserved?.account.accountCode;
   const rentedDays = calculateDaysRented(bookingReserved?.startAt ?? null, bookingReserved?.endAt ?? null);
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
-  
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 60);
@@ -46,9 +46,8 @@ const NavbarHomeMobile = () => {
 
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
-        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-      }`}
+      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+        }`}
     >
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-3 sm:px-6 lg:px-12">
         {/* LEFT */}
@@ -112,7 +111,7 @@ const NavbarHomeMobile = () => {
           {isAuthenticated && (
             <Popover open={isOpen} onOpenChange={setIsOpen}>
               <PopoverTrigger asChild>
-                <button 
+                <button
                   onClick={() => setIsOpen(!isOpen)}
                   onMouseEnter={() => setIsOpen(true)}
                   className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#C70515] hover:bg-[#a90411] transition"
@@ -126,7 +125,7 @@ const NavbarHomeMobile = () => {
                 </button>
               </PopoverTrigger>
 
-              <PopoverContent 
+              <PopoverContent
                 className="w-56 p-4 bg-[#C70515] border border-white/30 text-white"
                 align="end"
                 sideOffset={8}
