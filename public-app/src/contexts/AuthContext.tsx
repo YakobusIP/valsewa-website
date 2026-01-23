@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       await authService.logout();
-    } catch {}
+    } catch { }
 
     localStorage.removeItem("refreshToken");
     setAccessToken(null);
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setCustomerId(null);
     setUsername(null);
     setIsAuthenticated(false);
-    setIsAuthChecked(true);
+    setIsAuthChecked(false);
 
     router.push("/");
   };
@@ -118,10 +118,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       return;
     }
 
-    if (pathname === "/" || pathname === "/login") {
-      setIsAuthChecked(true);
-      return;
-    }
+    // If we have a refresh token, we should ALWAYS validate it to restore session,
+    // even on public pages like home or login. This ensures the user sees their logged-in state.
 
     validateToken();
   }, [pathname, validateToken]);
