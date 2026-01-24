@@ -43,9 +43,12 @@ function PaymentSummary({
     [booking.totalValue, discount]
   );
 
+  const isBookingFree = booking && subtotalPayment === 0;
+
   const adminFee = useMemo(
-    () => calculateAdminFee(subtotalPayment, paymentMethod),
-    [subtotalPayment, paymentMethod]
+    () =>
+      isBookingFree ? 0 : calculateAdminFee(subtotalPayment, paymentMethod),
+    [isBookingFree, subtotalPayment, paymentMethod]
   );
 
   const totalPayment = useMemo(
@@ -162,16 +165,18 @@ function PaymentSummary({
           <span>Other Fee</span>
           <span>IDR {booking.othersValue?.toLocaleString() ?? "0"}</span>
         </div>
-        {adminFee && (
+        {adminFee !== 0 && (
           <div className="flex justify-between">
             <span>Admin Fee</span>
             <span>IDR {adminFee?.toLocaleString() ?? "0"}</span>
           </div>
         )}
-        <div className="flex justify-between">
-          <span>Payment Method</span>
-          <span>{paymentMethodLabel}</span>
-        </div>
+        {!isBookingFree ? (
+          <div className="flex justify-between">
+            <span>Payment Method</span>
+            <span>{paymentMethodLabel}</span>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-700">
@@ -179,7 +184,7 @@ function PaymentSummary({
           Total Payment
         </span>
         <span className="text-base sm:text-lg font-bold text-red-500 break-words">
-          IDR {totalPayment.toLocaleString()}
+          {isBookingFree ? "Free" : "IDR " + totalPayment.toLocaleString()}
         </span>
       </div>
 
@@ -194,11 +199,11 @@ function PaymentSummary({
               ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
               : "bg-red-600 hover:bg-red-700"
           )}
-          aria-label={`Pay IDR ${totalPayment.toLocaleString()} and rent now`}
+          aria-label={`${isBookingFree ? "Free" : "Pay IDR " + totalPayment.toLocaleString()} and rent now`}
         >
           {loading
             ? "Loading..."
-            : `IDR ${totalPayment.toLocaleString()} | Rent Now`}
+            : `${isBookingFree ? "Free" : "IDR " + totalPayment.toLocaleString()} | Rent Now`}
         </button>
         <p className="text-xs sm:text-sm">Any Questions?</p>
         <button
