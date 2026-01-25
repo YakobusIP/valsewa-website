@@ -55,7 +55,7 @@ export default function AccountDetailPage() {
   const [bookDate, setBookDate] = useState<Date | null>(new Date());
   const [startTime, setStartTime] = useState<string>(""); // "09:00"
   const [endTime, setEndTime] = useState<string>("");
-  const { isAuthChecked, customerId } = useAuth()
+  const { isAuthenticated, customerId } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -86,11 +86,8 @@ export default function AccountDetailPage() {
   }
 
   const onSubmit = async () => {
-    if (!isAuthChecked) {
-      toast({
-        title: "Please wait",
-        description: "Checking login status..."
-      })
+    if (!isAuthenticated) {
+      setShowLogin(true)
       return
     }
 
