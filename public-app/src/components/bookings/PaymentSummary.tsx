@@ -10,6 +10,8 @@ import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { instrumentSans, staatliches } from "@/lib/fonts";
 import { calculateAdminFee, calculateVoucherDiscount, cn } from "@/lib/utils";
 
+import VoucherModal from "./VoucherModal";
+
 type PaymentSummaryProps = {
   booking: BookingWithAccountEntity;
   paymentMethod: PAYMENT_METHOD_REQUEST | null;
@@ -63,27 +65,30 @@ function PaymentSummary({
     );
   }, [paymentMethod]);
 
-  const onApplyVoucher = useCallback(async () => {
-    if (!voucherName.trim() || isApplyingVoucher) return;
+  const onApplyVoucher = useCallback(
+    async (voucherName: string) => {
+      if (!voucherName.trim() || isApplyingVoucher) return;
 
-    try {
-      setIsApplyingVoucher(true);
-      const result = await fetchVoucher(voucherName);
-      setVoucher(result);
-      if (!result) {
-        setVoucherName("");
+      try {
+        setIsApplyingVoucher(true);
+        const result = await fetchVoucher(voucherName);
+        setVoucher(result);
+        if (!result) {
+          setVoucherName("");
+        }
+      } catch (err) {
+        console.error("Failed to apply voucher", err);
+      } finally {
+        setIsApplyingVoucher(false);
       }
-    } catch (err) {
-      console.error("Failed to apply voucher", err);
-    } finally {
-      setIsApplyingVoucher(false);
-    }
-  }, [voucherName, isApplyingVoucher, fetchVoucher, setVoucher]);
+    },
+    [isApplyingVoucher, fetchVoucher, setVoucher]
+  );
 
   const handleVoucherKeyPress = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter" && voucherName.trim()) {
-        onApplyVoucher();
+        onApplyVoucher(voucherName);
       }
     },
     [voucherName, onApplyVoucher]
@@ -110,12 +115,11 @@ function PaymentSummary({
         >
           PROMO CODE
         </h1>
-        <button
-          type="button"
-          className="text-[#E8C545] mt-2 text-sm sm:text-base underline hover:text-yellow-400 focus:outline-none focus:ring-2 focus:ring-[#E8C545] focus:ring-offset-2 focus:ring-offset-black rounded"
-        >
-          Explore Promo Codes
-        </button>
+        <VoucherModal
+          voucher={voucher}
+          handleApplyVoucher={onApplyVoucher}
+          isApplyingVoucher={isApplyingVoucher}
+        />
         <div className="flex flex-col sm:flex-row gap-2 mt-2">
           <input
             type="text"
@@ -130,7 +134,7 @@ function PaymentSummary({
 
           <button
             type="button"
-            onClick={onApplyVoucher}
+            onClick={() => onApplyVoucher(voucherName)}
             disabled={!voucherName.trim() || isApplyingVoucher}
             className="px-4 py-2 text-sm sm:text-base font-semibold text-black bg-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
             aria-label="Apply promo code"
@@ -157,7 +161,7 @@ function PaymentSummary({
         </div>
         {voucher && (
           <div className="flex justify-between text-green-400">
-            <span>Promo</span>
+            <span>Promo ({voucher.voucherName})</span>
             <span>-IDR {discount.toLocaleString()}</span>
           </div>
         )}
@@ -210,7 +214,10 @@ function PaymentSummary({
           type="button"
           className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
           onClick={() =>
-            window.open("https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong", "_blank")
+            window.open(
+              "https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong",
+              "_blank"
+            )
           }
         >
           Ask Our Team

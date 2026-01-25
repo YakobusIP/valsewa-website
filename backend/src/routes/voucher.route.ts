@@ -17,12 +17,16 @@ class VoucherRouter {
 
   private initializeRoutes() {
     this.router.get("/", this.voucherController.getAllVouchers);
+    this.router.get("/active", this.voucherController.getActiveVouchers);
     this.router.get(
       "/active/:voucherName",
       this.voucherController.getActiveVoucherByVoucherName
     );
     this.router.post("/", this.voucherController.createVoucher);
-    this.router.patch("/:id/toggle", this.voucherController.toggleVoucherStatus);
+    this.router.patch(
+      "/:id/toggle",
+      this.voucherController.toggleVoucherStatus
+    );
     this.router.patch(
       "/:id/toggleVisibility",
       this.voucherController.toggleVoucherVisible
