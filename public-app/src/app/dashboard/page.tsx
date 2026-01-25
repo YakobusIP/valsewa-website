@@ -214,14 +214,14 @@ export default function Dashboard() {
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm px-12 text-nowrap">
                         <div className="relative inline-flex items-center gap-2">
-                          <span>{booking.account.username}</span>
+                          <span>{booking.account.nickname}</span>
                           <Button
                             type="button"
                             size="icon"
                             variant="ghost"
                             className="px-2"
                             onClick={() =>
-                              copyToClipboard(booking.account.username ?? "")
+                              copyToClipboard(booking.account.nickname ?? "")
                             }
                           >
                             <CopyIcon className="w-4 h-4" />
