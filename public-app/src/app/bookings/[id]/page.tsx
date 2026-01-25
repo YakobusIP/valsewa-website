@@ -13,6 +13,7 @@ import PaymentMethods from "@/components/bookings/PaymentMethods";
 import PaymentSummary from "@/components/bookings/PaymentSummary";
 import ProgressStepper from "@/components/bookings/ProgressStepper";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 import {
@@ -84,6 +85,8 @@ export default function BookingDetailPage() {
   );
   const [voucher, setVoucher] = useState<VoucherEntity | null>(null);
   const [isLoadingCancelBooking, setIsLoadingCancelBooking] = useState(false);
+  const auth = useAuth();
+
   const { handleAsyncError } = useErrorHandler();
 
   const discount = useMemo(() => {
@@ -167,6 +170,12 @@ export default function BookingDetailPage() {
   useEffect(() => {
     if (!id) return;
 
+    if (!auth || !auth.isAuthChecked) return;
+
+    if (!auth.isAuthenticated) {
+      router.push("/");
+    }
+
     bookingService
       .fetchBookingById(id)
       .then((res) => {
@@ -177,7 +186,7 @@ export default function BookingDetailPage() {
         setBooking(null);
       })
       .finally(() => setLoading(false));
-  }, [id, handleAsyncError]);
+  }, [id, handleAsyncError, auth, router]);
 
   if (loading) {
     return <LoadingState />;

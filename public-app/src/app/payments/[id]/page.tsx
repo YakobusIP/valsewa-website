@@ -9,6 +9,7 @@ import NavbarMobile from "@/components/NavbarMobile";
 import PaymentCountdown from "@/components/bookings/PaymentCountdown";
 import ProgressStepper from "@/components/bookings/ProgressStepper";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 
@@ -79,6 +80,9 @@ export default function PaymentDetailPage() {
   const [isLoadingCancelBooking, setIsLoadingCancelBooking] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [vaNoCopied, setVaNoCopied] = useState(false);
+
+  const auth = useAuth();
+
   const { handleAsyncError } = useErrorHandler();
 
   const onDownloadQR = useCallback(async () => {
@@ -172,6 +176,12 @@ export default function PaymentDetailPage() {
   useEffect(() => {
     if (!id) return;
 
+    if (!auth || !auth.isAuthChecked) return;
+
+    if (!auth.isAuthenticated) {
+      router.push("/");
+    }
+
     bookingService
       .fetchPaymentById(id)
       .then((res) => {
@@ -190,7 +200,7 @@ export default function PaymentDetailPage() {
         setPayment(null);
       })
       .finally(() => setLoading(false));
-  }, [id, handleAsyncError, router]);
+  }, [id, handleAsyncError, router, auth]);
 
   const paymentMethodLabel = useMemo(() => {
     if (!payment) return "";

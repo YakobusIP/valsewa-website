@@ -166,10 +166,13 @@ export class BookingService {
     }
   };
 
-  getBookingById = async (bookingId: string): Promise<BookingResponse> => {
+  getBookingById = async (
+    bookingId: string,
+    customerId?: number
+  ): Promise<BookingResponse> => {
     try {
       const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
+        where: { id: bookingId, customerId },
         include: {
           account: {
             include: {
@@ -182,7 +185,7 @@ export class BookingService {
       });
 
       if (!booking) {
-        throw new NotFoundError(`Booking with ID ${bookingId} not found.`);
+        throw new NotFoundError(`Booking not found.`);
       }
 
       const now = new Date();
@@ -320,7 +323,10 @@ export class BookingService {
     }
   };
 
-  getPaymentById = async (paymentId: string): Promise<PaymentResponse> => {
+  getPaymentById = async (
+    paymentId: string,
+    customerId?: number
+  ): Promise<PaymentResponse> => {
     try {
       const payment = await prisma.payment.findUnique({
         where: { id: paymentId },
@@ -329,8 +335,8 @@ export class BookingService {
         }
       });
 
-      if (!payment) {
-        throw new NotFoundError(`Payment with ID ${paymentId} not found.`);
+      if (!payment || payment.booking?.customerId != customerId) {
+        throw new NotFoundError(`Payment not found.`);
       }
       return this.mapPaymentWithBookingDataToPaymentResponse(payment);
     } catch (error) {
@@ -753,10 +759,11 @@ export class BookingService {
 
   payBooking = async (data: PayBookingRequest): Promise<PaymentResponse> => {
     try {
-      const { bookingId, voucherId, provider, paymentMethod } = data;
+      const { bookingId, customerId, voucherId, provider, paymentMethod } =
+        data;
 
       const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
+        where: { id: bookingId, customerId },
         include: {
           customer: true,
           account: true
@@ -913,10 +920,13 @@ export class BookingService {
     }
   };
 
-  cancelBooking = async (bookingId: string): Promise<BookingResponse> => {
+  cancelBooking = async (
+    bookingId: string,
+    customerId: number
+  ): Promise<BookingResponse> => {
     try {
       let booking = await prisma.booking.findUnique({
-        where: { id: bookingId }
+        where: { id: bookingId, customerId }
       });
 
       if (!booking) throw new NotFoundError("Booking not found!");
@@ -940,14 +950,21 @@ export class BookingService {
     }
   };
 
-  verifyPayment = async (paymentId: string): Promise<PaymentResponse> => {
+  verifyPayment = async (
+    paymentId: string,
+    customerId: number
+  ): Promise<PaymentResponse> => {
     try {
       let payment = await prisma.payment.findUnique({
         where: { id: paymentId },
         include: { booking: true }
       });
 
-      if (!payment || !payment.booking)
+      if (
+        !payment ||
+        !payment.booking ||
+        payment.booking.customerId !== customerId
+      )
         throw new NotFoundError("Record not found!");
 
       if (this.isPaymentFinal(payment.status)) {

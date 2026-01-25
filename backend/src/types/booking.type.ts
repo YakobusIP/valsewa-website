@@ -50,6 +50,7 @@ export type OverrideBookingRequest = {
 
 export type PayBookingRequest = {
   bookingId: string;
+  customerId: number;
   voucherId?: number;
   provider: Provider;
   paymentMethod: PaymentMethodRequest;
