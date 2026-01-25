@@ -50,6 +50,7 @@ export type OverrideBookingRequest = {
 
 export type PayBookingRequest = {
   bookingId: string;
+  customerId: number;
   voucherId?: number;
   provider: Provider;
   paymentMethod: PaymentMethodRequest;
@@ -83,7 +84,7 @@ export type BookingResponse = {
     accountCode: string;
     priceTierCode: string;
     thumbnailImageUrl: string;
-    username?: string;
+    nickname: string;
     password?: string;
   };
   payments?: Payment[];

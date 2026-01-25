@@ -7,6 +7,7 @@ import { bookingService } from "@/services/booking.service";
 import Navbar from "@/components/Navbar";
 import NavbarMobile from "@/components/NavbarMobile";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 import { BOOKING_STATUS, BookingWithAccountEntity } from "@/types/booking.type";
@@ -38,10 +39,19 @@ export default function PaymentSuccessPage() {
   const [booking, setBooking] = useState<BookingWithAccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [passwordCopied, setPasswordCopied] = useState(false);
+
+  const auth = useAuth();
+
   const { handleAsyncError } = useErrorHandler();
 
   useEffect(() => {
     if (!paymentId) return;
+
+    if (!auth || !auth.isAuthChecked) return;
+
+    if (!auth.isAuthenticated) {
+      router.push("/");
+    }
 
     // Fetch payment to get booking ID
     bookingService
@@ -65,7 +75,7 @@ export default function PaymentSuccessPage() {
         setBooking(null);
       })
       .finally(() => setLoading(false));
-  }, [paymentId, handleAsyncError]);
+  }, [paymentId, handleAsyncError, auth, router]);
 
   const onBackToHome = useCallback(() => {
     router.push("/");
@@ -90,7 +100,7 @@ export default function PaymentSuccessPage() {
   const showCredentials = useMemo(() => {
     return (
       booking?.active === true &&
-      booking?.account?.username &&
+      booking?.account?.nickname &&
       booking?.account?.password
     );
   }, [booking]);
@@ -193,7 +203,7 @@ export default function PaymentSuccessPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-400">Riot Username</span>
                     <span className="font-medium text-white">
-                      {booking.account.username}
+                      {booking.account.nickname}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -259,7 +269,7 @@ export default function PaymentSuccessPage() {
               <button
                 type="button"
                 onClick={() =>
-                  window.open("https://discord.gg/valsewa", "_blank")
+                  window.open("https://discord.gg/ywqTZSTwRY", "_blank")
                 }
                 className="flex items-center justify-center gap-4 w-full py-3 px-4 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
               >

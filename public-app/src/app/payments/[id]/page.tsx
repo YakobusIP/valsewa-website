@@ -9,6 +9,7 @@ import NavbarMobile from "@/components/NavbarMobile";
 import PaymentCountdown from "@/components/bookings/PaymentCountdown";
 import ProgressStepper from "@/components/bookings/ProgressStepper";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { usePaymentVerification } from "@/hooks/usePaymentVerification";
 
@@ -46,10 +47,7 @@ function PaymentStatusView({ payment }: { payment: PaymentWithBookingEntity }) {
 
   return (
     <div className="flex flex-col items-center justify-center h-full gap-6 text-center">
-      <div
-        role="img"
-        aria-label={statusLabel}
-      >
+      <div role="img" aria-label={statusLabel}>
         <XIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
       </div>
 
@@ -63,9 +61,7 @@ function PaymentStatusView({ payment }: { payment: PaymentWithBookingEntity }) {
       </h1>
 
       <button
-        onClick={() =>
-          router.push(`/details/${payment.booking.accountId}`)
-        }
+        onClick={() => router.push(`/details/${payment.booking.accountId}`)}
         className="mt-4 px-6 py-3 text-base sm:text-lg font-semibold rounded bg-neutral-700 hover:bg-neutral-600 transition"
       >
         Back to Account
@@ -84,6 +80,9 @@ export default function PaymentDetailPage() {
   const [isLoadingCancelBooking, setIsLoadingCancelBooking] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [vaNoCopied, setVaNoCopied] = useState(false);
+
+  const auth = useAuth();
+
   const { handleAsyncError } = useErrorHandler();
 
   const onDownloadQR = useCallback(async () => {
@@ -112,7 +111,6 @@ export default function PaymentDetailPage() {
   const handlePaymentUpdate = useCallback(
     (updatedPayment: PaymentWithBookingEntity) => {
       setPayment(updatedPayment);
-      // Redirect to success page if payment is successful and booking is reserved
       if (
         updatedPayment.status === PAYMENT_STATUS.SUCCESS &&
         updatedPayment.booking.status === BOOKING_STATUS.RESERVED
@@ -167,15 +165,22 @@ export default function PaymentDetailPage() {
     }
   }, [payment, isLoadingCancelBooking, handleAsyncError, router]);
 
-  const isFailed = payment && (
+  const isFailed =
+    payment &&
     [
       PAYMENT_STATUS.CANCELLED,
       PAYMENT_STATUS.EXPIRED,
       PAYMENT_STATUS.FAILED
-    ].includes(payment.status));
+    ].includes(payment.status);
 
   useEffect(() => {
     if (!id) return;
+
+    if (!auth || !auth.isAuthChecked) return;
+
+    if (!auth.isAuthenticated) {
+      router.push("/");
+    }
 
     bookingService
       .fetchPaymentById(id)
@@ -195,7 +200,7 @@ export default function PaymentDetailPage() {
         setPayment(null);
       })
       .finally(() => setLoading(false));
-  }, [id, handleAsyncError, router]);
+  }, [id, handleAsyncError, router, auth]);
 
   const paymentMethodLabel = useMemo(() => {
     if (!payment) return "";
@@ -209,6 +214,14 @@ export default function PaymentDetailPage() {
   }
 
   if (!payment) return notFound();
+
+  if (
+    payment.status === PAYMENT_STATUS.SUCCESS &&
+    payment.booking.status === BOOKING_STATUS.RESERVED
+  ) {
+    router.push(`/payments/${id}/success`);
+    return;
+  }
 
   return (
     <main className="min-h-screen flex text-white bg-black">
@@ -235,7 +248,7 @@ export default function PaymentDetailPage() {
               isLoadingCancelBooking={isLoadingCancelBooking}
             />
 
-            {payment.booking.expiredAt && (
+            {payment.booking && payment.booking.expiredAt && (
               <PaymentCountdown expiredAt={payment.booking.expiredAt} />
             )}
 
@@ -271,7 +284,9 @@ export default function PaymentDetailPage() {
                 </div>
                 {payment.bankAccountNo && (
                   <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-                    <p className="font-semibold text-sm sm:text-base">VA Number</p>
+                    <p className="font-semibold text-sm sm:text-base">
+                      VA Number
+                    </p>
                     <button
                       type="button"
                       onClick={() => handleCopyVaNo(payment.bankAccountNo!)}

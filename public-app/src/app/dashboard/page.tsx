@@ -18,12 +18,12 @@ import { toast } from "@/hooks/useToast";
 
 import { BookingWithAccountEntity } from "@/types/booking.type";
 
+import { setAccessToken } from "@/lib/axios";
 import { calculateDaysRented, calculateTimeRemaining, cn } from "@/lib/utils";
 
 import { CopyIcon, LogOut } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { setAccessToken } from "@/lib/axios";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -214,14 +214,14 @@ export default function Dashboard() {
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm px-12 text-nowrap">
                         <div className="relative inline-flex items-center gap-2">
-                          <span>{booking.account.username}</span>
+                          <span>{booking.account.nickname}</span>
                           <Button
                             type="button"
                             size="icon"
                             variant="ghost"
                             className="px-2"
                             onClick={() =>
-                              copyToClipboard(booking.account.username ?? "")
+                              copyToClipboard(booking.account.nickname ?? "")
                             }
                           >
                             <CopyIcon className="w-4 h-4" />

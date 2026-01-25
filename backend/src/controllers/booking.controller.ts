@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { Provider } from "@prisma/client";
 import { BookingService } from "../services/booking.service";
+import { BadRequestError, ForbiddenError } from "../lib/error";
 import {
-  BadRequestError,
-  ForbiddenError,
-} from "../lib/error";
-import { FASPAY_NOTIFICATION_STATUS_MAP, FaspayClient } from "../faspay/faspay.client";
+  FASPAY_NOTIFICATION_STATUS_MAP,
+  FaspayClient
+} from "../faspay/faspay.client";
 import { PaymentMethodRequest } from "../types/booking.type";
 import { parseToDate, parseToDateStr } from "../lib/utils";
 
@@ -36,7 +36,11 @@ export class BookingController {
   getBookingById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const bookingId = req.params.id;
-      const booking = await this.bookingService.getBookingById(bookingId);
+      const customerId = req.customer?.id;
+      const booking = await this.bookingService.getBookingById(
+        bookingId,
+        customerId
+      );
 
       return res.status(200).json(booking);
     } catch (error) {
@@ -101,17 +105,17 @@ export class BookingController {
       if (page < 1) {
         throw new BadRequestError("Page must be greater than 0.");
       }
-    
+
       if (limit < 1 || limit > 100) {
         throw new BadRequestError("Limit must be between 1 and 100.");
       }
-    
+
       const result = await this.bookingService.getBookingsByCustomerId(
         customerId,
         page,
         limit
       );
-    
+
       return res.status(200).json(result);
     } catch (error) {
       return next(error);
@@ -142,7 +146,11 @@ export class BookingController {
   getPaymentById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const paymentId = req.params.id;
-      const payment = await this.bookingService.getPaymentById(paymentId);
+      const customerId = req.customer?.id;
+      const payment = await this.bookingService.getPaymentById(
+        paymentId,
+        customerId
+      );
 
       return res.status(200).json(payment);
     } catch (error) {
@@ -168,16 +176,10 @@ export class BookingController {
 
   createBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const {
-        customerId,
-        accountId,
-        priceListId,
-        quantity,
-        voucherId,
-        startAt
-      } = req.body;
+      const customerId = req.customer?.id;
+      const { accountId, priceListId, quantity, voucherId, startAt } = req.body;
 
-      if (!accountId || !priceListId || !quantity) {
+      if (!customerId || !accountId || !priceListId || !quantity) {
         throw new BadRequestError("Missing required fields.");
       }
 
@@ -263,10 +265,15 @@ export class BookingController {
 
   cancelBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const customerId = req.customer?.id;
       const { bookingId } = req.body;
-      if (!bookingId) throw new BadRequestError("Missing required fields.");
+      if (!bookingId || !customerId)
+        throw new BadRequestError("Missing required fields.");
 
-      const result = await this.bookingService.cancelBooking(bookingId);
+      const result = await this.bookingService.cancelBooking(
+        bookingId,
+        customerId
+      );
 
       return res.status(200).json(result);
     } catch (error) {
@@ -276,11 +283,14 @@ export class BookingController {
 
   payBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const customerId = req.customer?.id;
       const { bookingId, voucherId, provider, paymentMethod } = req.body;
-      if (!bookingId) throw new BadRequestError("Missing required fields.");
+      if (!bookingId || !customerId)
+        throw new BadRequestError("Missing required fields.");
 
       const result = await this.bookingService.payBooking({
         bookingId,
+        customerId,
         voucherId,
         provider: provider ?? Provider.FASPAY,
         paymentMethod: paymentMethod ?? PaymentMethodRequest.QRIS
@@ -294,10 +304,15 @@ export class BookingController {
 
   verifyPayment = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const customerId = req.customer?.id;
       const { paymentId } = req.body;
-      if (!paymentId) throw new BadRequestError("Missing required fields.");
+      if (!paymentId || !customerId)
+        throw new BadRequestError("Missing required fields.");
 
-      const result = await this.bookingService.verifyPayment(paymentId);
+      const result = await this.bookingService.verifyPayment(
+        paymentId,
+        customerId
+      );
 
       return res.status(200).json(result);
     } catch (error) {
@@ -366,14 +381,17 @@ export class BookingController {
     next: NextFunction
   ) => {
     try {
-      console.log("[callbackFaspayPayment] Processing faspay callback payment with request:",  JSON.stringify({ 
-        method: req.method,
-        path: req.originalUrl,
-        headers: req.headers, 
-        body: req.body,
-        query: req.query,
-        params: req.params,
-      }));
+      console.log(
+        "[callbackFaspayPayment] Processing faspay callback payment with request:",
+        JSON.stringify({
+          method: req.method,
+          path: req.originalUrl,
+          headers: req.headers,
+          body: req.body,
+          query: req.query,
+          params: req.params
+        })
+      );
       const payload = req.body;
       const {
         trx_id,
@@ -414,9 +432,12 @@ export class BookingController {
         response_code: "00",
         response_desc: "Success",
         response_date: parseToDateStr(new Date())
-      }
+      };
 
-      console.log("[vaInquiry] Processed faspay callback payment with result:", JSON.stringify(result));
+      console.log(
+        "[vaInquiry] Processed faspay callback payment with result:",
+        JSON.stringify(result)
+      );
 
       return res.status(200).json(result);
     } catch (error) {

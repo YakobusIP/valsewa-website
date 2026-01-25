@@ -40,14 +40,22 @@ export default function CancelBookingButton({
       </AlertDialogTrigger>
       <AlertDialogContent className="bg-black border border-red-500">
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-2xl text-white uppercase mb-4">Confirm Cancellation</AlertDialogTitle>
+          <AlertDialogTitle className="text-2xl text-white uppercase mb-4">
+            Confirm Cancellation
+          </AlertDialogTitle>
           <AlertDialogDescription className="text-white">
-            Your reserved item will be released and available for others immediately upon cancellation.
+            Your reserved item will be released and available for others
+            immediately upon cancellation.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="text-white bg-black">Keep Reservation</AlertDialogCancel>
-          <AlertDialogAction className="bg-red-500 text-white" onClick={cancelBooking}>
+          <AlertDialogCancel className="text-white bg-black">
+            Keep Reservation
+          </AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-red-500 text-white"
+            onClick={cancelBooking}
+          >
             {isLoadingCancelBooking && (
               <Loader2Icon className="h-4 w-4 animate-spin" />
             )}

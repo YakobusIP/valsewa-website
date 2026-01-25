@@ -4,7 +4,11 @@ import SnapBiConfig from "../lib/snapbi/snapbi.config";
 import { BadRequestError, InternalServerError } from "../lib/error";
 import { randomBytes } from "crypto";
 import { BankCodes } from "../types/booking.type";
-import { parseToDate, parseToLocalDate, parseToLocalDateStr } from "../lib/utils";
+import {
+  parseToDate,
+  parseToLocalDate,
+  parseToLocalDateStr
+} from "../lib/utils";
 
 export type CreateQrisPaymentRequest = {
   bookingId: string;
@@ -56,7 +60,7 @@ export const FASPAY_NOTIFICATION_STATUS_MAP: Record<string, PaymentStatus> = {
   "5": PaymentStatus.FAILED,
   "7": PaymentStatus.EXPIRED,
   "8": PaymentStatus.CANCELLED,
-  "9": PaymentStatus.FAILED,
+  "9": PaymentStatus.FAILED
 };
 
 export const BANK_CODE_TO_CHANNEL_CODE_MAP: Record<BankCodes, string> = {
@@ -233,9 +237,9 @@ export class FaspayClient {
         }
       };
       const response = await SnapBi.qris()
-          .withTimeStamp(parseToLocalDateStr(new Date()))
-          .withBody(payload)
-          .getStatus(generateLargeNumericId());
+        .withTimeStamp(parseToLocalDateStr(new Date()))
+        .withBody(payload)
+        .getStatus(generateLargeNumericId());
 
       this.validateResponseCode(response);
 
@@ -277,14 +281,14 @@ export class FaspayClient {
       virtualAccountNo: bankAccountNo.padStart(18, " "),
       inquiryRequestId,
       additionalInfo: {
-        channelCode: BANK_CODE_TO_CHANNEL_CODE_MAP[bankCode],
+        channelCode: BANK_CODE_TO_CHANNEL_CODE_MAP[bankCode]
       }
     };
     const response = await SnapBi.va()
       .withTimeStamp(parseToLocalDateStr(new Date()))
       .withBody(payload)
       .getStatus(generateLargeNumericId());
-  
+
     this.validateResponseCode(response);
 
     const paymentStatus =

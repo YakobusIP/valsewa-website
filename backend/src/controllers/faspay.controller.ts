@@ -11,14 +11,17 @@ export class FaspayController {
 
   vaInquiry = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("[vaInquiry] Processing faspay virtual account inquiry with request:", JSON.stringify({ 
-        method: req.method,
-        path: req.originalUrl,
-        headers: req.headers, 
-        body: req.body,
-        query: req.query,
-        params: req.params,
-      }));
+      console.log(
+        "[vaInquiry] Processing faspay virtual account inquiry with request:",
+        JSON.stringify({
+          method: req.method,
+          path: req.originalUrl,
+          headers: req.headers,
+          body: req.body,
+          query: req.query,
+          params: req.params
+        })
+      );
 
       const payload = req.body;
       const {
@@ -38,7 +41,9 @@ export class FaspayController {
       };
 
       const missingFields = Object.entries(requiredFields)
-        .filter(([_, value]) => value === undefined || value === null || value === "")
+        .filter(
+          ([_, value]) => value === undefined || value === null || value === ""
+        )
         .map(([key]) => key);
 
       if (missingFields.length > 0) {
@@ -64,7 +69,10 @@ export class FaspayController {
         inquiryRequestId
       });
 
-      console.log("[vaInquiry] Processed faspay virtual account inquiry with result:", JSON.stringify(result));
+      console.log(
+        "[vaInquiry] Processed faspay virtual account inquiry with result:",
+        JSON.stringify(result)
+      );
 
       if (result.responseCode.startsWith("404")) {
         return res.status(404).json(result);
@@ -74,9 +82,9 @@ export class FaspayController {
     } catch (error) {
       if (error instanceof ForbiddenError) {
         return res.status(401).json({
-            "responseCode": "4014700",
-            "responseMessage": "Unauthorized. Invalid signature."
-        })
+          responseCode: "4014700",
+          responseMessage: "Unauthorized. Invalid signature."
+        });
       }
 
       return next(error);
@@ -85,14 +93,17 @@ export class FaspayController {
 
   vaPayment = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("[vaPayment] Processing faspay virtual account payment with request:",  JSON.stringify({ 
-        method: req.method,
-        path: req.originalUrl,
-        headers: req.headers, 
-        body: req.body,
-        query: req.query,
-        params: req.params,
-      }));
+      console.log(
+        "[vaPayment] Processing faspay virtual account payment with request:",
+        JSON.stringify({
+          method: req.method,
+          path: req.originalUrl,
+          headers: req.headers,
+          body: req.body,
+          query: req.query,
+          params: req.params
+        })
+      );
 
       const payload = req.body;
       const {
@@ -116,11 +127,13 @@ export class FaspayController {
         trxDateTime,
         referenceNo,
         signature,
-        timestamp,
+        timestamp
       };
 
       const missingFields = Object.entries(requiredFields)
-        .filter(([_, value]) => value === undefined || value === null || value === "")
+        .filter(
+          ([_, value]) => value === undefined || value === null || value === ""
+        )
         .map(([key]) => key);
 
       if (missingFields.length > 0) {
@@ -150,15 +163,18 @@ export class FaspayController {
         referenceNo
       });
 
-      console.log("[vaPayment] Processed faspay virtual account payment with result:", JSON.stringify(result));
+      console.log(
+        "[vaPayment] Processed faspay virtual account payment with result:",
+        JSON.stringify(result)
+      );
 
       return res.status(200).json(result);
     } catch (error) {
       if (error instanceof ForbiddenError) {
         return res.status(401).json({
-            "responseCode": "4014700",
-            "responseMessage": "Unauthorized. Invalid signature."
-        })
+          responseCode: "4014700",
+          responseMessage: "Unauthorized. Invalid signature."
+        });
       }
 
       return next(error);

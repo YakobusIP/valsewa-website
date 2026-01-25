@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+
 import CancelBookingButton from "./bookings/CancelBookingButton";
 
 type Props = {
   onBack?: () => Promise<void>;
   isLoading?: boolean;
-}
+};
 
 const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
   return (
@@ -40,7 +41,10 @@ const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
             </span>
           </Link>
         ) : (
-          <CancelBookingButton cancelBooking={onBack} isLoadingCancelBooking={isLoading} />
+          <CancelBookingButton
+            cancelBooking={onBack}
+            isLoadingCancelBooking={isLoading}
+          />
         )}
         {/* RIGHT - Logo */}
         <figure className="w-[160px] sm:w-[200px]">

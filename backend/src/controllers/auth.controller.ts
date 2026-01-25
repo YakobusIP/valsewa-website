@@ -18,11 +18,11 @@ const PUB_ACCESS_TOKEN_SECRET =
 const PUB_REFRESH_TOKEN_SECRET =
   env.PUB_REFRESH_TOKEN_SECRET || "pub_refresh_token_secret";
 
-type TokenPayload = {
+export type TokenPayload = {
   username: string;
 };
 
-type PubTokenPayload = {
+export type PubTokenPayload = {
   id: number;
   username: string;
 };

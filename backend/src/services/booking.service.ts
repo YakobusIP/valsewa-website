@@ -166,10 +166,13 @@ export class BookingService {
     }
   };
 
-  getBookingById = async (bookingId: string): Promise<BookingResponse> => {
+  getBookingById = async (
+    bookingId: string,
+    customerId?: number
+  ): Promise<BookingResponse> => {
     try {
       const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
+        where: { id: bookingId, customerId },
         include: {
           account: {
             include: {
@@ -182,7 +185,7 @@ export class BookingService {
       });
 
       if (!booking) {
-        throw new NotFoundError(`Booking with ID ${bookingId} not found.`);
+        throw new NotFoundError(`Booking not found.`);
       }
 
       const now = new Date();
@@ -320,7 +323,10 @@ export class BookingService {
     }
   };
 
-  getPaymentById = async (paymentId: string): Promise<PaymentResponse> => {
+  getPaymentById = async (
+    paymentId: string,
+    customerId?: number
+  ): Promise<PaymentResponse> => {
     try {
       const payment = await prisma.payment.findUnique({
         where: { id: paymentId },
@@ -329,8 +335,8 @@ export class BookingService {
         }
       });
 
-      if (!payment) {
-        throw new NotFoundError(`Payment with ID ${paymentId} not found.`);
+      if (!payment || payment.booking?.customerId != customerId) {
+        throw new NotFoundError(`Payment not found.`);
       }
       return this.mapPaymentWithBookingDataToPaymentResponse(payment);
     } catch (error) {
@@ -394,18 +400,21 @@ export class BookingService {
     }
 
     const subtotalValue = mainValue + othersValue - discount;
+
     let adminFee = 0;
-    switch (paymentMethod) {
-      case PaymentMethodType.QRIS:
-        adminFee = Math.ceil(0.00705 * subtotalValue);
-        break;
+    if (subtotalValue !== 0) {
+      switch (paymentMethod) {
+        case PaymentMethodType.QRIS:
+          adminFee = Math.ceil(0.00705 * subtotalValue);
+          break;
 
-      case PaymentMethodType.VIRTUAL_ACCOUNT:
-        adminFee = 4000;
-        break;
+        case PaymentMethodType.VIRTUAL_ACCOUNT:
+          adminFee = 4000;
+          break;
 
-      default:
-        adminFee = 0;
+        default:
+          adminFee = 0;
+      }
     }
 
     const totalValue = subtotalValue + adminFee;
@@ -750,10 +759,11 @@ export class BookingService {
 
   payBooking = async (data: PayBookingRequest): Promise<PaymentResponse> => {
     try {
-      const { bookingId, voucherId, provider, paymentMethod } = data;
+      const { bookingId, customerId, voucherId, provider, paymentMethod } =
+        data;
 
       const booking = await prisma.booking.findUnique({
-        where: { id: bookingId },
+        where: { id: bookingId, customerId },
         include: {
           customer: true,
           account: true
@@ -807,6 +817,8 @@ export class BookingService {
         booking.quantity
       );
 
+      const isBookingFree = totalValue === 0;
+
       const { payment, isPaymentNew } = await prisma.$transaction(
         async (tx) => {
           await tx.$executeRaw`
@@ -825,7 +837,11 @@ export class BookingService {
               discount,
               adminFee,
               totalValue,
-              version: { increment: 1 }
+              version: { increment: 1 },
+              ...(isBookingFree && {
+                status: BookingStatus.RESERVED,
+                expiredAt: null
+              })
             }
           });
 
@@ -837,6 +853,29 @@ export class BookingService {
           });
 
           if (payment) {
+            return { payment, isPaymentNew: false };
+          }
+
+          if (isBookingFree) {
+            payment = await tx.payment.create({
+              data: {
+                bookingId: booking.id,
+                status: PaymentStatus.SUCCESS,
+                value: updatedBooking.totalValue,
+                currency: "IDR",
+                provider: provider,
+                paymentMethod: paymentMethodType,
+                bankCode: bankCode?.toString(),
+                paidAt: new Date()
+              }
+            });
+            await this.finalizeStatus(
+              tx,
+              payment,
+              updatedBooking,
+              PaymentStatus.SUCCESS,
+              new Date()
+            );
             return { payment, isPaymentNew: false };
           }
 
@@ -881,10 +920,13 @@ export class BookingService {
     }
   };
 
-  cancelBooking = async (bookingId: string): Promise<BookingResponse> => {
+  cancelBooking = async (
+    bookingId: string,
+    customerId: number
+  ): Promise<BookingResponse> => {
     try {
       let booking = await prisma.booking.findUnique({
-        where: { id: bookingId }
+        where: { id: bookingId, customerId }
       });
 
       if (!booking) throw new NotFoundError("Booking not found!");
@@ -908,14 +950,21 @@ export class BookingService {
     }
   };
 
-  verifyPayment = async (paymentId: string): Promise<PaymentResponse> => {
+  verifyPayment = async (
+    paymentId: string,
+    customerId: number
+  ): Promise<PaymentResponse> => {
     try {
       let payment = await prisma.payment.findUnique({
         where: { id: paymentId },
         include: { booking: true }
       });
 
-      if (!payment || !payment.booking)
+      if (
+        !payment ||
+        !payment.booking ||
+        payment.booking.customerId !== customerId
+      )
         throw new NotFoundError("Record not found!");
 
       if (this.isPaymentFinal(payment.status)) {
@@ -1409,7 +1458,7 @@ export class BookingService {
             accountCode: booking.account.accountCode,
             priceTierCode: booking.account.priceTierId?.toString() ?? "",
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
-            username: booking.account.nickname,
+            nickname: booking.account.nickname ?? "",
             password: booking.account.password
           }
         : undefined
@@ -1463,7 +1512,7 @@ export class BookingService {
         accountCode: booking.account.accountCode,
         priceTierCode: booking.account.priceTier.code,
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
-        username: active ? booking.account.username : undefined,
+        nickname: booking.account.nickname ?? "",
         password: active ? booking.account.password : undefined
       },
       payments: booking.payments

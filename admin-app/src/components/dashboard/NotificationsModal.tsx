@@ -24,8 +24,8 @@ import {
 import { toast } from "@/hooks/useToast";
 
 import {
-  FailedJobs,
   DeleteResetLogRequest,
+  FailedJobs,
   ResetLogs,
   UpdateResetLogRequest
 } from "@/types/account.type";

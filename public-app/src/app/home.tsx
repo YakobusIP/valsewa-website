@@ -43,7 +43,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
 
   const handleSeeMore = () => {
     setShouldScroll(true);
-  }
+  };
 
   useEffect(() => {
     if (!loading && shouldScroll) {
@@ -98,9 +98,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
             <div className="xl:mx-12 sm:mx-6 mx-4 pt-4">
               <div>
                 <HowToOrder />
-                <RecommendedSection 
-                  onSeeMore={handleSeeMore}
-                />
+                <RecommendedSection onSeeMore={handleSeeMore} />
               </div>
               <div className="mt-32">
                 <DiscoverSection

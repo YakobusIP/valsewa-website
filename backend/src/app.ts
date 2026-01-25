@@ -89,7 +89,7 @@ const options: Options = {
 
 const swaggerSpec = swaggerJSDoc(options);
 
-if (env.NODE_ENV !== 'production') {
+if (env.NODE_ENV !== "production") {
   app.use("/docs", serve, setup(swaggerSpec));
 }
 

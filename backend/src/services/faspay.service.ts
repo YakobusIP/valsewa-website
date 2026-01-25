@@ -14,15 +14,13 @@ import { env } from "../lib/env";
 export class FaspayService {
   constructor(private readonly bookingService: BookingService) {}
 
-  vaInquiry = async (
-    data: VaInquiryRequest
-  ): Promise<VaInquiryResponse> => {
+  vaInquiry = async (data: VaInquiryRequest): Promise<VaInquiryResponse> => {
     try {
       const {
         partnerServiceId,
         customerNo,
         virtualAccountNo,
-        inquiryRequestId,
+        inquiryRequestId
       } = data;
 
       const trimmedVaNo = virtualAccountNo.trim();
@@ -34,13 +32,13 @@ export class FaspayService {
       const latestPayment = await prisma.payment.findFirst({
         where: { bankAccountNo: trimmedVaNo },
         include: { booking: true },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: "desc" }
       });
 
       if (!latestPayment) {
         return {
           responseCode: "4042412",
-          responseMessage: "Payment not found",
+          responseMessage: "Payment not found"
         };
       }
 
@@ -51,7 +49,7 @@ export class FaspayService {
       if (latestPayment.status === PaymentStatus.SUCCESS) {
         return {
           responseCode: "4042414",
-          responseMessage: "Payment has been paid",
+          responseMessage: "Payment has been paid"
         };
       }
 
@@ -63,21 +61,21 @@ export class FaspayService {
       if (isExpired) {
         return {
           responseCode: "4042419",
-          responseMessage: "Payment expired",
+          responseMessage: "Payment expired"
         };
       }
 
       if (latestPayment.status !== PaymentStatus.PENDING) {
         return {
           responseCode: "4042412",
-          responseMessage: "Payment not found",
+          responseMessage: "Payment not found"
         };
       }
 
       const updatedPayment = await prisma.payment.update({
         where: { id: latestPayment.id },
         data: {
-          providerPaymentId: inquiryRequestId,
+          providerPaymentId: inquiryRequestId
         }
       });
 
@@ -94,15 +92,15 @@ export class FaspayService {
           inquiryRequestId: updatedPayment.providerPaymentId!,
           totalAmount: {
             value: latestPayment.value.toFixed(2),
-            currency: latestPayment.currency,
-          },
-        },
+            currency: latestPayment.currency
+          }
+        }
       };
     } catch (error) {
       return {
         responseCode: "5002401",
         responseMessage:
-          error instanceof Error ? error.message : "Internal server error",
+          error instanceof Error ? error.message : "Internal server error"
       };
     }
   };
@@ -122,13 +120,13 @@ export class FaspayService {
       const payment = await prisma.payment.findFirst({
         where: { bankAccountNo: virtualAccountNo.trim() },
         include: { booking: true },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: "desc" }
       });
 
       if (!payment || !payment.booking) {
         return {
           responseCode: "4042512",
-          responseMessage: "Payment not found",
+          responseMessage: "Payment not found"
         };
       }
 
@@ -139,7 +137,7 @@ export class FaspayService {
       if (payment.booking.totalValue.toFixed(2) !== paidAmount.value) {
         return {
           responseCode: "4042513",
-          responseMessage: "Invalid amount",
+          responseMessage: "Invalid amount"
         };
       }
 
