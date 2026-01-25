@@ -18,12 +18,12 @@ import { toast } from "@/hooks/useToast";
 
 import { BookingWithAccountEntity } from "@/types/booking.type";
 
+import { setAccessToken } from "@/lib/axios";
 import { calculateDaysRented, calculateTimeRemaining, cn } from "@/lib/utils";
 
 import { CopyIcon, LogOut } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { setAccessToken } from "@/lib/axios";
 
 export default function Dashboard() {
   const router = useRouter();

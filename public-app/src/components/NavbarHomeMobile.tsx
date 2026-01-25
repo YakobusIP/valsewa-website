@@ -2,17 +2,18 @@
 
 import { useEffect, useState } from "react";
 
+import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 
+import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
+
+import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import LoginPage from "./LoginPage";
 import SearchPage from "./SearchPage";
-import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { useActiveBooking } from "@/hooks/useActiveBooking";
-import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 
 const NavbarHomeMobile = () => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
@@ -30,9 +31,15 @@ const NavbarHomeMobile = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
-  const bookingReserved = booking?.find((i) => i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now());
+  const bookingReserved = booking?.find(
+    (i) =>
+      i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now()
+  );
   const accountCode = bookingReserved?.account.accountCode;
-  const rentedDays = calculateDaysRented(bookingReserved?.startAt ?? null, bookingReserved?.endAt ?? null);
+  const rentedDays = calculateDaysRented(
+    bookingReserved?.startAt ?? null,
+    bookingReserved?.endAt ?? null
+  );
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
   useEffect(() => {
@@ -46,8 +53,9 @@ const NavbarHomeMobile = () => {
 
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-        }`}
+      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
+        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+      }`}
     >
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-3 sm:px-6 lg:px-12">
         {/* LEFT */}
@@ -138,25 +146,33 @@ const NavbarHomeMobile = () => {
                   </div>
 
                   {/* Ongoing Order */}
-                  {bookingReserved && <div className="space-y-2 cursor-default">
-                    <div className="flex items-center gap-3">
-                      <ListPlus className="w-4 h-4" />
-                      <span className="font-semibold text-sm">On Going Order</span>
-                    </div>
+                  {bookingReserved && (
+                    <div className="space-y-2 cursor-default">
+                      <div className="flex items-center gap-3">
+                        <ListPlus className="w-4 h-4" />
+                        <span className="font-semibold text-sm">
+                          On Going Order
+                        </span>
+                      </div>
 
-                    {/* Order Details */}
-                    <div className="space-y-1 cursor-default px-8">
-                      <div className="text-xs font-medium text-white/70">
-                        {accountCode} (Rented {rentedDays} days)
-                      </div>
-                      <div className="text-xs font-medium text-white/70">
-                        {remainingTime} left
+                      {/* Order Details */}
+                      <div className="space-y-1 cursor-default px-8">
+                        <div className="text-xs font-medium text-white/70">
+                          {accountCode} (Rented {rentedDays} days)
+                        </div>
+                        <div className="text-xs font-medium text-white/70">
+                          {remainingTime} left
+                        </div>
                       </div>
                     </div>
-                  </div>}
+                  )}
 
                   {/* See More */}
-                  <Link href="/dashboard" className="flex items-center gap-3 w-full rounded-lg transition" onClick={() => setIsOpen(false)}>
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-3 w-full rounded-lg transition"
+                    onClick={() => setIsOpen(false)}
+                  >
                     <MoreHorizontal className="w-4 h-4" />
                     <span className="font-semibold text-sm">See More</span>
                   </Link>

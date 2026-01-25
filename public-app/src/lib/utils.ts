@@ -10,10 +10,10 @@ export function cn(...inputs: ClassValue[]) {
 
 export function getRankImageUrl(rank: string): string {
   if (!rank) return "/rank/unranked.webp";
-    const baseRank = rank.trim().split(" ")[0].toLowerCase();
-    if (baseRank === "unrated") return "/rank/unranked.webp";
-    const normalizedRank = rank;
-    return `/rank/${normalizedRank}.svg`;
+  const baseRank = rank.trim().split(" ")[0].toLowerCase();
+  if (baseRank === "unrated") return "/rank/unranked.webp";
+  const normalizedRank = rank;
+  return `/rank/${normalizedRank}.svg`;
 }
 
 export function convertHoursToDays(hours?: number | string | null) {
@@ -53,15 +53,21 @@ export function calculateVoucherDiscount(
 
 export function calculateAdminFee(
   totalValue: number,
-  paymentMethod: PAYMENT_METHOD_REQUEST | null,
+  paymentMethod: PAYMENT_METHOD_REQUEST | null
 ): number {
   if (!totalValue || !paymentMethod) return 0;
 
   if (paymentMethod === PAYMENT_METHOD_REQUEST.QRIS) {
     return Math.ceil(totalValue * 0.00705);
   }
-  
-  if ([PAYMENT_METHOD_REQUEST.VA_BNI, PAYMENT_METHOD_REQUEST.VA_PERMATA, PAYMENT_METHOD_REQUEST.VA_BRI].includes(paymentMethod)) {
+
+  if (
+    [
+      PAYMENT_METHOD_REQUEST.VA_BNI,
+      PAYMENT_METHOD_REQUEST.VA_PERMATA,
+      PAYMENT_METHOD_REQUEST.VA_BRI
+    ].includes(paymentMethod)
+  ) {
     return 4000;
   }
 
@@ -69,13 +75,13 @@ export function calculateAdminFee(
 }
 
 export function calculateTimeRemaining(endAt: Date | null): string {
-  if (!endAt) return 'N/A';
+  if (!endAt) return "N/A";
 
   const now = new Date();
   const end = new Date(endAt);
   const diffMs = end.getTime() - now.getTime();
 
-  if (diffMs <= 0) return 'Expired';
+  if (diffMs <= 0) return "Expired";
 
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
   const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
@@ -83,7 +89,10 @@ export function calculateTimeRemaining(endAt: Date | null): string {
   return `${hours}h ${minutes}m`;
 }
 
-export function calculateDaysRented(startAt: Date | null, endAt: Date | null): number {
+export function calculateDaysRented(
+  startAt: Date | null,
+  endAt: Date | null
+): number {
   if (!startAt) return 0;
   if (!endAt) return 0;
 

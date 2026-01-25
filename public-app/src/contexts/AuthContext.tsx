@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       await authService.logout();
-    } catch { }
+    } catch {}
 
     localStorage.removeItem("refreshToken");
     setAccessToken(null);

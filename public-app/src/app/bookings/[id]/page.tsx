@@ -288,7 +288,10 @@ export default function BookingDetailPage() {
                   type="button"
                   className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
                   onClick={() =>
-                    window.open("https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong", "_blank")
+                    window.open(
+                      "https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong",
+                      "_blank"
+                    )
                   }
                 >
                   Ask Our Team

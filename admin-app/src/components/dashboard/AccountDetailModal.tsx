@@ -91,15 +91,15 @@ const formSchema = z.object({
       ])
     )
     .optional(),
-  totalRentHour: z
-    .string()
-    .nonempty("Total rent duration is required"),
+  totalRentHour: z.string().nonempty("Total rent duration is required"),
   isLowRank: z.boolean().optional().default(false),
   isRecommended: z.boolean().optional().default(false)
 });
 
 type FormValues = z.infer<typeof formSchema>;
-type SubmitValues = Omit<FormValues, "totalRentHour"> & { totalRentHour: number };
+type SubmitValues = Omit<FormValues, "totalRentHour"> & {
+  totalRentHour: number;
+};
 
 const getDefaultTotalRentHour = (hours?: number | null) =>
   convertHoursToDays(hours ?? undefined) ?? "0d 0h";
@@ -1070,9 +1070,7 @@ export default function AccountDetailModal({
             <div className="sticky bottom-0 bg-background p-4 border rounded-md flex justify-between items-center gap-4 xl:col-span-3">
               <p className="text-sm">
                 Akun ini sudah pernah disewa selama{" "}
-                <b>
-                  {totalRentHourPreview}
-                </b>
+                <b>{totalRentHourPreview}</b>
               </p>
 
               <Button type="submit" className="w-fit">

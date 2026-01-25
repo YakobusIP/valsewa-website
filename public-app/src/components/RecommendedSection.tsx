@@ -16,9 +16,7 @@ type RecSectionProps = {
   onSeeMore: () => void;
 };
 
-export default function RecommendedSection({
-  onSeeMore
-}: RecSectionProps) {
+export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
   const [accounts, setAccounts] = useState<AccountEntity[]>([]);
   const [loading, setLoading] = useState(true);
 

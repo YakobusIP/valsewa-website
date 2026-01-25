@@ -10,6 +10,7 @@ import {
 } from "@/types/booking.type";
 
 import { interceptedAxios } from "@/lib/axios";
+
 import axios from "axios";
 
 const createBookingService = () => {
@@ -99,13 +100,23 @@ const createBookingService = () => {
     }
   };
 
-  const fetchBookingByCustId  = async (
-  id: string,
-  page: number = 1,
-  limit: number = 5
-  ): Promise<{ bookings: BookingWithAccountEntity[], total: number, page: number, totalPages: number }> => {
+  const fetchBookingByCustId = async (
+    id: string,
+    page: number = 1,
+    limit: number = 5
+  ): Promise<{
+    bookings: BookingWithAccountEntity[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> => {
     try {
-      const response = await interceptedAxios.get<{ bookings: BookingWithAccountEntity[], total: number, page: number, totalPages: number }>(
+      const response = await interceptedAxios.get<{
+        bookings: BookingWithAccountEntity[];
+        total: number;
+        page: number;
+        totalPages: number;
+      }>(
         `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/customers/${id}?page=${page}&limit=${limit}`
       );
       return response.data;
@@ -113,7 +124,7 @@ const createBookingService = () => {
       console.error("Error when creating booking:", error);
       throw error;
     }
-  }
+  };
 
   return {
     fetchBookingById,

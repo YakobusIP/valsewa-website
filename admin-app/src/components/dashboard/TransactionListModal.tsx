@@ -43,7 +43,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const [dateTo, setDateTo] = useState("");
   const [statistics, setStatistics] = useState<any>(null);
 
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isOverrideBookingOpen, setIsOverrideBookingOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<BookingEntity | null>(
@@ -57,11 +56,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const [availableAccounts, setAvailableAccounts] = useState<ComboboxOption[]>(
     []
   );
-
-  const [createForm, setCreateForm] = useState<CreateBookingRequest>({
-    accountCode: "",
-    totalValue: 0
-  });
 
   useEffect(() => {
     if (!open) return;
@@ -229,21 +223,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     }
   };
 
-  const handleCreateBooking = async () => {
-    try {
-      await bookingService.create(createForm);
-      setIsCreateOpen(false);
-      setCreateForm({
-        accountCode: "",
-        totalValue: 0
-      });
-      fetchBookings();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to create booking");
-    }
-  };
-
   const resetFilter = () => {
     setSearch("");
     setDatePreset(null);
@@ -369,12 +348,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
             <Button size="sm" variant="ghost" onClick={resetFilter}>
               Reset
             </Button>
-
-            <div className="ml-auto">
-              <Button onClick={() => setIsCreateOpen(true)}>
-                + Create Booking
-              </Button>
-            </div>
           </div>
 
           {/* TABLE */}
@@ -524,58 +497,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
               >
                 Save
               </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* CREATE MODAL */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create Transaction</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Account Code */}
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Account Code</label>
-              <Input
-                type="text"
-                placeholder="Enter account Code"
-                value={createForm.accountCode}
-                onChange={(e) =>
-                  setCreateForm({
-                    ...createForm,
-                    accountCode: e.target.value
-                  })
-                }
-              />
-            </div>
-
-            {/* Total Value */}
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Total Value (IDR)</label>
-              <Input
-                type="text"
-                placeholder="Enter total value"
-                value={createForm.totalValue}
-                onChange={(e) =>
-                  setCreateForm({
-                    ...createForm,
-                    totalValue: Number(e.target.value)
-                  })
-                }
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>
-                Cancel
-              </Button>
-
-              <Button onClick={handleCreateBooking}>Create Transaction</Button>
             </div>
           </div>
         </DialogContent>
