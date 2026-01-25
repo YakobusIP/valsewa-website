@@ -327,12 +327,18 @@ export default function AccountDetailPage() {
 
               {/* COL 3 — ACCOUNT INFO (row-span 2) */}
               <div className="row-span-2 flex items-center justify-end">
-                <span className="flex items-center gap-1 text-blue-400 text-xs cursor-pointer hover:text-blue-300">
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-blue-400 text-xs cursor-pointer hover:text-blue-300"
+                  onClick={() =>
+                    window.open(`https://tracker.gg/valorant/profile/riot/${encodeURIComponent(account.nickname)}`, "_blank")
+                  }
+                >
                   Account Info
                   <span className="flex items-center justify-center w-3 h-3 rounded-full bg-blue-400 text-black text-[10px] font-bold no-underline">
                     ?
                   </span>
-                </span>
+                </button>
               </div>
 
               {/* COL 2 ROW 2 — PRICE TIER + STATUS */}
@@ -630,7 +636,13 @@ export default function AccountDetailPage() {
               {/* FOOTER */}
               <div className="text-center text-xs text-neutral-400 space-y-2">
                 <p>Any Questions?</p>
-                <button className="w-full bg-neutral-700 hover:bg-neutral-600 py-2 rounded-md text-white">
+                <button
+                  type="button"
+                  className="w-full bg-neutral-700 hover:bg-neutral-600 py-2 rounded-md text-white"
+                  onClick={() =>
+                    window.open("https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong", "_blank")
+                  }
+                >
                   Ask Our Team
                 </button>
               </div>

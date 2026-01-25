@@ -1458,7 +1458,7 @@ export class BookingService {
             accountCode: booking.account.accountCode,
             priceTierCode: booking.account.priceTierId?.toString() ?? "",
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
-            username: booking.account.nickname,
+            nickname: booking.account.nickname ?? "",
             password: booking.account.password
           }
         : undefined
@@ -1512,7 +1512,7 @@ export class BookingService {
         accountCode: booking.account.accountCode,
         priceTierCode: booking.account.priceTier.code,
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
-        username: active ? booking.account.username : undefined,
+        nickname: booking.account.nickname ?? "",
         password: active ? booking.account.password : undefined
       },
       payments: booking.payments

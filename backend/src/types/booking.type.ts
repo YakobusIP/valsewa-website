@@ -84,7 +84,7 @@ export type BookingResponse = {
     accountCode: string;
     priceTierCode: string;
     thumbnailImageUrl: string;
-    username?: string;
+    nickname: string;
     password?: string;
   };
   payments?: Payment[];
