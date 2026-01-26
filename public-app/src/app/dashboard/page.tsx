@@ -87,7 +87,7 @@ export default function Dashboard() {
           <div
             className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
               isScrolled
-                ? "bg-black shadow-md shadow-black/20"
+                ? "bg-[#0F0F0F] shadow-md shadow-[#0F0F0F]"
                 : "bg-transparent"
             }`}
           >
