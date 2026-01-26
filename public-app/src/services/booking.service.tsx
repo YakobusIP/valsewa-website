@@ -11,8 +11,6 @@ import {
 
 import { interceptedAxios } from "@/lib/axios";
 
-import axios from "axios";
-
 const createBookingService = () => {
   const fetchBookingById = async (
     bookingId: string

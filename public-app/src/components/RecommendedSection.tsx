@@ -9,7 +9,6 @@ import { AccountEntity } from "@/types/account.type";
 import { cn, convertHoursToDays, getRankImageUrl } from "@/lib/utils";
 
 import Image from "next/image";
-import Link from "next/link";
 import { FaArrowRight, FaFire } from "react-icons/fa";
 
 type RecSectionProps = {
