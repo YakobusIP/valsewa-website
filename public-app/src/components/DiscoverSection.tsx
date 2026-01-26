@@ -90,7 +90,7 @@ const ranks = [
     color: "text-[#7A7A7A]",
     bgGradient: "from-[#7A7A7A]/30 to-transparent",
     price: "Rp 25k",
-    image: "/rank/iron 3.svg"
+    image: "/rank/Iron 3.svg"
   },
   {
     id: "Bronze",
@@ -98,7 +98,7 @@ const ranks = [
     color: "text-[#C69C6D]",
     bgGradient: "from-[#C69C6D]/30 to-transparent",
     price: "Rp 25k",
-    image: "/rank/bronze 3.svg"
+    image: "/rank/Bronze 3.svg"
   },
   {
     id: "Silver",
@@ -106,7 +106,7 @@ const ranks = [
     color: "text-[#A6A6A6]",
     bgGradient: "from-[#A6A6A6]/30 to-transparent",
     price: "Rp 25k",
-    image: "/rank/silver 3.svg"
+    image: "/rank/Silver 3.svg"
   },
   {
     id: "Gold",
@@ -114,7 +114,7 @@ const ranks = [
     color: "text-[#FFD166]",
     bgGradient: "from-[#FFD166]/30 to-transparent",
     price: "Rp 25k",
-    image: "/rank/gold 3.svg"
+    image: "/rank/Gold 3.svg"
   },
   {
     id: "Platinum",
@@ -122,7 +122,7 @@ const ranks = [
     color: "text-[#3CCFCF]",
     bgGradient: "from-[#3CCFCF]/30 to-transparent",
     price: "Rp 25k",
-    image: "/rank/platinum 3.svg"
+    image: "/rank/Platinum 3.svg"
   },
   {
     id: "Diamond",
@@ -130,7 +130,7 @@ const ranks = [
     color: "text-[#B983FF]",
     bgGradient: "from-[#B983FF]/30 to-transparent",
     price: "Rp 25k",
-    image: "/rank/diamond 3.svg"
+    image: "/rank/Diamond 3.svg"
   },
   {
     id: "Ascendant",
@@ -138,7 +138,7 @@ const ranks = [
     color: "text-[#2EE59D]",
     bgGradient: "from-[#2EE59D]/30 to-transparent",
     price: "Rp 25k",
-    image: "/rank/ascendant 3.svg"
+    image: "/rank/Ascendant 3.svg"
   },
   {
     id: "Immortal",
@@ -146,7 +146,7 @@ const ranks = [
     color: "text-[#FF4D6D]",
     bgGradient: "from-[#FF4D6D]/30 to-transparent",
     price: "Rp 25k",
-    image: "/rank/immortal 3.svg"
+    image: "/rank/Immortal 3.svg"
   },
   {
     id: "Radiant",
@@ -154,7 +154,7 @@ const ranks = [
     color: "text-[#FFD700]",
     bgGradient: "from-[#FFD700]/30 to-transparent",
     price: "Rp 25k",
-    image: "/rank/radiant.svg"
+    image: "/rank/Radiant.svg"
   }
 ];
 
