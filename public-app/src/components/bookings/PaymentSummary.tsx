@@ -66,8 +66,8 @@ function PaymentSummary({
   }, [paymentMethod]);
 
   const onApplyVoucher = useCallback(
-    async (voucherName: string) => {
-      if (!voucherName.trim() || isApplyingVoucher) return;
+    async (voucherName: string | null) => {
+      if (!voucherName || !voucherName.trim() || isApplyingVoucher) return;
 
       try {
         setIsApplyingVoucher(true);

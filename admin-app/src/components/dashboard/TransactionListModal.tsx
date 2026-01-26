@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input";
 import {
   BOOKING_STATUS,
   BookingEntity,
-  CreateBookingRequest,
   PaymentEntity,
   UpdateBookingRequest
 } from "@/types/booking.type";

@@ -13,13 +13,13 @@ import Link from "next/link";
 
 import LoginPage from "./LoginPage";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+import { SearchModal } from "./SearchModal";
+import { useRouter } from "next/navigation";
 
-type SearchModalProps = React.ComponentProps<"div"> & {
-  onOpenChange: (open: boolean) => void;
-};
-
-function Navbar({ onOpenChange }: SearchModalProps) {
+function Navbar() {
+  const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeBrand, setActiveBrand] = useState<
     "valsewa" | "valjubel" | "valjoki"
   >("valsewa");
@@ -28,7 +28,7 @@ function Navbar({ onOpenChange }: SearchModalProps) {
     setIsComponentOpen(true); // open login modal
   };
   const handleSearchClick = () => {
-    onOpenChange(true);
+    setIsSearchOpen(true);
   };
   const { isAuthenticated, username, customerId } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -62,6 +62,10 @@ function Navbar({ onOpenChange }: SearchModalProps) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const handleCardClick = (id: string) => {
+    router?.push(`/details/${id}`);
+  };
 
   return (
     <div
@@ -274,6 +278,14 @@ function Navbar({ onOpenChange }: SearchModalProps) {
         {/* LOGIN POPUP */}
         {isComponentOpen && (
           <LoginPage onClose={() => setIsComponentOpen(false)} />
+        )}
+
+        {isSearchOpen && (
+          <SearchModal
+            onSelectAccount={handleCardClick}
+            onOpenChange={setIsSearchOpen}
+            open
+          />
         )}
       </div>
     </div>

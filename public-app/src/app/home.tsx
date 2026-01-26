@@ -9,27 +9,19 @@ import HowToOrder from "@/components/HowToOrder";
 import NavbarHome from "@/components/NavbarHome";
 import NavbarHomeMobile from "@/components/NavbarHomeMobile";
 import RecommendedSection from "@/components/RecommendedSection";
-import { SearchModal } from "@/components/SearchModal";
 
 import { AccountEntity, CarouselSlide } from "@/types/account.type";
 
 import { useAccountController } from "@/controllers/useAccountController";
-import { useRouter } from "next/navigation";
 
 interface Props {
   initialAccount: AccountEntity[];
   initialCarousel: CarouselSlide[];
 }
 export default function Home({ initialAccount, initialCarousel }: Props) {
-  const router = useRouter();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [shouldScroll, setShouldScroll] = useState(false);
   const { accountList, loading, selectTier, selectRank } =
     useAccountController(initialAccount);
-
-  const handleCardClick = (id: string) => {
-    router?.push(`/details/${id}`);
-  };
 
   const handleSelectTier = (tierId: string, isLowTier: string) => {
     selectTier(tierId, isLowTier);
@@ -73,7 +65,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
             <Hero initialCarousel={initialCarousel} />
           </div>
           <div className="relative max-xl:hidden pt-4">
-            <NavbarHome onOpenChange={setIsSearchOpen} />
+            <NavbarHome />
           </div>
           <div className="xl:hidden">
             <NavbarHomeMobile />
@@ -142,11 +134,6 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
           </div>
         </section>
       </main>
-      <SearchModal
-        open={isSearchOpen}
-        onOpenChange={setIsSearchOpen}
-        onSelectAccount={handleCardClick}
-      />
     </Fragment>
   );
 }
