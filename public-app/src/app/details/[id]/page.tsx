@@ -225,7 +225,7 @@ export default function AccountDetailPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="relative max-lg:hidden">
-        <Navbar onOpenChange={setIsSearchOpen} />
+        <Navbar />
       </div>
       <div className="lg:hidden">
         <NavbarMobile />

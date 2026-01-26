@@ -13,20 +13,24 @@ import Link from "next/link";
 
 import LoginPage from "./LoginPage";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+import { SearchModal } from "./SearchModal";
+import { useRouter } from "next/navigation";
 
-type SearchModalProps = React.ComponentProps<"div"> & {
-  onOpenChange: (open: boolean) => void;
-};
-
-const Navbar = ({ onOpenChange }: SearchModalProps) => {
+const Navbar = () => {
+  const router = useRouter()
   const [isComponentOpen, setIsComponentOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
   };
 
   const handleSearchClick = () => {
-    onOpenChange(true);
+    setIsSearchOpen(true);
+  };
+
+    const handleCardClick = (id: string) => {
+    router?.push(`/details/${id}`);
   };
   const { isAuthenticated, username, customerId } = useAuth();
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
@@ -172,6 +176,14 @@ const Navbar = ({ onOpenChange }: SearchModalProps) => {
       {/* LOGIN POPUP */}
       {isComponentOpen && (
         <LoginPage onClose={() => setIsComponentOpen(false)} />
+      )}
+
+      {isSearchOpen && (
+        <SearchModal 
+          onSelectAccount={handleCardClick}
+          onOpenChange={setIsSearchOpen}
+          open 
+        />
       )}
     </div>
   );
