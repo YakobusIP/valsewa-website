@@ -1,161 +1,125 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+
+import { priceTierService } from "@/services/pricetier.service";
 
 import { cn } from "@/lib/utils";
 
 import Image from "next/image";
 
-// Define the data for the tiers
-const lrtiers = [
-  {
-    id: "c",
+const tierStyles: Record<
+  string,
+  { rankLetter: string; color: string; bgGradient: string }
+> = {
+  C: {
     rankLetter: "C",
     color: "text-[#C69C6D]", // Bronze/Brownish
-    bgGradient: "from-[#C69C6D]/20 to-transparent",
-    price: "Rp 25k"
+    bgGradient: "from-[#C69C6D]/20 to-transparent"
   },
-  {
-    id: "b",
+  B: {
     rankLetter: "B",
     color: "text-[#A6A6A6]", // Silver/Grey
-    bgGradient: "from-[#A6A6A6]/20 to-transparent",
-    price: "Rp 25k"
+    bgGradient: "from-[#A6A6A6]/20 to-transparent"
   },
-  {
-    id: "a",
+  A: {
     rankLetter: "A",
     color: "text-[#BD2C2C]", // Red
-    bgGradient: "from-[#BD2C2C]/20 to-transparent",
-    price: "Rp 25k"
+    bgGradient: "from-[#BD2C2C]/20 to-transparent"
   },
-  {
-    id: "s",
+  S: {
     rankLetter: "S",
     color: "text-[#3B5BDB]", // Blue
-    bgGradient: "from-[#3B5BDB]/20 to-transparent",
-    price: "Rp 25k"
+    bgGradient: "from-[#3B5BDB]/20 to-transparent"
   },
-  {
-    id: "sss",
+  SSS: {
     rankLetter: "SSS",
     color: "text-[#9146FF]", // Purple
-    bgGradient: "from-[#9146FF]/20 to-transparent",
-    price: "Rp 25k"
+    bgGradient: "from-[#9146FF]/20 to-transparent"
+  },
+  "SSS⁺": {
+    rankLetter: "SSS⁺",
+    color: "text-[#FFD700]", // Gold
+    bgGradient: "from-[#FFD700]/20 to-transparent"
+  },
+  V: {
+    rankLetter: "V",
+    color: "text-[#00CED1]", // Turquoise
+    bgGradient: "from-[#00CED1]/20 to-transparent"
   }
-];
+};
 
-const tiers = [
-  {
-    id: "c",
-    rankLetter: "C",
-    color: "text-[#C69C6D]", // Bronze/Brownish
-    bgGradient: "from-[#C69C6D]/20 to-transparent",
-    price: "Rp 25k"
-  },
-  {
-    id: "b",
-    rankLetter: "B",
-    color: "text-[#A6A6A6]", // Silver/Grey
-    bgGradient: "from-[#A6A6A6]/20 to-transparent",
-    price: "Rp 25k"
-  },
-  {
-    id: "a",
-    rankLetter: "A",
-    color: "text-[#BD2C2C]", // Red
-    bgGradient: "from-[#BD2C2C]/20 to-transparent",
-    price: "Rp 25k"
-  },
-  {
-    id: "s",
-    rankLetter: "S",
-    color: "text-[#3B5BDB]", // Blue
-    bgGradient: "from-[#3B5BDB]/20 to-transparent",
-    price: "Rp 25k"
-  },
-  {
-    id: "sss",
-    rankLetter: "SSS",
-    color: "text-[#9146FF]", // Purple
-    bgGradient: "from-[#9146FF]/20 to-transparent",
-    price: "Rp 25k"
-  }
-];
-
-const ranks = [
-  {
-    id: "Iron",
+const rankStyles: Record<
+  string,
+  { name: string; color: string; bgGradient: string; image: string }
+> = {
+  Iron: {
     name: "IRON",
     color: "text-[#7A7A7A]",
     bgGradient: "from-[#7A7A7A]/30 to-transparent",
-    price: "Rp 25k",
     image: "/rank/Iron 3.svg"
   },
-  {
-    id: "Bronze",
+  Bronze: {
     name: "BRONZE",
     color: "text-[#C69C6D]",
     bgGradient: "from-[#C69C6D]/30 to-transparent",
-    price: "Rp 25k",
     image: "/rank/Bronze 3.svg"
   },
-  {
-    id: "Silver",
+  Silver: {
     name: "SILVER",
     color: "text-[#A6A6A6]",
     bgGradient: "from-[#A6A6A6]/30 to-transparent",
-    price: "Rp 25k",
     image: "/rank/Silver 3.svg"
   },
-  {
-    id: "Gold",
+  Gold: {
     name: "GOLD",
     color: "text-[#FFD166]",
     bgGradient: "from-[#FFD166]/30 to-transparent",
-    price: "Rp 25k",
     image: "/rank/Gold 3.svg"
   },
-  {
-    id: "Platinum",
+  Platinum: {
     name: "PLATINUM",
     color: "text-[#3CCFCF]",
     bgGradient: "from-[#3CCFCF]/30 to-transparent",
-    price: "Rp 25k",
     image: "/rank/Platinum 3.svg"
   },
-  {
-    id: "Diamond",
+  Diamond: {
     name: "DIAMOND",
     color: "text-[#B983FF]",
     bgGradient: "from-[#B983FF]/30 to-transparent",
-    price: "Rp 25k",
     image: "/rank/Diamond 3.svg"
   },
-  {
-    id: "Ascendant",
+  Ascendant: {
     name: "ASCENDANT",
     color: "text-[#2EE59D]",
     bgGradient: "from-[#2EE59D]/30 to-transparent",
-    price: "Rp 25k",
     image: "/rank/Ascendant 3.svg"
   },
-  {
-    id: "Immortal",
+  Immortal: {
     name: "IMMORTAL",
     color: "text-[#FF4D6D]",
     bgGradient: "from-[#FF4D6D]/30 to-transparent",
-    price: "Rp 25k",
     image: "/rank/Immortal 3.svg"
   },
-  {
-    id: "Radiant",
+  Radiant: {
     name: "RADIANT",
     color: "text-[#FFD700]",
     bgGradient: "from-[#FFD700]/30 to-transparent",
-    price: "Rp 25k",
     image: "/rank/Radiant.svg"
   }
+};
+
+const tierDisplayOrder = ["C", "B", "A", "S", "SSS"];
+const rankDisplayOrder = [
+  "Iron",
+  "Bronze",
+  "Silver",
+  "Gold",
+  "Platinum",
+  "Diamond",
+  "Ascendant",
+  "Immortal",
+  "Radiant"
 ];
 
 type DiscoverSectionProps = {
@@ -166,12 +130,126 @@ type DiscoverSectionProps = {
 
 type FilterType = "LR-TIER" | "TIER" | "RANK";
 
+type TierData = {
+  id: string;
+  rankLetter: string;
+  color: string;
+  bgGradient: string;
+  price: string;
+};
+
+type RankData = {
+  id: string;
+  name: string;
+  color: string;
+  bgGradient: string;
+  price: string;
+  image: string;
+};
+
 export default function DiscoverSection({
   onSelectTier,
   onSelectRank,
   loading
 }: DiscoverSectionProps) {
   const [activeFilter, setActiveFilter] = useState<FilterType>("LR-TIER");
+  const [lrTiers, setLrTiers] = useState<TierData[]>([]);
+  const [tiers, setTiers] = useState<TierData[]>([]);
+  const [ranks, setRanks] = useState<RankData[]>([]);
+  const [pricesLoading, setPricesLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const pricesData = await priceTierService.fetchPublicPrices();
+
+        const lrPriceMap = new Map(
+          pricesData?.lrTiers?.map((t) => [t.id, t.price]) || []
+        );
+        const tierPriceMap = new Map(
+          pricesData?.tiers?.map((t) => [t.id, t.price]) || []
+        );
+        const rankPriceMap = new Map(
+          pricesData?.ranks?.map((r) => [r.id, r.price]) || []
+        );
+
+        const builtLrTiers: TierData[] = tierDisplayOrder
+          .filter((id) => tierStyles[id])
+          .map((id) => ({
+            id,
+            rankLetter: tierStyles[id].rankLetter,
+            color: tierStyles[id].color,
+            bgGradient: tierStyles[id].bgGradient,
+            price: lrPriceMap.get(id) || "Rp -"
+          }));
+
+        const builtTiers: TierData[] = tierDisplayOrder
+          .filter((id) => tierStyles[id])
+          .map((id) => ({
+            id,
+            rankLetter: tierStyles[id].rankLetter,
+            color: tierStyles[id].color,
+            bgGradient: tierStyles[id].bgGradient,
+            price: tierPriceMap.get(id) || "Rp -"
+          }));
+
+        const builtRanks: RankData[] = rankDisplayOrder
+          .filter((id) => rankStyles[id])
+          .map((id) => ({
+            id,
+            name: rankStyles[id].name,
+            color: rankStyles[id].color,
+            bgGradient: rankStyles[id].bgGradient,
+            image: rankStyles[id].image,
+            price: rankPriceMap.get(id) || "Rp -"
+          }));
+
+        setLrTiers(builtLrTiers);
+        setTiers(builtTiers);
+        setRanks(builtRanks);
+      } catch (error) {
+        console.error("Failed to fetch prices:", error);
+        const builtLrTiers: TierData[] = tierDisplayOrder
+          .filter((id) => tierStyles[id])
+          .map((id) => ({
+            id,
+            rankLetter: tierStyles[id].rankLetter,
+            color: tierStyles[id].color,
+            bgGradient: tierStyles[id].bgGradient,
+            price: "Rp -"
+          }));
+
+        const builtTiers: TierData[] = tierDisplayOrder
+          .filter((id) => tierStyles[id])
+          .map((id) => ({
+            id,
+            rankLetter: tierStyles[id].rankLetter,
+            color: tierStyles[id].color,
+            bgGradient: tierStyles[id].bgGradient,
+            price: "Rp -"
+          }));
+
+        const builtRanks: RankData[] = rankDisplayOrder
+          .filter((id) => rankStyles[id])
+          .map((id) => ({
+            id,
+            name: rankStyles[id].name,
+            color: rankStyles[id].color,
+            bgGradient: rankStyles[id].bgGradient,
+            image: rankStyles[id].image,
+            price: "Rp -"
+          }));
+
+        setLrTiers(builtLrTiers);
+        setTiers(builtTiers);
+        setRanks(builtRanks);
+      } finally {
+        setPricesLoading(false);
+      }
+    };
+
+    fetchPrices();
+  }, []);
 
   return (
     <section className="w-full relative z-10 -mt-8 mb-12">
@@ -229,229 +307,246 @@ export default function DiscoverSection({
           </div>
 
           {activeFilter === "LR-TIER" && (
-            <div
-              className="
-                                flex gap-4 overflow-x-auto pb-2
-                                snap-x snap-mandatory
-                                xl:grid xl:grid-cols-5
-                                xl:overflow-visible
-                            "
-            >
-              {lrtiers.map((lrtiers) => (
-                <div
-                  key={lrtiers.id}
-                  className="
-                                        group relative bg-[#111] rounded-2xl border border-[#787878]
-                                        p-5 h-[220px] flex flex-col justify-between overflow-hidden
-                                        min-w-[48%] sm:min-w-[260px] xl:min-w-0 snap-start
-                                    "
-                >
-                  {/* Available Badge */}
-                  <span className="absolute top-4 left-4 bg-[#4ade80] text-black text-[10px] font-bold px-2 py-1 rounded">
-                    Available
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory xl:grid xl:grid-cols-5 xl:overflow-visible">
+              {pricesLoading ? (
+                <div className="col-span-5 flex justify-center items-center h-[220px]">
+                  <span className="text-white/50 text-sm">
+                    Loading prices...
                   </span>
-
-                  {/* Main Content */}
-                  <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
-                    <span className="2xl:text-6xl sm:text-6xl text-2xl font-black italic text-white mr-2 tracking-tighter font-antonio">
-                      LR
-                    </span>
-                    <span
-                      className={cn(
-                        "text-5xl 2xl:text-8xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
-                        lrtiers.color
-                      )}
-                    >
-                      {lrtiers.rankLetter}
-                    </span>
-                  </div>
-
-                  {/* Background Glow */}
+                </div>
+              ) : lrTiers.length === 0 ? (
+                <div className="col-span-5 flex justify-center items-center h-[220px]">
+                  <span className="text-white/50 text-sm">
+                    No tiers available
+                  </span>
+                </div>
+              ) : (
+                lrTiers.map((lrtier) => (
                   <div
-                    className={cn(
-                      "absolute inset-0 bg-gradient-to-t opacity-10 group-hover:opacity-20 transition-opacity",
-                      lrtiers.bgGradient
-                    )}
-                  />
+                    key={lrtier.id}
+                    className="group relative bg-[#111] rounded-2xl border border-[#787878] p-5 h-[220px] flex flex-col justify-between overflow-hidden min-w-[48%] sm:min-w-[260px] xl:min-w-0 snap-start"
+                  >
+                    {/* Available Badge */}
+                    <span className="absolute top-4 left-4 bg-[#4ade80] text-black text-[10px] font-bold px-2 py-1 rounded">
+                      Available
+                    </span>
 
-                  {/* Footer */}
-                  <div className="flex items-end justify-between mt-auto relative z-10">
-                    <div className="flex flex-col">
-                      <span className="text-white/50 text-[10px] font-medium border-none underline-offset-auto">
-                        Starts From
+                    {/* Main Content */}
+                    <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
+                      <span className="2xl:text-6xl sm:text-6xl text-2xl font-black italic text-white mr-2 tracking-tighter font-antonio">
+                        LR
                       </span>
-                      <span className="text-white font-bold text-sm sm:text-lg leading-tight">
-                        {lrtiers.price}
+                      <span
+                        className={cn(
+                          "text-5xl 2xl:text-8xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
+                          lrtier.color
+                        )}
+                      >
+                        {lrtier.rankLetter}
                       </span>
                     </div>
 
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={() =>
-                        onSelectTier(
-                          lrtiers.id.toUpperCase().concat("-LRTIER"),
-                          "true"
-                        )
-                      }
+                    {/* Background Glow */}
+                    <div
                       className={cn(
-                        "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
-                        loading && "opacity-60 cursor-not-allowed"
+                        "absolute inset-0 bg-gradient-to-t opacity-10 group-hover:opacity-20 transition-opacity",
+                        lrtier.bgGradient
                       )}
-                    >
-                      {loading ? "Loading..." : "See More"}
-                    </button>
+                    />
+
+                    {/* Footer */}
+                    <div className="flex items-end justify-between mt-auto relative z-10">
+                      <div className="flex flex-col">
+                        <span className="text-white/50 text-[10px] font-medium border-none underline-offset-auto">
+                          Starts From
+                        </span>
+                        <span className="text-white font-bold text-sm sm:text-lg leading-tight">
+                          {lrtier.price}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() =>
+                          onSelectTier(lrtier.id.concat("-LRTIER"), "true")
+                        }
+                        className={cn(
+                          "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                          loading && "opacity-60 cursor-not-allowed"
+                        )}
+                      >
+                        {loading ? "Loading..." : "See More"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
           {activeFilter === "TIER" && (
-            <div
-              className="
-                                flex gap-4 overflow-x-auto pb-2
-                                snap-x snap-mandatory
-                                xl:grid xl:grid-cols-5
-                                xl:overflow-visible
-                            "
-            >
-              {tiers.map((tier) => (
-                <div
-                  key={tier.id}
-                  className="
-                                        group relative bg-[#111] rounded-2xl border border-[#787878]
-                                        p-5 h-[220px] flex flex-col justify-between overflow-hidden
-                                        min-w-[48%] sm:min-w-[260px] xl:min-w-0 snap-start
-                                    "
-                >
-                  {/* Available Badge */}
-                  <span className="absolute top-4 left-4 bg-[#4ade80] text-black text-[10px] font-bold px-2 py-1 rounded">
-                    Available
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory xl:grid xl:grid-cols-5 xl:overflow-visible">
+              {pricesLoading ? (
+                <div className="col-span-5 flex justify-center items-center h-[220px]">
+                  <span className="text-white/50 text-sm">
+                    Loading prices...
                   </span>
-
-                  {/* Main Content */}
-                  <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
-                    <span
-                      className={cn(
-                        "text-5xl 2xl:text-8xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
-                        tier.color
-                      )}
-                    >
-                      {tier.rankLetter}
-                    </span>
-                  </div>
-
-                  {/* Background Glow */}
+                </div>
+              ) : tiers.length === 0 ? (
+                <div className="col-span-5 flex justify-center items-center h-[220px]">
+                  <span className="text-white/50 text-sm">
+                    No tiers available
+                  </span>
+                </div>
+              ) : (
+                tiers.map((tier) => (
                   <div
-                    className={cn(
-                      "absolute inset-0 bg-gradient-to-t opacity-10 group-hover:opacity-20 transition-opacity",
-                      tier.bgGradient
-                    )}
-                  />
+                    key={tier.id}
+                    className="group relative bg-[#111] rounded-2xl border border-[#787878] p-5 h-[220px] flex flex-col justify-between overflow-hidden min-w-[48%] sm:min-w-[260px] xl:min-w-0 snap-start"
+                  >
+                    {/* Available Badge */}
+                    <span className="absolute top-4 left-4 bg-[#4ade80] text-black text-[10px] font-bold px-2 py-1 rounded">
+                      Available
+                    </span>
 
-                  {/* Footer */}
-                  <div className="flex items-end justify-between mt-auto relative z-10">
-                    <div className="flex flex-col">
-                      <span className="text-white/50 text-[10px] font-medium border-none underline-offset-auto">
-                        Starts From
-                      </span>
-                      <span className="text-white font-bold text-sm sm:text-lg leading-tight">
-                        {tier.price}
+                    {/* Main Content */}
+                    <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
+                      <span
+                        className={cn(
+                          "text-5xl 2xl:text-8xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
+                          tier.color
+                        )}
+                      >
+                        {tier.rankLetter}
                       </span>
                     </div>
 
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={() =>
-                        onSelectTier(tier.id.toUpperCase(), "false")
-                      }
+                    {/* Background Glow */}
+                    <div
                       className={cn(
-                        "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
-                        loading && "opacity-60 cursor-not-allowed"
+                        "absolute inset-0 bg-gradient-to-t opacity-10 group-hover:opacity-20 transition-opacity",
+                        tier.bgGradient
                       )}
-                    >
-                      {loading ? "Loading..." : "See More"}
-                    </button>
+                    />
+
+                    {/* Footer */}
+                    <div className="flex items-end justify-between mt-auto relative z-10">
+                      <div className="flex flex-col">
+                        <span className="text-white/50 text-[10px] font-medium border-none underline-offset-auto">
+                          Starts From
+                        </span>
+                        <span className="text-white font-bold text-sm sm:text-lg leading-tight">
+                          {tier.price}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => onSelectTier(tier.id, "false")}
+                        className={cn(
+                          "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                          loading && "opacity-60 cursor-not-allowed"
+                        )}
+                      >
+                        {loading ? "Loading..." : "See More"}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           )}
           {activeFilter === "RANK" && (
-            <div
-              className="
-                                flex gap-4 overflow-x-auto pb-2
-                                snap-x snap-mandatory
-                            "
-            >
-              {ranks.map((rank) => (
-                <div
-                  key={rank.id}
-                  className={cn(
-                    "relative w-[70%] sm:w-[260px] h-[220px] flex-shrink-0 rounded-2xl border border-white/10 overflow-hidden snap-start",
-                    "sm:bg-gradient-to-b sm:from-[#3a0f0f] sm:via-[#1a0505] sm:to-black"
-                  )}
-                >
-                  {/* Rank Title */}
-                  <div className="absolute top-4 left-4 z-20 text-right">
-                    <p className="text-white text-xs font-semibold tracking-wider">
-                      {rank.name}
-                    </p>
-                  </div>
-
-                  {/* Available badge */}
-                  <span className="absolute top-10 left-4 z-20 bg-[#4ade80] text-black text-[10px] font-bold px-3 py-1 rounded">
-                    Available
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+              {pricesLoading ? (
+                <div className="w-full flex justify-center items-center h-[220px]">
+                  <span className="text-white/50 text-sm">
+                    Loading prices...
                   </span>
-
-                  {/* Rank Image */}
-                  <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                    <Image
-                      src={rank.image}
-                      alt={rank.name}
-                      width={100}
-                      height={100}
-                      className="object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.35)]"
-                    />
-                  </div>
-
-                  {/* Red Glow Background */}
+                </div>
+              ) : ranks.length === 0 ? (
+                <div className="w-full flex justify-center items-center h-[220px]">
+                  <span className="text-white/50 text-sm">
+                    No ranks available
+                  </span>
+                </div>
+              ) : (
+                ranks.map((rank) => (
                   <div
+                    key={rank.id}
                     className={cn(
-                      "absolute inset-0 bg-gradient-to-t opacity-40",
-                      rank.bgGradient
+                      "relative w-[70%] sm:w-[260px] h-[220px] flex-shrink-0 rounded-2xl border border-white/10 overflow-hidden snap-start",
+                      "sm:bg-gradient-to-b sm:from-[#3a0f0f] sm:via-[#1a0505] sm:to-black"
                     )}
-                  />
-
-                  {/* Bottom Section */}
-                  <div className="absolute bottom-0 left-0 right-0 z-20 p-4 flex items-end justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-white/50 text-[10px] font-medium">
-                        Starts From
-                      </span>
-                      <span className="text-white font-bold text-sm sm:text-lg leading-tight">
-                        {rank.price}
-                      </span>
+                  >
+                    {/* Rank Title */}
+                    <div className="absolute top-4 left-4 z-20 text-right">
+                      <p className="text-white text-xs font-semibold tracking-wider">
+                        {rank.name}
+                      </p>
                     </div>
 
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={() => onSelectRank(rank.id)}
+                    {/* Available badge */}
+                    <span
                       className={cn(
-                        "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
-                        loading && "opacity-60 cursor-not-allowed"
+                        "absolute top-10 left-4 z-20  text-[10px] font-bold px-3 py-1 rounded",
+                        rank.price === "Rp -"
+                          ? "bg-[#C70515] text-white"
+                          : "bg-[#4ade80] text-black"
                       )}
                     >
-                      {loading ? "Loading..." : "See More"}
-                    </button>
-                  </div>
+                      {rank.price === "Rp -" ? "Not Available" : "Available"}
+                    </span>
 
-                  {/* Subtle border glow */}
-                  <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10" />
-                </div>
-              ))}
+                    {/* Rank Image */}
+                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+                      <Image
+                        src={rank.image}
+                        alt={rank.name}
+                        width={100}
+                        height={100}
+                        className="object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.35)]"
+                      />
+                    </div>
+
+                    {/* Red Glow Background */}
+                    <div
+                      className={cn(
+                        "absolute inset-0 bg-gradient-to-t opacity-40",
+                        rank.bgGradient
+                      )}
+                    />
+
+                    {/* Bottom Section */}
+                    <div className="absolute bottom-0 left-0 right-0 z-20 p-4 flex items-end justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-white/50 text-[10px] font-medium">
+                          Starts From
+                        </span>
+                        <span className="text-white font-bold text-sm sm:text-lg leading-tight">
+                          {rank.price}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={loading}
+                        onClick={() => onSelectRank(rank.id)}
+                        className={cn(
+                          "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+                          loading && "opacity-60 cursor-not-allowed"
+                        )}
+                      >
+                        {loading ? "Loading..." : "See More"}
+                      </button>
+                    </div>
+
+                    {/* Subtle border glow */}
+                    <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10" />
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
