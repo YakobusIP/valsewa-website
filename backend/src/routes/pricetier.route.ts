@@ -16,6 +16,7 @@ class PriceTierRouter {
   }
 
   private initializeRoutes() {
+    this.router.get("/public/prices", this.priceTierController.getPublicPrices);
     this.router.get(
       "/:tierId/price-list",
       authMiddleware,

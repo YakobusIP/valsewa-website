@@ -102,6 +102,12 @@ export class BookingController {
         throw new BadRequestError("Customer ID is required.");
       }
 
+      if (customerId !== req.customer?.id) {
+        throw new ForbiddenError(
+          "You are not authorized to access this resource."
+        );
+      }
+
       if (page < 1) {
         throw new BadRequestError("Page must be greater than 0.");
       }
