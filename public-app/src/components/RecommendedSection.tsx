@@ -94,103 +94,108 @@ export default function RecommendedSection({
             }
 
             return (
-              <div
+              <Link
                 key={account.id}
-                className={cn(
-                  "group relative h-[360px] rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.02]",
-                  "border-white/10 hover:border-white/30 bg-[#111] border-[#E8C545]",
-                  // Mobile horizontal sizing
-                  "min-w-[75%] snap-start sm:min-w-[320px] xl:min-w-0"
-                )}
+                href={`/details/${account.id}`}
+                className="cursor-pointer"
               >
-                {/* Background Image */}
-                <div className="absolute inset-0 z-0">
-                  <Image
-                    src={
-                      account.thumbnail?.imageUrl ??
-                      "/defaultPicture/default.jpg"
-                    }
-                    fill
-                    alt="Thumbnail"
-                    className="object-cover rounded-xl"
-                    unoptimized
-                  />
-                  {/* <Image
+                <div
+                  className={cn(
+                    "group relative h-[360px] rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.02]",
+                    "border-white/10 hover:border-white/30 bg-[#111] border-[#E8C545]",
+                    // Mobile horizontal sizing
+                    "min-w-[75%] snap-start sm:min-w-[320px] xl:min-w-0"
+                  )}
+                >
+                  {/* Background Image */}
+                  <div className="absolute inset-0 z-0">
+                    <Image
+                      src={
+                        account.thumbnail?.imageUrl ??
+                        "/defaultPicture/default.jpg"
+                      }
+                      fill
+                      alt="Thumbnail"
+                      className="object-cover rounded-xl"
+                      unoptimized
+                    />
+                    {/* <Image
                                         src={bgImage}
                                         alt={account.nickname}
                                         fill
                                         className="object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300"
                                     /> */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                  </div>
 
-                {/* Badges */}
-                <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
-                  <span className="bg-[#4ade80] text-black text-[10px] sm:text-xs font-bold px-3 py-1 rounded shadow-lg">
-                    Most Rented
-                  </span>
-                </div>
-
-                {/* Content */}
-                <div className="absolute bottom-0 left-0 right-0 p-5 z-20">
-                  {/* Rank Name */}
-                  <div className="flex items-center gap-2 mb-1">
-                    {/* Rank Icon if available - reusing approach from DiscoverSection or just text */}
-                    {/* Rank Icon if available */}
-                    <Image
-                      src={getRankImageUrl(account.accountRank)}
-                      alt={account.accountRank}
-                      width={24}
-                      height={24}
-                      className="object-contain" // Or w-6 h-6
-                    />
-                    <span className="text-white font-bold text-xs sm:text-sm tracking-wide uppercase">
-                      {account.accountRank} | {account.accountCode}
+                  {/* Badges */}
+                  <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+                    <span className="bg-[#4ade80] text-black text-[10px] sm:text-xs font-bold px-3 py-1 rounded shadow-lg">
+                      Most Rented
                     </span>
                   </div>
 
-                  {/* Big Letter Grade & Stats */}
-                  <div className="flex items-end mt-2 gap-8">
-                    <span className="text-5xl md:text-7xl font-black italic leading-none tracking-tighter text-white font-antonio">
-                      {letterGrade}
-                    </span>
-
-                    <div className="flex flex-col gap-2 mb-1 font-instrumentSans">
-                      <span className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1">
-                        <span className="text-white/70 text-[10px]">
-                          Skins Amount
-                        </span>
-                        <span className="text-white/70 text-[10px]">
-                          | {account.skinList?.length || 0}
-                        </span>
-                      </span>
-                      <span className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1">
-                        <span className="text-white/70 text-[10px]">
-                          Rent Count
-                        </span>
-                        <span className="text-white/70 text-[10px]">
-                          | {convertHoursToDays(account.totalRentHour)}
-                        </span>
+                  {/* Content */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5 z-20">
+                    {/* Rank Name */}
+                    <div className="flex items-center gap-2 mb-1">
+                      {/* Rank Icon if available - reusing approach from DiscoverSection or just text */}
+                      {/* Rank Icon if available */}
+                      <Image
+                        src={getRankImageUrl(account.accountRank)}
+                        alt={account.accountRank}
+                        width={24}
+                        height={24}
+                        className="object-contain" // Or w-6 h-6
+                      />
+                      <span className="text-white font-bold text-xs sm:text-sm tracking-wide uppercase">
+                        {account.accountRank} | {account.accountCode}
                       </span>
                     </div>
+
+                    {/* Big Letter Grade & Stats */}
+                    <div className="flex items-end mt-2 gap-8">
+                      <span className="text-5xl md:text-7xl font-black italic leading-none tracking-tighter text-white font-antonio">
+                        {letterGrade}
+                      </span>
+
+                      <div className="flex flex-col gap-2 mb-1 font-instrumentSans">
+                        <span className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1">
+                          <span className="text-white/70 text-[10px]">
+                            Skins Amount
+                          </span>
+                          <span className="text-white/70 text-[10px]">
+                            | {account.skinList?.length || 0}
+                          </span>
+                        </span>
+                        <span className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1">
+                          <span className="text-white/70 text-[10px]">
+                            Rent Count
+                          </span>
+                          <span className="text-white/70 text-[10px]">
+                            | {convertHoursToDays(account.totalRentHour)}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Glow Effect */}
+                  <div
+                    className={cn(
+                      "absolute inset-0 bg-gradient-to-t opacity-30 pointer-events-none",
+                      glowColor
+                    )}
+                  />
+
+                  <div
+                    className={cn(
+                      "absolute inset-0 border-2 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
+                      borderColor
+                    )}
+                  />
                 </div>
-
-                {/* Glow Effect */}
-                <div
-                  className={cn(
-                    "absolute inset-0 bg-gradient-to-t opacity-30 pointer-events-none",
-                    glowColor
-                  )}
-                />
-
-                <div
-                  className={cn(
-                    "absolute inset-0 border-2 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
-                    borderColor
-                  )}
-                />
-              </div>
+              </Link>
             );
           })}
 
