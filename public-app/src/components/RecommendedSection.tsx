@@ -10,6 +10,7 @@ import { cn, convertHoursToDays, getRankImageUrl } from "@/lib/utils";
 
 import Image from "next/image";
 import { FaArrowRight, FaFire } from "react-icons/fa";
+import Link from "next/link";
 
 type RecSectionProps = {
   onSeeMore: () => void;
