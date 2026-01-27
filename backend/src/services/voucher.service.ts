@@ -64,7 +64,7 @@ export class VoucherService {
   getActiveVouchers = async () => {
     try {
       const vouchers = await prisma.voucher.findMany({
-        where: { isValid: true }
+        where: { isValid: true, isVisible: true }
       });
 
       return vouchers;
