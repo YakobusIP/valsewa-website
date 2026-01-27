@@ -183,7 +183,15 @@ export default function PaymentSuccessPage() {
               <p>
                 If you encounter any difficulties or have questions, please
                 contact our{" "}
-                <span className="font-semibold text-yellow-300 underline">
+                <span
+                  onClick={() =>
+                    window.open(
+                      "https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong",
+                      "_blank"
+                    )
+                  }
+                  className="font-semibold text-yellow-300 underline"
+                >
                   Customer Service
                 </span>{" "}
                 team for assistance.
