@@ -1,13 +1,12 @@
 import { ApiResponseList, MessageResponse } from "@/types/api.type";
 import {
+  BookingEntity,
   CreateAdminBookingRequest,
   CreateBookingRequest,
-  UpdateBookingRequest, BookingEntity
+  UpdateBookingRequest
 } from "@/types/booking.type";
 
 import { handleAxiosError, interceptedAxios } from "@/lib/axios";
-
-
 
 const BASE_BOOKING_URL = "/api/bookings";
 

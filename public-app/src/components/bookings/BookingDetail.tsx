@@ -74,6 +74,12 @@ function BookingDetail({ booking }: BookingDetailProps) {
                 type="button"
                 className="flex items-center gap-1 text-[#2F40FF] text-xs sm:text-sm underline cursor-pointer font-semibold hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-[#2F40FF] focus:ring-offset-2 focus:ring-offset-black rounded"
                 aria-label="View account information"
+                onClick={() =>
+                  window.open(
+                    `https://tracker.gg/valorant/profile/riot/${encodeURIComponent(booking.account.nickname)}`,
+                    "_blank"
+                  )
+                }
               >
                 Account Info
                 <span className="flex items-center justify-center w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-[#2F40FF] text-black text-[8px] sm:text-[10px] font-bold no-underline">

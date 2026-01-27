@@ -23,7 +23,6 @@ import { calculateDaysRented, calculateTimeRemaining, cn } from "@/lib/utils";
 import { CopyIcon, LogOut } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { setAccessToken } from "@/lib/axios";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -83,12 +82,12 @@ export default function Dashboard() {
 
   return (
     <Fragment>
-      <main className="min-h-[100dvh] bg-[#0F0F0F] md:pb-64 pb-32">
+      <main className="min-h-[100dvh] bg-[#0F0F0F] md:pb-8 pb-4">
         <div className="container flex flex-col mx-auto p-4 xl:p-8 gap-4">
           <div
             className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
               isScrolled
-                ? "bg-black shadow-md shadow-black/20"
+                ? "bg-[#0F0F0F] shadow-md shadow-[#0F0F0F]"
                 : "bg-transparent"
             }`}
           >
@@ -136,7 +135,7 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={logout}
-              className="inline-flex text-sm lg:text-xl font-normal items-center gap-2 rounded-md bg-[#C70515] px-4 py-2 text-white font-semibold hover:bg-[#a90412] transition focus:outline-none focus:ring-2 focus:ring-[#C70515] focus:ring-offset-2 focus:ring-offset-black"
+              className="inline-flex text-sm lg:text-xl items-center gap-2 rounded-md bg-[#C70515] px-4 py-2 text-white font-semibold hover:bg-[#a90412] transition focus:outline-none focus:ring-2 focus:ring-[#C70515] focus:ring-offset-2 focus:ring-offset-black"
             >
               <LogOut className="w-5 h-5" />
               Logout
@@ -214,14 +213,14 @@ export default function Dashboard() {
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm px-12 text-nowrap">
                         <div className="relative inline-flex items-center gap-2">
-                          <span>{booking.account.username}</span>
+                          <span>{booking.account.nickname}</span>
                           <Button
                             type="button"
                             size="icon"
                             variant="ghost"
                             className="px-2"
                             onClick={() =>
-                              copyToClipboard(booking.account.username ?? "")
+                              copyToClipboard(booking.account.nickname ?? "")
                             }
                           >
                             <CopyIcon className="w-4 h-4" />

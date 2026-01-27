@@ -169,4 +169,13 @@ export class PriceTierController {
       return next(error);
     }
   };
+
+  getPublicPrices = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.priceTierService.getPublicPrices();
+      return res.json({ data });
+    } catch (error) {
+      return next(error);
+    }
+  };
 }

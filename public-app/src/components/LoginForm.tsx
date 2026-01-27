@@ -44,9 +44,9 @@ export function LoginForm({ className, onClose, ...props }: LoginFormProps) {
 
   useEffect(() => {
     if (isAuthenticated && onClose) {
-      onClose()
+      onClose();
     }
-  }, [isAuthenticated, onClose])
+  }, [isAuthenticated, onClose]);
 
   return (
     <div

@@ -2,25 +2,24 @@
 
 import { useEffect, useState } from "react";
 
+import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 
+import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
+
+import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import LoginPage from "./LoginPage";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
-import { ListPlus, MoreHorizontal, User } from "lucide-react";
-import { useActiveBooking } from "@/hooks/useActiveBooking";
-import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
+import { SearchModal } from "./SearchModal";
+import { useRouter } from "next/navigation";
 
-type SearchModalProps = React.ComponentProps<"div"> & {
-  onOpenChange: (open: boolean) => void;
-};
-
-function Navbar({
-  onOpenChange
-}: SearchModalProps) {
+function Navbar() {
+  const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeBrand, setActiveBrand] = useState<
     "valsewa" | "valjubel" | "valjoki"
   >("valsewa");
@@ -29,21 +28,27 @@ function Navbar({
     setIsComponentOpen(true); // open login modal
   };
   const handleSearchClick = () => {
-    onOpenChange(true);
+    setIsSearchOpen(true);
   };
   const { isAuthenticated, username, customerId } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
-  const bookingReserved = booking?.find((i) => i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now());
+  const bookingReserved = booking?.find(
+    (i) =>
+      i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now()
+  );
   const accountCode = bookingReserved?.account.accountCode;
-  const rentedDays = calculateDaysRented(bookingReserved?.startAt ?? null, bookingReserved?.endAt ?? null);
+  const rentedDays = calculateDaysRented(
+    bookingReserved?.startAt ?? null,
+    bookingReserved?.endAt ?? null
+  );
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
   const [, setTick] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
-      setTick(prev => prev + 1);
+      setTick((prev) => prev + 1);
     }, 60000);
 
     return () => clearInterval(interval);
@@ -58,10 +63,15 @@ function Navbar({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const handleCardClick = (id: string) => {
+    router?.push(`/details/${id}`);
+  };
+
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-        }`}
+      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
+        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+      }`}
     >
       <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between px-8 sm:px-12 xl:px-24 large:px-16">
         <div className="flex items-center gap-4 lg:gap-6 xl:gap-10 pl-4 lg:pl-6 xl:pl-8">
@@ -92,19 +102,21 @@ function Navbar({
           </div>
           {/* BRAND SWITCHER - scales down on lg, full size on xl+ */}
           <div
-            className={`relative transition-all duration-300 ${isScrolled
-              ? "opacity-0 translate-y-[-10px] pointer-events-none"
-              : "opacity-100 translate-y-0"
-              }`}
+            className={`relative transition-all duration-300 ${
+              isScrolled
+                ? "opacity-0 translate-y-[-10px] pointer-events-none"
+                : "opacity-100 translate-y-0"
+            }`}
           >
             <div className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
               {/* VALSEWA */}
               <div
                 onClick={() => setActiveBrand("valsewa")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valsewa"
-                  ? "bg-black shadow-md"
-                  : "hover:bg-white/10"
-                  }`}
+                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
+                  activeBrand === "valsewa"
+                    ? "bg-black shadow-md"
+                    : "hover:bg-white/10"
+                }`}
               >
                 <Image
                   src="/header/VALSEWA.png"
@@ -118,10 +130,11 @@ function Navbar({
               {/* VALJUBEL */}
               <div
                 onClick={() => setActiveBrand("valjubel")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjubel"
-                  ? "bg-black shadow-md"
-                  : "hover:bg-white/10"
-                  }`}
+                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
+                  activeBrand === "valjubel"
+                    ? "bg-black shadow-md"
+                    : "hover:bg-white/10"
+                }`}
               >
                 <Image
                   src="/header/VALJUBEL.png"
@@ -135,10 +148,11 @@ function Navbar({
               {/* VALJOKI */}
               <div
                 onClick={() => setActiveBrand("valjoki")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjoki"
-                  ? "bg-black shadow-md"
-                  : "hover:bg-white/10"
-                  }`}
+                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
+                  activeBrand === "valjoki"
+                    ? "bg-black shadow-md"
+                    : "hover:bg-white/10"
+                }`}
               >
                 <Image
                   src="/header/VALJOKI.png"
@@ -228,25 +242,30 @@ function Navbar({
                   </div>
 
                   {/* Ongoing Order */}
-                  {bookingReserved && <div className="space-y-2 cursor-default">
-                    <div className="flex items-center gap-3">
-                      <ListPlus className="w-5 h-5" />
-                      <span className="font-semibold">On Going Order</span>
-                    </div>
+                  {bookingReserved && (
+                    <div className="space-y-2 cursor-default">
+                      <div className="flex items-center gap-3">
+                        <ListPlus className="w-5 h-5" />
+                        <span className="font-semibold">On Going Order</span>
+                      </div>
 
-                    {/* Order Details */}
-                    <div className="space-y-1 cursor-default px-8">
-                      <div className="text-sm font-medium text-white/70">
-                        {accountCode} (Rented {rentedDays} days)
-                      </div>
-                      <div className="text-sm font-medium text-white/70">
-                        {remainingTime} left
+                      {/* Order Details */}
+                      <div className="space-y-1 cursor-default px-8">
+                        <div className="text-sm font-medium text-white/70">
+                          {accountCode} (Rented {rentedDays} days)
+                        </div>
+                        <div className="text-sm font-medium text-white/70">
+                          {remainingTime} left
+                        </div>
                       </div>
                     </div>
-                  </div>}
+                  )}
 
                   {/* See More */}
-                  <Link href="/dashboard" className="flex items-center gap-3 w-full rounded-lg transition">
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-3 w-full rounded-lg transition"
+                  >
                     <MoreHorizontal className="w-5 h-5" />
                     <span className="font-semibold">See More</span>
                   </Link>
@@ -260,9 +279,17 @@ function Navbar({
         {isComponentOpen && (
           <LoginPage onClose={() => setIsComponentOpen(false)} />
         )}
+
+        {isSearchOpen && (
+          <SearchModal
+            onSelectAccount={handleCardClick}
+            onOpenChange={setIsSearchOpen}
+            open
+          />
+        )}
       </div>
     </div>
   );
-};
+}
 
 export default Navbar;

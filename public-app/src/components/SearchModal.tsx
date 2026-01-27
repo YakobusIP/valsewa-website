@@ -47,47 +47,47 @@ const RANKS = [
   {
     id: "Iron",
     name: "IRON",
-    image: "/rank/iron 3.svg"
+    image: "/rank/Iron 3.svg"
   },
   {
     id: "Bronze",
     name: "BRONZE",
-    image: "/rank/bronze 3.svg"
+    image: "/rank/Bronze 3.svg"
   },
   {
     id: "Silver",
     name: "SILVER",
-    image: "/rank/silver 3.svg"
+    image: "/rank/Silver 3.svg"
   },
   {
     id: "Gold",
     name: "GOLD",
-    image: "/rank/gold 3.svg"
+    image: "/rank/Gold 3.svg"
   },
   {
     id: "Platinum",
     name: "PLATINUM",
-    image: "/rank/platinum 3.svg"
+    image: "/rank/Platinum 3.svg"
   },
   {
     id: "Diamond",
     name: "DIAMOND",
-    image: "/rank/diamond 3.svg"
+    image: "/rank/Diamond 3.svg"
   },
   {
     id: "Ascendant",
     name: "ASCENDANT",
-    image: "/rank/ascendant 3.svg"
+    image: "/rank/Ascendant 3.svg"
   },
   {
     id: "Immortal",
     name: "IMMORTAL",
-    image: "/rank/immortal 3.svg"
+    image: "/rank/Immortal 3.svg"
   },
   {
     id: "Radiant",
     name: "RADIANT",
-    image: "/rank/radiant.svg"
+    image: "/rank/Radiant.svg"
   }
 ];
 

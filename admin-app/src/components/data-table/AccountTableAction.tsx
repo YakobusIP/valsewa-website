@@ -1,7 +1,7 @@
 import { memo, useState } from "react";
 
-import AddBookingModal from "@/components/dashboard/AddBookingModal";
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
+import AddBookingModal from "@/components/dashboard/AddBookingModal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

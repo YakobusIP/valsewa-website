@@ -282,4 +282,114 @@ export class PriceTierService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  getPublicPrices = async () => {
+    try {
+      const priceTiers = await prisma.priceTier.findMany({
+        where: {
+          code: {
+            not: { startsWith: "LR-" }
+          }
+        },
+        include: {
+          priceList: true
+        }
+      });
+
+      const formatPrice = (price: number): string => {
+        const inK = Math.floor(price / 1000);
+        return `Rp ${inK}k`;
+      };
+
+      const lrTiers: { id: string; price: string }[] = [];
+      const normalTiers: { id: string; price: string }[] = [];
+
+      for (const tier of priceTiers) {
+        if (tier.priceList.length === 0) continue;
+
+        const minNormalPrice = Math.min(
+          ...tier.priceList.map((p) => p.normalPrice)
+        );
+        const minLowPrice = Math.min(...tier.priceList.map((p) => p.lowPrice));
+
+        normalTiers.push({
+          id: tier.code,
+          price: formatPrice(minNormalPrice)
+        });
+
+        lrTiers.push({
+          id: tier.code,
+          price: formatPrice(minLowPrice)
+        });
+      }
+
+      const rankBases = [
+        "Iron",
+        "Bronze",
+        "Silver",
+        "Gold",
+        "Platinum",
+        "Diamond",
+        "Ascendant",
+        "Immortal",
+        "Radiant"
+      ];
+
+      const ranks: { id: string; price: string }[] = [];
+
+      for (const rankBase of rankBases) {
+        const accounts = await prisma.account.findMany({
+          where: {
+            OR: [
+              { accountRank: { startsWith: `${rankBase} ` } },
+              { accountRank: rankBase }
+            ],
+            availabilityStatus: "AVAILABLE"
+          },
+          include: {
+            priceTier: {
+              include: {
+                priceList: true
+              }
+            }
+          }
+        });
+
+        if (accounts.length === 0) {
+          continue;
+        }
+
+        let minPrice = Infinity;
+
+        for (const account of accounts) {
+          const priceList = account.priceTier.priceList;
+          if (priceList.length === 0) continue;
+
+          const prices = priceList.map((p) =>
+            account.isLowRank ? p.lowPrice : p.normalPrice
+          );
+          const accountMinPrice = Math.min(...prices);
+
+          if (accountMinPrice < minPrice) {
+            minPrice = accountMinPrice;
+          }
+        }
+
+        if (minPrice !== Infinity) {
+          ranks.push({
+            id: rankBase,
+            price: formatPrice(minPrice)
+          });
+        }
+      }
+
+      return {
+        lrTiers,
+        tiers: normalTiers,
+        ranks
+      };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
 }

@@ -13,6 +13,7 @@ import PaymentMethods from "@/components/bookings/PaymentMethods";
 import PaymentSummary from "@/components/bookings/PaymentSummary";
 import ProgressStepper from "@/components/bookings/ProgressStepper";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 import {
@@ -49,10 +50,7 @@ function BookingStatusView({ booking }: { booking: BookingWithAccountEntity }) {
 
   return (
     <div className="flex flex-col items-center justify-center h-full gap-6 text-center">
-      <div
-        role="img"
-        aria-label={statusLabel}
-      >
+      <div role="img" aria-label={statusLabel}>
         <XIcon className="w-16 h-16 p-2 text-white bg-red-600 rounded-full" />
       </div>
 
@@ -66,9 +64,7 @@ function BookingStatusView({ booking }: { booking: BookingWithAccountEntity }) {
       </h1>
 
       <button
-        onClick={() =>
-          router.push(`/details/${booking.accountId}`)
-        }
+        onClick={() => router.push(`/details/${booking.accountId}`)}
         className="mt-4 px-6 py-3 text-base sm:text-lg font-semibold rounded bg-neutral-700 hover:bg-neutral-600 transition"
       >
         Back to Account
@@ -84,11 +80,34 @@ export default function BookingDetailPage() {
 
   const [booking, setBooking] = useState<BookingWithAccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
-  const [paymentMethod, setPaymentMethod] =
-    useState<PAYMENT_METHOD_REQUEST>(PAYMENT_METHOD_REQUEST.QRIS);
+  const [paymentMethod, setPaymentMethod] = useState<PAYMENT_METHOD_REQUEST>(
+    PAYMENT_METHOD_REQUEST.QRIS
+  );
   const [voucher, setVoucher] = useState<VoucherEntity | null>(null);
   const [isLoadingCancelBooking, setIsLoadingCancelBooking] = useState(false);
+  const auth = useAuth();
+
   const { handleAsyncError } = useErrorHandler();
+
+  const discount = useMemo(() => {
+    if (!booking) return 0;
+    return calculateVoucherDiscount(voucher, booking.mainValue);
+  }, [booking, voucher]);
+
+  const totalPayment = useMemo(() => {
+    if (!booking) return 0;
+    return booking.totalValue - discount;
+  }, [booking, discount]);
+
+  const isBookingFree = booking && totalPayment === 0;
+
+  const isFailed =
+    booking &&
+    [
+      BOOKING_STATUS.CANCELLED,
+      BOOKING_STATUS.EXPIRED,
+      BOOKING_STATUS.FAILED
+    ].includes(booking.status);
 
   const fetchVoucher = useCallback(
     async (voucherName: string): Promise<VoucherEntity | null> => {
@@ -126,8 +145,10 @@ export default function BookingDetailPage() {
       const payment = await bookingService.payBooking({
         bookingId: id!,
         voucherId: voucher?.id,
-        provider: PROVIDER.FASPAY,
-        paymentMethod: paymentMethod
+        provider: isBookingFree ? PROVIDER.MANUAL : PROVIDER.FASPAY,
+        paymentMethod: isBookingFree
+          ? PAYMENT_METHOD_REQUEST.MANUAL
+          : paymentMethod
       });
 
       if (payment) {
@@ -136,27 +157,24 @@ export default function BookingDetailPage() {
     } catch (error) {
       handleAsyncError(error, "Payment failed", "Payment failed");
     }
-  }, [booking, paymentMethod, voucher, id, router, handleAsyncError]);
-
-  const discount = useMemo(() => {
-    if (!booking) return 0;
-    return calculateVoucherDiscount(voucher, booking.mainValue);
-  }, [booking, voucher]);
-
-  const totalPayment = useMemo(() => {
-    if (!booking) return 0;
-    return booking.totalValue - discount;
-  }, [booking, discount]);
-
-  const isFailed = booking && (
-    [
-      BOOKING_STATUS.CANCELLED,
-      BOOKING_STATUS.EXPIRED,
-      BOOKING_STATUS.FAILED
-    ].includes(booking.status));
+  }, [
+    booking,
+    paymentMethod,
+    id,
+    voucher?.id,
+    isBookingFree,
+    router,
+    handleAsyncError
+  ]);
 
   useEffect(() => {
     if (!id) return;
+
+    if (!auth || !auth.isAuthChecked) return;
+
+    if (!auth.isAuthenticated) {
+      router.push("/");
+    }
 
     bookingService
       .fetchBookingById(id)
@@ -168,7 +186,7 @@ export default function BookingDetailPage() {
         setBooking(null);
       })
       .finally(() => setLoading(false));
-  }, [id, handleAsyncError]);
+  }, [id, handleAsyncError, auth, router]);
 
   if (loading) {
     return <LoadingState />;
@@ -186,7 +204,10 @@ export default function BookingDetailPage() {
         <Navbar />
       </div>
       <div className="lg:hidden">
-        <NavbarMobile onBack={handleCancelBooking} isLoading={isLoadingCancelBooking} />
+        <NavbarMobile
+          onBack={handleCancelBooking}
+          isLoading={isLoadingCancelBooking}
+        />
       </div>
 
       <div
@@ -205,7 +226,7 @@ export default function BookingDetailPage() {
               isLoadingCancelBooking={isLoadingCancelBooking}
             />
 
-            {(booking && booking.expiredAt) && (
+            {booking && booking.expiredAt && (
               <PaymentCountdown expiredAt={booking.expiredAt} />
             )}
 
@@ -260,12 +281,18 @@ export default function BookingDetailPage() {
                 >
                   {loading
                     ? "Loading..."
-                    : `IDR ${totalPayment.toLocaleString()} | Rent Now`}
+                    : `${isBookingFree ? "Free" : "IDR " + totalPayment.toLocaleString()} | Rent Now`}
                 </button>
                 <p className="text-xs sm:text-sm">Any Questions?</p>
                 <button
                   type="button"
                   className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
+                  onClick={() =>
+                    window.open(
+                      "https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong",
+                      "_blank"
+                    )
+                  }
                 >
                   Ask Our Team
                 </button>

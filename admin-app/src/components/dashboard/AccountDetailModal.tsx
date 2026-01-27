@@ -91,15 +91,15 @@ const formSchema = z.object({
       ])
     )
     .optional(),
-  totalRentHour: z
-    .string()
-    .nonempty("Total rent duration is required"),
+  totalRentHour: z.string().nonempty("Total rent duration is required"),
   isLowRank: z.boolean().optional().default(false),
   isRecommended: z.boolean().optional().default(false)
 });
 
 type FormValues = z.infer<typeof formSchema>;
-type SubmitValues = Omit<FormValues, "totalRentHour"> & { totalRentHour: number };
+type SubmitValues = Omit<FormValues, "totalRentHour"> & {
+  totalRentHour: number;
+};
 
 const getDefaultTotalRentHour = (hours?: number | null) =>
   convertHoursToDays(hours ?? undefined) ?? "0d 0h";
@@ -575,8 +575,8 @@ export default function AccountDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full xl:w-3/5 overflow-y-auto max-h-[100dvh]">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] w-full flex-col xl:w-3/5">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>
             {mode === "add" ? "Add New Account" : "Edit Account"}
           </DialogTitle>
@@ -587,11 +587,12 @@ export default function AccountDetailModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit, handleError)}
-            className="grid grid-cols-1 xl:grid-cols-3 gap-4 p-4"
-          >
+        <div className="flex-1 overflow-y-auto">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit, handleError)}
+              className="grid grid-cols-1 xl:grid-cols-3 gap-4 p-4"
+            >
             <div className="flex flex-col col-span-1 xl:col-span-3 gap-2">
               <p className="font-semibold">Account Details</p>
               <hr />
@@ -1070,9 +1071,7 @@ export default function AccountDetailModal({
             <div className="sticky bottom-0 bg-background p-4 border rounded-md flex justify-between items-center gap-4 xl:col-span-3">
               <p className="text-sm">
                 Akun ini sudah pernah disewa selama{" "}
-                <b>
-                  {totalRentHourPreview}
-                </b>
+                <b>{totalRentHourPreview}</b>
               </p>
 
               <Button type="submit" className="w-fit">
@@ -1082,8 +1081,9 @@ export default function AccountDetailModal({
                 Submit
               </Button>
             </div>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

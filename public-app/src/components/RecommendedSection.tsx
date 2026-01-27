@@ -9,16 +9,13 @@ import { AccountEntity } from "@/types/account.type";
 import { cn, convertHoursToDays, getRankImageUrl } from "@/lib/utils";
 
 import Image from "next/image";
-import Link from "next/link";
 import { FaArrowRight, FaFire } from "react-icons/fa";
 
 type RecSectionProps = {
   onSeeMore: () => void;
 };
 
-export default function RecommendedSection({
-  onSeeMore
-}: RecSectionProps) {
+export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
   const [accounts, setAccounts] = useState<AccountEntity[]>([]);
   const [loading, setLoading] = useState(true);
 

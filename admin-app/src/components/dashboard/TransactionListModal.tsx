@@ -12,20 +12,17 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
-import { AccountEntity } from "@/types/account.type";
 import {
   BOOKING_STATUS,
   BookingEntity,
-  CreateBookingRequest,
   PaymentEntity,
   UpdateBookingRequest
 } from "@/types/booking.type";
 
-import { SelectTrigger } from "@radix-ui/react-select";
 import { format } from "date-fns";
 
+import { Combobox, ComboboxOption } from "../ui/combobox";
 import { Label } from "../ui/label";
-import { Select, SelectContent, SelectItem, SelectValue } from "../ui/select";
 import TransactionStatisticsGrid from "./TransactionStatisticGrid";
 
 type Props = {
@@ -45,7 +42,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const [dateTo, setDateTo] = useState("");
   const [statistics, setStatistics] = useState<any>(null);
 
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isOverrideBookingOpen, setIsOverrideBookingOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<BookingEntity | null>(
@@ -53,15 +49,12 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   );
 
   const [editTotalValue, setEditTotalValue] = useState<number>(0);
-  const [accountOverrideValue, setAccountOverrideValue] = useState<number>(0);
-  const [availableAccounts, setAvailableAccounts] = useState<AccountEntity[]>(
+  const [accountOverrideValue, setAccountOverrideValue] = useState<
+    string | null
+  >(null);
+  const [availableAccounts, setAvailableAccounts] = useState<ComboboxOption[]>(
     []
   );
-
-  const [createForm, setCreateForm] = useState<CreateBookingRequest>({
-    accountCode: "",
-    totalValue: 0
-  });
 
   useEffect(() => {
     if (!open) return;
@@ -192,13 +185,18 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const handleOpenOverrideBooking = async (booking: BookingEntity) => {
     try {
       setSelectedBooking(booking);
-      setAccountOverrideValue(0);
+      setAccountOverrideValue(null);
 
       const accounts = await accountService.fetchAvailableAccounts(
         booking.startAt!,
         booking.endAt!
       );
-      setAvailableAccounts(accounts);
+      setAvailableAccounts(
+        accounts.map((acc) => ({
+          key: String(acc.id),
+          label: acc.accountCode
+        }))
+      );
       setIsOverrideBookingOpen(true);
     } catch (err) {
       console.error(err);
@@ -212,7 +210,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     try {
       await bookingService.overrideBooking(
         selectedBooking.id,
-        accountOverrideValue
+        Number(accountOverrideValue)
       );
 
       setIsOverrideBookingOpen(false);
@@ -221,21 +219,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     } catch (err) {
       console.error(err);
       alert("Failed to override booking");
-    }
-  };
-
-  const handleCreateBooking = async () => {
-    try {
-      await bookingService.create(createForm);
-      setIsCreateOpen(false);
-      setCreateForm({
-        accountCode: "",
-        totalValue: 0
-      });
-      fetchBookings();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to create booking");
     }
   };
 
@@ -250,9 +233,9 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     v == null
       ? "-"
       : new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR"
-      }).format(v);
+          style: "currency",
+          currency: "IDR"
+        }).format(v);
 
   const formatDateTime = (d: Date | string | null) =>
     d ? new Date(d).toLocaleString("id-ID") : "-";
@@ -364,12 +347,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
             <Button size="sm" variant="ghost" onClick={resetFilter}>
               Reset
             </Button>
-
-            <div className="ml-auto">
-              <Button onClick={() => setIsCreateOpen(true)}>
-                + Create Booking
-              </Button>
-            </div>
           </div>
 
           {/* TABLE */}
@@ -398,7 +375,9 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                     <td className="px-3 py-2 font-mono text-xs">{b.id}</td>
                     <td className="px-3 py-2">{formatDateTime(b.createdAt)}</td>
                     <td className="px-3 py-2">{b.customer?.username ?? "-"}</td>
-                    <td className="px-3 py-2">{b.account?.accountCode ?? "-"}</td>
+                    <td className="px-3 py-2">
+                      {b.account?.accountCode ?? "-"}
+                    </td>
                     <td className="px-3 py-2">{formatCurrency(b.mainValue)}</td>
                     <td className="px-3 py-2">
                       {formatCurrency(b.othersValue)}
@@ -421,8 +400,8 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                     <td className="px-3 py-2 text-xs text-muted-foreground">
                       {getLatestPayment(b.payments)?.paidAt
                         ? renderPaymentStatus(
-                          getLatestPayment(b.payments)!.status
-                        )
+                            getLatestPayment(b.payments)!.status
+                          )
                         : "-"}
                     </td>
                     <td className="px-3 py-2">
@@ -491,24 +470,17 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
           <div className="space-y-4">
             <div className="flex flex-col gap-2">
               <Label>Override booking to account</Label>
-              <Select
-                value={accountOverrideValue ? String(accountOverrideValue) : ""}
-                onValueChange={(value) =>
-                  setAccountOverrideValue(Number(value))
-                }
-              >
-                <SelectTrigger className="text-left border border-gray-300 px-2 py-1">
-                  <SelectValue placeholder="Select account" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {availableAccounts.map((acc) => (
-                    <SelectItem key={acc.id} value={String(acc.id)}>
-                      {acc.accountCode}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                label="Available accounts"
+                options={availableAccounts}
+                selected={availableAccounts.find(
+                  (acc) => acc.key === accountOverrideValue
+                )}
+                onSelect={(value) => {
+                  setAccountOverrideValue(value.key);
+                }}
+                disabled={!availableAccounts || availableAccounts.length === 0}
+              />
             </div>
 
             <div className="flex justify-end gap-2">
@@ -524,58 +496,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
               >
                 Save
               </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* CREATE MODAL */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create Transaction</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Account Code */}
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Account Code</label>
-              <Input
-                type="text"
-                placeholder="Enter account Code"
-                value={createForm.accountCode}
-                onChange={(e) =>
-                  setCreateForm({
-                    ...createForm,
-                    accountCode: e.target.value
-                  })
-                }
-              />
-            </div>
-
-            {/* Total Value */}
-            <div className="space-y-1">
-              <label className="text-sm font-medium">Total Value (IDR)</label>
-              <Input
-                type="text"
-                placeholder="Enter total value"
-                value={createForm.totalValue}
-                onChange={(e) =>
-                  setCreateForm({
-                    ...createForm,
-                    totalValue: Number(e.target.value)
-                  })
-                }
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" onClick={() => setIsCreateOpen(false)}>
-                Cancel
-              </Button>
-
-              <Button onClick={handleCreateBooking}>Create Transaction</Button>
             </div>
           </div>
         </DialogContent>

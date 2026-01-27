@@ -61,6 +61,19 @@ export class VoucherService {
     }
   };
 
+  getActiveVouchers = async () => {
+    try {
+      const vouchers = await prisma.voucher.findMany({
+        where: { isValid: true }
+      });
+
+      return vouchers;
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   getActiveVoucherByVoucherName = async (voucherName: string) => {
     try {
       const voucher = await prisma.voucher.findUnique({

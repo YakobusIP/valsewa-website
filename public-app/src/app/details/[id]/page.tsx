@@ -5,8 +5,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchAccountById } from "@/services/accountService";
 import { bookingService } from "@/services/booking.service";
 
+import LoginPage from "@/components/LoginPage";
 import Navbar from "@/components/Navbar";
 import NavbarMobile from "@/components/NavbarMobile";
+import { SearchModal } from "@/components/SearchModal";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -27,11 +29,8 @@ import { getRankImageUrl } from "@/lib/utils";
 import { isAxiosError } from "axios";
 import { ChevronDown, Search } from "lucide-react";
 import Image from "next/image";
-import { notFound, useParams, useRouter } from "next/navigation";
-
-import LoginPage from "@/components/LoginPage"
-import { SearchModal } from "@/components/SearchModal";
 import Link from "next/link";
+import { notFound, useParams, useRouter } from "next/navigation";
 
 export default function AccountDetailPage() {
   const router = useRouter();
@@ -55,8 +54,8 @@ export default function AccountDetailPage() {
   const [bookDate, setBookDate] = useState<Date | null>(new Date());
   const [startTime, setStartTime] = useState<string>(""); // "09:00"
   const [endTime, setEndTime] = useState<string>("");
-  const { isAuthenticated, customerId } = useAuth()
-  const [showLogin, setShowLogin] = useState(false)
+  const { isAuthenticated, customerId } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleCardClick = (id: string) => {
@@ -83,12 +82,12 @@ export default function AccountDetailPage() {
     result.setHours(hours, minutes, 0, 0);
 
     return result;
-  }
+  };
 
   const onSubmit = async () => {
     if (!isAuthenticated) {
-      setShowLogin(true)
-      return
+      setShowLogin(true);
+      return;
     }
 
     if (!selectedDuration) return;
@@ -100,9 +99,7 @@ export default function AccountDetailPage() {
         accountId: parseInt(id),
         priceListId: selectedDuration.value.id,
         quantity: qty,
-        ...((mode === "BOOK" && startAt)
-          ? { startAt }
-          : {}),
+        ...(mode === "BOOK" && startAt ? { startAt } : {})
       });
 
       if (booking) {
@@ -228,7 +225,7 @@ export default function AccountDetailPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <div className="relative max-lg:hidden">
-        <Navbar onOpenChange={setIsSearchOpen} />
+        <Navbar />
       </div>
       <div className="lg:hidden">
         <NavbarMobile />
@@ -324,12 +321,21 @@ export default function AccountDetailPage() {
 
               {/* COL 3 — ACCOUNT INFO (row-span 2) */}
               <div className="row-span-2 flex items-center justify-end">
-                <span className="flex items-center gap-1 text-blue-400 text-xs cursor-pointer hover:text-blue-300">
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-blue-400 text-xs cursor-pointer hover:text-blue-300"
+                  onClick={() =>
+                    window.open(
+                      `https://tracker.gg/valorant/profile/riot/${encodeURIComponent(account.nickname)}`,
+                      "_blank"
+                    )
+                  }
+                >
                   Account Info
                   <span className="flex items-center justify-center w-3 h-3 rounded-full bg-blue-400 text-black text-[10px] font-bold no-underline">
                     ?
                   </span>
-                </span>
+                </button>
               </div>
 
               {/* COL 2 ROW 2 — PRICE TIER + STATUS */}
@@ -366,8 +372,9 @@ export default function AccountDetailPage() {
                     <p className="font-semibold">Skin List</p>
 
                     <div
-                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${showSkins ? "rotate-180" : "rotate-0"
-                        }`}
+                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${
+                        showSkins ? "rotate-180" : "rotate-0"
+                      }`}
                     >
                       <ChevronDown className="w-3 h-3 text-white" />
                     </div>
@@ -420,9 +427,10 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("RENT")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${mode === "RENT"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${
+                      mode === "RENT"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   RENT NOW
@@ -431,9 +439,10 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("BOOK")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${mode === "BOOK"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${
+                      mode === "BOOK"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   BOOK FOR LATER
@@ -456,9 +465,10 @@ export default function AccountDetailPage() {
                           })
                         }
                         className={`border rounded-md py-2 cursor-pointer transition
-                          ${isActive
-                            ? "border-red-600 bg-red-600/10"
-                            : "border-neutral-700 hover:border-red-600"
+                          ${
+                            isActive
+                              ? "border-red-600 bg-red-600/10"
+                              : "border-neutral-700 hover:border-red-600"
                           }`}
                       >
                         <p className="text-xs font-semibold uppercase">
@@ -491,9 +501,10 @@ export default function AccountDetailPage() {
                             })
                           }
                           className={`border rounded-md py-2 cursor-pointer transition
-                            ${isActive
-                              ? "border-red-600 bg-red-600/10"
-                              : "border-neutral-700 hover:border-red-600"
+                            ${
+                              isActive
+                                ? "border-red-600 bg-red-600/10"
+                                : "border-neutral-700 hover:border-red-600"
                             }`}
                         >
                           <p className="text-xs font-semibold uppercase">
@@ -601,9 +612,10 @@ export default function AccountDetailPage() {
                 onClick={onSubmit}
                 disabled={isDisabled || submitting}
                 className={`w-full font-semibold py-3 rounded-md transition
-                  ${isDisabled || submitting
-                    ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-                    : "bg-red-600 hover:bg-red-700 text-white"
+                  ${
+                    isDisabled || submitting
+                      ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700 text-white"
                   }`}
               >
                 {submitting && <>Loading...</>}
@@ -627,7 +639,16 @@ export default function AccountDetailPage() {
               {/* FOOTER */}
               <div className="text-center text-xs text-neutral-400 space-y-2">
                 <p>Any Questions?</p>
-                <button className="w-full bg-neutral-700 hover:bg-neutral-600 py-2 rounded-md text-white">
+                <button
+                  type="button"
+                  className="w-full bg-neutral-700 hover:bg-neutral-600 py-2 rounded-md text-white"
+                  onClick={() =>
+                    window.open(
+                      "https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong",
+                      "_blank"
+                    )
+                  }
+                >
                   Ask Our Team
                 </button>
               </div>
@@ -635,9 +656,7 @@ export default function AccountDetailPage() {
           </div>
         </div>
       </div>
-      {showLogin && (
-        <LoginPage onClose={() => setShowLogin(false)} />
-      )}
+      {showLogin && <LoginPage onClose={() => setShowLogin(false)} />}
 
       <SearchModal
         open={isSearchOpen}

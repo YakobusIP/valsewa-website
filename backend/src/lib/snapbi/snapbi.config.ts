@@ -51,7 +51,8 @@ export default class SnapBiConfig {
 
     this.snapBiChannelId = env.SNAP_BI_CHANNEL_ID || "snap_bi_channel_id";
 
-    this.snapBiPublicKey = env.SNAP_BI_PUBLIC_KEY.replace(/\\n/g, "\n") || "snap_bi_public_key";
+    this.snapBiPublicKey =
+      env.SNAP_BI_PUBLIC_KEY.replace(/\\n/g, "\n") || "snap_bi_public_key";
 
     this.snapBiPrivateKey =
       env.SNAP_BI_PRIVATE_KEY.replace(/\\n/g, "\n") || "snap_bi_private_key";

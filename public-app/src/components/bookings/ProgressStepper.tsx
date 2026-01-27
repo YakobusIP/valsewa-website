@@ -3,11 +3,8 @@ import { memo, useCallback } from "react";
 import { instrumentSans } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
-import {
-  CheckIcon,
-  DollarSign,
-  MoreHorizontal
-} from "lucide-react";
+import { CheckIcon, DollarSign, MoreHorizontal } from "lucide-react";
+
 import CancelBookingButton from "./CancelBookingButton";
 
 type ProgressStepperProps = {
@@ -16,7 +13,11 @@ type ProgressStepperProps = {
   isLoadingCancelBooking: boolean;
 };
 
-function ProgressStepper({ stepIdx, handleCancelBooking, isLoadingCancelBooking }: ProgressStepperProps) {
+function ProgressStepper({
+  stepIdx,
+  handleCancelBooking,
+  isLoadingCancelBooking
+}: ProgressStepperProps) {
   const isActive = useCallback((idx: number) => idx <= stepIdx, [stepIdx]);
 
   return (
@@ -28,7 +29,10 @@ function ProgressStepper({ stepIdx, handleCancelBooking, isLoadingCancelBooking 
       aria-label="Booking progress"
     >
       <div className="hidden lg:flex">
-        <CancelBookingButton cancelBooking={handleCancelBooking} isLoadingCancelBooking={isLoadingCancelBooking} />
+        <CancelBookingButton
+          cancelBooking={handleCancelBooking}
+          isLoadingCancelBooking={isLoadingCancelBooking}
+        />
       </div>
 
       <div className="flex flex-col w-full gap-1 sm:gap-2">
