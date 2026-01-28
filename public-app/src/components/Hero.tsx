@@ -23,11 +23,17 @@ import Image from "next/image";
 
 interface HeroProps {
   initialCarousel: CarouselSlide[];
+  activeBrand: "valsewa" | "valjubel" | "valjoki";
+  setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
 }
 
 const HERO_SLIDE_DURATION = 5000;
 
-export default function Hero({ initialCarousel }: HeroProps) {
+export default function Hero({
+  initialCarousel,
+  activeBrand,
+  setActiveBrand
+}: HeroProps) {
   const mobileAutoplay = useRef(
     Autoplay({
       delay: () => [
@@ -57,7 +63,10 @@ export default function Hero({ initialCarousel }: HeroProps) {
 
         {/* MOBILE: Brand Switcher - absolutely positioned at top to align with notch */}
         <div className="xl:hidden absolute top-0 left-0 right-0 z-20">
-          <MobileBrandSwitcher />
+          <MobileBrandSwitcher
+            activeBrand={activeBrand}
+            setActiveBrand={setActiveBrand}
+          />
         </div>
 
         {/* MOBILE: Hero carousel (includes hardcoded design as slide 1) */}
@@ -73,8 +82,11 @@ export default function Hero({ initialCarousel }: HeroProps) {
                   <CarouselItem>
                     <AspectRatio ratio={4 / 5}>
                       <div className="relative w-full h-full">
-                        <HeroTextBlock className="w-full" />
-                        <HeroAgentLayer />
+                        <HeroTextBlock
+                          className="w-full"
+                          activeBrand={activeBrand}
+                        />
+                        <HeroAgentLayer activeBrand={activeBrand} />
                       </div>
                     </AspectRatio>
                   </CarouselItem>
@@ -114,8 +126,8 @@ export default function Hero({ initialCarousel }: HeroProps) {
 
         {/* Content layer - positioned inside the main area (below notch on desktop) */}
         <div className="relative z-10 hidden xl:flex flex-col xl:flex-row h-full max-w-[1920px] mx-auto xl:items-center justify-between xl:px-12 large:px-0 min-h-[550px] md:min-h-[620px] pt-16 xl:pt-20">
-          <HeroAgentLayer />
-          <HeroTextBlock className="w-full xl:w-[55%]" />
+          <HeroAgentLayer activeBrand={activeBrand} />
+          <HeroTextBlock className="w-full xl:w-[50%]" activeBrand={activeBrand} />
 
           {/* RIGHT – CAROUSEL (Desktop only) */}
           <div className="relative w-full xl:w-[30%] hidden xl:flex justify-end aspect-[4/5] h-full">
@@ -160,8 +172,20 @@ export default function Hero({ initialCarousel }: HeroProps) {
           </div>
         </div>
 
-        {/* Red Glow overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#C70515] pointer-events-none rounded-2xl xl:rounded-none xl:mx-12 large:mx-0 mt-16" />
+        {activeBrand === "valsewa" && (
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#C70515] pointer-events-none rounded-2xl xl:rounded-none xl:mx-12 large:mx-0 mt-16" />
+        )}
+        {activeBrand === "valjoki" && (
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-[#111111] to-[#FDE047]/70 pointer-events-none rounded-2xl xl:rounded-none xl:mx-12 large:mx-0 mt-16" />
+        )}
+        {activeBrand === "valjubel" && (
+          <div className="absolute inset-0 bg-gradient-to-br from-transparent via-[#6D28D9]/15 to-[#A855F7]/70 pointer-events-none rounded-2xl xl:rounded-none xl:mx-12 large:mx-0 mt-16" />
+        )}
+
+
+
+
+
       </div>
     </section>
   );

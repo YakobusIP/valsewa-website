@@ -15,9 +15,25 @@ import LoginPage from "./LoginPage";
 import SearchPage from "./SearchPage";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
-const NavbarHomeMobile = () => {
+interface NavbarHomeMobileProps {
+  activeBrand: "valsewa" | "valjubel" | "valjoki";
+}
+
+const NavbarHomeMobile = ({ activeBrand }: NavbarHomeMobileProps) => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const getLogo = () => {
+    switch (activeBrand) {
+      case "valjubel":
+        return "/header/VALJUBEL.png";
+      case "valjoki":
+        return "/header/VALJOKI.png";
+      case "valsewa":
+      default:
+        return "/header/VALSEWA.png";
+    }
+  };
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
@@ -75,8 +91,8 @@ const NavbarHomeMobile = () => {
         <div className="flex items-center justify-center flex-1">
           <figure className="sm:w-[210px] w-[150px]">
             <Image
-              src="/header/VALSEWA.png"
-              alt="logo"
+              src={getLogo()}
+              alt={activeBrand}
               height={80}
               width={210}
               className="object-contain"

@@ -16,13 +16,15 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { SearchModal } from "./SearchModal";
 import { useRouter } from "next/navigation";
 
-function Navbar() {
+interface NavbarProps {
+  activeBrand: "valsewa" | "valjubel" | "valjoki";
+  setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
+}
+
+function Navbar({ activeBrand, setActiveBrand }: NavbarProps) {
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [activeBrand, setActiveBrand] = useState<
-    "valsewa" | "valjubel" | "valjoki"
-  >("valsewa");
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
