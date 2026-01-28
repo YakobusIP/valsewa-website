@@ -29,7 +29,7 @@ const Navbar = () => {
     setIsSearchOpen(true);
   };
 
-    const handleCardClick = (id: string) => {
+  const handleCardClick = (id: string) => {
     router?.push(`/details/${id}`);
   };
   const { isAuthenticated, username, customerId } = useAuth();
@@ -48,12 +48,12 @@ const Navbar = () => {
 
   return (
     <div className="fixed top-0 z-50 w-full bg-[#000000] shadow-md shadow-black/5">
-      <div className="mx-auto max-w-[1920px] pt-5 h-[84px] md:h-[80px] flex items-center justify-between px-5 md:px-14">
+      <div className="mx-auto max-w-[1920px] pt-5 h-[84px] md:h-[80px] flex items-center justify-between px-5 ">
         {/* LOGO */}
         <div className="relative md:pl-14">
           <figure className="relative top-0 lg:max-w-[200px] sm:max-w-[150px] max-w-[150px] left-5">
             <Image
-              src="/logo/Logo Valsewa 6 SVG.svg"
+              src="/header/VALSEWA.png"
               alt="logo"
               height={300}
               width={200}
@@ -63,7 +63,7 @@ const Navbar = () => {
         </div>
 
         {/* NAV RIGHT SIDE */}
-        <div className="md:pr-14 pr-7 flex items-center gap-4">
+        <div className="pr-7 flex items-center gap-4">
           {/* SEARCH */}
           <button onClick={handleSearchClick}>
             <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
@@ -179,10 +179,10 @@ const Navbar = () => {
       )}
 
       {isSearchOpen && (
-        <SearchModal 
+        <SearchModal
           onSelectAccount={handleCardClick}
           onOpenChange={setIsSearchOpen}
-          open 
+          open
         />
       )}
     </div>

@@ -44,7 +44,7 @@ const NavbarHomeMobile = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 60);
+      setIsScrolled(window.scrollY > 1);
     };
 
     window.addEventListener("scroll", handleScroll);
@@ -53,20 +53,19 @@ const NavbarHomeMobile = () => {
 
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
-        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-      }`}
+      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+        }`}
     >
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-3 sm:px-6 lg:px-12">
         {/* LEFT */}
         <div className="flex items-center flex-1">
           <button onClick={handleSearchClick}>
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/10 transition">
+            <div className="flex items-center justify-center w-11 h-11 rounded-lg hover:bg-white/10 transition">
               <Image
                 src="/header/Frame.svg"
                 alt="Search"
-                width={18}
-                height={18}
+                width={30}
+                height={30}
               />
             </div>
           </button>

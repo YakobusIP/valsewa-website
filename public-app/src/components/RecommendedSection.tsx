@@ -99,7 +99,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
               >
                 <div
                   className={cn(
-                    "group relative h-[360px] rounded-2xl overflow-hidden border transition-all duration-300 hover:scale-[1.02]",
+                    "group relative h-[360px] rounded-lg overflow-auto lg:overflow-hidden border transition-all duration-300 hover:scale-[1.02]",
                     "border-white/10 hover:border-white/30 bg-[#111] border-[#E8C545]",
                     // Mobile horizontal sizing
                     "min-w-[75%] snap-start sm:min-w-[320px] xl:min-w-0"
