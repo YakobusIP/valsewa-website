@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
@@ -54,21 +55,23 @@ export default function CreateUserModal({ open, onOpenChange }: Props) {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await customerService.create(data);
+      const response = await customerService.create(data);
 
       toast({
         title: "Success",
-        description: "User created successfully ✅"
+        description: response.message || "User created successfully"
       });
 
       reset();
       onOpenChange(false);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Username telah digunakan";
+        error instanceof Error ? error.message : "An unknown error occured";
+
+      console.log(error);
 
       toast({
-        title: "Failed to create user ❌",
+        title: "Failed to create user",
         description: errorMessage,
         variant: "destructive"
       });
@@ -98,6 +101,7 @@ export default function CreateUserModal({ open, onOpenChange }: Props) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Create User</DialogTitle>
+          <DialogDescription>Create new customer account</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 mt-4">

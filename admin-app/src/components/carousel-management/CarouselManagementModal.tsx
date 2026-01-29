@@ -72,7 +72,7 @@ export default function CarouselManagementModal({
   return (
     <Fragment>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[100dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Carousel Management</DialogTitle>
             <DialogDescription>

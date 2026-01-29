@@ -75,34 +75,37 @@ export default function SkinManagementModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
-        <DialogHeader>
+      <DialogContent className="flex flex-col w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Skin Management</DialogTitle>
           <DialogDescription>Manage all skins</DialogDescription>
         </DialogHeader>
-        <DataTable
-          columns={skinColumns}
-          data={skinList}
-          rowSelection={selectedSkinRows}
-          setRowSelection={setSelectedSkinRows}
-          isLoadingData={isLoadingSkin}
-          deleteData={deleteManySkins}
-          isLoadingDeleteData={isLoadingDeleteSkin}
-          page={skinListPage}
-          setPage={setSkinListPage}
-          metadata={skinMetadata}
-          leftSideComponent={
-            <Input
-              startIcon={
-                <SearchIcon size={18} className="text-muted-foreground" />
-              }
-              placeholder="Search skin..."
-              parentClassName="w-full xl:w-64"
-              onChange={(e) => setLocalSearch(e.target.value)}
-            />
-          }
-          rightSideComponent={<SkinDetailModal mode="add" />}
-        />
+
+        <div className="flex-1 overflow-y-auto">
+          <DataTable
+            columns={skinColumns}
+            data={skinList}
+            rowSelection={selectedSkinRows}
+            setRowSelection={setSelectedSkinRows}
+            isLoadingData={isLoadingSkin}
+            deleteData={deleteManySkins}
+            isLoadingDeleteData={isLoadingDeleteSkin}
+            page={skinListPage}
+            setPage={setSkinListPage}
+            metadata={skinMetadata}
+            leftSideComponent={
+              <Input
+                startIcon={
+                  <SearchIcon size={18} className="text-muted-foreground" />
+                }
+                placeholder="Search skin..."
+                parentClassName="w-full xl:w-64"
+                onChange={(e) => setLocalSearch(e.target.value)}
+              />
+            }
+            rightSideComponent={<SkinDetailModal mode="add" />}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

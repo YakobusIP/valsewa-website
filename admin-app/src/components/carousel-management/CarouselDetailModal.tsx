@@ -39,7 +39,7 @@ export default function CarouselDetailModal({
 
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [duration, setDuration] = useState<number>(10);
+  const [duration, setDuration] = useState<number | "">(10);
   const [isLoadingSave, setIsLoadingSave] = useState(false);
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
 
@@ -71,7 +71,7 @@ export default function CarouselDetailModal({
     return "IMAGE";
   };
 
-  const allReady = !!preview && duration > 0;
+  const allReady = !!preview && typeof duration === "number" && duration >= 0;
 
   const handleSave = async () => {
     if (!isEditMode && !file) {
@@ -83,11 +83,11 @@ export default function CarouselDetailModal({
       return;
     }
 
-    if (!duration) {
+    if (typeof duration === "number" && duration < 0) {
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong!",
-        description: "Duration is required."
+        description: "Duration must be 0 or greater."
       });
       return;
     }
@@ -101,9 +101,12 @@ export default function CarouselDetailModal({
         imageId = responses[0].id;
       }
 
+      // Convert empty duration to 0
+      const finalDuration = typeof duration === "string" ? 0 : duration;
+
       if (isEditMode) {
         const payload: Partial<CarouselSlideRequest> = {
-          duration
+          duration: finalDuration
         };
         if (imageId !== undefined) {
           payload.imageId = imageId;
@@ -112,7 +115,7 @@ export default function CarouselDetailModal({
       } else {
         const payload: CarouselSlideRequest = {
           imageId: imageId!,
-          duration
+          duration: finalDuration
         };
         await carouselSlideService.create(payload);
       }
@@ -160,11 +163,9 @@ export default function CarouselDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <div className="flex justify-between items-center">
-            <DialogTitle>{title}</DialogTitle>
-          </div>
+      <DialogContent className="flex flex-col max-w-3xl overflow-y-auto max-h-[100dvh]">
+        <DialogHeader className="flex-shrink-0">
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             {isEditMode
               ? "Atur gambar untuk slide ini (4:5 aspect ratio, 1080px × 1350px)."
@@ -172,103 +173,115 @@ export default function CarouselDetailModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid w-full max-w-sm items-center gap-1.5 mb-4">
-          <Label htmlFor="duration">Duration (Seconds)</Label>
-          <Input
-            type="number"
-            id="duration"
-            placeholder="Duration in seconds"
-            value={duration}
-            onChange={(e) => setDuration(Number(e.target.value))}
-          />
-        </div>
+        <div className="flex-1 overflow-auto">
+          <div className="grid w-full max-w-sm items-center gap-1.5 mb-4">
+            <Label htmlFor="duration">Duration (Seconds)</Label>
+            <Input
+              type="text"
+              id="duration"
+              placeholder="Duration in seconds"
+              value={duration === "" ? "" : duration}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "") {
+                  setDuration("");
+                } else {
+                  const numValue = parseFloat(value);
+                  if (!isNaN(numValue)) {
+                    setDuration(numValue);
+                  }
+                }
+              }}
+            />
+          </div>
 
-        <div className="space-y-4 mt-4">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1">
-              <div className="relative overflow-hidden aspect-[4/5] max-w-[432px] mx-auto">
-                {preview ? (
-                  getMediaType() === "VIDEO" ? (
-                    <video
-                      src={preview}
-                      className="w-full h-full object-contain"
-                      muted
-                      autoPlay
-                      loop
-                    />
+          <div className="space-y-4 mt-4">
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex-1">
+                <div className="relative overflow-hidden aspect-[4/5] max-w-[432px] mx-auto">
+                  {preview ? (
+                    getMediaType() === "VIDEO" ? (
+                      <video
+                        src={preview}
+                        className="w-full h-full object-contain"
+                        muted
+                        autoPlay
+                        loop
+                      />
+                    ) : (
+                      <img
+                        src={preview}
+                        alt="Carousel slide"
+                        className="w-full h-full object-contain"
+                      />
+                    )
                   ) : (
-                    <img
-                      src={preview}
-                      alt="Carousel slide"
-                      className="w-full h-full object-contain"
-                    />
-                  )
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full gap-2 border-2 border-dashed border-gray-300 rounded-lg">
-                    <div className="text-center text-gray-500 mb-4">
-                      <p className="text-sm font-medium">4:5 Aspect Ratio</p>
-                      <p className="text-xs">1080px × 1350px</p>
+                    <div className="flex flex-col items-center justify-center h-full gap-2 border-2 border-dashed border-gray-300 rounded-lg">
+                      <div className="text-center text-gray-500 mb-4">
+                        <p className="text-sm font-medium">4:5 Aspect Ratio</p>
+                        <p className="text-xs">1080px × 1350px</p>
+                      </div>
+                      <Input
+                        id="upload-image"
+                        type="file"
+                        accept="image/*,video/*"
+                        className="sr-only"
+                        onChange={(e) => handleFileChange(e.target.files![0])}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                        onClick={() =>
+                          document.getElementById("upload-image")?.click()
+                        }
+                      >
+                        <UploadIcon className="h-4 w-4" />
+                        Upload Media
+                      </Button>
                     </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-4">
+                <div>
+                  <Label htmlFor="image-type">Image Type</Label>
+                  <div className="mt-1 text-sm" id="image-type">
+                    Instagram Post (4:5)
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="dimensions">Dimensions</Label>
+                  <div className="mt-1 text-sm" id="dimensions">
+                    1080px × 1350px
+                  </div>
+                </div>
+
+                {preview && (
+                  <div className="pt-2">
+                    <Label htmlFor="upload-image" className="cursor-pointer">
+                      <div className="flex items-center gap-2 text-sm text-primary hover:underline">
+                        <UploadIcon className="h-4 w-4" />
+                        Change media
+                      </div>
+                    </Label>
                     <Input
                       id="upload-image"
                       type="file"
                       accept="image/*,video/*"
-                      className="sr-only"
+                      className="hidden"
                       onChange={(e) => handleFileChange(e.target.files![0])}
                     />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-2"
-                      onClick={() =>
-                        document.getElementById("upload-image")?.click()
-                      }
-                    >
-                      <UploadIcon className="h-4 w-4" />
-                      Upload Media
-                    </Button>
                   </div>
                 )}
               </div>
             </div>
-
-            <div className="flex-1 space-y-4">
-              <div>
-                <Label htmlFor="image-type">Image Type</Label>
-                <div className="mt-1 text-sm" id="image-type">
-                  Instagram Post (4:5)
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="dimensions">Dimensions</Label>
-                <div className="mt-1 text-sm" id="dimensions">
-                  1080px × 1350px
-                </div>
-              </div>
-
-              {preview && (
-                <div className="pt-2">
-                  <Label htmlFor="upload-image" className="cursor-pointer">
-                    <div className="flex items-center gap-2 text-sm text-primary hover:underline">
-                      <UploadIcon className="h-4 w-4" />
-                      Change media
-                    </div>
-                  </Label>
-                  <Input
-                    id="upload-image"
-                    type="file"
-                    accept="image/*,video/*"
-                    className="hidden"
-                    onChange={(e) => handleFileChange(e.target.files![0])}
-                  />
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
-        <DialogFooter className="flex justify-between">
+        <DialogFooter className="flex justify-between gap-2">
           {isEditMode && (
             <Button variant="destructive" onClick={handleDelete}>
               {isLoadingDelete ? (

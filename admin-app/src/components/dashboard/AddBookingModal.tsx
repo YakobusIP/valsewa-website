@@ -61,9 +61,19 @@ const formSchema = z.object({
   duration: z
     .string({ required_error: "Duration is required" })
     .nonempty("Duration is required"),
-  totalValue: z
-    .number({ required_error: "Total price is required" })
-    .min(1, "Total price must be greater than 0"),
+  totalValue: z.preprocess(
+    (val) => {
+      if (val === "" || val === null || val === undefined) return 0;
+
+      if (typeof val === "string") {
+        const n = Number(val);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      return val;
+    },
+    z.number().min(0, "Total price must be 0 or greater")
+  ),
   expireAt: z.date().nullish()
 });
 
@@ -242,250 +252,244 @@ export default function AddBookingModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
-        <DialogHeader>
+      <DialogContent className="flex flex-col w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Add New Booking</DialogTitle>
           <DialogDescription>
             Create a new booking for this account
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit, handleError)}
-            className="flex flex-col gap-4 p-4"
-          >
-            <div className="flex flex-col gap-2">
-              <p className="font-semibold">Booking Details</p>
-              <hr />
-            </div>
+        <div className="flex-1 overflow-y-auto">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit, handleError)}
+              className="flex flex-col gap-4 p-4"
+            >
+              <div className="flex flex-col gap-2">
+                <p className="font-semibold">Booking Details</p>
+                <hr />
+              </div>
 
-            <div className="flex flex-col min-[1920px]:flex-row gap-4">
-              <FormField
-                control={form.control}
-                name="bookingDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col w-full min-[1920px]:w-2/5">
-                    <FormLabel className="mt-[0.4rem] mb-[0.275rem]">
-                      Booking Date
-                    </FormLabel>
-                    <div className="flex items-center justify-center gap-2">
-                      <Popover modal>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "justify-start text-left font-normal flex-1",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {field.value ? (
-                              format(field.value, "dd MMMM yyyy 'at' HH:mm")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <div className="sm:flex overflow-auto h-96 xl:h-fit">
-                            <Calendar
-                              mode="single"
-                              selected={field.value ?? undefined}
-                              onSelect={handleDateSelect}
-                              initialFocus
-                            />
-                            <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
-                              <ScrollArea
-                                type="always"
-                                className="w-[17.25rem] sm:w-auto"
-                              >
-                                <div className="flex sm:flex-col p-2">
-                                  {Array.from({ length: 24 }, (_, i) => i)
-                                    .reverse()
-                                    .map((hour) => (
+              <div className="flex flex-col min-[1920px]:flex-row gap-4">
+                <FormField
+                  control={form.control}
+                  name="bookingDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col w-full min-[1920px]:w-2/5">
+                      <FormLabel className="mt-[0.4rem] mb-[0.275rem]">
+                        Booking Date
+                      </FormLabel>
+                      <div className="flex items-center justify-center gap-2">
+                        <Popover modal>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "justify-start text-left font-normal flex-1",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value ? (
+                                format(field.value, "dd MMMM yyyy 'at' HH:mm")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <div className="sm:flex overflow-auto h-96 xl:h-fit">
+                              <Calendar
+                                mode="single"
+                                selected={field.value ?? undefined}
+                                onSelect={handleDateSelect}
+                                initialFocus
+                              />
+                              <div className="flex flex-col sm:flex-row sm:h-[300px] divide-y sm:divide-y-0 sm:divide-x">
+                                <ScrollArea
+                                  type="always"
+                                  className="w-[17.25rem] sm:w-auto"
+                                >
+                                  <div className="flex sm:flex-col p-2">
+                                    {Array.from({ length: 24 }, (_, i) => i)
+                                      .reverse()
+                                      .map((hour) => (
+                                        <Button
+                                          key={hour}
+                                          size="icon"
+                                          variant={
+                                            field.value &&
+                                            field.value.getHours() === hour
+                                              ? "default"
+                                              : "ghost"
+                                          }
+                                          className="sm:w-full shrink-0 aspect-square"
+                                          onClick={() =>
+                                            handleTimeChange(
+                                              "hour",
+                                              hour.toString()
+                                            )
+                                          }
+                                        >
+                                          {hour}
+                                        </Button>
+                                      ))}
+                                  </div>
+                                  <ScrollBar
+                                    orientation="horizontal"
+                                    className="sm:hidden"
+                                  />
+                                </ScrollArea>
+                                <ScrollArea
+                                  type="always"
+                                  className="w-[17.25rem] sm:w-auto"
+                                >
+                                  <div className="flex sm:flex-col p-2">
+                                    {Array.from(
+                                      { length: 12 },
+                                      (_, i) => i * 5
+                                    ).map((minute) => (
                                       <Button
-                                        key={hour}
+                                        key={minute}
                                         size="icon"
                                         variant={
                                           field.value &&
-                                          field.value.getHours() === hour
+                                          field.value.getMinutes() === minute
                                             ? "default"
                                             : "ghost"
                                         }
                                         className="sm:w-full shrink-0 aspect-square"
                                         onClick={() =>
                                           handleTimeChange(
-                                            "hour",
-                                            hour.toString()
+                                            "minute",
+                                            minute.toString()
                                           )
                                         }
                                       >
-                                        {hour}
+                                        {minute.toString().padStart(2, "0")}
                                       </Button>
                                     ))}
-                                </div>
-                                <ScrollBar
-                                  orientation="horizontal"
-                                  className="sm:hidden"
-                                />
-                              </ScrollArea>
-                              <ScrollArea
-                                type="always"
-                                className="w-[17.25rem] sm:w-auto"
-                              >
-                                <div className="flex sm:flex-col p-2">
-                                  {Array.from(
-                                    { length: 12 },
-                                    (_, i) => i * 5
-                                  ).map((minute) => (
-                                    <Button
-                                      key={minute}
-                                      size="icon"
-                                      variant={
-                                        field.value &&
-                                        field.value.getMinutes() === minute
-                                          ? "default"
-                                          : "ghost"
-                                      }
-                                      className="sm:w-full shrink-0 aspect-square"
-                                      onClick={() =>
-                                        handleTimeChange(
-                                          "minute",
-                                          minute.toString()
-                                        )
-                                      }
-                                    >
-                                      {minute.toString().padStart(2, "0")}
-                                    </Button>
-                                  ))}
-                                </div>
-                                <ScrollBar
-                                  orientation="horizontal"
-                                  className="sm:hidden"
-                                />
-                              </ScrollArea>
+                                  </div>
+                                  <ScrollBar
+                                    orientation="horizontal"
+                                    className="sm:hidden"
+                                  />
+                                </ScrollArea>
+                              </div>
                             </div>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                          </PopoverContent>
+                        </Popover>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          onClick={handleDeleteBookingDate}
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem className="w-full min-[1920px]:w-2/5">
+                      <FormLabel>Duration</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter duration here" {...field} />
+                      </FormControl>
+                      <FormDescription>Contoh format: 7d 1h</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="totalValue"
+                  render={({ field }) => (
+                    <FormItem className="w-full min-[1920px]:w-2/5">
+                      <FormLabel>Total Price</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="Enter total price"
+                          value={field.value ?? ""}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value);
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {expireAtValue && (
+                <Label className="text-destructive">
+                  Status sewa akan expire pada{" "}
+                  <span className="font-bold">
+                    {format(expireAtValue, "dd MMMM yyyy 'at' HH:mm")}
+                  </span>
+                </Label>
+              )}
+
+              <div className="flex flex-col gap-2">
+                <p className="font-semibold">Transactional Info</p>
+                <hr />
+              </div>
+
+              <div className="relative">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
                       <Button
                         type="button"
-                        variant="destructive"
                         size="icon"
-                        onClick={handleDeleteBookingDate}
+                        className="absolute top-1 right-1 z-50"
+                        onClick={() => copyReminderToClipboard()}
                       >
-                        <Trash2Icon />
+                        <CopyIcon />
                       </Button>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="duration"
-                render={({ field }) => (
-                  <FormItem className="w-full min-[1920px]:w-2/5">
-                    <FormLabel>Duration</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter duration here" {...field} />
-                    </FormControl>
-                    <FormDescription>Contoh format: 7d 1h</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="totalValue"
-                render={({ field }) => (
-                  <FormItem className="w-full min-[1920px]:w-2/5">
-                    <FormLabel>Total Price</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Enter total price"
-                        value={field.value === 0 ? "" : field.value.toString()}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === "") {
-                            field.onChange(0);
-                          } else {
-                            const numValue = parseFloat(value);
-                            if (!isNaN(numValue)) {
-                              field.onChange(numValue);
-                            }
-                          }
-                        }}
-                        onBlur={field.onBlur}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copy to clipboard</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Textarea
+                  rows={16}
+                  className="whitespace-pre-wrap"
+                  value={reminderText}
+                  onChange={(e) => setReminderText(e.target.value)}
+                />
+              </div>
 
-            {expireAtValue && (
-              <Label className="text-destructive">
-                Status sewa akan expire pada{" "}
-                <span className="font-bold">
-                  {format(expireAtValue, "dd MMMM yyyy 'at' HH:mm")}
-                </span>
-              </Label>
-            )}
+              <div className="sticky bottom-0 bg-background p-4 border rounded-md flex justify-between gap-4 items-center">
+                <p className="text-sm">
+                  Akun ini sudah pernah disewa selama{" "}
+                  <b>
+                    {data?.totalRentHour
+                      ? convertHoursToDays(data?.totalRentHour)
+                      : "0d 0h"}
+                  </b>
+                </p>
 
-            <div className="flex flex-col gap-2">
-              <p className="font-semibold">Transactional Info</p>
-              <hr />
-            </div>
-
-            <div className="relative">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      size="icon"
-                      className="absolute top-1 right-1 z-50"
-                      onClick={() => copyReminderToClipboard()}
-                    >
-                      <CopyIcon />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Copy to clipboard</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <Textarea
-                rows={16}
-                className="whitespace-pre-wrap"
-                value={reminderText}
-                onChange={(e) => setReminderText(e.target.value)}
-              />
-            </div>
-
-            <div className="sticky bottom-0 bg-background p-4 border rounded-md flex justify-between gap-4 items-center">
-              <p className="text-sm">
-                Akun ini sudah pernah disewa selama{" "}
-                <b>
-                  {data?.totalRentHour
-                    ? convertHoursToDays(data?.totalRentHour)
-                    : "0d 0h"}
-                </b>
-              </p>
-
-              <Button type="submit" className="w-fit">
-                {isLoadingSubmit && (
-                  <Loader2Icon className="w-4 h-4 animate-spin" />
-                )}
-                Submit
-              </Button>
-            </div>
-          </form>
-        </Form>
+                <Button type="submit" className="w-fit">
+                  {isLoadingSubmit && (
+                    <Loader2Icon className="w-4 h-4 animate-spin" />
+                  )}
+                  Submit
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );

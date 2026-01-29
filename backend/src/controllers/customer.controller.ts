@@ -15,7 +15,6 @@ export class CustomerController {
         limit ? parseInt(limit as string) : undefined,
         query
       );
-      console.log("Users from service:", data);
 
       return res.json({ data, metadata });
     } catch (error) {
@@ -23,40 +22,38 @@ export class CustomerController {
     }
   };
 
-  updatePassword = async (req: Request, res: Response) => {
+  updatePassword = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const { password } = req.body;
 
       await this.customerService.updatePassword(Number(id), password);
 
-      res.status(200).json({
-        message: "Password updated"
-      });
+      return res.status(200).json({ message: "Password updated" });
     } catch (error) {
-      res.status(500).json({
-        message: "Failed to update password"
-      });
+      return next(error);
     }
   };
 
-  createCustomer = async (req: Request, res: Response) => {
+  createCustomer = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { username, password } = req.body;
 
       await this.customerService.createCustomer(username, password);
 
-      res.status(201).json({
+      return res.status(201).json({
         message: "User created successfully"
       });
     } catch (error) {
-      res.status(400).json({
-        message: (error as Error).message
-      });
+      return next(error);
     }
   };
 
-  toggleActiveStatus = async (req: Request, res: Response) => {
+  toggleActiveStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const { id } = req.params;
       const { isActive } = req.body;
@@ -66,13 +63,11 @@ export class CustomerController {
         Boolean(isActive)
       );
 
-      res.status(200).json({
+      return res.status(200).json({
         message: "Customer active status updated"
       });
     } catch (error) {
-      res.status(500).json({
-        message: "Failed to update customer active status"
-      });
+      return next(error);
     }
   };
 

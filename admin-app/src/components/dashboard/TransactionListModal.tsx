@@ -1,28 +1,39 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { accountService } from "@/services/account.service";
 import { bookingService } from "@/services/transaction.service";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
 import {
   BOOKING_STATUS,
   BookingEntity,
-  PaymentEntity,
-  UpdateBookingRequest
+  BookingStatistics,
+  PaymentEntity
 } from "@/types/booking.type";
 
 import { format } from "date-fns";
+import { useDebounce } from "use-debounce";
 
-import { Combobox, ComboboxOption } from "../ui/combobox";
-import { Label } from "../ui/label";
 import TransactionStatisticsGrid from "./TransactionStatisticGrid";
 
 type Props = {
@@ -37,10 +48,17 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const [loading, setLoading] = useState(false);
 
   const [search, setSearch] = useState("");
+  const [debouncedSearch] = useDebounce(search, 500);
   const [datePreset, setDatePreset] = useState<DatePreset>(null);
+  const [debouncedDatePreset] = useDebounce(datePreset, 500);
   const [dateFrom, setDateFrom] = useState("");
+  const [debouncedDateFrom] = useDebounce(dateFrom, 500);
   const [dateTo, setDateTo] = useState("");
-  const [statistics, setStatistics] = useState<any>(null);
+  const [debouncedDateTo] = useDebounce(dateTo, 500);
+  const [statistics, setStatistics] = useState<BookingStatistics>({
+    completedBookingCount: 0,
+    totalIncome: 0
+  });
 
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isOverrideBookingOpen, setIsOverrideBookingOpen] = useState(false);
@@ -56,25 +74,29 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     []
   );
 
-  useEffect(() => {
-    if (!open) return;
-    fetchBookings();
-    fetchAccountRented();
-  }, [open, datePreset, dateFrom, dateTo]);
-
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await bookingService.fetchAll();
+      const res = await bookingService.fetchAll(
+        debouncedSearch,
+        debouncedDatePreset,
+        debouncedDateFrom,
+        debouncedDateTo
+      );
       setBookings(res.data);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    debouncedSearch,
+    debouncedDatePreset,
+    debouncedDateFrom,
+    debouncedDateTo
+  ]);
 
-  const fetchAccountRented = async () => {
+  const fetchAccountRented = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -84,76 +106,38 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
         if (datePreset === "1D") from.setDate(now.getDate() - 1);
         if (datePreset === "7D") from.setDate(now.getDate() - 7);
         if (datePreset === "30D") from.setDate(now.getDate() - 30);
-        const res = await bookingService.getAccountRented(
+        const response = await bookingService.getAccountRented(
           formatDateOnly(from),
           formatDateOnly(now)
         );
-        setStatistics(res.data);
+        setStatistics(response.data);
         return;
       }
 
       if (dateFrom && dateTo) {
         const from = new Date(dateFrom);
         const to = new Date(dateTo);
-        const res = await bookingService.getAccountRented(
+        const response = await bookingService.getAccountRented(
           formatDateOnly(from),
           formatDateOnly(to)
         );
-        setStatistics(res.data);
+        setStatistics(response.data);
         return;
       }
 
-      const res = await bookingService.getAccountRented();
-      setStatistics(res.data);
+      const response = await bookingService.getAccountRented();
+      setStatistics(response.data);
       return;
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateFrom, datePreset, dateTo]);
 
   const formatDateOnly = (date: Date | string) => {
     return format(new Date(date), "MM-dd-yyyy");
   };
-
-  const filteredBookings = useMemo(() => {
-    let data = [...bookings];
-
-    if (search.trim()) {
-      data = data.filter((b) =>
-        b.id.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    if (datePreset) {
-      const now = new Date();
-      const from = new Date();
-      if (datePreset === "1D") from.setDate(now.getDate() - 1);
-      if (datePreset === "7D") from.setDate(now.getDate() - 7);
-      if (datePreset === "30D") from.setDate(now.getDate() - 30);
-
-      data = data.filter((b) => {
-        if (!b.createdAt) return false;
-        const d = new Date(b.createdAt);
-        return d >= from && d <= now;
-      });
-    }
-
-    if (dateFrom && dateTo) {
-      const from = new Date(dateFrom);
-      const to = new Date(dateTo);
-      to.setHours(23, 59, 59, 999);
-
-      data = data.filter((b) => {
-        if (!b.createdAt) return false;
-        const d = new Date(b.createdAt);
-        return d >= from && d <= to;
-      });
-    }
-
-    return data;
-  }, [bookings, search, datePreset, dateFrom, dateTo]);
 
   const handleOpenEdit = (booking: BookingEntity) => {
     setSelectedBooking(booking);
@@ -167,11 +151,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     try {
       await bookingService.update(selectedBooking.id, {
         totalValue: editTotalValue
-      }),
-        {
-          // backend will only update what you send
-          totalValue: editTotalValue
-        } as UpdateBookingRequest;
+      });
 
       setIsEditOpen(false);
       setSelectedBooking(null);
@@ -242,18 +222,14 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
 
   const renderBookingStatus = (status: BOOKING_STATUS) => {
     const map: Record<BOOKING_STATUS, string> = {
-      HOLD: "bg-yellow-500/10 text-yellow-600",
-      RESERVED: "bg-blue-500/10 text-blue-600",
-      EXPIRED: "bg-gray-500/10 text-gray-500",
-      FAILED: "bg-red-500/10 text-red-500",
-      CANCELLED: "bg-red-500/10 text-red-500",
-      COMPLETED: "bg-green-500/10 text-green-600"
+      HOLD: "bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20",
+      RESERVED: "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20",
+      EXPIRED: "bg-gray-500/10 text-gray-500 hover:bg-gray-500/20",
+      FAILED: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
+      CANCELLED: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
+      COMPLETED: "bg-green-500/10 text-green-600 hover:bg-green-500/20"
     };
-    return (
-      <span className={`px-2 py-0.5 rounded text-xs ${map[status]}`}>
-        {status}
-      </span>
-    );
+    return <Badge className={map[status]}>{status}</Badge>;
   };
   const renderPaymentStatus = (status?: string | null) => {
     if (!status) return "-";
@@ -261,19 +237,17 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     const normalized = status.toUpperCase();
 
     const map: Record<string, string> = {
-      PAID: "bg-green-500/10 text-green-600",
-      SUCCESS: "bg-green-500/10 text-green-600",
-      PENDING: "bg-yellow-500/10 text-yellow-600",
-      FAILED: "bg-red-500/10 text-red-500",
-      REFUNDED: "bg-purple-500/10 text-purple-600",
-      EXPIRED: "bg-gray-500/10 text-gray-500"
+      PAID: "bg-green-500/10 text-green-600 hover:bg-green-500/20",
+      SUCCESS: "bg-green-500/10 text-green-600 hover:bg-green-500/20",
+      PENDING: "bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20",
+      FAILED: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
+      REFUNDED: "bg-purple-500/10 text-purple-600 hover:bg-purple-500/20",
+      EXPIRED: "bg-gray-500/10 text-gray-500 hover:bg-gray-500/20"
     };
     return (
-      <span
-        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${map[normalized] ?? "bg-gray-500/10 text-gray-500"}`}
-      >
+      <Badge className={map[normalized] ?? "bg-gray-500/10 text-gray-500"}>
         {normalized}
-      </span>
+      </Badge>
     );
   };
 
@@ -287,124 +261,143 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     })[0];
   };
 
+  const formatBookingNumber = (n: string) => {
+    return `VS-${n.toString().padStart(7, "0")}`;
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    fetchBookings();
+    fetchAccountRented();
+  }, [
+    open,
+    debouncedDatePreset,
+    debouncedDateFrom,
+    debouncedDateTo,
+    fetchAccountRented,
+    fetchBookings
+  ]);
+
   return (
     <>
       {/* MAIN MODAL */}
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-full xl:w-5/6 max-h-[90dvh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="flex flex-col w-full max-h-[100dvh] overflow-y-auto">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle>Transaction List</DialogTitle>
+            <DialogDescription>List of transactions</DialogDescription>
           </DialogHeader>
 
-          <TransactionStatisticsGrid
-            statistics={statistics}
-            isLoading={loading}
-          />
-
-          {/* FILTER */}
-          <div className="flex flex-wrap gap-3 mt-4">
-            <Input
-              placeholder="Search Transaction ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-[240px]"
-            />
-            <Button
-              size="sm"
-              variant={datePreset === "1D" ? "default" : "outline"}
-              onClick={() => setDatePreset("1D")}
-            >
-              1 Day
-            </Button>
-            <Button
-              size="sm"
-              variant={datePreset === "7D" ? "default" : "outline"}
-              onClick={() => setDatePreset("7D")}
-            >
-              7 Days
-            </Button>
-            <Button
-              size="sm"
-              variant={datePreset === "30D" ? "default" : "outline"}
-              onClick={() => setDatePreset("30D")}
-            >
-              30 Days
-            </Button>
-
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="border rounded px-2 h-9"
-            />
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="border rounded px-2 h-9"
+          <div className="flex-1 overflow-auto">
+            <TransactionStatisticsGrid
+              statistics={statistics}
+              isLoading={loading}
             />
 
-            <Button size="sm" variant="ghost" onClick={resetFilter}>
-              Reset
-            </Button>
-          </div>
+            {/* FILTER */}
+            <div className="flex flex-col xl:flex-row gap-3 mt-4">
+              <Input
+                placeholder="Search Transaction ID..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
 
-          {/* TABLE */}
-          <div className="mt-4 border rounded-lg overflow-y-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 border-b">
-                <tr>
-                  <th className="px-3 py-2 text-left">ID</th>
-                  <th className="px-3 py-2 text-left">Date</th>
-                  <th className="px-3 py-2 text-left">Customer</th>
-                  <th className="px-3 py-2 text-left">Account</th>
-                  <th className="px-3 py-2 text-left">Main Value</th>
-                  <th className="px-3 py-2 text-left">Others Value</th>
-                  <th className="px-3 py-2 text-left">Admin Fee</th>
-                  <th className="px-3 py-2 text-left">Total</th>
-                  <th className="px-3 py-2 text-left">Payment Method</th>
-                  <th className="px-3 py-2 text-left">Duration</th>
-                  <th className="px-3 py-2 text-left">Booking Status</th>
-                  <th className="px-3 py-2 text-left">Payment Status</th>
-                  <th className="px-3 py-2 text-left">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBookings.map((b) => (
-                  <tr key={b.id} className="border-b hover:bg-muted">
-                    <td className="px-3 py-2 font-mono text-xs">{b.id}</td>
-                    <td className="px-3 py-2">{formatDateTime(b.createdAt)}</td>
-                    <td className="px-3 py-2">{b.customer?.username ?? "-"}</td>
-                    <td className="px-3 py-2">
-                      {b.account?.accountCode ?? "-"}
-                    </td>
-                    <td className="px-3 py-2">{formatCurrency(b.mainValue)}</td>
-                    <td className="px-3 py-2">
-                      {formatCurrency(b.othersValue)}
-                    </td>
-                    <td className="px-3 py-2">
-                      {formatCurrency(b.adminFee) ?? "-"}
-                    </td>
-                    <td className="px-3 py-2 font-semibold">
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  className="w-full"
+                  variant={datePreset === "1D" ? "default" : "outline"}
+                  onClick={() => setDatePreset("1D")}
+                >
+                  1 Day
+                </Button>
+                <Button
+                  size="sm"
+                  className="w-full"
+                  variant={datePreset === "7D" ? "default" : "outline"}
+                  onClick={() => setDatePreset("7D")}
+                >
+                  7 Days
+                </Button>
+                <Button
+                  size="sm"
+                  className="w-full"
+                  variant={datePreset === "30D" ? "default" : "outline"}
+                  onClick={() => setDatePreset("30D")}
+                >
+                  30 Days
+                </Button>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-full border rounded h-9 px-[0.15rem]"
+                />
+                <strong className="mt-1">-</strong>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-full border rounded h-9 px-[0.15rem]"
+                />
+              </div>
+
+              <Button size="sm" variant="destructive" onClick={resetFilter}>
+                Reset
+              </Button>
+            </div>
+
+            <Table className="mt-2">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Account</TableHead>
+                  <TableHead>Main Value</TableHead>
+                  <TableHead>Others Value</TableHead>
+                  <TableHead>Admin Fee</TableHead>
+                  <TableHead>Total</TableHead>
+                  <TableHead>Payment Method</TableHead>
+                  <TableHead>Duration</TableHead>
+                  <TableHead>Booking Status</TableHead>
+                  <TableHead>Payment Status</TableHead>
+                  <TableHead>Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bookings.map((b) => (
+                  <TableRow key={b.id} className="border-b hover:bg-muted">
+                    <TableCell className="font-mono">
+                      {formatBookingNumber(b.readableNumber)}
+                    </TableCell>
+                    <TableCell>{formatDateTime(b.createdAt)}</TableCell>
+                    <TableCell>{b.customer?.username ?? "-"}</TableCell>
+                    <TableCell>{b.account?.accountCode ?? "-"}</TableCell>
+                    <TableCell>{formatCurrency(b.mainValue)}</TableCell>
+                    <TableCell>{formatCurrency(b.othersValue)}</TableCell>
+                    <TableCell>{formatCurrency(b.adminFee) ?? "-"}</TableCell>
+                    <TableCell className=" font-semibold">
                       {formatCurrency(b.totalValue)}
-                    </td>
-                    <td className="px-3 py-2 font-semibold">
+                    </TableCell>
+                    <TableCell className="font-semibold">
                       {getLatestPayment(b.payments)?.paymentMethod ?? "-"}
-                    </td>
-                    <td className="px-3 py-2 font-semibold">
+                    </TableCell>
+                    <TableCell className=" font-semibold">
                       {b.duration ?? "-"}
-                    </td>
-                    <td className="px-3 py-2">
-                      {renderBookingStatus(b.status)}
-                    </td>
-                    <td className="px-3 py-2 text-xs text-muted-foreground">
+                    </TableCell>
+                    <TableCell>{renderBookingStatus(b.status)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
                       {getLatestPayment(b.payments)?.paidAt
                         ? renderPaymentStatus(
                             getLatestPayment(b.payments)!.status
                           )
                         : "-"}
-                    </td>
-                    <td className="px-3 py-2">
+                    </TableCell>
+                    <TableCell>
                       <div className="flex flex-row gap-2">
                         <Button
                           size="sm"
@@ -423,11 +416,11 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                           </Button>
                         )}
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </DialogContent>
       </Dialog>

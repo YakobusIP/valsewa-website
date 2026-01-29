@@ -1,7 +1,9 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
+import { BookingStatistics } from "@/types/booking.type";
+
 type Props = {
-  statistics: { completedBookingCount: number; totalIncome: number };
+  statistics: BookingStatistics;
   isLoading: boolean;
 };
 
@@ -12,14 +14,14 @@ export default function TransactionStatisticsGrid({
   const data = [
     {
       title: "Accounts Rented",
-      value: statistics?.completedBookingCount
+      value: statistics.completedBookingCount
     },
     {
       title: "Total Income",
       value: new Intl.NumberFormat("id-ID", {
         style: "currency",
         currency: "IDR"
-      }).format(statistics?.totalIncome)
+      }).format(statistics.totalIncome)
     }
   ];
 
