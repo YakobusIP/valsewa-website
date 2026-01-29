@@ -66,6 +66,9 @@ export default {
         sm: "calc(var(--radius) - 4px)"
       },
       screens: {
+        "md-lg": "900px",
+        "xl-2xl": "1440px",
+        "2xl-large": "1720px",
         large: "1920px"
       },
       clipPath: {

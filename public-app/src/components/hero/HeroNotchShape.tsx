@@ -22,37 +22,39 @@ export default function HeroNotchShape() {
     `;
 
   return (
-    <svg
-      className="absolute inset-0 w-full h-full pointer-events-none hidden xl:block sm:px-6 xl:px-12 large:px-0"
-      viewBox="0 0 1920 690"
-      preserveAspectRatio="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      {/* Gradient definition for the background */}
-      <defs>
-        <radialGradient
-          id="heroGradient"
-          cx="0%"
-          cy="50%"
-          r="80%"
-          fx="0%"
-          fy="50%"
-        >
-          <stop offset="0%" stopColor="#210004" />
-          <stop offset="60%" stopColor="#000000" />
-        </radialGradient>
-      </defs>
+    <div className="absolute max-w-[1920px] inset-0 overflow-x-clip overflow-y-visible pointer-events-none hidden xl:block">
+      <svg
+        className="block w-full h-full"
+        viewBox="0 0 1920 690"
+        preserveAspectRatio="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Gradient definition for the background */}
+        <defs>
+          <radialGradient
+            id="heroGradient"
+            cx="0%"
+            cy="50%"
+            r="80%"
+            fx="0%"
+            fy="50%"
+          >
+            <stop offset="0%" stopColor="#210004" />
+            <stop offset="60%" stopColor="#000000" />
+          </radialGradient>
+        </defs>
 
-      {/* Background fill */}
-      <path d={notchPath} fill="url(#heroGradient)" />
+        {/* Background fill */}
+        <path d={notchPath} fill="url(#heroGradient)" />
 
-      {/* Border stroke */}
-      <path
-        d={notchPath}
-        stroke="rgba(255,255,255,0.1)"
-        strokeWidth="2"
-        fill="none"
-      />
-    </svg>
+        {/* Border stroke */}
+        <path
+          d={notchPath}
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth="2"
+          fill="none"
+        />
+      </svg>
+    </div>
   );
 }

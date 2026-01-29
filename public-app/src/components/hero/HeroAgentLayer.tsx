@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+
 import Image from "next/image";
 
 export default function HeroAgentLayer({
@@ -23,7 +24,19 @@ export default function HeroAgentLayer({
       className="absolute inset-0 pointer-events-none"
       style={{ clipPath: "inset(-50% 0 0 0)" }}
     >
-      <div className={cn(activeBrand === "valjoki" ? "xl:top-[50%] top-[60%]" : "top-[110%] sm:top-[95%] md:top-[80%] xl:top-[100%]", activeBrand === "valjubel" ? "left-[10%] sm:left-[10%] xl:left-1/2" : "left-[10%] sm:left-[20%] xl:left-1/2", ` absolute xl:-translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[800px] md:w-[1000px] xl:w-[880px] select-none opacity-100`)}>
+      <div
+        className={cn(
+          activeBrand === "valjoki"
+            ? "md:top-[55%] top-[60%]"
+            : activeBrand === "valjubel"
+              ? "top-[110%] sm:top-[95%] md:top-[125%]"
+              : "top-[110%] sm:top-[95%] md:top-[105%]",
+          activeBrand === "valjubel"
+            ? "left-[10%] sm:left-[10%] md:left-1/2"
+            : "left-[10%] sm:left-[20%] md:left-1/2",
+          `absolute md:-translate-x-1/2 -translate-y-1/2 w-[500px] sm:w-[800px] md:w-[500px] xl:w-[1000px] select-none opacity-100`
+        )}
+      >
         <Image
           key={activeBrand} // Force re-render for animation if needed, or just proper image switch
           src={getImage()}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,18 +10,19 @@ import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { SearchModal } from "./SearchModal";
-import { useRouter } from "next/navigation";
+import { Button } from "./ui/button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 
 interface NavbarProps {
   activeBrand: "valsewa" | "valjubel" | "valjoki";
   setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
 }
 
-function Navbar({ activeBrand, setActiveBrand }: NavbarProps) {
+function NavbarHome({ activeBrand, setActiveBrand }: NavbarProps) {
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -71,15 +72,16 @@ function Navbar({ activeBrand, setActiveBrand }: NavbarProps) {
 
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-        }`}
+      className={`fixed top-0 z-50 w-full transition-all duration-300 lg:pt-3 px-8 lg:px-16 ${
+        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+      }`}
     >
-      <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between px-8 sm:px-12 xl:px-24 large:px-16">
-        <div className="flex items-center gap-4 lg:gap-6 xl:gap-10 pl-4 lg:pl-6 xl:pl-8">
+      <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between">
+        <div className="flex items-center gap-4 md:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 2xl-large:gap-12 large:gap-14 pl-7 lg:pl-9 xl:pl-7">
           {/* Logo wrapper - positioned to align with hero notch on desktop, scales down on lg */}
           <div className="relative">
             {!isScrolled && (
-              <figure className="relative w-[70px] xl:w-[80px] 2xl:w-[130px]">
+              <figure className="relative w-[70px] md:w-[80px] lg:w-[100px] 2xl:w-[130px]">
                 <Image
                   src="/header/Logo Header Valforum.png"
                   alt="logo"
@@ -90,7 +92,7 @@ function Navbar({ activeBrand, setActiveBrand }: NavbarProps) {
               </figure>
             )}
             {isScrolled && (
-              <figure className="relative xl:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
+              <figure className="relative md:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
                 <Image
                   src="/header/VALSEWA.png"
                   alt="logo"
@@ -103,60 +105,64 @@ function Navbar({ activeBrand, setActiveBrand }: NavbarProps) {
           </div>
           {/* BRAND SWITCHER - scales down on lg, full size on xl+ */}
           <div
-            className={`relative transition-all duration-300 ${isScrolled
-              ? "opacity-0 translate-y-[-10px] pointer-events-none"
-              : "opacity-100 translate-y-0"
-              }`}
+            className={`relative transition-all duration-300 ${
+              isScrolled
+                ? "opacity-0 translate-y-[-10px] pointer-events-none"
+                : "opacity-100 translate-y-0"
+            }`}
           >
             <div className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
               {/* VALSEWA */}
               <div
                 onClick={() => setActiveBrand("valsewa")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valsewa"
-                  ? "bg-black shadow-md"
-                  : "hover:bg-white/10"
-                  }`}
+                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
+                  activeBrand === "valsewa"
+                    ? "bg-black shadow-md"
+                    : "hover:bg-white/10"
+                }`}
               >
                 <Image
                   src="/header/VALSEWA.png"
                   alt="VALSEWA"
                   width={130}
                   height={28}
-                  className="object-contain w-[80px] xl:w-[80px] 2xl:w-[130px] h-auto"
+                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
 
               {/* VALJUBEL */}
               <div
                 onClick={() => setActiveBrand("valjubel")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjubel"
-                  ? "bg-black shadow-md"
-                  : "hover:bg-white/10"
-                  }`}
+                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
+                  activeBrand === "valjubel"
+                    ? "bg-black shadow-md"
+                    : "hover:bg-white/10"
+                }`}
               >
                 <Image
                   src="/header/VALJUBEL.png"
                   alt="VALJUBEL"
                   width={130}
                   height={28}
-                  className="object-contain w-[80px] xl:w-[80px] 2xl:w-[130px] h-auto"
+                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
 
               {/* VALJOKI */}
               <div
                 onClick={() => setActiveBrand("valjoki")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjoki"
-                  ? "bg-black shadow-md"
-                  : "hover:bg-white/10"
-                  }`}
+                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
+                  activeBrand === "valjoki"
+                    ? "bg-black shadow-md"
+                    : "hover:bg-white/10"
+                }`}
               >
                 <Image
                   src="/header/VALJOKI.png"
                   alt="VALJOKI"
                   width={130}
                   height={28}
-                  className="object-contain w-[80px] xl:w-[80px] 2xl:w-[130px] h-auto"
+                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
             </div>
@@ -178,7 +184,7 @@ function Navbar({ activeBrand, setActiveBrand }: NavbarProps) {
 
           {/* TOP UP */}
           <Link href="https://valforum.com/top-up">
-            <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl hover:border-white transition cursor-pointer">
+            <Button className="hidden lg:flex border border-white/30 rounded-xl hover:border-white transition">
               <Image
                 src="/header/Diamond.svg"
                 alt="Top Up"
@@ -188,26 +194,52 @@ function Navbar({ activeBrand, setActiveBrand }: NavbarProps) {
               <span className="text-white text-xs md:text-sm font-bold font-instrumentSans">
                 Top Up
               </span>
-            </div>
+            </Button>
+            <Button
+              size="icon"
+              className="lg:hidden border border-white/30 rounded-xl hover:border-white transition"
+            >
+              <Image
+                src="/header/Diamond.svg"
+                alt="Top Up"
+                width={18}
+                height={18}
+              />
+            </Button>
           </Link>
 
           {/* SIGN IN */}
           {!isAuthenticated && (
-            <button
-              onClick={handleLoginClick}
-              className="flex items-center gap-2 px-4 py-2 border border-black rounded-xl bg-white hover:bg-gray-100 transition"
-            >
-              <Image
-                src="/header/SignUp Icon.svg"
-                alt="Sign In"
-                width={18}
-                height={18}
-                className="filter invert"
-              />
-              <span className="text-black text-xs md:text-sm font-semibold">
-                Login/Sign Up
-              </span>
-            </button>
+            <Fragment>
+              <Button
+                onClick={handleLoginClick}
+                className="hidden lg:flex border border-black rounded-xl bg-white hover:bg-gray-100 transition"
+              >
+                <Image
+                  src="/header/SignUp Icon.svg"
+                  alt="Sign In"
+                  width={18}
+                  height={18}
+                  className="filter invert"
+                />
+                <span className="text-black text-xs md:text-sm font-semibold hidden lg:block">
+                  Login/Sign Up
+                </span>
+              </Button>
+              <Button
+                onClick={handleLoginClick}
+                size="icon"
+                className="lg:hidden border border-black rounded-xl bg-white hover:bg-gray-100 transition"
+              >
+                <Image
+                  src="/header/SignUp Icon.svg"
+                  alt="Sign In"
+                  width={18}
+                  height={18}
+                  className="filter invert"
+                />
+              </Button>
+            </Fragment>
           )}
 
           {isAuthenticated && (
@@ -289,4 +321,4 @@ function Navbar({ activeBrand, setActiveBrand }: NavbarProps) {
   );
 }
 
-export default Navbar;
+export default NavbarHome;

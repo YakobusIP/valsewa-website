@@ -9,8 +9,8 @@ import { AccountEntity } from "@/types/account.type";
 import { cn, convertHoursToDays, getRankImageUrl } from "@/lib/utils";
 
 import Image from "next/image";
-import { FaArrowRight, FaFire } from "react-icons/fa";
 import Link from "next/link";
+import { FaArrowRight, FaFire } from "react-icons/fa";
 
 type RecSectionProps = {
   onSeeMore: () => void;
@@ -39,7 +39,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
 
   return (
     <section className="w-full relative z-10 mb-12">
-      <div className="w-full max-w-[1920px] mx-auto xl:px-12">
+      <div className="w-full max-w-[1920px] mx-auto">
         {/* Header */}
         <div className="flex flex-col mb-8">
           <div className="flex items-center gap-2 mb-2">
@@ -56,14 +56,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
         </div>
 
         {/* Grid */}
-        <div
-          className="
-                        flex gap-4 overflow-x-auto pb-2
-                        snap-x snap-mandatory
-                        xl:grid xl:grid-cols-4
-                        xl:overflow-visible
-                    "
-        >
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory xl-2xl:grid xl-2xl:grid-cols-4 xl-2xl:overflow-visible">
           {accounts.map((account) => {
             // Construct displayed tier and rank info
             // Assuming accountCode format like "SSS-01" or similar
@@ -99,10 +92,10 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
               >
                 <div
                   className={cn(
-                    "group relative h-[360px] rounded-lg overflow-auto lg:overflow-hidden border transition-all duration-300 hover:scale-[1.02]",
+                    "group relative rounded-xl overflow-auto lg:overflow-hidden border transition-all duration-300 hover:scale-[1.02]",
                     "border-white/10 hover:border-white/30 bg-[#111] border-[#E8C545]",
                     // Mobile horizontal sizing
-                    "min-w-[75%] snap-start sm:min-w-[320px] xl:min-w-0"
+                    "snap-start min-w-[320px] aspect-square"
                   )}
                 >
                   {/* Background Image */}
@@ -188,7 +181,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
 
                   <div
                     className={cn(
-                      "absolute inset-0 border-2 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
+                      "absolute inset-0 border-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
                       borderColor
                     )}
                   />
@@ -200,14 +193,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
           {/* Discover More Card */}
           <button
             onClick={onSeeMore}
-            className="
-                            group relative h-[360px] rounded-2xl overflow-hidden
-                            bg-gradient-to-br from-[#770000] to-black
-                            border border-white/10
-                            flex flex-col items-center justify-center text-left
-                            transition-all duration-300 hover:scale-[1.02]
-                            min-w-[75%] snap-start sm:min-w-[320px] xl:min-w-0
-                        "
+            className="group relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#770000] to-black border border-white/10 flex flex-col items-center justify-center text-left transition-all duration-300 hover:scale-[1.02] snap-start min-w-[320px] aspect-square"
           >
             <div className="relative z-10 p-6">
               <h3 className="text-3xl font-bold text-white mb-2 leading-tight">

@@ -62,24 +62,21 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
 
   return (
     <Fragment>
+      <div className="relative max-md:hidden">
+        <NavbarHome activeBrand={activeBrand} setActiveBrand={setActiveBrand} />
+      </div>
+      <div className="md:hidden">
+        <NavbarHomeMobile activeBrand={activeBrand} />
+      </div>
       <main>
-        <section className="bg-[#0F0F0F] md:pb-64 pb-32 relative ">
+        <section className="bg-[#0F0F0F] md:pb-64 pb-32 relative px-8 lg:px-16">
           {/* Hero wrapper - overflow-visible to allow notch to show, pt for navbar space */}
-          <div className="relative w-full max-w-[1920px] mx-auto h-auto xl:min-h-[720px] bg-[#0F0F0F] overflow-visible px-4 sm:px-6 xl:px-12 pt-4">
+          <div className="relative w-full max-w-[1920px] mx-auto h-auto bg-[#0F0F0F] overflow-visible pt-4">
             <Hero
               initialCarousel={initialCarousel}
               activeBrand={activeBrand}
               setActiveBrand={setActiveBrand}
             />
-          </div>
-          <div className="relative max-xl:hidden pt-4">
-            <NavbarHome
-              activeBrand={activeBrand}
-              setActiveBrand={setActiveBrand}
-            />
-          </div>
-          <div className="xl:hidden">
-            <NavbarHomeMobile activeBrand={activeBrand} />
           </div>
           {/* <a
         href="https://wa.me/6285175343447?text=Halo admin VALSEWA aku butuh bantuan dong"
@@ -98,7 +95,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
         <FaArrowUp size={30} />
       </div> */}
           <div>
-            <div className="xl:mx-12 sm:mx-6 mx-4 pt-4">
+            <div className="pt-4">
               <div>
                 <HowToOrder />
                 <RecommendedSection onSeeMore={handleSeeMore} />

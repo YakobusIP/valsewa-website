@@ -231,7 +231,7 @@ export default function AccountDetailPage() {
         <NavbarMobile />
       </div>
 
-      <div className="hidden lg:block absolute top-32 left-24 items-center mb-6 z-50">
+      <div className="hidden lg:block fixed top-32 left-24 items-center mb-6 z-50">
         <Link
           href="/"
           className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
@@ -281,23 +281,25 @@ export default function AccountDetailPage() {
             </div>
 
             {/* DESKTOP GRID (>= sm) */}
-            <div className="hidden lg:grid grid-cols-2 gap-1 max-h-[100vh] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {images.map((img: UploadResponse, i: number) => (
-                <div key={i} className="relative aspect-video">
-                  <Image
-                    src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
-                    alt="Account Image"
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-              ))}
+            <div className="hidden lg:block lg:sticky lg:top-[110px]">
+              <div className="grid grid-cols-2 gap-1 max-h-[calc(100vh-110px)] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {images.map((img: UploadResponse, i: number) => (
+                  <div key={i} className="relative aspect-video">
+                    <Image
+                      src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
+                      alt="Account Image"
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* RIGHT — DETAILS */}
-          <div className="col-span-12 lg:col-span-5 space-y-6">
+          <div className="col-span-12 lg:col-span-5 space-y-6 mb-4">
             {/* TITLE */}
             <div className="grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-4 gap-y-1 items-center">
               {/* COL 1 — IMAGE (row-span 2) */}
@@ -372,8 +374,9 @@ export default function AccountDetailPage() {
                     <p className="font-semibold">Skin List</p>
 
                     <div
-                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${showSkins ? "rotate-180" : "rotate-0"
-                        }`}
+                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${
+                        showSkins ? "rotate-180" : "rotate-0"
+                      }`}
                     >
                       <ChevronDown className="w-3 h-3 text-white" />
                     </div>
@@ -426,9 +429,10 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("RENT")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${mode === "RENT"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${
+                      mode === "RENT"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   RENT NOW
@@ -437,9 +441,10 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("BOOK")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${mode === "BOOK"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${
+                      mode === "BOOK"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   BOOK FOR LATER
@@ -462,9 +467,10 @@ export default function AccountDetailPage() {
                           })
                         }
                         className={`border rounded-md py-2 cursor-pointer transition
-                          ${isActive
-                            ? "border-red-600 bg-red-600/10"
-                            : "border-neutral-700 hover:border-red-600"
+                          ${
+                            isActive
+                              ? "border-red-600 bg-red-600/10"
+                              : "border-neutral-700 hover:border-red-600"
                           }`}
                       >
                         <p className="text-xs font-semibold uppercase">
@@ -497,9 +503,10 @@ export default function AccountDetailPage() {
                             })
                           }
                           className={`border rounded-md py-2 cursor-pointer transition
-                            ${isActive
-                              ? "border-red-600 bg-red-600/10"
-                              : "border-neutral-700 hover:border-red-600"
+                            ${
+                              isActive
+                                ? "border-red-600 bg-red-600/10"
+                                : "border-neutral-700 hover:border-red-600"
                             }`}
                         >
                           <p className="text-xs font-semibold uppercase">
@@ -607,9 +614,10 @@ export default function AccountDetailPage() {
                 onClick={onSubmit}
                 disabled={isDisabled || submitting}
                 className={`w-full font-semibold py-3 rounded-md transition
-                  ${isDisabled || submitting
-                    ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-                    : "bg-red-600 hover:bg-red-700 text-white"
+                  ${
+                    isDisabled || submitting
+                      ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700 text-white"
                   }`}
               >
                 {submitting && <>Loading...</>}

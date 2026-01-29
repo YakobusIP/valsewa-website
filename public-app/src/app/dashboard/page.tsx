@@ -83,7 +83,7 @@ export default function Dashboard() {
   return (
     <Fragment>
       <main className="min-h-[100dvh] bg-[#0F0F0F] md:pb-8 pb-4">
-        <div className="container flex flex-col mx-auto p-4 xl:p-8 gap-4">
+        <div className="container flex flex-col mx-auto p-4 md:p-8 gap-4">
           <div
             className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
               isScrolled
