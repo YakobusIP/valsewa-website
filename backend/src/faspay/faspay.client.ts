@@ -9,6 +9,7 @@ import {
   parseToLocalDate,
   parseToLocalDateStr
 } from "../lib/utils";
+import { env } from "../lib/env";
 
 export type CreateQrisPaymentRequest = {
   bookingId: string;
@@ -69,11 +70,25 @@ export const BANK_CODE_TO_CHANNEL_CODE_MAP: Record<BankCodes, string> = {
   [BankCodes.BRI]: "800"
 };
 
-export const BANK_CODE_TO_PREFIX_MAP: Record<BankCodes, string> = {
+export const BANK_CODE_TO_PREFIX_MAP_STG: Record<BankCodes, string> = {
   [BankCodes.BNI]: "9881236371",
   [BankCodes.PERMATA]: "365901",
   [BankCodes.BRI]: "365905"
 };
+
+export const BANK_CODE_TO_PREFIX_MAP_PROD: Record<BankCodes, string> = {
+  [BankCodes.BNI]: "1859317",
+  [BankCodes.PERMATA]: "735138",
+  [BankCodes.BRI]: "365905" // TODO: Update BRI Prod
+};
+
+export function getPrefixByBankCode(bankCode: BankCodes): string {
+  if (env.NODE_ENV === "production") {
+    return BANK_CODE_TO_PREFIX_MAP_PROD[bankCode];
+  }
+
+  return BANK_CODE_TO_PREFIX_MAP_STG[bankCode];
+}
 
 export function generateLargeNumericId(): string {
   const buf = randomBytes(16);
@@ -90,14 +105,14 @@ export function virtualAccountNoToCustomerNo(
   bankAccountNo: string,
   bankCode: BankCodes
 ): string {
-  return bankAccountNo.slice(BANK_CODE_TO_PREFIX_MAP[bankCode].length);
+  return bankAccountNo.slice(getPrefixByBankCode(bankCode).length);
 }
 
 export function generateBankAccountNo(
   bankCode: BankCodes,
   customerId: number
 ): string {
-  let prefix = BANK_CODE_TO_PREFIX_MAP[bankCode];
+  let prefix = getPrefixByBankCode(bankCode);
   if (prefix.length < 8) {
     prefix = prefix.padStart(8 - prefix.length, " ");
   }
@@ -106,7 +121,7 @@ export function generateBankAccountNo(
 }
 
 export function generatePartnerServiceId(bankCode: BankCodes): string {
-  return BANK_CODE_TO_PREFIX_MAP[bankCode].padStart(8, " ");
+  return getPrefixByBankCode(bankCode).padStart(8, " ");
 }
 
 export class FaspayClient {
