@@ -20,9 +20,10 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 interface NavbarProps {
   activeBrand: "valsewa" | "valjubel" | "valjoki";
   setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
+  isScrolled: boolean;
 }
 
-function NavbarHome({ activeBrand, setActiveBrand }: NavbarProps) {
+function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -34,7 +35,6 @@ function NavbarHome({ activeBrand, setActiveBrand }: NavbarProps) {
     setIsSearchOpen(true);
   };
   const { isAuthenticated, username, customerId } = useAuth();
-  const [isScrolled, setIsScrolled] = useState(false);
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
   const bookingReserved = booking?.find(
@@ -57,22 +57,13 @@ function NavbarHome({ activeBrand, setActiveBrand }: NavbarProps) {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 60);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const handleCardClick = (id: string) => {
     router?.push(`/details/${id}`);
   };
 
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 lg:pt-3 px-8 lg:px-16 ${
+      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-16 ${
         isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
       }`}
     >

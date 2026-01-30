@@ -2,7 +2,7 @@ import React from "react";
 
 export default function HowToOrder() {
   return (
-    <section className="w-full relative z-10 mb-20">
+    <section className="w-full relative z-10 mb-20 pt-4">
       <div className="w-full max-w-[1920px] mx-auto">
         <div className="bg-gradient-to-r from-[#770000] to-[#4A0107] rounded-2xl p-3 sm:p-8 md:p-12 relative overflow-hidden border border-white/10 shadow-2xl">
           <h2 className="text-xl md:text-4xl font-antonio font-black text-white tracking-tighter uppercase mb-4 sm:mb-8">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,9 +17,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 interface NavbarHomeMobileProps {
   activeBrand: "valsewa" | "valjubel" | "valjoki";
+  isScrolled: boolean;
 }
 
-const NavbarHomeMobile = ({ activeBrand }: NavbarHomeMobileProps) => {
+const NavbarHomeMobile = ({
+  activeBrand,
+  isScrolled
+}: NavbarHomeMobileProps) => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -43,7 +47,6 @@ const NavbarHomeMobile = ({ activeBrand }: NavbarHomeMobileProps) => {
     setIsSearchOpen(true);
   };
   const { isAuthenticated, username, customerId } = useAuth();
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
@@ -58,18 +61,9 @@ const NavbarHomeMobile = ({ activeBrand }: NavbarHomeMobileProps) => {
   );
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 1);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
+      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${
         isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
       }`}
     >
