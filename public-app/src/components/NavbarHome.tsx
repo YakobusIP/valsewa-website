@@ -68,7 +68,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
       }`}
     >
       <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between">
-        <div className="flex items-center gap-4 md:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 2xl-large:gap-12 large:gap-14 pl-7 lg:pl-9 xl:pl-7">
+        <div className="flex items-center gap-4 md:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 2xl-large:gap-12 large:gap-14 pl-7 md:pl-6 lg:pl-9 xl:pl-7">
           {/* Logo wrapper - positioned to align with hero notch on desktop, scales down on lg */}
           <div className="relative">
             {!isScrolled && (
