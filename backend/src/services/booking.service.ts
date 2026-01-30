@@ -78,14 +78,67 @@ export const PAYMENT_METHODS_MAP: Record<
 export class BookingService {
   constructor(private readonly faspayClient: FaspayClient) {}
 
+  private parseBookingNumber = (input: string): bigint | undefined => {
+    const re = new RegExp(`^VS-(\\d{7})$`);
+    const match = input.trim().toUpperCase().match(re);
+
+    if (!match) return undefined;
+
+    const numeric = match[1].replace(/^0+/, "") || "0";
+
+    return BigInt(numeric);
+  };
+
   getAllBookings = async (
     page?: number,
     limit?: number,
-    query?: string
+    query?: string,
+    datePreset?: string,
+    dateFrom?: Date,
+    dateTo?: Date
   ): Promise<[BookingResponse[], Metadata]> => {
     try {
       const trimmed = (query ?? "").trim();
-      const whereCriteria: Prisma.BookingWhereInput | undefined = undefined;
+      const parsedId = this.parseBookingNumber(trimmed);
+
+      const whereCriteria: Prisma.BookingWhereInput = {};
+
+      // Add readableNumber filter if query is provided
+      if (parsedId !== undefined) {
+        whereCriteria.readableNumber = parsedId;
+      }
+
+      // Handle date filtering
+      if (datePreset) {
+        const now = new Date();
+        const from = new Date();
+        if (datePreset === "1D") from.setDate(now.getDate() - 1);
+        if (datePreset === "7D") from.setDate(now.getDate() - 7);
+        if (datePreset === "30D") from.setDate(now.getDate() - 30);
+
+        whereCriteria.createdAt = {
+          gte: from,
+          lte: now
+        };
+      } else if (dateFrom && dateTo) {
+        const to = new Date(dateTo);
+        to.setHours(23, 59, 59, 999);
+
+        whereCriteria.createdAt = {
+          gte: dateFrom,
+          lte: to
+        };
+      } else if (dateFrom) {
+        whereCriteria.createdAt = {
+          gte: dateFrom
+        };
+      } else if (dateTo) {
+        const to = new Date(dateTo);
+        to.setHours(23, 59, 59, 999);
+        whereCriteria.createdAt = {
+          lte: to
+        };
+      }
 
       let data: Booking[];
       let metadata: Metadata;
@@ -1429,6 +1482,7 @@ export class BookingService {
 
     return {
       id: booking.id,
+      readableNumber: booking.readableNumber.toString(),
       customerId: booking.customerId,
       accountId: booking.accountId,
       status,
@@ -1486,6 +1540,7 @@ export class BookingService {
 
     return {
       id: booking.id,
+      readableNumber: booking.readableNumber.toString(),
       customerId: booking.customerId,
       accountId: booking.accountId,
       status,
@@ -1567,7 +1622,10 @@ export class BookingService {
       bankAccountName: payment.bankAccountName,
       paidAt: payment.paidAt,
       refundedAt: payment.refundedAt,
-      booking: payment.booking
+      booking: {
+        ...payment.booking,
+        readableNumber: payment.booking?.readableNumber.toString()
+      }
     };
   };
 

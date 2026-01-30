@@ -1,6 +1,11 @@
-import { ApiResponseList, MessageResponse } from "@/types/api.type";
+import {
+  ApiResponse,
+  ApiResponseList,
+  MessageResponse
+} from "@/types/api.type";
 import {
   BookingEntity,
+  BookingStatistics,
   CreateAdminBookingRequest,
   CreateBookingRequest,
   UpdateBookingRequest
@@ -11,12 +16,24 @@ import { handleAxiosError, interceptedAxios } from "@/lib/axios";
 const BASE_BOOKING_URL = "/api/bookings";
 
 const createBookingService = () => {
-  const fetchAll = async () => {
+  const fetchAll = async (
+    query?: string,
+    datePreset?: string | null,
+    dateFrom?: string,
+    dateTo?: string
+  ) => {
     try {
-      const response =
-        await interceptedAxios.get<ApiResponseList<BookingEntity>>(
-          BASE_BOOKING_URL
-        );
+      const params: Record<string, string> = {};
+      if (query) params.q = query;
+      if (datePreset) params.datePreset = datePreset;
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
+
+      const response = await interceptedAxios.get<
+        ApiResponseList<BookingEntity>
+      >(BASE_BOOKING_URL, {
+        params
+      });
 
       return response.data;
     } catch (error) {
@@ -30,7 +47,6 @@ const createBookingService = () => {
         `${BASE_BOOKING_URL}/create`,
         data
       );
-      console.log(response.data);
       return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));
@@ -53,7 +69,7 @@ const createBookingService = () => {
   const getAccountRented = async (startDate?: string, endDate?: string) => {
     try {
       const response = await interceptedAxios.get<
-        ApiResponseList<BookingEntity>
+        ApiResponse<BookingStatistics>
       >(`${BASE_BOOKING_URL}/rented`, {
         params: {
           start_date: startDate,

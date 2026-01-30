@@ -90,34 +90,36 @@ export default function PriceTierModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
-        <DialogHeader>
+      <DialogContent className="flex flex-col w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Price Tiers</DialogTitle>
           <DialogDescription>Manage price tiers</DialogDescription>
         </DialogHeader>
-        <DataTable
-          columns={priceTierColumns}
-          data={priceTierList}
-          rowSelection={selectedPriceTierRows}
-          setRowSelection={setSelectedPriceTierRows}
-          isLoadingData={isLoadingPriceTier}
-          deleteData={deleteManyPriceTiers}
-          isLoadingDeleteData={isLoadingDeletePriceTier}
-          page={priceTierListPage}
-          setPage={setPriceTierListPage}
-          metadata={priceTierMetadata}
-          leftSideComponent={
-            <Input
-              startIcon={
-                <SearchIcon size={18} className="text-muted-foreground" />
-              }
-              placeholder="Search price tier..."
-              parentClassName="w-full xl:w-64"
-              onChange={(e) => setLocalSearch(e.target.value)}
-            />
-          }
-          rightSideComponent={<PriceTierDetailModal mode="add" />}
-        />
+        <div className="flex-1 overflow-y-auto">
+          <DataTable
+            columns={priceTierColumns}
+            data={priceTierList}
+            rowSelection={selectedPriceTierRows}
+            setRowSelection={setSelectedPriceTierRows}
+            isLoadingData={isLoadingPriceTier}
+            deleteData={deleteManyPriceTiers}
+            isLoadingDeleteData={isLoadingDeletePriceTier}
+            page={priceTierListPage}
+            setPage={setPriceTierListPage}
+            metadata={priceTierMetadata}
+            leftSideComponent={
+              <Input
+                startIcon={
+                  <SearchIcon size={18} className="text-muted-foreground" />
+                }
+                placeholder="Search price tier..."
+                parentClassName="w-full xl:w-64"
+                onChange={(e) => setLocalSearch(e.target.value)}
+              />
+            }
+            rightSideComponent={<PriceTierDetailModal mode="add" />}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

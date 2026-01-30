@@ -190,7 +190,7 @@ export default function PaymentSuccessPage() {
                       "_blank"
                     )
                   }
-                  className="font-semibold text-yellow-300 underline"
+                  className="font-semibold text-yellow-300 underline hover:cursor-pointer"
                 >
                   Customer Service
                 </span>{" "}

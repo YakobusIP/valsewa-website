@@ -115,6 +115,10 @@ export class CustomerService {
 
       return user;
     } catch (error) {
+      if (error instanceof BadRequestError) {
+        throw error;
+      }
+
       throw new InternalServerError((error as Error).message);
     }
   };

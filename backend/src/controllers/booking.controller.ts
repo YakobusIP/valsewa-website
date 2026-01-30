@@ -20,11 +20,17 @@ export class BookingController {
       const page = req.query.page ?? undefined;
       const limit = req.query.limit ?? undefined;
       const query = req.query.q as string;
+      const datePreset = req.query.datePreset as string | undefined;
+      const dateFrom = req.query.dateFrom as string | undefined;
+      const dateTo = req.query.dateTo as string | undefined;
 
       const [data, metadata] = await this.bookingService.getAllBookings(
         page ? parseInt(page as string) : undefined,
         limit ? parseInt(limit as string) : undefined,
-        query
+        query,
+        datePreset,
+        dateFrom ? new Date(dateFrom) : undefined,
+        dateTo ? new Date(dateTo) : undefined
       );
 
       return res.json({ data, metadata });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,9 +15,29 @@ import LoginPage from "./LoginPage";
 import SearchPage from "./SearchPage";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
-const NavbarHomeMobile = () => {
+interface NavbarHomeMobileProps {
+  activeBrand: "valsewa" | "valjubel" | "valjoki";
+  isScrolled: boolean;
+}
+
+const NavbarHomeMobile = ({
+  activeBrand,
+  isScrolled
+}: NavbarHomeMobileProps) => {
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const getLogo = () => {
+    switch (activeBrand) {
+      case "valjubel":
+        return "/header/VALJUBEL.png";
+      case "valjoki":
+        return "/header/VALJOKI.png";
+      case "valsewa":
+      default:
+        return "/header/VALSEWA.png";
+    }
+  };
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
@@ -27,7 +47,6 @@ const NavbarHomeMobile = () => {
     setIsSearchOpen(true);
   };
   const { isAuthenticated, username, customerId } = useAuth();
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
@@ -42,22 +61,13 @@ const NavbarHomeMobile = () => {
   );
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 60);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
+      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${
         isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
       }`}
     >
-      <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-3 sm:px-6 lg:px-12">
+      <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-8">
         {/* LEFT */}
         <div className="flex items-center flex-1">
           <button onClick={handleSearchClick}>
@@ -65,8 +75,8 @@ const NavbarHomeMobile = () => {
               <Image
                 src="/header/Frame.svg"
                 alt="Search"
-                width={18}
-                height={18}
+                width={30}
+                height={30}
               />
             </div>
           </button>
@@ -76,8 +86,8 @@ const NavbarHomeMobile = () => {
         <div className="flex items-center justify-center flex-1">
           <figure className="sm:w-[210px] w-[150px]">
             <Image
-              src="/header/VALSEWA.png"
-              alt="logo"
+              src={getLogo()}
+              alt={activeBrand}
               height={80}
               width={210}
               className="object-contain"

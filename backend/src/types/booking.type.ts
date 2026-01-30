@@ -3,6 +3,7 @@ import {
   Payment,
   PaymentMethodType,
   PaymentStatus,
+  Prisma,
   Provider,
   Type
 } from "@prisma/client";
@@ -58,6 +59,7 @@ export type PayBookingRequest = {
 
 export type BookingResponse = {
   id: string;
+  readableNumber: string;
   customerId: number | null;
   accountId: number;
   status: BookingStatus;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,19 +10,23 @@ import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-import LoginPage from "./LoginPage";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
-import { SearchModal } from "./SearchModal";
 import { useRouter } from "next/navigation";
 
-function Navbar() {
+import LoginPage from "./LoginPage";
+import { SearchModal } from "./SearchModal";
+import { Button } from "./ui/button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+
+interface NavbarProps {
+  activeBrand: "valsewa" | "valjubel" | "valjoki";
+  setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
+  isScrolled: boolean;
+}
+
+function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [activeBrand, setActiveBrand] = useState<
-    "valsewa" | "valjubel" | "valjoki"
-  >("valsewa");
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
@@ -31,7 +35,6 @@ function Navbar() {
     setIsSearchOpen(true);
   };
   const { isAuthenticated, username, customerId } = useAuth();
-  const [isScrolled, setIsScrolled] = useState(false);
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
   const bookingReserved = booking?.find(
@@ -54,31 +57,22 @@ function Navbar() {
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 60);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const handleCardClick = (id: string) => {
     router?.push(`/details/${id}`);
   };
 
   return (
     <div
-      className={`fixed top-0 z-50 w-full transition-all duration-300 pt-3 pb-3 ${
+      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-16 ${
         isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
       }`}
     >
-      <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between px-8 sm:px-12 xl:px-24 large:px-16">
-        <div className="flex items-center gap-4 lg:gap-6 xl:gap-10 pl-4 lg:pl-6 xl:pl-8">
+      <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between">
+        <div className="flex items-center gap-4 md:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 2xl-large:gap-12 large:gap-14 pl-7 md:pl-6 lg:pl-9 xl:pl-7">
           {/* Logo wrapper - positioned to align with hero notch on desktop, scales down on lg */}
           <div className="relative">
             {!isScrolled && (
-              <figure className="relative w-[70px] xl:w-[80px] 2xl:w-[130px]">
+              <figure className="relative w-[70px] md:w-[80px] lg:w-[100px] 2xl:w-[130px]">
                 <Image
                   src="/header/Logo Header Valforum.png"
                   alt="logo"
@@ -89,12 +83,12 @@ function Navbar() {
               </figure>
             )}
             {isScrolled && (
-              <figure className="relative xl:max-w-[130px] sm:max-w-[130px] max-w-[130px]">
+              <figure className="relative md:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
                 <Image
                   src="/header/VALSEWA.png"
                   alt="logo"
-                  height={50}
-                  width={130}
+                  height={80}
+                  width={170}
                   className="object-contain"
                 />
               </figure>
@@ -112,7 +106,7 @@ function Navbar() {
               {/* VALSEWA */}
               <div
                 onClick={() => setActiveBrand("valsewa")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
+                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
                   activeBrand === "valsewa"
                     ? "bg-black shadow-md"
                     : "hover:bg-white/10"
@@ -123,14 +117,14 @@ function Navbar() {
                   alt="VALSEWA"
                   width={130}
                   height={28}
-                  className="object-contain w-[80px] xl:w-[80px] 2xl:w-[130px] h-auto"
+                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
 
               {/* VALJUBEL */}
               <div
                 onClick={() => setActiveBrand("valjubel")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
+                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
                   activeBrand === "valjubel"
                     ? "bg-black shadow-md"
                     : "hover:bg-white/10"
@@ -141,14 +135,14 @@ function Navbar() {
                   alt="VALJUBEL"
                   width={130}
                   height={28}
-                  className="object-contain w-[80px] xl:w-[80px] 2xl:w-[130px] h-auto"
+                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
 
               {/* VALJOKI */}
               <div
                 onClick={() => setActiveBrand("valjoki")}
-                className={`flex items-center justify-center px-3 lg:px-4 xl:px-6 py-2 rounded-xl cursor-pointer transition ${
+                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
                   activeBrand === "valjoki"
                     ? "bg-black shadow-md"
                     : "hover:bg-white/10"
@@ -159,7 +153,7 @@ function Navbar() {
                   alt="VALJOKI"
                   width={130}
                   height={28}
-                  className="object-contain w-[80px] xl:w-[80px] 2xl:w-[130px] h-auto"
+                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
             </div>
@@ -181,7 +175,7 @@ function Navbar() {
 
           {/* TOP UP */}
           <Link href="https://valforum.com/top-up">
-            <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl hover:border-white transition cursor-pointer">
+            <Button className="hidden lg:flex border border-white/30 rounded-xl hover:border-white transition">
               <Image
                 src="/header/Diamond.svg"
                 alt="Top Up"
@@ -191,26 +185,52 @@ function Navbar() {
               <span className="text-white text-xs md:text-sm font-bold font-instrumentSans">
                 Top Up
               </span>
-            </div>
+            </Button>
+            <Button
+              size="icon"
+              className="lg:hidden border border-white/30 rounded-xl hover:border-white transition"
+            >
+              <Image
+                src="/header/Diamond.svg"
+                alt="Top Up"
+                width={18}
+                height={18}
+              />
+            </Button>
           </Link>
 
           {/* SIGN IN */}
           {!isAuthenticated && (
-            <button
-              onClick={handleLoginClick}
-              className="flex items-center gap-2 px-4 py-2 border border-black rounded-xl bg-white hover:bg-gray-100 transition"
-            >
-              <Image
-                src="/header/SignUp Icon.svg"
-                alt="Sign In"
-                width={18}
-                height={18}
-                className="filter invert"
-              />
-              <span className="text-black text-xs md:text-sm font-semibold">
-                Login/Sign Up
-              </span>
-            </button>
+            <Fragment>
+              <Button
+                onClick={handleLoginClick}
+                className="hidden lg:flex border border-black rounded-xl bg-white hover:bg-gray-100 transition"
+              >
+                <Image
+                  src="/header/SignUp Icon.svg"
+                  alt="Sign In"
+                  width={18}
+                  height={18}
+                  className="filter invert"
+                />
+                <span className="text-black text-xs md:text-sm font-semibold hidden lg:block">
+                  Login/Sign Up
+                </span>
+              </Button>
+              <Button
+                onClick={handleLoginClick}
+                size="icon"
+                className="lg:hidden border border-black rounded-xl bg-white hover:bg-gray-100 transition"
+              >
+                <Image
+                  src="/header/SignUp Icon.svg"
+                  alt="Sign In"
+                  width={18}
+                  height={18}
+                  className="filter invert"
+                />
+              </Button>
+            </Fragment>
           )}
 
           {isAuthenticated && (
@@ -292,4 +312,4 @@ function Navbar() {
   );
 }
 
-export default Navbar;
+export default NavbarHome;

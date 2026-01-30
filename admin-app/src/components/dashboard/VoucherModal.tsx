@@ -199,7 +199,7 @@ export default function VoucherModal({
                       </p>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-col xl:flex-row gap-2">
                       <Button
                         size="sm"
                         className="hover:bg-slate-400"
@@ -221,6 +221,7 @@ export default function VoucherModal({
                       <Button
                         size="icon"
                         variant="destructive"
+                        className="place-self-end"
                         onClick={() => handleDelete(voucher.id)}
                       >
                         <Trash2 className="h-4 w-4" />

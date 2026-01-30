@@ -13,6 +13,7 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -52,13 +53,31 @@ export default function SkinDetailModal({ mode, data }: Props) {
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
   const [isLoadingFetchImage, setIsLoadingFetchImage] = useState(false);
 
+  const convertKeywordToNewLines = (keyword: string | null) => {
+    if (!keyword) return "";
+    return keyword
+      .split(/\s*,\s*/g)
+      .map((k) => k.trim())
+      .filter(Boolean)
+      .join("\n");
+  };
+
+  const convertKeywordToComma = (keyword: string | null) => {
+    if (!keyword) return "";
+    return keyword
+      .split(/\r?\n/g)
+      .map((k) => k.trim())
+      .filter(Boolean)
+      .join(", ");
+  };
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues:
       mode === "edit" && data
         ? {
             name: data.name,
-            keyword: data.keyword,
+            keyword: convertKeywordToNewLines(data.keyword),
             imageUrl: data.imageUrl ?? ""
           }
         : {
@@ -119,7 +138,7 @@ export default function SkinDetailModal({ mode, data }: Props) {
 
       form.reset({
         name: data.name ?? "",
-        keyword: data.keyword ?? "",
+        keyword: convertKeywordToNewLines(data.keyword),
         imageUrl: initialImageUrl
       });
 
@@ -137,7 +156,12 @@ export default function SkinDetailModal({ mode, data }: Props) {
 
   const handleAddSkin = async (values: z.infer<typeof formSchema>) => {
     try {
-      const response = await skinService.create(values);
+      const data = {
+        ...values,
+        keyword: convertKeywordToComma(values.keyword)
+      };
+
+      const response = await skinService.create(data);
       await refetchSkin();
       onOpenChange(false);
 
@@ -168,7 +192,12 @@ export default function SkinDetailModal({ mode, data }: Props) {
     values: z.infer<typeof formSchema>
   ) => {
     try {
-      const response = await skinService.update(id, values);
+      const data = {
+        ...values,
+        keyword: convertKeywordToComma(values.keyword) ?? ""
+      };
+
+      const response = await skinService.update(id, data);
       await refetchSkin();
       onOpenChange(false);
 
@@ -267,6 +296,9 @@ export default function SkinDetailModal({ mode, data }: Props) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Keyword</FormLabel>
+                    <FormDescription>
+                      Keyword dipisahkan dengan baris baru
+                    </FormDescription>
                     <FormControl>
                       <Textarea
                         placeholder="Enter skin keyword here"

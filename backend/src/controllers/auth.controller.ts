@@ -126,15 +126,7 @@ export class AuthController {
           }
         );
 
-        const refreshToken = jwt.sign(
-          { username: payload.username },
-          REFRESH_TOKEN_SECRET,
-          {
-            expiresIn: env.REFRESH_TOKEN_DURATION as StringValue
-          }
-        );
-
-        return res.status(200).json({ accessToken, refreshToken });
+        return res.status(200).json({ accessToken });
       });
     } catch (error) {
       if (error instanceof ForbiddenError) {
@@ -259,17 +251,7 @@ export class AuthController {
           }
         );
 
-        const refreshToken = jwt.sign(
-          { id: payload.id, username: payload.username },
-          PUB_REFRESH_TOKEN_SECRET,
-          {
-            expiresIn: env.PUB_REFRESH_TOKEN_DURATION as StringValue
-          }
-        );
-
-        return res
-          .status(200)
-          .json({ pubAccessToken: accessToken, pubRefreshToken: refreshToken });
+        return res.status(200).json({ pubAccessToken: accessToken });
       });
     } catch (error) {
       if (error instanceof ForbiddenError) {

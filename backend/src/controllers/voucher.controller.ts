@@ -53,7 +53,7 @@ export class VoucherController {
     }
   };
 
-  createVoucher = async (req: Request, res: Response) => {
+  createVoucher = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const {
         voucherName,
@@ -75,59 +75,59 @@ export class VoucherController {
         dateEnd: new Date(dateEnd)
       });
 
-      res.status(201).json({
+      return res.status(201).json({
         message: "Voucher created successfully"
       });
     } catch (error) {
-      res.status(400).json({
-        message: (error as Error).message
-      });
+      return next(error);
     }
   };
 
-  toggleVoucherStatus = async (req: Request, res: Response) => {
+  toggleVoucherStatus = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const { id } = req.params;
 
       await this.voucherService.toggleStatus(Number(id));
 
-      res.json({ message: "Voucher status updated" });
+      return res.status(200).json({ message: "Voucher status updated" });
     } catch (error) {
-      res.status(400).json({
-        message: (error as Error).message
-      });
+      return next(error);
     }
   };
 
-  toggleVoucherVisible = async (req: Request, res: Response) => {
+  toggleVoucherVisible = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const { id } = req.params;
 
       await this.voucherService.toggleVisibility(Number(id));
 
-      res.json({ message: "Voucher visibility updated" });
+      return res.status(200).json({ message: "Voucher visibility updated" });
     } catch (error) {
-      res.status(400).json({
-        message: (error as Error).message
-      });
+      return next(error);
     }
   };
 
-  deleteVoucher = async (req: Request, res: Response) => {
+  deleteVoucher = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
 
       await this.voucherService.remove(Number(id));
 
-      res.json({ message: "Voucher deleted" });
+      return res.status(200).json({ message: "Voucher deleted" });
     } catch (error) {
-      res.status(400).json({
-        message: (error as Error).message
-      });
+      return next(error);
     }
   };
 
-  toggleValidity = async (req: Request, res: Response) => {
+  toggleValidity = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const { isValid } = req.body;
@@ -137,20 +137,18 @@ export class VoucherController {
         Boolean(isValid)
       );
 
-      res.status(200).json({
+      return res.status(200).json({
         message: "Voucher validity updated"
       });
     } catch (error) {
-      res.status(500).json({
-        message: "Failed to update voucher validity"
-      });
+      return next(error);
     }
   };
 
   checkExpiration = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const result = await this.voucherService.checkVoucherExpiration();
-      return res.json({
+      return res.status(200).json({
         message: "Voucher expiration check completed",
         ...result
       });

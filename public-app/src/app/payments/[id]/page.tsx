@@ -268,7 +268,7 @@ export default function PaymentDetailPage() {
 
               <h1
                 className={cn(
-                  "text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl text-center font-bold mb-4 leading-[1.2]",
+                  "text-4xl sm:text-5xl md:text-6xl lg:text-7xl md:text-8xl text-center font-bold mb-4 leading-[1.2]",
                   staatliches.className
                 )}
               >

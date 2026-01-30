@@ -36,7 +36,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
 
   return (
     <section className="w-full flex justify-center">
-      <div className="w-full max-w-[1920px] xl:px-12">
+      <div className="w-full max-w-[1920px]">
         <div className="flex flex-col mb-8">
           <div className="flex items-center gap-2 mb-2">
             <h2 className="text-3xl md:text-5xl font-antonio font-black text-white tracking-tighter uppercase relative">
@@ -65,7 +65,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                 key={item.id}
                 href={`/details/${item.id}`}
                 className={`
-                col-span-6 sm:col-span-6 lg:col-span-4 xl:col-span-4
+                col-span-6 sm:col-span-6 lg:col-span-4
                 w-full h-full cursor-pointer
                 transition-all duration-300
                 ${inUse ? "" : "hover:scale-[1.02]"}

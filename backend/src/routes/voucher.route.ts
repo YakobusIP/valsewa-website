@@ -2,6 +2,8 @@ import { Router } from "express";
 import { VoucherController } from "../controllers/voucher.controller";
 import { VoucherService } from "../services/voucher.service";
 import { schedulerMiddleware } from "../middleware/scheduler.middleware";
+import { authMiddleware } from "../middleware/auth.middleware";
+import { customerMiddleware } from "../middleware/customer.middleware";
 
 class VoucherRouter {
   public router: Router;
@@ -16,19 +18,26 @@ class VoucherRouter {
   }
 
   private initializeRoutes() {
-    this.router.get("/", this.voucherController.getAllVouchers);
-    this.router.get("/active", this.voucherController.getActiveVouchers);
+    this.router.get("/", authMiddleware, this.voucherController.getAllVouchers);
+    this.router.get(
+      "/active",
+      customerMiddleware,
+      this.voucherController.getActiveVouchers
+    );
     this.router.get(
       "/active/:voucherName",
+      customerMiddleware,
       this.voucherController.getActiveVoucherByVoucherName
     );
-    this.router.post("/", this.voucherController.createVoucher);
+    this.router.post("/", authMiddleware, this.voucherController.createVoucher);
     this.router.patch(
       "/:id/toggle",
+      authMiddleware,
       this.voucherController.toggleVoucherStatus
     );
     this.router.patch(
       "/:id/toggleVisibility",
+      authMiddleware,
       this.voucherController.toggleVoucherVisible
     );
     this.router.post(
@@ -36,7 +45,11 @@ class VoucherRouter {
       schedulerMiddleware,
       this.voucherController.checkExpiration
     );
-    this.router.delete("/:id", this.voucherController.deleteVoucher);
+    this.router.delete(
+      "/:id",
+      authMiddleware,
+      this.voucherController.deleteVoucher
+    );
   }
 }
 

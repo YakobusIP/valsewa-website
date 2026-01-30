@@ -252,9 +252,9 @@ export default function DiscoverSection({
   }, []);
 
   return (
-    <section className="w-full relative z-10 -mt-8 mb-12">
-      <div className="w-full max-w-[1920px] mx-auto xl:px-12">
-        <div className="sm:bg-gradient-to-r sm:from-black sm:via-[#5e0000] sm:to-[#C70515] sm:rounded-3xl 2xl:p-8 sm:p-8 md:p-8 relative overflow-hidden sm:bg-clip-padding sm:border sm:border-transparent sm:ring-1 sm:ring-white/10 sm:shadow-2xl">
+    <section className="w-full relative z-10 mb-12 mt-32">
+      <div className="w-full max-w-[1920px] mx-auto">
+        <div className="sm:bg-gradient-to-r sm:from-black sm:via-[#5e0000] sm:to-[#C70515] sm:rounded-3xl 2md:p-8 sm:p-8 md:p-8 relative overflow-hidden sm:bg-clip-padding sm:border sm:border-transparent sm:ring-1 sm:ring-white/10 sm:shadow-2xl">
           {/* Header Section */}
           <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
             <div>
@@ -333,12 +333,12 @@ export default function DiscoverSection({
 
                     {/* Main Content */}
                     <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
-                      <span className="2xl:text-6xl sm:text-6xl text-2xl font-black italic text-white mr-2 tracking-tighter font-antonio">
+                      <span className="sm:text-6xl text-2xl font-black italic text-white mr-2 tracking-tighter font-antonio">
                         LR
                       </span>
                       <span
                         className={cn(
-                          "text-5xl 2xl:text-8xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
+                          "text-5xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
                           lrtier.color
                         )}
                       >
@@ -413,7 +413,7 @@ export default function DiscoverSection({
                     <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
                       <span
                         className={cn(
-                          "text-5xl 2xl:text-8xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
+                          "text-5xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
                           tier.color
                         )}
                       >

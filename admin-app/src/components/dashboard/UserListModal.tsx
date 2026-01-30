@@ -7,11 +7,24 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
 import { Customer } from "@/types/customer.type";
+
+import { PlusIcon } from "lucide-react";
+
+import { Badge } from "../ui/badge";
 
 type User = Customer;
 
@@ -64,86 +77,88 @@ export default function UserListModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full xl:w-3/5 max-h-[100dvh] overflow-y-auto">
+      <DialogContent className="flex flex-col w-full xl:w-3/5 max-h-[100dvh] overflow-y-auto">
         <DialogHeader className="space-y-1">
           <DialogTitle>Customer List</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            Manage registered customers
-          </p>
+          <DialogDescription>Manage registered customers</DialogDescription>
         </DialogHeader>
 
-        {/* TABLE CONTAINER */}
-        <div className="mt-4 border rounded-lg overflow-y-hidden bg-background">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50 border-b">
-              <tr>
-                <th className="px-4 py-3 text-left w-[60px]">#</th>
-                <th className="px-4 py-3 text-left">Username</th>
-                <th className="px-4 py-3 text-left">Status</th>
-                <th className="px-4 py-3 text-left">Created At</th>
-                <th className="px-4 py-3 text-left">Actions</th>
-              </tr>
-            </thead>
+        <div className="flex-1 overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[60px]">ID</TableHead>
+                <TableHead>Username</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Created At</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
 
-            <tbody>
+            <TableBody>
               {loading && (
-                <tr>
-                  <td
+                <TableRow>
+                  <TableCell
                     colSpan={5}
                     className="py-6 text-center text-muted-foreground"
                   >
                     Loading customers...
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
 
               {error && (
-                <tr>
-                  <td colSpan={5} className="py-6 text-center text-destructive">
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="py-6 text-center text-destructive"
+                  >
                     {error}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
 
               {!loading && !error && users.length === 0 && (
-                <tr>
-                  <td
+                <TableRow>
+                  <TableCell
                     colSpan={5}
                     className="py-6 text-center text-muted-foreground"
                   >
                     No customers found
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )}
 
               {!loading &&
                 !error &&
-                users.map((user, index) => (
-                  <tr
+                users.map((user) => (
+                  <TableRow
                     key={user.id}
                     className="border-b last:border-b-0 hover:bg-muted transition-colors"
                   >
-                    <td className="px-4 py-3">{index + 1}</td>
+                    <TableCell className="px-4 py-3">{user.id}</TableCell>
 
-                    <td className="px-4 py-3 font-medium">{user.username}</td>
+                    <TableCell className="px-4 py-3 font-medium">
+                      {user.username}
+                    </TableCell>
 
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    <TableCell className="px-4 py-3">
+                      <Badge
+                        className={
                           user.isActive
-                            ? "bg-green-500/10 text-green-600"
-                            : "bg-red-500/10 text-red-500"
-                        }`}
+                            ? "bg-green-500/10 text-green-600 hover:bg-green-500/20"
+                            : "bg-red-500/10 text-red-500 hover:bg-red-500/20"
+                        }
                       >
                         {user.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
+                      </Badge>
+                    </TableCell>
 
-                    <td className="px-4 py-3 text-muted-foreground">
+                    <TableCell className="px-4 py-3 text-muted-foreground">
                       {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
+                    </TableCell>
 
-                    <td className="px-4 py-3">
+                    <TableCell className="px-4 py-3">
                       <Button
                         size="sm"
                         variant="outline"
@@ -151,16 +166,18 @@ export default function UserListModal({
                       >
                         Change Password
                       </Button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
 
         {/* FOOTER */}
         <div className="flex justify-end mt-4">
-          <Button onClick={onOpenCreateUser}>+ Create User</Button>
+          <Button onClick={onOpenCreateUser}>
+            <PlusIcon /> Create User
+          </Button>
         </div>
       </DialogContent>
 

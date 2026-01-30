@@ -231,29 +231,29 @@ export default function AccountDetailPage() {
         <NavbarMobile />
       </div>
 
-      <div className="pt-[110px] px-4 lg:px-10">
-        <div className="hidden lg:flex items-center mb-6">
-          <Link
-            href="/"
-            className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
+      <div className="hidden lg:block fixed top-32 left-24 items-center mb-6 z-50">
+        <Link
+          href="/"
+          className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
+        >
+          {/* Solid Left Triangle Custom SVG for precise look */}
+          <svg
+            width="10"
+            height="12"
+            viewBox="0 0 10 12"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className=""
           >
-            {/* Solid Left Triangle Custom SVG for precise look */}
-            <svg
-              width="10"
-              height="12"
-              viewBox="0 0 10 12"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className=""
-            >
-              <path d="M0 6L9.75 11.6292L9.75 0.370835L0 6Z" fill="white" />
-            </svg>
+            <path d="M0 6L9.75 11.6292L9.75 0.370835L0 6Z" fill="white" />
+          </svg>
 
-            <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
-              ALL ACCOUNTS
-            </span>
-          </Link>
-        </div>
+          <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
+            ALL ACCOUNTS
+          </span>
+        </Link>
+      </div>
+      <div className="pt-[110px] px-4 lg:px-10">
         <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8">
           {/* LEFT — GALLERY */}
           <div className="col-span-12 lg:col-span-7">
@@ -281,23 +281,25 @@ export default function AccountDetailPage() {
             </div>
 
             {/* DESKTOP GRID (>= sm) */}
-            <div className="hidden lg:grid grid-cols-2 gap-1 max-h-[100vh] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {images.map((img: UploadResponse, i: number) => (
-                <div key={i} className="relative aspect-video">
-                  <Image
-                    src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
-                    alt="Account Image"
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
-                </div>
-              ))}
+            <div className="hidden lg:block lg:sticky lg:top-[110px]">
+              <div className="grid grid-cols-2 gap-1 max-h-[calc(100vh-110px)] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {images.map((img: UploadResponse, i: number) => (
+                  <div key={i} className="relative aspect-video">
+                    <Image
+                      src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
+                      alt="Account Image"
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* RIGHT — DETAILS */}
-          <div className="col-span-12 lg:col-span-5 space-y-6">
+          <div className="col-span-12 lg:col-span-5 space-y-6 mb-4">
             {/* TITLE */}
             <div className="grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-4 gap-y-1 items-center">
               {/* COL 1 — IMAGE (row-span 2) */}

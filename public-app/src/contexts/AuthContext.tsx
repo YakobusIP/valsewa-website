@@ -102,7 +102,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const publicRoutes = ["/", "/login"];
 
       if (!publicRoutes.includes(pathname)) {
-        router.push("/unauthorized");
+        router.push("/");
       }
     } finally {
       setIsAuthChecked(true);
