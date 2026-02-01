@@ -83,15 +83,17 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               </figure>
             )}
             {isScrolled && (
-              <figure className="relative md:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
-                <Image
-                  src="/header/VALSEWA.png"
-                  alt="logo"
-                  height={80}
-                  width={170}
-                  className="object-contain"
-                />
-              </figure>
+              <Link href="/">
+                <figure className="relative md:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
+                  <Image
+                    src="/header/VALSEWA.png"
+                    alt="logo"
+                    height={80}
+                    width={170}
+                    className="object-contain"
+                  />
+                </figure>
+              </Link>
             )}
           </div>
           {/* BRAND SWITCHER - scales down on lg, full size on xl+ */}

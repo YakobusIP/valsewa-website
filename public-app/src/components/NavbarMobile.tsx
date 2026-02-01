@@ -47,16 +47,18 @@ const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
           />
         )}
         {/* RIGHT - Logo */}
-        <figure className="w-[160px] sm:w-[200px]">
-          <Image
-            src="/header/VALSEWA.png"
-            alt="logo"
-            height={40}
-            width={200}
-            className="object-contain"
-            priority
-          />
-        </figure>
+        <Link href="/">
+          <figure className="w-[160px] sm:w-[200px]">
+            <Image
+              src="/header/VALSEWA.png"
+              alt="logo"
+              height={40}
+              width={200}
+              className="object-contain"
+              priority
+            />
+          </figure>
+        </Link>
       </div>
     </div>
   );

@@ -10,14 +10,14 @@ import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
-import LoginPage from "./LoginPage";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
-import { SearchModal } from "./SearchModal";
 import { useRouter } from "next/navigation";
 
+import LoginPage from "./LoginPage";
+import { SearchModal } from "./SearchModal";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+
 const Navbar = () => {
-  const router = useRouter()
+  const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -50,7 +50,7 @@ const Navbar = () => {
     <div className="fixed top-0 z-50 w-full bg-[#000000] shadow-md shadow-black/5">
       <div className="mx-auto max-w-[1920px] pt-5 h-[84px] md:h-[80px] flex items-center justify-between px-5 ">
         {/* LOGO */}
-        <div className="relative md:pl-14">
+        <Link href="/" className="relative md:pl-14">
           <figure className="relative top-0 lg:max-w-[200px] sm:max-w-[150px] max-w-[150px] left-5">
             <Image
               src="/header/VALSEWA.png"
@@ -60,7 +60,7 @@ const Navbar = () => {
               className="object-contain"
             />
           </figure>
-        </div>
+        </Link>
 
         {/* NAV RIGHT SIDE */}
         <div className="pr-7 flex items-center gap-4">
