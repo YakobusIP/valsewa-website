@@ -57,7 +57,13 @@ import { ranks } from "@/lib/constants";
 import { cn, convertHoursToDays, generatePassword } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CopyIcon, Loader2Icon, LockIcon, Trash2Icon } from "lucide-react";
+import {
+  CopyIcon,
+  LinkIcon,
+  Loader2Icon,
+  LockIcon,
+  Trash2Icon
+} from "lucide-react";
 import parse from "parse-duration";
 import { FieldErrors, useForm, useWatch } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
@@ -285,6 +291,16 @@ export default function AccountDetailModal({
 
   const copySkinListToClipboard = async () => {
     await navigator.clipboard.writeText(skinListText);
+    toast({
+      title: "All set!",
+      description: "Copied to clipboard!"
+    });
+  };
+
+  const copyPublicLinkToClipboard = async () => {
+    await navigator.clipboard.writeText(
+      `${import.meta.env.VITE_PUBLIC_APP_URL}/details/${data?.id}`
+    );
     toast({
       title: "All set!",
       description: "Copied to clipboard!"
@@ -1074,12 +1090,23 @@ export default function AccountDetailModal({
                   <b>{totalRentHourPreview}</b>
                 </p>
 
-                <Button type="submit" className="w-fit">
-                  {isLoadingSubmit && (
-                    <Loader2Icon className="w-4 h-4 animate-spin" />
-                  )}
-                  Submit
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    onClick={() => copyPublicLinkToClipboard()}
+                  >
+                    <LinkIcon />
+                  </Button>
+
+                  <Button type="submit" className="w-fit">
+                    {isLoadingSubmit && (
+                      <Loader2Icon className="w-4 h-4 animate-spin" />
+                    )}
+                    Submit
+                  </Button>
+                </div>
               </div>
             </form>
           </Form>
