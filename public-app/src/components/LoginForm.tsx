@@ -101,7 +101,7 @@ export function LoginForm({ className, onClose, ...props }: LoginFormProps) {
                   target="_blank"
                   className="text-xs text-neutral-400 hover:text-white"
                 >
-                  <span className="underline cursor-pointer">Sign Up</span>
+                  <span className="text-sm underline cursor-pointer text-yellow-400">Sign Up</span>
                 </a>
               </p>
 
