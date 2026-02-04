@@ -96,7 +96,13 @@ export function LoginForm({ className, onClose, ...props }: LoginFormProps) {
             <div className="space-y-2">
               <p className="text-sm text-yellow-400">
                 First Time Here?{" "}
-                <span className="underline cursor-pointer">Sign Up</span>
+                <a
+                  href="https://wa.me/6285175343447?text=Halo Admin mau daftar nih min"
+                  target="_blank"
+                  className="text-xs text-neutral-400 hover:text-white"
+                >
+                  <span className="underline cursor-pointer">Sign Up</span>
+                </a>
               </p>
 
               <h1 className="text-3xl font-semibold text-white">
@@ -154,6 +160,7 @@ export function LoginForm({ className, onClose, ...props }: LoginFormProps) {
               <div className="flex items-center justify-between gap-4">
                 <a
                   href="https://wa.me/6285175343447?text=Halo Admin aku lupa password nih min"
+                  target="_blank"
                   className="text-xs text-neutral-400 hover:text-white"
                 >
                   Forget Password

@@ -16,13 +16,18 @@ import LoginPage from "./LoginPage";
 import { SearchModal } from "./SearchModal";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 
-const Navbar = () => {
-  const router = useRouter();
+interface NavbarProps {
+  onLoginModalOpenChange?: (isOpen: boolean) => void;
+}
+
+const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
+  const router = useRouter()
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
+    onLoginModalOpenChange?.(true);
   };
 
   const handleSearchClick = () => {
@@ -175,7 +180,12 @@ const Navbar = () => {
 
       {/* LOGIN POPUP */}
       {isComponentOpen && (
-        <LoginPage onClose={() => setIsComponentOpen(false)} />
+        <LoginPage
+          onClose={() => {
+            setIsComponentOpen(false);
+            onLoginModalOpenChange?.(false);
+          }}
+        />
       )}
 
       {isSearchOpen && (
