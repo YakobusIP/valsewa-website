@@ -79,7 +79,7 @@ export const BANK_CODE_TO_PREFIX_MAP_STG: Record<BankCodes, string> = {
 export const BANK_CODE_TO_PREFIX_MAP_PROD: Record<BankCodes, string> = {
   [BankCodes.BNI]: "1859317",
   [BankCodes.PERMATA]: "735138",
-  [BankCodes.BRI]: "365905" // TODO: Update BRI Prod
+  [BankCodes.BRI]: "141251"
 };
 
 export function getPrefixByBankCode(bankCode: BankCodes): string {
