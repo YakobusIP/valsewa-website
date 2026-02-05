@@ -101,6 +101,9 @@ jobs:
             sudo systemctl enable --now backend-cron@update-rank.timer || true
 
             cd /srv/backend
+
+            sudo cp .env.production .env
+            
             npm ci --production
             npx prisma migrate deploy
             sudo mv /tmp/deploy/backend/.env.production /srv/backend/
