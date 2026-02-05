@@ -99,6 +99,7 @@ jobs:
             sudo systemctl enable --now backend-cron@sync-completed.timer || true
             sudo systemctl enable --now backend-cron@sync-account-availability.timer || true
             sudo systemctl enable --now backend-cron@update-rank.timer || true
+            sudo systemctl enable --now backend-cron@update-expire-at.timer || true
 
             cd /srv/backend
 
