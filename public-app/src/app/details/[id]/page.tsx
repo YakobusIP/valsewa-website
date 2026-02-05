@@ -1,0 +1,666 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+import { fetchAccountById } from "@/services/accountService";
+import { bookingService } from "@/services/booking.service";
+
+import LoginPage from "@/components/LoginPage";
+import Navbar from "@/components/Navbar";
+import NavbarMobile from "@/components/NavbarMobile";
+import { SearchModal } from "@/components/SearchModal";
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious
+} from "@/components/ui/carousel";
+
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "@/hooks/useToast";
+
+import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
+
+import { getRankImageUrl } from "@/lib/utils";
+
+import { isAxiosError } from "axios";
+import { ChevronDown, Search } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound, useParams, useRouter } from "next/navigation";
+
+export default function AccountDetailPage() {
+  const router = useRouter();
+
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+
+  const [account, setAccount] = useState<AccountEntity | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Skin UI state
+  const [showSkins, setShowSkins] = useState(false);
+  const [skinSearch, setSkinSearch] = useState("");
+  const [mode, setMode] = useState<"RENT" | "BOOK">("RENT");
+  const [qty, setQty] = useState(1);
+  const [selectedDuration, setSelectedDuration] = useState<{
+    label: string;
+    value: PriceList;
+  } | null>(null);
+  const [bookDate, setBookDate] = useState<Date | null>(new Date());
+  const [startTime, setStartTime] = useState<string>(""); // "09:00"
+  const [endTime, setEndTime] = useState<string>("");
+  const { isAuthenticated, customerId } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
+  const [navbarLoginOpen, setNavbarLoginOpen] = useState(false); // NEW state for navbar login
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const handleCardClick = (id: string) => {
+    router?.push(`/details/${id}`);
+  };
+
+  useEffect(() => {
+    fetchAccountById(id)
+      .then((res) => setAccount(res))
+      .catch(() => setAccount(null))
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  useEffect(() => {
+    setSelectedDuration(null);
+  }, [mode]);
+
+  const getStartDateTime = (): Date | null => {
+    if (!bookDate || !startTime) return null;
+
+    const [hours, minutes] = startTime.split(":").map(Number);
+
+    const result = new Date(bookDate);
+    result.setHours(hours, minutes, 0, 0);
+
+    return result;
+  };
+
+  const onSubmit = async () => {
+    if (!isAuthenticated) {
+      setShowLogin(true);
+      return;
+    }
+
+    if (!selectedDuration) return;
+    try {
+      setSubmitting(true);
+      const startAt = getStartDateTime();
+      const booking = await bookingService.createBooking({
+        customerId: customerId ?? undefined,
+        accountId: parseInt(id),
+        priceListId: selectedDuration.value.id,
+        quantity: qty,
+        ...(mode === "BOOK" && startAt ? { startAt } : {})
+      });
+
+      if (booking) {
+        router.push(`/bookings/${booking.id}`);
+      }
+    } catch (error) {
+      let message = "Booking failed";
+
+      if (isAxiosError(error)) {
+        message = error.response?.data?.error || error.message || message;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+
+      toast({
+        variant: "destructive",
+        title: "Booking failed",
+        description: message
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const filteredSkins = useMemo(() => {
+    if (!account?.skinList) return [];
+
+    return account.skinList.filter((skin) =>
+      skin.name.toLowerCase().includes(skinSearch.toLowerCase())
+    );
+  }, [account?.skinList, skinSearch]);
+
+  const priceList = useMemo(() => {
+    return account?.priceTier?.priceList ?? [];
+  }, [account?.priceTier?.priceList]);
+
+  function parseDurationToHours(duration: string): number {
+    const lower = duration.toLowerCase().trim();
+
+    if (lower.endsWith("h")) {
+      return Number(lower.replace("h", ""));
+    }
+
+    if (lower.endsWith("d")) {
+      return Number(lower.replace("d", "")) * 24;
+    }
+
+    return 0;
+  }
+
+  useEffect(() => {
+    if (!selectedDuration || !startTime || qty === 0) {
+      setEndTime("");
+      return;
+    }
+
+    const durationHours = parseDurationToHours(selectedDuration.value.duration);
+    const totalHours = durationHours * qty;
+
+    const [startHour, startMinute] = startTime.split(":").map(Number);
+
+    const start = new Date();
+    start.setHours(startHour, startMinute, 0, 0);
+
+    const end = new Date(start.getTime() + totalHours * 60 * 60 * 1000);
+
+    const hh = end.getHours().toString().padStart(2, "0");
+    const mm = end.getMinutes().toString().padStart(2, "0");
+
+    setEndTime(`${hh}:${mm}`);
+  }, [selectedDuration, startTime, qty]);
+
+  const calculateBasePrice = useCallback(
+    (priceList: PriceList) => {
+      if (!priceList) return 0;
+      return (
+        Number(priceList.normalPrice) +
+        (account?.isLowRank ? Number(priceList.lowPrice) : 0)
+      );
+    },
+    [account?.isLowRank]
+  );
+
+  const calculateTotalPrice = useMemo(() => {
+    if (!selectedDuration || qty === 0) return 0;
+
+    return calculateBasePrice(selectedDuration.value) * qty;
+  }, [selectedDuration, qty, calculateBasePrice]);
+
+  const isDisabled =
+    (mode === "RENT" && (!selectedDuration || qty === 0)) ||
+    (mode === "BOOK" &&
+      (!selectedDuration || !bookDate || !startTime || qty === 0));
+
+  function formatRentDuration(totalHours: number): string {
+    if (!totalHours || totalHours <= 0) return "0h";
+
+    const days = Math.floor(totalHours / 24);
+    const hours = totalHours % 24;
+
+    if (days > 0) {
+      return `${days}d:${hours}h`;
+    }
+
+    return `${hours}h`;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!account) return notFound();
+
+  const images =
+    account.thumbnail && account.otherImages?.length
+      ? [{ ...account.thumbnail, isThumbnail: true }, ...account.otherImages]
+      : (account.otherImages ?? [account.thumbnail]);
+
+  return (
+    <main className="min-h-screen bg-black text-white">
+      <div className="relative max-lg:hidden">
+        <Navbar onLoginModalOpenChange={setNavbarLoginOpen} />
+      </div>
+      <div className="lg:hidden">
+        <NavbarMobile />
+      </div>
+
+      {!showLogin && !navbarLoginOpen && (
+        <div className="hidden lg:block fixed top-32 left-24 items-center mb-6 z-50">
+          <Link
+            href="/"
+            className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
+          >
+            {/* Solid Left Triangle Custom SVG for precise look */}
+            <svg
+              width="10"
+              height="12"
+              viewBox="0 0 10 12"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className=""
+            >
+              <path d="M0 6L9.75 11.6292L9.75 0.370835L0 6Z" fill="white" />
+            </svg>
+            <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
+              ALL ACCOUNTS
+            </span>
+          </Link>
+        </div>
+      )}
+      <div className="pt-[110px] px-4 lg:px-10">
+        <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8">
+          {/* LEFT — GALLERY */}
+          <div className="col-span-12 lg:col-span-7">
+            {/* MOBILE CAROUSEL (< sm) */}
+            <div className="lg:hidden">
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {images.map((img: UploadResponse, i: number) => (
+                    <CarouselItem key={i}>
+                      <div className="relative aspect-video w-full">
+                        <Image
+                          src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
+                          alt="Account Image"
+                          fill
+                          className="object-cover rounded-md"
+                          unoptimized
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-2" />
+                <CarouselNext className="right-2" />
+              </Carousel>
+            </div>
+
+            {/* DESKTOP GRID (>= sm) */}
+            <div className="hidden lg:block lg:sticky lg:top-[110px]">
+              <div className="grid grid-cols-2 gap-1 max-h-[calc(100vh-110px)] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {images.map((img: UploadResponse, i: number) => (
+                  <div key={i} className="relative aspect-video">
+                    <Image
+                      src={img?.imageUrl ?? "/defaultPicture/default.jpg"}
+                      alt="Account Image"
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT — DETAILS */}
+          <div className="col-span-12 lg:col-span-5 space-y-6 mb-4">
+            {/* TITLE */}
+            <div className="grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-4 gap-y-1 items-center">
+              {/* COL 1 — IMAGE (row-span 2) */}
+              <div className="row-span-2">
+                <Image
+                  src={getRankImageUrl(account.accountRank)}
+                  alt={account.accountRank}
+                  width={56}
+                  height={56}
+                  className="object-contain"
+                  priority
+                />
+              </div>
+
+              {/* COL 2 ROW 1 — TITLE */}
+              <h1 className="sm:text-3xl text-xl font-bold text-white tracking-wide leading-tight">
+                <span className="uppercase">{account.accountRank}</span>
+                <span className="text-neutral-400"> | </span>
+                <span>{account.accountCode}</span>
+              </h1>
+
+              {/* COL 3 — ACCOUNT INFO (row-span 2) */}
+              <div className="row-span-2 flex items-center justify-end">
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-blue-400 text-xs cursor-pointer hover:text-blue-300"
+                  onClick={() =>
+                    window.open(
+                      `https://tracker.gg/valorant/profile/riot/${encodeURIComponent(account.nickname)}`,
+                      "_blank"
+                    )
+                  }
+                >
+                  Account Info
+                  <span className="flex items-center justify-center w-3 h-3 rounded-full bg-blue-400 text-black text-[10px] font-bold no-underline">
+                    ?
+                  </span>
+                </button>
+              </div>
+
+              {/* COL 2 ROW 2 — PRICE TIER + STATUS */}
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-600 text-white px-2 py-0.5 text-xs rounded-sm">
+                  {account.priceTier.code}
+                </div>
+              </div>
+            </div>
+
+            {/* META */}
+            <div className="space-y-2 text-sm text-neutral-300">
+              <div className="flex justify-between">
+                <p>Rent Count:</p>
+                <p>{formatRentDuration(account.totalRentHour)}</p>
+              </div>
+              <div className="flex justify-between">
+                <p>Region: </p>
+                <p>IDN</p>
+              </div>
+              <div className="flex justify-between">
+                <p>Rank: </p>
+                <p>{account.accountRank}</p>
+              </div>
+              <div className="flex justify-between">
+                <span>
+                  <div
+                    className="flex items-center justify-between cursor-pointer select-none"
+                    onClick={() => {
+                      setShowSkins((prev) => !prev);
+                      if (showSkins) setSkinSearch("");
+                    }}
+                  >
+                    <p className="font-semibold">Skin List</p>
+
+                    <div
+                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${showSkins ? "rotate-180" : "rotate-0"
+                        }`}
+                    >
+                      <ChevronDown className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
+                </span>
+
+                <p>{account.skinList.length} Skins</p>
+              </div>
+            </div>
+
+            {/* SKIN LIST */}
+            <div className="space-y-3">
+              {showSkins && (
+                <div className="space-y-3">
+                  {/* SEARCH */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                    <input
+                      type="text"
+                      placeholder="Search Valorant skin..."
+                      value={skinSearch}
+                      onChange={(e) => setSkinSearch(e.target.value)}
+                      className="w-full rounded-md bg-neutral-900 border border-neutral-700 pl-9 pr-3 py-2 text-sm text-white placeholder:text-neutral-500 focus:outline-none focus:border-red-500"
+                    />
+                  </div>
+
+                  {/* LIST */}
+                  <div className="flex flex-wrap gap-2 max-h-[240px] overflow-y-auto pr-1">
+                    {filteredSkins.length === 0 ? (
+                      <p className="text-sm text-neutral-500">No skins found</p>
+                    ) : (
+                      filteredSkins.map((skin, i) => (
+                        <Badge
+                          key={skin.id ?? i}
+                          className="bg-neutral-800 text-neutral-200 hover:bg-red-600 transition"
+                        >
+                          {skin.name}
+                        </Badge>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* RENT / BOOK SECTION */}
+            <div className="bg-neutral-900 rounded-xl xl:p-4 p-2 space-y-4">
+              {/* MODE TOGGLE */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setMode("RENT")}
+                  className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
+                    ${mode === "RENT"
+                      ? "bg-red-600 text-white"
+                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    }`}
+                >
+                  RENT NOW
+                </button>
+
+                <button
+                  onClick={() => setMode("BOOK")}
+                  className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
+                    ${mode === "BOOK"
+                      ? "bg-red-600 text-white"
+                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    }`}
+                >
+                  BOOK FOR LATER
+                </button>
+              </div>
+
+              {/* MODE CONTENT */}
+              {mode === "RENT" && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                  {priceList.map((item) => {
+                    const isActive = selectedDuration?.label === item.duration;
+
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() =>
+                          setSelectedDuration({
+                            label: item.duration,
+                            value: item
+                          })
+                        }
+                        className={`border rounded-md py-2 cursor-pointer transition
+                          ${isActive
+                            ? "border-red-600 bg-red-600/10"
+                            : "border-neutral-700 hover:border-red-600"
+                          }`}
+                      >
+                        <p className="text-xs font-semibold uppercase">
+                          {item.duration}
+                        </p>
+                        <p className="sm:text-[11px] text-xs text-neutral-400">
+                          IDR {calculateBasePrice(item).toLocaleString("id-ID")}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {mode === "BOOK" && (
+                <div className="space-y-4">
+                  {/* DURATION SELECT */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                    {priceList.map((item) => {
+                      const isActive =
+                        selectedDuration?.label === item.duration;
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() =>
+                            setSelectedDuration({
+                              label: item.duration,
+                              value: item
+                            })
+                          }
+                          className={`border rounded-md py-2 cursor-pointer transition
+                            ${isActive
+                              ? "border-red-600 bg-red-600/10"
+                              : "border-neutral-700 hover:border-red-600"
+                            }`}
+                        >
+                          <p className="text-xs font-semibold uppercase">
+                            {item.duration}
+                          </p>
+                          <p className="text-[11px] text-neutral-400">
+                            IDR{" "}
+                            {calculateBasePrice(item).toLocaleString("id-ID")}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* DATE + TIME */}
+                  <div className="bg-neutral-900 rounded-xl sm:p-4 grid grid-cols-2 gap-4 pt-5 sm:pt-0">
+                    {/* DATE */}
+                    <div className="flex h-auto justify-center sm:mb-10">
+                      <Calendar
+                        mode="single"
+                        selected={bookDate ?? undefined}
+                        onSelect={(date) => setBookDate(date ?? null)}
+                        disabled={(date) =>
+                          date < new Date(new Date().setHours(0, 0, 0, 0))
+                        }
+                        className="rounded-md border border-neutral-800 bg-black text-white p-2 max-sm:scale-75 origin-top -mt-2 -mb-16
+                          [&_.rdp-day]:text-white [&_.rdp-day]:h-7 [&_.rdp-day]:w-7 [&_.rdp-day]:text-xs
+                          [&_.rdp-head_cell]:text-neutral-400 [&_.rdp-head_cell]:text-[0.65rem] [&_.rdp-head_cell]:font-normal
+                          [&_.rdp-caption_label]:text-white [&_.rdp-caption_label]:text-sm
+                          [&_.rdp-nav_button]:text-white [&_.rdp-nav_button]:h-6 [&_.rdp-nav_button]:w-6
+
+                          [&_.rdp-day[aria-selected=true]]:bg-red-500
+                          [&_.rdp-day[aria-selected=true]]:text-white
+                          [&_.rdp-day[aria-selected=true]]:shadow-[0_0_0_2px_rgba(239,68,68,0.5)]
+
+                          [&_.rdp-day_today]:border
+                          [&_.rdp-day_today]:border-red-500
+                        "
+                      />
+                    </div>
+
+                    {/* TIME */}
+                    <div className="flex flex-col gap-3">
+                      <p className="text-white sm:text-sm text-xs font-semibold">
+                        Rental Time
+                      </p>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-neutral-400">
+                          Start Time
+                        </label>
+                        <input
+                          type="time"
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                          className="bg-neutral-800 text-white rounded-md px-2 py-1"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-neutral-400">
+                          End Time
+                        </label>
+                        <input
+                          type="time"
+                          value={endTime}
+                          disabled
+                          className="bg-neutral-700 text-neutral-400 rounded-md px-2 py-1 cursor-not-allowed"
+                        />
+                      </div>
+                      <p className="mt-2 text-xs text-neutral-400">
+                        {bookDate
+                          ? `Selected: ${bookDate.toLocaleDateString("id-ID")}`
+                          : "Select a date"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* QTY */}
+              <div className="flex items-center justify-between">
+                <span className="sm:text-sm text-xs">Qty</span>
+
+                <div className="flex items-center bg-neutral-800 rounded-md overflow-hidden">
+                  <button
+                    onClick={() => setQty((prev) => Math.max(1, prev - 1))}
+                    className="px-3 py-1 sm:text-lg text-md hover:bg-neutral-700"
+                  >
+                    −
+                  </button>
+
+                  <span className="px-4 sm:text-sm text-xs">{qty}</span>
+
+                  <button
+                    onClick={() => setQty((prev) => prev + 1)}
+                    className="px-3 py-1 sm:text-lg text-md hover:bg-neutral-700"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={onSubmit}
+                disabled={isDisabled || submitting}
+                className={`w-full font-semibold py-3 rounded-md transition
+                  ${isDisabled || submitting
+                    ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700 text-white"
+                  }`}
+              >
+                {submitting && <>Loading...</>}
+
+                {mode === "RENT" && selectedDuration && !submitting && (
+                  <>
+                    IDR {calculateTotalPrice.toLocaleString("id-ID")} | Rent Now
+                  </>
+                )}
+
+                {mode === "BOOK" && selectedDuration && !submitting && (
+                  <>
+                    IDR {calculateTotalPrice.toLocaleString("id-ID")} | Book Now
+                  </>
+                )}
+
+                {mode === "RENT" && !selectedDuration && "Select Duration"}
+                {mode === "BOOK" && !selectedDuration && "Select Date"}
+              </button>
+
+              {/* FOOTER */}
+              <div className="text-center text-xs text-neutral-400 space-y-2">
+                <p>Any Questions?</p>
+                <button
+                  type="button"
+                  className="w-full bg-neutral-700 hover:bg-neutral-600 py-2 rounded-md text-white"
+                  onClick={() =>
+                    window.open(
+                      "https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong",
+                      "_blank"
+                    )
+                  }
+                >
+                  Ask Our Team
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {showLogin && <LoginPage onClose={() => setShowLogin(false)} />}
+
+      <SearchModal
+        open={isSearchOpen}
+        onOpenChange={setIsSearchOpen}
+        onSelectAccount={handleCardClick}
+      />
+    </main>
+  );
+}

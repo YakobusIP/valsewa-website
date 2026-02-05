@@ -35,6 +35,21 @@ jobs:
           HENRIKDEV_API_KEY=${{ secrets.HENRIKDEV_API_KEY }}
           SCHEDULER_API_KEY=${{ secrets.SCHEDULER_API_KEY }}
           BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}
+          PUB_ACCESS_TOKEN_SECRET=${{ secrets.PUB_ACCESS_TOKEN_SECRET }} \
+          PUB_REFRESH_TOKEN_SECRET=${{ secrets.PUB_REFRESH_TOKEN_SECRET }} \
+          PUB_ACCESS_TOKEN_DURATION=${{ vars.PUB_ACCESS_TOKEN_DURATION }} \
+          PUB_REFRESH_TOKEN_DURATION=${{ vars.PUB_REFRESH_TOKEN_DURATION }} \
+          SNAP_BI_MERCHANT_ID=${{ secrets.SNAP_BI_MERCHANT_ID }} \
+          SNAP_BI_CLIENT_ID=${{ secrets.SNAP_BI_CLIENT_ID }} \
+          SNAP_BI_PRIVATE_KEY=${{ secrets.SNAP_BI_PRIVATE_KEY }} \
+          SNAP_BI_CLIENT_SECRET=${{ secrets.SNAP_BI_CLIENT_SECRET }} \
+          SNAP_BI_PARTNER_ID=${{ secrets.SNAP_BI_PARTNER_ID }} \
+          SNAP_BI_CHANNEL_ID=${{ secrets.SNAP_BI_CHANNEL_ID }} \
+          SNAP_BI_PUBLIC_KEY=${{ secrets.SNAP_BI_PUBLIC_KEY }} \
+          PAYMENT_NOTIFICATION_USER_ID=${{ secrets.PAYMENT_NOTIFICATION_USER_ID }} \
+          PAYMENT_NOTIFICATION_PASSWORD=${{ secrets.PAYMENT_NOTIFICATION_PASSWORD }} \
+          BOOKING_HOLD_TIME_MINUTES=${{ vars.BOOKING_HOLD_TIME_MINUTES }} \
+          BOOKING_GRACE_TIME_MILLIS=${{ vars.BOOKING_GRACE_TIME_MILLIS }}
           NODE_ENV=${{ secrets.BACKEND_NODE_ENV }}
           PORT=${{ secrets.BACKEND_PORT }}
           EOF
@@ -56,7 +71,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           port:     ${{ secrets.SSH_PORT }}
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "backend/dist/,backend/.env.production,backend/package.json,backend/package-lock.json,backend/prisma/"
+          source: "backend/dist/,backend/.env.production,backend/package.json,backend/package-lock.json,backend/prisma/,backend/infrastructure/"
           target: /tmp/deploy/backend
           strip_components: 1
 
@@ -69,7 +84,22 @@ jobs:
           key:      ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             sudo systemctl stop backend.service
+
             sudo rsync -rt --delete /tmp/deploy/backend/ /srv/backend/
+
+            # Deploy systemd cron units
+            sudo rsync -rt /tmp/deploy/backend/infrastructure/cron/ /etc/systemd/system/
+
+            sudo systemctl daemon-reload
+
+            # Enable timers once (idempotent)
+            sudo systemctl enable --now backend-cron@check-password-expiration.timer || true
+            sudo systemctl enable --now backend-cron@check-voucher-expiration.timer || true
+            sudo systemctl enable --now backend-cron@sync-expired.timer || true
+            sudo systemctl enable --now backend-cron@sync-completed.timer || true
+            sudo systemctl enable --now backend-cron@sync-account-availability.timer || true
+            sudo systemctl enable --now backend-cron@update-rank.timer || true
+
             cd /srv/backend
             npm ci --production
             npx prisma migrate deploy

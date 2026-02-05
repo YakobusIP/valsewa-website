@@ -27,6 +27,11 @@ class AccountRouter {
     this.router.get("/", authMiddleware, this.accountController.getAllAccounts);
     this.router.get("/public", this.accountController.getAllPublicAccounts);
     this.router.get(
+      "/public/recommended",
+      this.accountController.getRecommendedAccounts
+    );
+    this.router.get("/public/:id", this.accountController.getAccountById);
+    this.router.get(
       "/failed-jobs",
       authMiddleware,
       this.accountController.getFailedAccountJobs
@@ -46,17 +51,17 @@ class AccountRouter {
       authMiddleware,
       this.accountController.getAccountResetLogs
     );
+    this.router.get(
+      "/available",
+      authMiddleware,
+      this.accountController.getAvailableAccounts
+    );
     this.router.get("/:id", this.accountController.getAccountById);
     this.router.post("/", authMiddleware, this.accountController.createAccount);
     this.router.post(
       "/update-rank",
       schedulerMiddleware,
       this.accountController.updateAllAccountsRank
-    );
-    this.router.post(
-      "/update-expire-at",
-      schedulerMiddleware,
-      this.accountController.updateExpireAt
     );
     this.router.put(
       "/finish-booking/:id",
@@ -67,6 +72,11 @@ class AccountRouter {
       "/reset-logs/:id",
       authMiddleware,
       this.accountController.updateResetLogs
+    );
+    this.router.delete(
+      "/reset-logs/:id",
+      authMiddleware,
+      this.accountController.deleteResetLogs
     );
     this.router.put(
       "/:id",

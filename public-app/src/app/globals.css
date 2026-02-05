@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  @apply font-instrumentSans;
 }
 
 @layer base {
@@ -34,6 +34,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
@@ -66,16 +67,37 @@ body {
   * {
     @apply border-border;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-instrumentSans;
   }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-antonio;
+  }
+
+  /* Sub Headlines and elements that should be Instrument Sans explicitly if needed */
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-instrumentSans;
+  }
+
   @keyframes waveBackground {
     0% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }
+
     100% {
       background-position: 0% 50%;
     }
@@ -89,11 +111,15 @@ body {
 }
 
 .no-scrollbar {
-  -ms-overflow-style: none; /* Internet Explorer */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  /* Internet Explorer */
+  scrollbar-width: none;
+  /* Firefox */
 }
+
 .no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari */
+  display: none;
+  /* Chrome, Safari */
 }
 
 @font-face {
@@ -106,6 +132,31 @@ body {
 @font-face {
   font-family: "fpdPressure";
   src: url("/fonts/FPDPressure-Bold.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "antonio";
+  src: url("/fonts/static/Antonio-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "instrumentSansItalic";
+  src: url("/fonts/InstrumentSans-Italic-VariableFont_wdth,wght.ttf")
+    format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "instrumentSans";
+  src: url("/fonts/InstrumentSans-VariableFont_wdth,wght.ttf") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: swap;
