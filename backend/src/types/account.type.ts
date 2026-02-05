@@ -26,7 +26,7 @@ type AccountEntityRequest = {
 };
 
 type AccountWithSkins = Prisma.AccountGetPayload<{
-  include: { skinList: true };
+  // include: { skinList: true };
 }>;
 
 type PublicAccount = Prisma.AccountGetPayload<{
