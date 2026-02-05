@@ -32,9 +32,9 @@ model Account {
   rentHourUpdated        Boolean   @default(false)
   password               String
   passwordResetRequired  Boolean   @default(false)
-  // skinList               String[]  // EXPAND: Temporarily added back for migration (old column)
-  // skins                  Skin[]     // EXPAND: Temporarily renamed relation (was skinList)
-  skinList               Skin[] // CONTRACT: Enable this once migration is complete
+  skinList               String[]  // EXPAND: Temporarily added back for migration (old column)
+  skins                  Skin[]     // EXPAND: Temporarily renamed relation (was skinList)
+  // skinList               Skin[] // CONTRACT: Enable this once migration is complete
   skinCount              Int       @default(0)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
@@ -66,7 +66,7 @@ model AccountResetLog {
 model PriceTier {
   id        Int      @id @default(autoincrement())
   code      String   @unique
-  // description String?  // EXPAND: Temporarily added back for migration
+  description String?  // EXPAND: Temporarily added back for migration
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
