@@ -177,8 +177,9 @@ export default function AccountDetailPage() {
     (priceList: PriceList) => {
       if (!priceList) return 0;
       return (
-        Number(priceList.normalPrice) +
-        (account?.isLowRank ? Number(priceList.lowPrice) : 0)
+        account?.isLowRank
+          ? Number(priceList.lowPrice)
+          : Number(priceList.normalPrice)
       );
     },
     [account?.isLowRank]
@@ -345,7 +346,9 @@ export default function AccountDetailPage() {
               {/* COL 2 ROW 2 — PRICE TIER + STATUS */}
               <div className="flex items-center gap-3">
                 <div className="bg-purple-600 text-white px-2 py-0.5 text-xs rounded-sm">
-                  {account.priceTier.code}
+                  {account.isLowRank
+                    ? `LR-${account.priceTier.code}`
+                    : account.priceTier.code}
                 </div>
               </div>
             </div>
@@ -376,8 +379,9 @@ export default function AccountDetailPage() {
                     <p className="font-semibold">Skin List</p>
 
                     <div
-                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${showSkins ? "rotate-180" : "rotate-0"
-                        }`}
+                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${
+                        showSkins ? "rotate-180" : "rotate-0"
+                      }`}
                     >
                       <ChevronDown className="w-3 h-3 text-white" />
                     </div>
@@ -430,9 +434,10 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("RENT")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${mode === "RENT"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${
+                      mode === "RENT"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   RENT NOW
@@ -441,9 +446,10 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("BOOK")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${mode === "BOOK"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${
+                      mode === "BOOK"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   BOOK FOR LATER
@@ -466,9 +472,10 @@ export default function AccountDetailPage() {
                           })
                         }
                         className={`border rounded-md py-2 cursor-pointer transition
-                          ${isActive
-                            ? "border-red-600 bg-red-600/10"
-                            : "border-neutral-700 hover:border-red-600"
+                          ${
+                            isActive
+                              ? "border-red-600 bg-red-600/10"
+                              : "border-neutral-700 hover:border-red-600"
                           }`}
                       >
                         <p className="text-xs font-semibold uppercase">
@@ -501,9 +508,10 @@ export default function AccountDetailPage() {
                             })
                           }
                           className={`border rounded-md py-2 cursor-pointer transition
-                            ${isActive
-                              ? "border-red-600 bg-red-600/10"
-                              : "border-neutral-700 hover:border-red-600"
+                            ${
+                              isActive
+                                ? "border-red-600 bg-red-600/10"
+                                : "border-neutral-700 hover:border-red-600"
                             }`}
                         >
                           <p className="text-xs font-semibold uppercase">
@@ -611,9 +619,10 @@ export default function AccountDetailPage() {
                 onClick={onSubmit}
                 disabled={isDisabled || submitting}
                 className={`w-full font-semibold py-3 rounded-md transition
-                  ${isDisabled || submitting
-                    ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-                    : "bg-red-600 hover:bg-red-700 text-white"
+                  ${
+                    isDisabled || submitting
+                      ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700 text-white"
                   }`}
               >
                 {submitting && <>Loading...</>}
