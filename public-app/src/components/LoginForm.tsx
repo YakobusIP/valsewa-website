@@ -97,11 +97,13 @@ export function LoginForm({ className, onClose, ...props }: LoginFormProps) {
               <p className="text-sm text-yellow-400">
                 First Time Here?{" "}
                 <a
-                  href="https://wa.me/6285175343447?text=Halo Admin mau daftar nih min"
+                  href="https://wa.me/6285175343447?text=Halo admin Valsewa aku mau buat akun dong"
                   target="_blank"
                   className="text-xs text-yellow-400 hover:text-yellow-500"
                 >
-                  <span className="text-sm underline cursor-pointer">Sign Up</span>
+                  <span className="text-sm underline cursor-pointer">
+                    Sign Up
+                  </span>
                 </a>
               </p>
 
