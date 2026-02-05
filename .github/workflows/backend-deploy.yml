@@ -102,8 +102,8 @@ jobs:
 
             cd /srv/backend
 
-            sudo cp .env.production .env
-            
+            sudo install -m 600 /tmp/deploy/backend/.env.production /srv/backend/.env
+
             npm ci --production
             npx prisma migrate deploy
             sudo mv /tmp/deploy/backend/.env.production /srv/backend/
