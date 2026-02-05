@@ -102,7 +102,7 @@ jobs:
 
             cd /srv/backend
 
-            sudo install -m 600 /tmp/deploy/backend/.env.production /srv/backend/.env
+            sudo install -m 600 -o deploy -g deploy /tmp/deploy/backend/.env.production /srv/backend/.env
 
             npm ci --production
             npx prisma generate
