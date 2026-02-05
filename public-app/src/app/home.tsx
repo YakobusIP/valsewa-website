@@ -1,53 +1,89 @@
 "use client";
 
+import { Fragment, useEffect, useRef, useState } from "react";
+
 import Card from "@/components/Card";
-import Navbar from "@/components/Navbar";
-import Navbar1 from "@/components/Navbar1";
-import SearchBar from "@/components/SearchBar";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious
-} from "@/components/ui/carousel";
+import DiscoverSection from "@/components/DiscoverSection";
+import Hero from "@/components/Hero";
+import HowToOrder from "@/components/HowToOrder";
+import NavbarHome from "@/components/NavbarHome";
+import NavbarHomeMobile from "@/components/NavbarHomeMobile";
+import RecommendedSection from "@/components/RecommendedSection";
 
 import { AccountEntity, CarouselSlide } from "@/types/account.type";
 
 import { useAccountController } from "@/controllers/useAccountController";
-import Autoplay from "embla-carousel-autoplay";
+import { motion } from "framer-motion";
 import Image from "next/image";
-import { FaArrowUp } from "react-icons/fa";
 
 interface Props {
   initialAccount: AccountEntity[];
   initialCarousel: CarouselSlide[];
 }
 export default function Home({ initialAccount, initialCarousel }: Props) {
-  const {
-    accountList,
-    setSearchAccount,
-    sortAccount,
-    sortDirection,
-    changeDirection,
-    getSortLabel
-  } = useAccountController(initialAccount);
+  const [shouldScroll, setShouldScroll] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const { accountList, loading, selectTier, selectRank } =
+    useAccountController(initialAccount);
 
-  console.log(initialCarousel);
+  const [activeBrand, setActiveBrand] = useState<
+    "valsewa" | "valjubel" | "valjoki"
+  >("valsewa");
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 300, behavior: "smooth" });
+  // Calculate and set scrollbar width as CSS variable
+  useEffect(() => {
+    const updateScrollbarWidth = () => {
+      if (mainRef.current) {
+        const scrollbarWidth =
+          mainRef.current.offsetWidth - mainRef.current.clientWidth;
+        document.documentElement.style.setProperty(
+          "--scrollbar-width",
+          `${scrollbarWidth}px`
+        );
+      }
+    };
+
+    updateScrollbarWidth();
+    window.addEventListener("resize", updateScrollbarWidth);
+    return () => window.removeEventListener("resize", updateScrollbarWidth);
+  }, []);
+
+  const handleSelectTier = (tierId: string, isLowTier: string) => {
+    selectTier(tierId, isLowTier);
+    setShouldScroll(true);
   };
-  const autoplay = Autoplay({ delay: 5000, stopOnInteraction: false });
+
+  const handleSelectRank = (rank: string) => {
+    selectRank(rank);
+    setShouldScroll(true);
+  };
+
+  const handleSeeMore = () => {
+    setShouldScroll(true);
+  };
+
+  useEffect(() => {
+    if (!loading && shouldScroll) {
+      setTimeout(() => {
+        if (accountList.length > 0) {
+          document.getElementById("card-section")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+        } else {
+          document.getElementById("results-section")?.scrollIntoView({
+            behavior: "smooth",
+            block: "center"
+          });
+        }
+        setShouldScroll(false);
+      }, 100);
+    }
+  }, [loading, shouldScroll, accountList.length]);
+
   return (
-    <section className="bg-[#101822] md:pb-64 pb-32 relative ">
-      <div className="relative max-lg:hidden">
-        <Navbar />
-      </div>
-      <div className="lg:hidden">
-        <Navbar1 />
-      </div>
+    <Fragment>
       <a
         href="https://wa.me/6285175343447?text=Halo admin VALSEWA aku butuh bantuan dong"
         target="_blank"
@@ -58,149 +94,86 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
           <Image src="/home/kananbawah.png" fill alt="Iconic" />
         </figure>
       </a>
-      <div
-        className="fixed bottom-4 left-4 z-50 cursor-pointer text-[#DDDDDD] bg-[#A6A6A6B2] p-3 rounded-full"
-        onClick={scrollToTop}
-      >
-        <FaArrowUp size={30} />
+      <div className="max-md:hidden">
+        <NavbarHome
+          activeBrand={activeBrand}
+          setActiveBrand={setActiveBrand}
+          isScrolled={isScrolled}
+        />
       </div>
-      <div>
-        <div className="relative w-full h-screen flex flex-col">
-          {/* Hero Background with Breakpoints */}
-          <div className="absolute inset-0 w-full h-full">
-            {/* 2XL Screens */}
-            <figure className="absolute w-full h-full max-2xl:hidden">
-              <Image
-                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x560px.svg"
-                fill
-                alt="Hero"
-                className="object-cover object-center"
-              />
-            </figure>
-
-            {/* XL and Large Screens */}
-            <figure className="absolute w-full h-full max-lg:hidden 2xl:hidden">
-              <Image
-                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x720px.svg"
-                fill
-                alt="Hero"
-                className="object-cover object-center"
-              />
-            </figure>
-
-            {/* Medium Screens */}
-            <figure className="absolute w-full h-full max-md:hidden lg:hidden">
-              <Image
-                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x800px.svg"
-                fill
-                alt="Hero"
-                className="object-cover object-center"
-              />
-            </figure>
-
-            {/* Small Screens */}
-            <figure className="absolute w-full h-full">
-              <Image
-                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x1200px.svg"
-                fill
-                alt="Hero"
-                className="object-cover object-center"
-              />
-            </figure>
-
-            {/* Extra Small Screens */}
-            <figure className="absolute w-full h-full sm:hidden">
-              <Image
-                src="/NewHero/SVG/Picture for Hero_VS_Hero_1280x1760px.svg"
-                fill
-                alt="Hero"
-                className="object-cover object-center"
-              />
-            </figure>
-
-            {/* Dark Overlay for better readability */}
-            <div className="absolute inset-0 bg-black/50"></div>
+      <div className="md:hidden">
+        <NavbarHomeMobile activeBrand={activeBrand} isScrolled={isScrolled} />
+      </div>
+      <main
+        ref={mainRef}
+        className="h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth bg-[#0F0F0F]"
+        onScroll={(e) => setIsScrolled(e.currentTarget.scrollTop > 1)}
+      >
+        <motion.section
+          id="hero"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeIn" }}
+          className="snap-start snap-always px-8 lg:px-16"
+        >
+          {/* Hero wrapper - overflow-visible to allow notch to show, pt for navbar space */}
+          <div className="relative w-full max-w-[1920px] mx-auto overflow-visible pt-4">
+            <Hero
+              initialCarousel={initialCarousel}
+              activeBrand={activeBrand}
+              setActiveBrand={setActiveBrand}
+            />
           </div>
-
-          {/* Content Section */}
-          <div className="relative z-20 flex flex-col items-center justify-center flex-grow -translate-y-[50px]">
-            {/* Carousel */}
-            <div className="w-full md:px-14 px-7">
-              <Carousel
-                className="shadow-lg rounded-2xl overflow-hidden"
-                plugins={[autoplay]}
-                opts={{ loop: true }}
-              >
-                <CarouselContent>
-                  {initialCarousel?.map((image, index) => (
-                    <CarouselItem key={index}>
-                      <div className="h-full w-full relative max-lg:hidden">
-                        <AspectRatio ratio={12 / 3}>
-                          <Image
-                            loading="lazy"
-                            src={image.image123.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover rounded-2xl"
-                            unoptimized
-                          />
-                        </AspectRatio>
-                      </div>
-                      <div className="h-full w-full relative max-sm:hidden lg:hidden">
-                        <AspectRatio ratio={12 / 6}>
-                          <Image
-                            loading="lazy"
-                            src={image.image126.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover rounded-2xl"
-                            unoptimized
-                          />
-                        </AspectRatio>
-                      </div>
-                      <div className="h-full w-full relative sm:hidden">
-                        <AspectRatio ratio={12 / 9}>
-                          <Image
-                            loading="lazy"
-                            src={image.image129.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover rounded-2xl"
-                            unoptimized
-                          />
-                        </AspectRatio>
-                      </div>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="absolute left-4 top-1/2 -translate-y-1/2 z-30" />
-                <CarouselNext className="absolute right-4 top-1/2 -translate-y-1/2 z-30" />
-              </Carousel>
-            </div>
-          </div>
-
-          {/* Search Bar Fixed at Bottom */}
-          <div className="absolute bottom-[-70px] w-full flex justify-center z-30 pb-4">
-            <div className="w-full">
-              <SearchBar
-                accountList={accountList || []}
-                setSearchAccount={setSearchAccount}
-                changeDirection={changeDirection}
-                getSortLabel={getSortLabel}
-                sortAccount={sortAccount}
-                sortDirection={sortDirection}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="lg:mx-14 sm:mx-7 mx-2 pt-10 ">
+        </motion.section>
+        <motion.section
+          id="howto"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeIn" }}
+          className="snap-start snap-always px-8 lg:px-16 scroll-mt-24"
+        >
+          <HowToOrder />
+        </motion.section>
+        <motion.section
+          id="recommended"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeIn" }}
+          className="snap-start snap-always px-8 lg:px-16 scroll-mt-24"
+        >
+          <RecommendedSection onSeeMore={handleSeeMore} />
+        </motion.section>
+        <motion.section
+          id="discover"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeIn" }}
+          className="snap-start snap-always px-8 lg:px-16 scroll-mt-24"
+        >
+          <DiscoverSection
+            onSelectTier={handleSelectTier}
+            onSelectRank={handleSelectRank}
+            loading={loading}
+          />
+        </motion.section>
+        <motion.section
+          id="cards"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.001 }}
+          transition={{ duration: 0.6, ease: "easeIn" }}
+          className="snap-start snap-always px-8 lg:px-16 scroll-mt-24"
+        >
           {accountList.length > 0 ? (
-            <div className="mt-9 mx-0 pt-10">
+            <div id="card-section" className="mt-9 mx-0 pt-10">
               <Card data={accountList} />
             </div>
           ) : (
-            <div className=" mt-48">
+            <div id="results-section" className=" mt-48">
               <div className="flex items-center ps-3 pointer-events-none justify-center">
                 <svg
                   className="w-16 h-16 text-roseWhite font-bold  dark:text-gray-400 p-2"
@@ -226,8 +199,8 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
               </p>
             </div>
           )}
-        </div>
-      </div>
-    </section>
+        </motion.section>
+      </main>
+    </Fragment>
   );
 }

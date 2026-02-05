@@ -23,7 +23,7 @@ export default function LoadingPage() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden items-center justify-center gap-4 relative">
-      <figure className="w-full h-full absolute z-0 max-xl:hidden">
+      <figure className="w-full h-full absolute z-0 max-md:hidden">
         <AspectRatio ratio={16 / 12}>
           <Image
             src="/LS/SVG/Loading Screen_VS_Loading_1280x2800px.svg"
@@ -33,7 +33,7 @@ export default function LoadingPage() {
           />
         </AspectRatio>
       </figure>
-      <figure className="w-full h-full absolute z-0 max-lg:hidden xl:hidden">
+      <figure className="w-full h-full absolute z-0 max-lg:hidden md:hidden">
         <AspectRatio ratio={16 / 15}>
           <Image
             src="/LS/SVG/Loading Screen_VS_Loading_1280x2000px.svg"
@@ -64,7 +64,7 @@ export default function LoadingPage() {
         </AspectRatio>
       </figure>
 
-      <div className="flex flex-col items-center justify-center gap-2 xl:gap-4 z-50">
+      <div className="flex flex-col items-center justify-center gap-2 md:gap-4 z-50">
         <div className="flex items-center justify-center gap-2">
           <div className="relative w-44 h-44">
             <Image

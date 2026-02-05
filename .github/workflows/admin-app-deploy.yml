@@ -20,6 +20,7 @@ jobs:
         working-directory: admin-app
         env:
           VITE_AXIOS_BASE_URL: ${{ secrets.BACKEND_BASE_URL }}
+          VITE_PUBLIC_APP_URL: ${{ vars.PUBLIC_APP_URL }}
         run: |
           npm ci
           npm run build

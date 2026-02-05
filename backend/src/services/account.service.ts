@@ -1,4 +1,11 @@
-import { Account, AccountResetLog, Prisma, Status } from "@prisma/client";
+import {
+  Account,
+  AccountResetLog,
+  BookingStatus,
+  Prisma,
+  Skin,
+  Status
+} from "@prisma/client";
 import { addHours, subDays } from "date-fns";
 import Fuse, { IFuseOptions } from "fuse.js";
 import {
@@ -10,11 +17,16 @@ import {
 import { prisma } from "../lib/prisma";
 import {
   AccountEntityRequest,
+  AccountSearchFilters,
+  AccountWithSkins,
+  DeleteResetLogRequest,
+  GetAvailableAccountsRequest,
   PublicAccount,
   UpdateResetLogRequest
 } from "../types/account.type";
 import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
+import { parseDurationToHours } from "../lib/utils";
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
@@ -246,19 +258,169 @@ export class AccountService {
     });
   };
 
+  private async ensureSkinsExist(skinIds: number[]): Promise<void> {
+    const found = await prisma.skin.findMany({
+      where: { id: { in: skinIds } },
+      select: { id: true }
+    });
+    const foundIds = new Set(found.map((s) => s.id));
+    const missing = skinIds.filter((id) => !foundIds.has(id));
+    if (missing.length) {
+      throw new BadRequestError(
+        `Some skin IDs do not exist: ${missing.join(", ")}`
+      );
+    }
+  }
+
+  private bucketToRange(bucket?: string) {
+    if (!bucket) return undefined;
+    const [min, max] = bucket.split("-").map(Number);
+    return { min, max };
+  }
+
+  private buildPublicAccountsWhere(
+    filters: AccountSearchFilters
+  ): Prisma.AccountWhereInput {
+    const { lowTierOnly, tiers, skinCounts, ranks, minPrice, maxPrice } =
+      filters;
+
+    const where: Prisma.AccountWhereInput = {
+      availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
+    };
+
+    const LR_LABEL = "-LRTIER";
+
+    const normalizeCode = (s: string) => s.trim().toUpperCase();
+    const normalTierCodes =
+      tiers?.filter((t) => !t.endsWith(LR_LABEL)).map(normalizeCode) ?? [];
+
+    const lowTierCodes =
+      tiers
+        ?.filter((t) => t.endsWith(LR_LABEL))
+        .map((t) => normalizeCode(t.replace(LR_LABEL, ""))) ?? [];
+
+    if (typeof lowTierOnly === "boolean") {
+      where.isLowRank = lowTierOnly;
+    }
+
+    const andConditions: Prisma.AccountWhereInput[] = [];
+
+    const minPrices = Number.isFinite(minPrice) ? minPrice : undefined;
+    const maxPrices = Number.isFinite(maxPrice) ? maxPrice : undefined;
+    const hasPrice = minPrices != undefined || maxPrices != undefined;
+
+    if (hasPrice) {
+      const min = minPrice ?? 0;
+      const max = maxPrice ?? 99999999999;
+
+      if (lowTierOnly === true) {
+        where.priceTier = {
+          ...(where.priceTier || {}),
+          priceList: { some: { lowPrice: { gte: min, lte: max } } }
+        } as any;
+      } else if (lowTierOnly === false) {
+        where.priceTier = {
+          ...(where.priceTier || {}),
+          priceList: { some: { normalPrice: { gte: min, lte: max } } }
+        } as any;
+      } else {
+        andConditions.push({
+          OR: [
+            {
+              isLowRank: false,
+              priceTier: {
+                ...(tiers?.length ? { code: { in: normalTierCodes } } : {}),
+                priceList: { some: { normalPrice: { gte: min, lte: max } } }
+              }
+            },
+            {
+              isLowRank: true,
+              priceTier: {
+                ...(tiers?.length ? { code: { in: lowTierCodes } } : {}),
+                priceList: { some: { lowPrice: { gte: min, lte: max } } }
+              }
+            }
+          ]
+        });
+      }
+    }
+
+    if (tiers?.length) {
+      const or: Prisma.AccountWhereInput[] = [];
+
+      if (normalTierCodes.length) {
+        or.push({
+          priceTier: { code: { in: normalTierCodes } },
+          isLowRank: false
+        });
+      }
+
+      if (lowTierCodes.length) {
+        or.push({
+          priceTier: { code: { in: lowTierCodes } },
+          isLowRank: true
+        });
+      }
+
+      if (or.length) {
+        andConditions.push({ OR: or });
+      }
+    }
+
+    if (ranks?.length) {
+      const rankConditions: Prisma.AccountWhereInput[] = [];
+      for (const rank of ranks) {
+        if (rank === "Radiant" || rank === "Unranked") {
+          rankConditions.push({ accountRank: rank });
+        } else {
+          rankConditions.push({ accountRank: { startsWith: rank } });
+        }
+      }
+      if (rankConditions.length > 0) {
+        andConditions.push({ OR: rankConditions });
+      }
+    }
+
+    if (skinCounts?.length) {
+      const skinCountConditions: Prisma.AccountWhereInput[] = [];
+      for (const bucket of skinCounts) {
+        const range = this.bucketToRange(bucket);
+        if (range) {
+          skinCountConditions.push({
+            skinCount: { gte: range.min, lte: range.max }
+          });
+        }
+      }
+      if (skinCountConditions.length > 0) {
+        andConditions.push({ OR: skinCountConditions });
+      }
+    }
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
+    }
+
+    return where;
+  }
+
   getAllAccounts = async (
     page: number,
     limit: number,
     query?: string,
     sortBy?: string,
     direction?: Prisma.SortOrder
-  ): Promise<[Account[], Metadata]> => {
+  ): Promise<[AccountWithSkins[], Metadata]> => {
     try {
       let data = await prisma.account.findMany({
         orderBy: {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
-        include: { priceTier: true, thumbnail: true, otherImages: true }
+        include: {
+          priceTier: true,
+          thumbnail: true,
+          otherImages: true
+          // skinList: true
+        }
       });
 
       if (sortBy === "rank") {
@@ -269,10 +431,16 @@ export class AccountService {
         data = this.sortAccountsByIdTier(data);
       }
 
-      let filteredData: Account[] = data;
+      let filteredData: AccountWithSkins[] = data;
       if (query && query.trim().length > 0) {
-        const fuseOptions: IFuseOptions<Account> = {
-          keys: ["nickname", "accountCode", "accountRank", "skinList"],
+        const fuseOptions: IFuseOptions<AccountWithSkins> = {
+          keys: [
+            "nickname",
+            "accountCode",
+            "accountRank",
+            "skinList.name",
+            "skinList.keyword"
+          ],
           threshold: 0.3
         };
 
@@ -281,7 +449,58 @@ export class AccountService {
         filteredData = fuseResults.map((result) => result.item);
       }
 
-      const itemCount = filteredData.length;
+      const accountIds = filteredData.map((a) => a.id);
+
+      const bookings = await prisma.booking.findMany({
+        where: {
+          accountId: { in: accountIds },
+          status: BookingStatus.RESERVED,
+          endAt: { gt: new Date() }
+        },
+        orderBy: {
+          startAt: "asc"
+        },
+        select: {
+          accountId: true,
+          startAt: true,
+          endAt: true,
+          duration: true
+        }
+      });
+
+      const bookingMap = new Map<number, typeof bookings>();
+
+      for (const booking of bookings) {
+        if (!bookingMap.has(booking.accountId)) {
+          bookingMap.set(booking.accountId, []);
+        }
+
+        const list = bookingMap.get(booking.accountId)!;
+        if (list.length < 2) {
+          list.push(booking);
+        }
+      }
+
+      const filteredDataWithBookings = filteredData.map((datum) => {
+        const b = bookingMap.get(datum.id) ?? [];
+
+        return {
+          ...datum,
+          currentBookingDate: b[0]?.startAt ?? null,
+          currentBookingDuration: b[0]
+            ? parseDurationToHours(b[0].duration)
+            : null,
+          currentExpireAt: b[0]?.endAt ?? null,
+
+          nextBookingDate: b[1]?.startAt ?? null,
+          nextBookingDuration: b[1]
+            ? parseDurationToHours(b[1].duration)
+            : null,
+          nextExpireAt: b[1]?.endAt ?? null
+        };
+      });
+
+      const itemCount = filteredDataWithBookings.length;
       const pageCount = Math.ceil(itemCount / limit);
 
       const metadata = {
@@ -291,7 +510,7 @@ export class AccountService {
         total: itemCount
       };
 
-      const paginatedData = filteredData.slice(
+      const paginatedData = filteredDataWithBookings.slice(
         (page - 1) * limit,
         page * limit
       );
@@ -303,19 +522,25 @@ export class AccountService {
   };
 
   getAllPublicAccounts = async (
-    page: number,
-    limit: number,
-    query?: string,
-    sortBy?: string,
-    direction?: Prisma.SortOrder
-  ): Promise<[PublicAccount[], Metadata]> => {
+    filters: AccountSearchFilters,
+    page?: number,
+    limit?: number
+  ): Promise<[PublicAccount[], Metadata | null]> => {
     try {
+      const { query, sortBy, direction = "asc" } = filters;
+
+      const where = this.buildPublicAccountsWhere(filters);
+
+      const orderBy: Prisma.AccountOrderByWithRelationInput =
+        sortBy === "availability"
+          ? { availabilityStatus: direction }
+          : { createdAt: "desc" };
+
       let data = await prisma.account.findMany({
-        where: { availabilityStatus: { in: ["AVAILABLE", "IN_USE"] } },
-        orderBy: {
-          availabilityStatus: sortBy === "availability" ? direction : undefined
-        },
+        where,
+        orderBy,
         select: {
+          id: true,
           nickname: true,
           accountCode: true,
           description: true,
@@ -323,10 +548,13 @@ export class AccountService {
           availabilityStatus: true,
           currentExpireAt: true,
           totalRentHour: true,
+          skinCount: true,
           skinList: true,
-          priceTier: true,
+          priceTier: { include: { priceList: true } },
           thumbnail: true,
-          otherImages: true
+          otherImages: true,
+          isLowRank: true,
+          isRecommended: true
         }
       });
 
@@ -338,11 +566,12 @@ export class AccountService {
         data = this.sortAccountsByIdTierPublic(data);
       }
 
-      let filteredData: PublicAccount[] = data;
+      let filteredData: typeof data = data;
       if (query && query.trim().length > 0) {
-        const fuseOptions: IFuseOptions<PublicAccount> = {
-          keys: ["nickname", "accountCode", "accountRank", "skinList"],
-          threshold: 0.3
+        const fuseOptions: IFuseOptions<(typeof data)[0]> = {
+          keys: ["accountCode", "skinList.name", "skinList.keyword"],
+          threshold: 0.3,
+          ignoreLocation: true
         };
 
         const fuse = new Fuse(data, fuseOptions);
@@ -350,22 +579,26 @@ export class AccountService {
         filteredData = fuseResults.map((result) => result.item);
       }
 
-      const itemCount = filteredData.length;
-      const pageCount = Math.ceil(itemCount / limit);
+      const total = filteredData.length;
 
-      const metadata = {
-        page,
-        limit,
-        pageCount,
-        total: itemCount
-      };
+      if (page === undefined || limit === undefined) {
+        return [filteredData as PublicAccount[], null];
+      }
 
+      const pageCount = Math.ceil(total / limit);
       const paginatedData = filteredData.slice(
         (page - 1) * limit,
         page * limit
       );
 
-      return [paginatedData, metadata];
+      const metadata: Metadata = {
+        page,
+        limit,
+        pageCount,
+        total
+      };
+
+      return [paginatedData as PublicAccount[], metadata];
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -379,13 +612,93 @@ export class AccountService {
     }
   };
 
+  getRecommendedAccounts = async (): Promise<PublicAccount[]> => {
+    try {
+      const accounts = await prisma.account.findMany({
+        where: {
+          isRecommended: true,
+          availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
+        },
+        orderBy: {
+          totalRentHour: "desc"
+        },
+        take: 3,
+        select: {
+          id: true,
+          nickname: true,
+          accountCode: true,
+          description: true,
+          accountRank: true,
+          availabilityStatus: true,
+          currentExpireAt: true,
+          totalRentHour: true,
+          skinCount: true,
+          skinList: true,
+          priceTier: true,
+          thumbnail: true,
+          otherImages: true,
+          isLowRank: true,
+          isRecommended: true
+        }
+      });
+
+      return accounts;
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   getAccountById = async (id: number) => {
     try {
-      const account = await prisma.account.findFirst({ where: { id } });
+      const account = await prisma.account.findUnique({
+        where: { id },
+        include: {
+          priceTier: {
+            include: {
+              priceList: true
+            }
+          },
+          // skinList: true,
+          thumbnail: true,
+          otherImages: true
+        }
+      });
 
-      if (!account) throw new NotFoundError("Account not found!");
+      if (!account) {
+        throw new NotFoundError("Account not found!");
+      }
 
-      return account;
+      const bookings = await prisma.booking.findMany({
+        where: {
+          accountId: account.id,
+          status: BookingStatus.RESERVED,
+          endAt: { gt: new Date() }
+        },
+        orderBy: {
+          endAt: "asc"
+        },
+        select: {
+          id: true,
+          duration: true,
+          startAt: true,
+          endAt: true
+        },
+        take: 2
+      });
+
+      return {
+        ...account,
+        currentBookingDate: bookings[0]?.startAt ?? null,
+        currentBookingDuration: bookings[0]
+          ? parseDurationToHours(bookings[0]?.duration)
+          : null,
+        currentExpireAt: bookings[0]?.endAt ?? null,
+        nextBookingDate: bookings[1]?.startAt ?? null,
+        nextBookingDuration: bookings[1]
+          ? parseDurationToHours(bookings[1]?.duration)
+          : null,
+        nextExpireAt: bookings[1]?.endAt ?? null
+      };
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
@@ -421,17 +734,53 @@ export class AccountService {
     }
   };
 
-  createAccount = async (data: AccountEntityRequest) => {
+  getAvailableAccounts = async (data: GetAvailableAccountsRequest) => {
     try {
-      return await prisma.account.create({
-        data: {
-          ...data,
-          thumbnail: { connect: { id: data.thumbnail } },
-          availabilityStatus: data.availabilityStatus as Status,
-          otherImages: { connect: data.otherImages?.map((id) => ({ id })) },
-          priceTier: { connect: { id: data.priceTier } }
+      const unavailableAccounts = await prisma.booking.findMany({
+        where: {
+          status: { in: [BookingStatus.HOLD, BookingStatus.RESERVED] },
+          startAt: { lt: data.endAt ?? new Date() },
+          endAt: { gt: data.startAt ?? new Date() }
+        },
+        distinct: ["accountId"],
+        select: { accountId: true }
+      });
+
+      const availableAccounts = await prisma.account.findMany({
+        where: {
+          availabilityStatus: { not: Status.NOT_AVAILABLE },
+          id: { notIn: unavailableAccounts.map((v) => v.accountId) }
         }
       });
+
+      return availableAccounts;
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  createAccount = async (data: AccountEntityRequest) => {
+    try {
+      const { skinList, thumbnail, otherImages, priceTier, ...scalars } = data;
+
+      // const skinCount = data.skinList.length;
+      const skinConnect =
+        Array.isArray(skinList) && skinList.length > 0
+          ? { connect: skinList.map((id) => ({ id })) }
+          : undefined;
+
+      // return await prisma.account.create({
+      //   data: {
+      //     ...scalars,
+      //     ...data,
+      //     skinCount,
+      //     skinList: skinConnect,
+      //     thumbnail: { connect: { id: thumbnail } },
+      //     availabilityStatus: scalars.availabilityStatus as Status,
+      //     otherImages: { connect: otherImages?.map((id) => ({ id })) },
+      //     priceTier: { connect: { id: priceTier } }
+      //   }
+      // });
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -495,7 +844,7 @@ export class AccountService {
 
       if (!currentAccount) throw new NotFoundError("Account not found!");
 
-      const { thumbnail, otherImages, priceTier, ...scalars } = data;
+      const { thumbnail, otherImages, priceTier, skinList, ...scalars } = data;
 
       const updateData: Prisma.AccountUpdateInput = { ...scalars };
 
@@ -542,6 +891,13 @@ export class AccountService {
         updateData.priceTier = { connect: { id: priceTier } };
       }
 
+      // if (skinList !== undefined) {
+      //   updateData.skinList = {
+      //     set: skinList.map((id) => ({ id }))
+      //   };
+      //   updateData.skinCount = skinList.length;
+      // }
+
       return await prisma.account.update({
         where: { id },
         data: updateData
@@ -566,45 +922,6 @@ export class AccountService {
     }
   };
 
-  updateExpireAt = async () => {
-    try {
-      const expiredAccounts = await prisma.account.findMany({
-        where: { currentExpireAt: { lt: new Date() } }
-      });
-
-      await prisma.$transaction(async (tx) => {
-        for (const account of expiredAccounts) {
-          await tx.account.update({
-            where: { id: account.id },
-            data: {
-              currentBookingDate: null,
-              currentExpireAt: null,
-              currentBookingDuration: null,
-              passwordResetRequired: true,
-              availabilityStatus: "AVAILABLE",
-              totalRentHour: {
-                increment: account.currentBookingDuration || 0
-              }
-            }
-          });
-
-          await tx.accountResetLog.create({
-            data: {
-              accountId: account.id,
-              previousExpireAt: account.currentExpireAt
-            }
-          });
-        }
-
-        await tx.accountResetLog.deleteMany({
-          where: { resetAt: { lt: subDays(new Date(), 2) } }
-        });
-      });
-    } catch (error) {
-      throw new InternalServerError((error as Error).message);
-    }
-  };
-
   updateResetLogs = async (id: number, data: UpdateResetLogRequest) => {
     try {
       await prisma.account.update({
@@ -612,6 +929,25 @@ export class AccountService {
         data: {
           password: data.password,
           passwordResetRequired: data.passwordResetRequired
+        }
+      });
+
+      return await prisma.accountResetLog.delete({ where: { id } });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientValidationError) {
+        throw new BadRequestError("Invalid request body!");
+      }
+
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  deleteResetLogs = async (id: number, data: DeleteResetLogRequest) => {
+    try {
+      await prisma.account.update({
+        where: { id: data.accountId },
+        data: {
+          passwordResetRequired: false
         }
       });
 
