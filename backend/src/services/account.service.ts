@@ -418,8 +418,8 @@ export class AccountService {
         include: {
           priceTier: true,
           thumbnail: true,
-          otherImages: true
-          // skinList: true
+          otherImages: true,
+          skinList: true
         }
       });
 
@@ -658,7 +658,7 @@ export class AccountService {
               priceList: true
             }
           },
-          // skinList: true,
+          skinList: true,
           thumbnail: true,
           otherImages: true
         }
@@ -763,24 +763,24 @@ export class AccountService {
     try {
       const { skinList, thumbnail, otherImages, priceTier, ...scalars } = data;
 
-      // const skinCount = data.skinList.length;
+      const skinCount = data.skinList.length;
       const skinConnect =
         Array.isArray(skinList) && skinList.length > 0
           ? { connect: skinList.map((id) => ({ id })) }
           : undefined;
 
-      // return await prisma.account.create({
-      //   data: {
-      //     ...scalars,
-      //     ...data,
-      //     skinCount,
-      //     skinList: skinConnect,
-      //     thumbnail: { connect: { id: thumbnail } },
-      //     availabilityStatus: scalars.availabilityStatus as Status,
-      //     otherImages: { connect: otherImages?.map((id) => ({ id })) },
-      //     priceTier: { connect: { id: priceTier } }
-      //   }
-      // });
+      return await prisma.account.create({
+        data: {
+          ...scalars,
+          ...data,
+          skinCount,
+          skinList: skinConnect,
+          thumbnail: { connect: { id: thumbnail } },
+          availabilityStatus: scalars.availabilityStatus as Status,
+          otherImages: { connect: otherImages?.map((id) => ({ id })) },
+          priceTier: { connect: { id: priceTier } }
+        }
+      });
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -891,12 +891,12 @@ export class AccountService {
         updateData.priceTier = { connect: { id: priceTier } };
       }
 
-      // if (skinList !== undefined) {
-      //   updateData.skinList = {
-      //     set: skinList.map((id) => ({ id }))
-      //   };
-      //   updateData.skinCount = skinList.length;
-      // }
+      if (skinList !== undefined) {
+        updateData.skinList = {
+          set: skinList.map((id) => ({ id }))
+        };
+        updateData.skinCount = skinList.length;
+      }
 
       return await prisma.account.update({
         where: { id },
