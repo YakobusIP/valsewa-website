@@ -63,6 +63,11 @@ class AccountRouter {
       schedulerMiddleware,
       this.accountController.updateAllAccountsRank
     );
+    this.router.post(
+      "/update-expire-at",
+      schedulerMiddleware,
+      this.accountController.updateExpireAt
+    );
     this.router.put(
       "/finish-booking/:id",
       authMiddleware,

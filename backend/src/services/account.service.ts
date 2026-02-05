@@ -487,15 +487,13 @@ export class AccountService {
         return {
           ...datum,
           // Priority: booking data > account data > null
-          currentBookingDate:
-            b[0]?.startAt ?? datum.currentBookingDate ?? null,
+          currentBookingDate: b[0]?.startAt ?? datum.currentBookingDate ?? null,
           currentBookingDuration: b[0]
             ? parseDurationToHours(b[0].duration)
             : (datum.currentBookingDuration ?? null),
           currentExpireAt: b[0]?.endAt ?? datum.currentExpireAt ?? null,
 
-          nextBookingDate:
-            b[1]?.startAt ?? datum.nextBookingDate ?? null,
+          nextBookingDate: b[1]?.startAt ?? datum.nextBookingDate ?? null,
           nextBookingDuration: b[1]
             ? parseDurationToHours(b[1].duration)
             : (datum.nextBookingDuration ?? null),
@@ -697,8 +695,7 @@ export class AccountService {
         currentBookingDuration: bookings[0]
           ? parseDurationToHours(bookings[0]?.duration)
           : (account.currentBookingDuration ?? null),
-        currentExpireAt:
-          bookings[0]?.endAt ?? account.currentExpireAt ?? null,
+        currentExpireAt: bookings[0]?.endAt ?? account.currentExpireAt ?? null,
         nextBookingDate:
           bookings[1]?.startAt ?? account.nextBookingDate ?? null,
         nextBookingDuration: bookings[1]
@@ -925,6 +922,45 @@ export class AccountService {
         throw new BadRequestError("Invalid request body!");
       }
 
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  updateExpireAt = async () => {
+    try {
+      const expiredAccounts = await prisma.account.findMany({
+        where: { currentExpireAt: { lt: new Date() } }
+      });
+
+      await prisma.$transaction(async (tx) => {
+        for (const account of expiredAccounts) {
+          await tx.account.update({
+            where: { id: account.id },
+            data: {
+              currentBookingDate: null,
+              currentExpireAt: null,
+              currentBookingDuration: null,
+              passwordResetRequired: true,
+              availabilityStatus: "AVAILABLE",
+              totalRentHour: {
+                increment: account.currentBookingDuration || 0
+              }
+            }
+          });
+
+          await tx.accountResetLog.create({
+            data: {
+              accountId: account.id,
+              previousExpireAt: account.currentExpireAt
+            }
+          });
+        }
+
+        await tx.accountResetLog.deleteMany({
+          where: { resetAt: { lt: subDays(new Date(), 2) } }
+        });
+      });
+    } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
   };
