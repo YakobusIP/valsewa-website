@@ -428,7 +428,7 @@ export class BookingService {
     quantity: number
   ) => {
     const mainValue = normalPrice * quantity;
-    const othersValue = isLowRank ? lowPrice * quantity : 0;
+    const othersValue = isLowRank ? (lowPrice - normalPrice) * quantity : 0;
 
     let voucherType = null;
     let voucherAmount = null;
@@ -643,7 +643,9 @@ export class BookingService {
             endAt: bookingEndAt,
             expiredAt: bookingExpiredAt,
             mainValuePerUnit: priceList.normalPrice,
-            othersValuePerUnit: account.isLowRank ? priceList.lowPrice : 0,
+            othersValuePerUnit: account.isLowRank
+              ? (priceList.lowPrice - priceList.normalPrice)
+              : 0,
             voucherName: voucher?.voucherName,
             voucherType,
             voucherAmount,

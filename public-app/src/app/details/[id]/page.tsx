@@ -177,8 +177,9 @@ export default function AccountDetailPage() {
     (priceList: PriceList) => {
       if (!priceList) return 0;
       return (
-        Number(priceList.normalPrice) +
-        (account?.isLowRank ? Number(priceList.lowPrice) : 0)
+        account?.isLowRank
+          ? Number(priceList.lowPrice)
+          : Number(priceList.normalPrice)
       );
     },
     [account?.isLowRank]
