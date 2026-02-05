@@ -105,6 +105,6 @@ jobs:
             sudo install -m 600 /tmp/deploy/backend/.env.production /srv/backend/.env
 
             npm ci --production
+            npx prisma generate
             npx prisma migrate deploy
-            sudo mv /tmp/deploy/backend/.env.production /srv/backend/
             sudo systemctl start backend.service
