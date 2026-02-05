@@ -1220,13 +1220,15 @@ export class BookingService {
       const activeAccountIds = reservedAccountIds.map((v) => v.accountId);
 
       // Mark reserved accounts as IN_USE (only if not already)
+      // Skip accounts with currentBookingDate set (they have an active booking)
       const markedInUse =
         activeAccountIds.length > 0
           ? (
               await prisma.account.updateMany({
                 where: {
                   id: { in: activeAccountIds },
-                  availabilityStatus: { not: Status.IN_USE }
+                  availabilityStatus: { not: Status.IN_USE },
+                  currentBookingDate: null
                 },
                 data: {
                   availabilityStatus: Status.IN_USE
@@ -1236,10 +1238,12 @@ export class BookingService {
           : 0;
 
       // Mark accounts as AVAILABLE if they are IN_USE but no longer reserved
+      // Skip accounts with currentBookingDate set (they have an active booking)
       const markedAvailable = (
         await prisma.account.updateMany({
           where: {
             availabilityStatus: Status.IN_USE,
+            currentBookingDate: null,
             ...(activeAccountIds.length > 0 && {
               id: { notIn: activeAccountIds }
             })
