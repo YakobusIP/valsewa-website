@@ -486,17 +486,20 @@ export class AccountService {
 
         return {
           ...datum,
-          currentBookingDate: b[0]?.startAt ?? null,
+          // Priority: booking data > account data > null
+          currentBookingDate:
+            b[0]?.startAt ?? datum.currentBookingDate ?? null,
           currentBookingDuration: b[0]
             ? parseDurationToHours(b[0].duration)
-            : null,
-          currentExpireAt: b[0]?.endAt ?? null,
+            : (datum.currentBookingDuration ?? null),
+          currentExpireAt: b[0]?.endAt ?? datum.currentExpireAt ?? null,
 
-          nextBookingDate: b[1]?.startAt ?? null,
+          nextBookingDate:
+            b[1]?.startAt ?? datum.nextBookingDate ?? null,
           nextBookingDuration: b[1]
             ? parseDurationToHours(b[1].duration)
-            : null,
-          nextExpireAt: b[1]?.endAt ?? null
+            : (datum.nextBookingDuration ?? null),
+          nextExpireAt: b[1]?.endAt ?? datum.nextExpireAt ?? null
         };
       });
 
@@ -688,16 +691,20 @@ export class AccountService {
 
       return {
         ...account,
-        currentBookingDate: bookings[0]?.startAt ?? null,
+        // Priority: booking data > account data > null
+        currentBookingDate:
+          bookings[0]?.startAt ?? account.currentBookingDate ?? null,
         currentBookingDuration: bookings[0]
           ? parseDurationToHours(bookings[0]?.duration)
-          : null,
-        currentExpireAt: bookings[0]?.endAt ?? null,
-        nextBookingDate: bookings[1]?.startAt ?? null,
+          : (account.currentBookingDuration ?? null),
+        currentExpireAt:
+          bookings[0]?.endAt ?? account.currentExpireAt ?? null,
+        nextBookingDate:
+          bookings[1]?.startAt ?? account.nextBookingDate ?? null,
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
-          : null,
-        nextExpireAt: bookings[1]?.endAt ?? null
+          : (account.nextBookingDuration ?? null),
+        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null
       };
     } catch (error) {
       if (error instanceof NotFoundError) {
