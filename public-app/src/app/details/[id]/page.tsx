@@ -320,11 +320,7 @@ export default function AccountDetailPage() {
               <h1 className="sm:text-3xl text-xl font-bold text-white tracking-wide leading-tight">
                 <span className="uppercase">{account.accountRank}</span>
                 <span className="text-neutral-400"> | </span>
-                <span>
-                  {account.isLowRank
-                    ? `LR-${account.accountCode}`
-                    : account.accountCode}
-                </span>
+                <span>{account.accountCode}</span>
               </h1>
 
               {/* COL 3 — ACCOUNT INFO (row-span 2) */}
@@ -349,7 +345,9 @@ export default function AccountDetailPage() {
               {/* COL 2 ROW 2 — PRICE TIER + STATUS */}
               <div className="flex items-center gap-3">
                 <div className="bg-purple-600 text-white px-2 py-0.5 text-xs rounded-sm">
-                  {account.priceTier.code}
+                  {account.isLowRank
+                    ? `LR-${account.priceTier.code}`
+                    : account.priceTier.code}
                 </div>
               </div>
             </div>
