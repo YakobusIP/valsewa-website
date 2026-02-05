@@ -418,8 +418,8 @@ export class AccountService {
         include: {
           priceTier: true,
           thumbnail: true,
-          otherImages: true
-          // skinList: true
+          otherImages: true,
+          skinList: true
         }
       });
 
@@ -486,17 +486,18 @@ export class AccountService {
 
         return {
           ...datum,
-          currentBookingDate: b[0]?.startAt ?? null,
+          // Priority: booking data > account data > null
+          currentBookingDate: b[0]?.startAt ?? datum.currentBookingDate ?? null,
           currentBookingDuration: b[0]
             ? parseDurationToHours(b[0].duration)
-            : null,
-          currentExpireAt: b[0]?.endAt ?? null,
+            : (datum.currentBookingDuration ?? null),
+          currentExpireAt: b[0]?.endAt ?? datum.currentExpireAt ?? null,
 
-          nextBookingDate: b[1]?.startAt ?? null,
+          nextBookingDate: b[1]?.startAt ?? datum.nextBookingDate ?? null,
           nextBookingDuration: b[1]
             ? parseDurationToHours(b[1].duration)
-            : null,
-          nextExpireAt: b[1]?.endAt ?? null
+            : (datum.nextBookingDuration ?? null),
+          nextExpireAt: b[1]?.endAt ?? datum.nextExpireAt ?? null
         };
       });
 
@@ -658,7 +659,7 @@ export class AccountService {
               priceList: true
             }
           },
-          // skinList: true,
+          skinList: true,
           thumbnail: true,
           otherImages: true
         }
@@ -688,16 +689,19 @@ export class AccountService {
 
       return {
         ...account,
-        currentBookingDate: bookings[0]?.startAt ?? null,
+        // Priority: booking data > account data > null
+        currentBookingDate:
+          bookings[0]?.startAt ?? account.currentBookingDate ?? null,
         currentBookingDuration: bookings[0]
           ? parseDurationToHours(bookings[0]?.duration)
-          : null,
-        currentExpireAt: bookings[0]?.endAt ?? null,
-        nextBookingDate: bookings[1]?.startAt ?? null,
+          : (account.currentBookingDuration ?? null),
+        currentExpireAt: bookings[0]?.endAt ?? account.currentExpireAt ?? null,
+        nextBookingDate:
+          bookings[1]?.startAt ?? account.nextBookingDate ?? null,
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
-          : null,
-        nextExpireAt: bookings[1]?.endAt ?? null
+          : (account.nextBookingDuration ?? null),
+        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null
       };
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -763,24 +767,24 @@ export class AccountService {
     try {
       const { skinList, thumbnail, otherImages, priceTier, ...scalars } = data;
 
-      // const skinCount = data.skinList.length;
+      const skinCount = data.skinList.length;
       const skinConnect =
         Array.isArray(skinList) && skinList.length > 0
           ? { connect: skinList.map((id) => ({ id })) }
           : undefined;
 
-      // return await prisma.account.create({
-      //   data: {
-      //     ...scalars,
-      //     ...data,
-      //     skinCount,
-      //     skinList: skinConnect,
-      //     thumbnail: { connect: { id: thumbnail } },
-      //     availabilityStatus: scalars.availabilityStatus as Status,
-      //     otherImages: { connect: otherImages?.map((id) => ({ id })) },
-      //     priceTier: { connect: { id: priceTier } }
-      //   }
-      // });
+      return await prisma.account.create({
+        data: {
+          ...scalars,
+          ...data,
+          skinCount,
+          skinList: skinConnect,
+          thumbnail: { connect: { id: thumbnail } },
+          availabilityStatus: scalars.availabilityStatus as Status,
+          otherImages: { connect: otherImages?.map((id) => ({ id })) },
+          priceTier: { connect: { id: priceTier } }
+        }
+      });
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -891,12 +895,12 @@ export class AccountService {
         updateData.priceTier = { connect: { id: priceTier } };
       }
 
-      // if (skinList !== undefined) {
-      //   updateData.skinList = {
-      //     set: skinList.map((id) => ({ id }))
-      //   };
-      //   updateData.skinCount = skinList.length;
-      // }
+      if (skinList !== undefined) {
+        updateData.skinList = {
+          set: skinList.map((id) => ({ id }))
+        };
+        updateData.skinCount = skinList.length;
+      }
 
       return await prisma.account.update({
         where: { id },
@@ -918,6 +922,45 @@ export class AccountService {
         throw new BadRequestError("Invalid request body!");
       }
 
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  updateExpireAt = async () => {
+    try {
+      const expiredAccounts = await prisma.account.findMany({
+        where: { currentExpireAt: { lt: new Date() } }
+      });
+
+      await prisma.$transaction(async (tx) => {
+        for (const account of expiredAccounts) {
+          await tx.account.update({
+            where: { id: account.id },
+            data: {
+              currentBookingDate: null,
+              currentExpireAt: null,
+              currentBookingDuration: null,
+              passwordResetRequired: true,
+              availabilityStatus: "AVAILABLE",
+              totalRentHour: {
+                increment: account.currentBookingDuration || 0
+              }
+            }
+          });
+
+          await tx.accountResetLog.create({
+            data: {
+              accountId: account.id,
+              previousExpireAt: account.currentExpireAt
+            }
+          });
+        }
+
+        await tx.accountResetLog.deleteMany({
+          where: { resetAt: { lt: subDays(new Date(), 2) } }
+        });
+      });
+    } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
   };

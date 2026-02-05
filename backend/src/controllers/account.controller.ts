@@ -299,6 +299,16 @@ export class AccountController {
     }
   };
 
+  updateExpireAt = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await this.accountService.updateExpireAt();
+
+      return res.status(200).end();
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   updateResetLogs = async (req: Request, res: Response, next: NextFunction) => {
     try {
       await this.accountService.updateResetLogs(
