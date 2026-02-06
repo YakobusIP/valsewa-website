@@ -77,7 +77,7 @@ export const BANK_CODE_TO_PREFIX_MAP_STG: Record<BankCodes, string> = {
 };
 
 export const BANK_CODE_TO_PREFIX_MAP_PROD: Record<BankCodes, string> = {
-  [BankCodes.BNI]: "1859317",
+  [BankCodes.BNI]: "9881859317",
   [BankCodes.PERMATA]: "735138",
   [BankCodes.BRI]: "141251"
 };
