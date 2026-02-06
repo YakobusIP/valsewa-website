@@ -726,7 +726,31 @@ export class AccountService {
 
   getAccountResetLogs = async () => {
     try {
+      const now = new Date();
+
+      // Find accounts that currently have an active booking
+      // These should be hidden from the reset logs to prevent admins
+      // from resetting passwords while someone is using the account
+      const activelyBookedAccountIds = await prisma.booking.findMany({
+        where: {
+          status: BookingStatus.RESERVED,
+          startAt: { lte: now },
+          endAt: { gt: now }
+        },
+        distinct: ["accountId"],
+        select: { accountId: true }
+      });
+
+      const excludedAccountIds = activelyBookedAccountIds.map(
+        (b) => b.accountId
+      );
+
       return await prisma.accountResetLog.findMany({
+        where: {
+          ...(excludedAccountIds.length > 0 && {
+            accountId: { notIn: excludedAccountIds }
+          })
+        },
         include: {
           account: {
             select: { username: true, accountCode: true }

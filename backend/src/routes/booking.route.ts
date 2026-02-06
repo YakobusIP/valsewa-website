@@ -101,6 +101,11 @@ class BookingRouter {
       this.bookingController.forcePay
     );
     this.router.post(
+      "/force-finish/:accountId",
+      authMiddleware,
+      this.bookingController.forceFinishBooking
+    );
+    this.router.post(
       "/sync-expired",
       schedulerMiddleware,
       this.bookingController.syncExpiredBookings
