@@ -644,7 +644,7 @@ export class BookingService {
             expiredAt: bookingExpiredAt,
             mainValuePerUnit: priceList.normalPrice,
             othersValuePerUnit: account.isLowRank
-              ? (priceList.lowPrice - priceList.normalPrice)
+              ? priceList.lowPrice - priceList.normalPrice
               : 0,
             voucherName: voucher?.voucherName,
             voucherType,
@@ -783,29 +783,48 @@ export class BookingService {
     try {
       const { bookingId, accountId } = data;
 
-      const booking = await prisma.booking.findUnique({
-        where: { id: bookingId, status: BookingStatus.RESERVED }
-      });
-      if (!booking) throw new NotFoundError("Booking not found");
+      return await prisma.$transaction(async (tx) => {
+        const booking = await tx.booking.findUnique({
+          where: { id: bookingId, status: BookingStatus.RESERVED }
+        });
+        if (!booking) throw new NotFoundError("Booking not found");
 
-      const account = await prisma.account.findUnique({
-        where: {
-          id: accountId,
-          availabilityStatus: { not: Status.NOT_AVAILABLE }
-        }
-      });
-      if (!account)
-        throw new NotFoundError("Account not found or not available!");
+        const originalAccount = await tx.account.findUnique({
+          where: {
+            id: booking.accountId
+          }
+        });
+        if (!originalAccount)
+          throw new NotFoundError("Original account not found!");
 
-      const updatedBooking = await prisma.booking.update({
-        where: { id: booking.id },
-        data: {
-          accountId,
-          version: { increment: 1 }
-        }
-      });
+        const account = await tx.account.findUnique({
+          where: {
+            id: accountId,
+            availabilityStatus: { not: Status.NOT_AVAILABLE }
+          }
+        });
+        if (!account)
+          throw new NotFoundError("Account not found or not available!");
 
-      return this.mapBookingDataToBookingResponse(updatedBooking);
+        if (booking.accountId === accountId)
+          return this.mapBookingDataToBookingResponse(booking);
+
+        const updatedBooking = await tx.booking.update({
+          where: { id: booking.id },
+          data: {
+            accountId,
+            version: { increment: 1 }
+          }
+        });
+
+        await tx.accountResetLog.create({
+          data: {
+            accountId: originalAccount.id
+          }
+        });
+
+        return this.mapBookingDataToBookingResponse(updatedBooking);
+      });
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
@@ -1258,6 +1277,42 @@ export class BookingService {
 
       return { markedInUse, markedAvailable };
     } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  forceFinishBooking = async (accountId: number) => {
+    try {
+      const now = new Date();
+
+      // Find the active RESERVED booking for this account
+      const activeBooking = await prisma.booking.findFirst({
+        where: {
+          accountId,
+          status: BookingStatus.RESERVED,
+          startAt: { lte: now },
+          endAt: { gt: now }
+        }
+      });
+
+      if (!activeBooking) {
+        throw new NotFoundError("No active booking found for this account.");
+      }
+
+      // Set endAt to now() - the cron jobs will handle the rest:
+      // - syncCompletedBookings will mark it COMPLETED and set passwordResetRequired
+      // - syncAccountAvailability will mark the account as AVAILABLE
+      const updatedBooking = await prisma.booking.update({
+        where: { id: activeBooking.id },
+        data: {
+          endAt: now,
+          version: { increment: 1 }
+        }
+      });
+
+      return this.mapBookingDataToBookingResponse(updatedBooking);
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
   };

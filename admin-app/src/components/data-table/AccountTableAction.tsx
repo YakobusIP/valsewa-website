@@ -1,5 +1,7 @@
 import { memo, useState } from "react";
 
+import { bookingService } from "@/services/transaction.service";
+
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
 import AddBookingModal from "@/components/dashboard/AddBookingModal";
 import { Button } from "@/components/ui/button";
@@ -8,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import {
@@ -16,6 +19,8 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from "@/components/ui/tooltip";
+
+import { toast } from "@/hooks/useToast";
 
 import { AccountEntity } from "@/types/account.type";
 
@@ -31,6 +36,32 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
   const [openAddBookingModal, setOpenAddBookingModal] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isForceFinishing, setIsForceFinishing] = useState(false);
+
+  const isAccountInUse = data.availabilityStatus === "IN_USE";
+
+  const handleForceFinish = async () => {
+    setIsForceFinishing(true);
+    try {
+      await bookingService.forceFinishBooking(data.id);
+      toast({
+        title: "Success",
+        description: `Booking for ${data.accountCode} has been force finished.`
+      });
+      await resetParent();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occurred";
+      toast({
+        variant: "destructive",
+        title: "Failed to force finish booking",
+        description: errorMessage
+      });
+    } finally {
+      setIsForceFinishing(false);
+      setDropdownOpen(false);
+    }
+  };
 
   return (
     <Fragment>
@@ -72,6 +103,18 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
             >
               Add new booking
             </DropdownMenuItem>
+            {isAccountInUse && (
+              <Fragment>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={handleForceFinish}
+                  disabled={isForceFinishing}
+                >
+                  {isForceFinishing ? "Finishing..." : "Force finish booking"}
+                </DropdownMenuItem>
+              </Fragment>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
