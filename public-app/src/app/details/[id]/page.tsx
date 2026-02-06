@@ -278,8 +278,12 @@ export default function AccountDetailPage() {
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious className="left-2" />
-                <CarouselNext className="right-2" />
+                <CarouselPrevious
+                  className="left-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent"
+                />
+                <CarouselNext
+                  className="right-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent"
+                />
               </Carousel>
             </div>
 

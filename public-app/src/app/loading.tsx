@@ -22,8 +22,16 @@ export default function LoadingPage() {
   // }, [images.length]);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden items-center justify-center gap-4 relative">
-      <figure className="w-full h-full absolute z-0 max-md:hidden">
+    <div className="flex flex-col h-screen overflow-hidden items-center justify-center gap-4 relative bg-black h-[100vh] w-[100vw]">
+      <video autoPlay muted loop playsInline className="block lg:hidden" width="full" height="full">
+        <source src="loading/Mobile.mov" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+      <video autoPlay muted loop playsInline width="full" height="full" className="hidden lg:block">
+        <source src="loading/Desktop.mov" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+      {/* <figure className="w-full h-full absolute z-0 max-md:hidden">
         <AspectRatio ratio={16 / 12}>
           <Image
             src="/LS/SVG/Loading Screen_VS_Loading_1280x2800px.svg"
@@ -72,8 +80,8 @@ export default function LoadingPage() {
               alt="Loading animation"
               fill
               unoptimized // <== important for GIFs to work with next/image
-            />
-            {/* {images.map((src, i) => (
+            /> */}
+      {/* {images.map((src, i) => (
               <motion.img
                 key={i}
                 src={src}
@@ -86,7 +94,7 @@ export default function LoadingPage() {
                 transition={{ duration: 0.1, ease: "easeInOut" }}
               />
             ))} */}
-          </div>
+      {/* </div>
         </div>
         <h2 className="text-white font-bold text-4xl font-valorant tracking-widest mt-[-30px]">
           Loading...
@@ -99,7 +107,7 @@ export default function LoadingPage() {
             accounts for you!
           </h2>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }

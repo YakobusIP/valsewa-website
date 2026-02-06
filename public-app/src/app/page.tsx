@@ -4,8 +4,6 @@ import type { Metadata } from "next";
 
 import Home from "./home";
 
-// import ValJubelHero from "./hero"
-
 export const metadata: Metadata = {
   title: "Valsewa | Sewa akun Valorant terpercaya",
   description:
@@ -28,7 +26,6 @@ export default async function Page() {
   const initialCarousel = await fetchCarousel();
   return (
     <Home initialAccount={initialAccount} initialCarousel={initialCarousel} />
-    // <ValJubelHero />
   );
 }
 
