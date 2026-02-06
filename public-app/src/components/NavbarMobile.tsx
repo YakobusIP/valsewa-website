@@ -18,7 +18,20 @@ const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
       `}
     >
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center justify-between px-4 sm:px-6">
-        {/* LEFT - Back Button */}
+        {/* LEFT - Logo*/}
+        <Link href="/">
+          <figure className="w-[160px] sm:w-[200px]">
+            <Image
+              src="/header/VALSEWA.png"
+              alt="logo"
+              height={40}
+              width={200}
+              className="object-contain"
+              priority
+            />
+          </figure>
+        </Link>
+        {/* RIGHT - Back Button */}
         {!onBack ? (
           <Link
             href="/"
@@ -46,19 +59,7 @@ const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
             isLoadingCancelBooking={isLoading}
           />
         )}
-        {/* RIGHT - Logo */}
-        <Link href="/">
-          <figure className="w-[160px] sm:w-[200px]">
-            <Image
-              src="/header/VALSEWA.png"
-              alt="logo"
-              height={40}
-              width={200}
-              className="object-contain"
-              priority
-            />
-          </figure>
-        </Link>
+
       </div>
     </div>
   );
