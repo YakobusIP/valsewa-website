@@ -7,7 +7,6 @@ import {
   BookingEntity,
   BookingStatistics,
   CreateAdminBookingRequest,
-  CreateBookingRequest,
   UpdateBookingRequest
 } from "@/types/booking.type";
 

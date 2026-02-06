@@ -92,12 +92,6 @@ export type PaymentWithBookingEntity = PaymentEntity & {
   booking: BookingEntity;
 };
 
-export type CreateBookingRequest = {
-  accountCode: string;
-  totalValue: number;
-  startAt?: Date;
-};
-
 export type CreateAdminBookingRequest = {
   accountId: number;
   startAt: Date;
