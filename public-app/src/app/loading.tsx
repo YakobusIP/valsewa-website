@@ -1,9 +1,9 @@
 "use client";
 
 // import { useEffect, useState } from "react";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+// import { AspectRatio } from "@/components/ui/aspect-ratio";
 
-import Image from "next/image";
+// import Image from "next/image";
 
 export default function LoadingPage() {
   // const [index, setIndex] = useState(0);

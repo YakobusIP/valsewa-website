@@ -158,6 +158,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       )}
 
                       {/* IN USE OVERLAY */}
+
                       {inUse && (
                         <div
                           className="absolute sm:top-6 sm:left-6 top-5 left-4 flex items-center justify-center z-20
@@ -170,9 +171,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                             Time Left{" "}
                             {item.currentExpireAt && (
                               <CountdownTimer
-                                targetDate={new Date(
-                                  item.currentExpireAt
-                                ).toISOString()}
+                                targetDate={String(item.currentExpireAt)}
                               />
                             )}
                           </div>
@@ -183,12 +182,13 @@ const Card: React.FC<CardProps> = ({ data }) => {
                     {/* FOOTER */}
                     <div className="px-2 sm:px-4 sm:py-4 py-1">
                       <div
-                        className="inline-flex items-center
+                        className="inline-flex items-center justify-center
                           bg-white/10 text-white
                           text-[0.4rem] sm:text-xs px-3 py-1 rounded-sm"
                       >
-                        Skins Amount |{" "}
-                        <span className="ml-1">{item.skinList.length}</span>
+                        <span>Skins Amount</span>
+                        <span className="ml-0.5">|</span>
+                        <span className="ml-0.5">{item.skinList.length}</span>
                       </div>
                     </div>
                   </div>
