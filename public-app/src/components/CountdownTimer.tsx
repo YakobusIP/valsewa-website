@@ -35,7 +35,7 @@ const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
 
   if (isExpired) return null;
 
-  return <span className="text-sm font-semibold ">{timeLeft}</span>;
+  return <span className="font-semibold ">{timeLeft}</span>;
 };
 
 export default CountdownTimer;
