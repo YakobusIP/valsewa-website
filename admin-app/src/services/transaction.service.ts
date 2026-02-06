@@ -7,7 +7,6 @@ import {
   BookingEntity,
   BookingStatistics,
   CreateAdminBookingRequest,
-  CreateBookingRequest,
   UpdateBookingRequest
 } from "@/types/booking.type";
 
@@ -35,18 +34,6 @@ const createBookingService = () => {
         params
       });
 
-      return response.data;
-    } catch (error) {
-      throw new Error(handleAxiosError(error));
-    }
-  };
-
-  const create = async (data: CreateBookingRequest) => {
-    try {
-      const response = await interceptedAxios.post<MessageResponse>(
-        `${BASE_BOOKING_URL}/create`,
-        data
-      );
       return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));
@@ -108,13 +95,24 @@ const createBookingService = () => {
     }
   };
 
+  const forceFinishBooking = async (accountId: number) => {
+    try {
+      const response = await interceptedAxios.post<MessageResponse>(
+        `${BASE_BOOKING_URL}/force-finish/${accountId}`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
   return {
     fetchAll,
-    create,
     update,
     getAccountRented,
     overrideBooking,
-    createAdminBooking
+    createAdminBooking,
+    forceFinishBooking
   };
 };
 

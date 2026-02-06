@@ -345,6 +345,23 @@ export class BookingController {
     }
   };
 
+  forceFinishBooking = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const accountId = parseInt(req.params.accountId, 10);
+      if (!accountId) throw new BadRequestError("Account ID is required.");
+
+      const result = await this.bookingService.forceFinishBooking(accountId);
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   syncExpiredBookings = async (
     req: Request,
     res: Response,
