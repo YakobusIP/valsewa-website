@@ -158,6 +158,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                       )}
 
                       {/* IN USE OVERLAY */}
+
                       {inUse && (
                         <div
                           className="absolute sm:top-6 sm:left-6 top-5 left-4 flex items-center justify-center z-20
@@ -170,9 +171,7 @@ const Card: React.FC<CardProps> = ({ data }) => {
                             Time Left{" "}
                             {item.currentExpireAt && (
                               <CountdownTimer
-                                targetDate={new Date(
-                                  item.currentExpireAt
-                                ).toISOString()}
+                                targetDate={String(item.currentExpireAt)}
                               />
                             )}
                           </div>
