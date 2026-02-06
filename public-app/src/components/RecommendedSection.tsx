@@ -38,7 +38,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
   if (accounts.length === 0) return null;
 
   return (
-    <section className="w-full relative z-10 mb-12">
+    <section className="w-full relative z-10 my-8 xl:my-16">
       <div className="w-full max-w-[1920px] mx-auto">
         {/* Header */}
         <div className="flex flex-col mb-8">
