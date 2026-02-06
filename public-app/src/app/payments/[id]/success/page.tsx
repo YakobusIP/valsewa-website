@@ -100,7 +100,7 @@ export default function PaymentSuccessPage() {
   const showCredentials = useMemo(() => {
     return (
       booking?.active === true &&
-      booking?.account?.nickname &&
+      booking?.account?.username &&
       booking?.account?.password
     );
   }, [booking]);
@@ -211,7 +211,7 @@ export default function PaymentSuccessPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-400">Riot Username</span>
                     <span className="font-medium text-white">
-                      {booking.account.nickname}
+                      {booking.account.username}
                     </span>
                   </div>
                   <div className="flex justify-between">

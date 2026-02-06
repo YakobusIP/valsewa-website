@@ -1528,6 +1528,7 @@ export class BookingService {
         priceTierId?: number;
         thumbnailId?: number | null;
         nickname?: string;
+        username?: string;
         password?: string;
       };
     }
@@ -1574,6 +1575,7 @@ export class BookingService {
             priceTierCode: booking.account.priceTierId?.toString() ?? "",
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
             nickname: booking.account.nickname ?? "",
+            username: booking.account.username,
             password: booking.account.password
           }
         : undefined
@@ -1629,6 +1631,7 @@ export class BookingService {
         priceTierCode: booking.account.priceTier.code,
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
         nickname: booking.account.nickname ?? "",
+        username: active ? booking.account.username : undefined,
         password: active ? booking.account.password : undefined
       },
       payments: booking.payments
