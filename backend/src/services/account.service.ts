@@ -754,6 +754,70 @@ export class AccountService {
     }
   };
 
+  getAccountByIdPublic = async (id: number) => {
+    try {
+      const account = await prisma.account.findUnique({
+        omit: { password: true, passwordResetRequired: true, rentHourUpdated:true },
+        where: { id },
+        include: {
+          priceTier: {
+            include: {
+              priceList: true
+            }
+          },
+          skinList: true,
+          thumbnail: true,
+          otherImages: true
+        }
+      });
+
+      if (!account) {
+        throw new NotFoundError("Account not found!");
+      }
+
+      const bookings = await prisma.booking.findMany({
+        where: {
+          accountId: account.id,
+          status: BookingStatus.RESERVED,
+          endAt: { gt: new Date() }
+        },
+        orderBy: {
+          endAt: "asc"
+        },
+        select: {
+          id: true,
+          duration: true,
+          startAt: true,
+          endAt: true
+        },
+        take: 2
+      });
+
+      return {
+        ...account,
+        // Priority: booking data > account data > null
+        currentBookingDate:
+          bookings[0]?.startAt ?? account.currentBookingDate ?? null,
+        currentBookingDuration: bookings[0]
+          ? parseDurationToHours(bookings[0]?.duration)
+          : (account.currentBookingDuration ?? null),
+        currentExpireAt: bookings[0]?.endAt ?? account.currentExpireAt ?? null,
+        nextBookingDate:
+          bookings[1]?.startAt ?? account.nextBookingDate ?? null,
+        nextBookingDuration: bookings[1]
+          ? parseDurationToHours(bookings[1]?.duration)
+          : (account.nextBookingDuration ?? null),
+        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null
+      };
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   getAccountDuplicate = async (nickname: string, accountCode: string) => {
     try {
       const account = await prisma.account.findFirst({

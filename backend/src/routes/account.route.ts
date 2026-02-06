@@ -30,7 +30,7 @@ class AccountRouter {
       "/public/recommended",
       this.accountController.getRecommendedAccounts
     );
-    this.router.get("/public/:id", this.accountController.getAccountById);
+    this.router.get("/public/:id", this.accountController.getAccountByIdPublic);
     this.router.get(
       "/failed-jobs",
       authMiddleware,

@@ -124,6 +124,18 @@ export class AccountController {
     }
   };
 
+  getAccountByIdPublic = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const account = await this.accountService.getAccountByIdPublic(
+        parseInt(req.params.id)
+      );
+
+      return res.json({ ...account });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getAccountRank = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const rankResponse = await this.rankService.getSingleAccountRank(
