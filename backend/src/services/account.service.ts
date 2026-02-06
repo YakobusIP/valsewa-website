@@ -580,24 +580,66 @@ export class AccountService {
         filteredData = fuseResults.map((result) => result.item);
       }
 
-      const total = filteredData.length;
-
       if (page === undefined || limit === undefined) {
         return [filteredData as PublicAccount[], null];
       }
 
-      const pageCount = Math.ceil(total / limit);
-      const paginatedData = filteredData.slice(
-        (page - 1) * limit,
-        page * limit
-      );
+      const accountIds = filteredData.map((a) => a.id);
+
+      const bookings = await prisma.booking.findMany({
+        where: {
+          accountId: { in: accountIds },
+          status: BookingStatus.RESERVED,
+          endAt: { gt: new Date() }
+        },
+        orderBy: {
+          startAt: "asc"
+        },
+        select: {
+          accountId: true,
+          startAt: true,
+          endAt: true,
+          duration: true
+        }
+      });
+
+      const bookingMap = new Map<number, typeof bookings>();
+
+      for (const booking of bookings) {
+        if (!bookingMap.has(booking.accountId)) {
+          bookingMap.set(booking.accountId, []);
+        }
+
+        const list = bookingMap.get(booking.accountId)!;
+        if (list.length < 2) {
+          list.push(booking);
+        }
+      }
+
+      const filteredDataWithBookings = filteredData.map((datum) => {
+        const b = bookingMap.get(datum.id) ?? [];
+
+        return {
+          ...datum,
+          // Priority: booking data > account data > null
+          currentExpireAt: b[0]?.endAt ?? datum.currentExpireAt ?? null
+        };
+      });
+
+      const itemCount = filteredDataWithBookings.length;
+      const pageCount = Math.ceil(itemCount / limit);
 
       const metadata: Metadata = {
         page,
         limit,
         pageCount,
-        total
+        total: itemCount
       };
+
+      const paginatedData = filteredDataWithBookings.slice(
+        (page - 1) * limit,
+        page * limit
+      );
 
       return [paginatedData as PublicAccount[], metadata];
     } catch (error) {
