@@ -1328,27 +1328,11 @@ export class BookingService {
     
     if (!activeBooking) throw new NotFoundError("No active booking found for this account.");
 
-    await prisma.$transaction(async (tx) => {
-      await tx.account.update({
-        where: { id: accountId },
-        data: {
-          availabilityStatus: "AVAILABLE",
-          currentBookingDate: null,
-          currentBookingDuration: null,
-          currentExpireAt: null,
-          passwordResetRequired: true,
-          totalRentHour: {
-            increment: activeBooking.currentBookingDuration || 0
-          }
-        }
-      });
-
-      await tx.accountResetLog.create({
-        data: { 
-          accountId, 
-          previousExpireAt: activeBooking.currentExpireAt 
-        }
-      });
+    await prisma.account.update({
+      where: { id: accountId },
+      data: {
+        currentExpireAt: new Date(),
+      }
     });
   }
 
