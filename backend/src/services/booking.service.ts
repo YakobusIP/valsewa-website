@@ -1228,54 +1228,84 @@ export class BookingService {
     try {
       const now = new Date();
 
-      const reservedAccountIds = await prisma.booking.findMany({
-        where: {
-          status: BookingStatus.RESERVED,
-          startAt: { lt: now },
-          endAt: { gt: now }
-        },
-        distinct: ["accountId"],
-        select: { accountId: true }
-      });
+      return await prisma.$transaction(async (tx) => {
+        const reservedAccountIds = await tx.booking.findMany({
+          where: {
+            status: BookingStatus.RESERVED,
+            startAt: { lt: now },
+            endAt: { gt: now }
+          },
+          distinct: ["accountId"],
+          select: { accountId: true }
+        });
 
-      const activeAccountIds = reservedAccountIds.map((v) => v.accountId);
+        const activeAccountIds = reservedAccountIds.map((v) => v.accountId);
 
-      // Mark reserved accounts as IN_USE (only if not already)
-      // Skip accounts with currentBookingDate set (they have an active booking)
-      const markedInUse =
-        activeAccountIds.length > 0
-          ? (
-              await prisma.account.updateMany({
+        // Find accounts that are transitioning to IN_USE (were not IN_USE, now have active booking)
+        // These accounts need their existing reset logs deleted since a new booking started
+        const accountsTransitioningToInUse =
+          activeAccountIds.length > 0
+            ? await tx.account.findMany({
                 where: {
                   id: { in: activeAccountIds },
                   availabilityStatus: { not: Status.IN_USE },
                   currentBookingDate: null
                 },
-                data: {
-                  availabilityStatus: Status.IN_USE
-                }
+                select: { id: true }
               })
-            ).count
-          : 0;
+            : [];
 
-      // Mark accounts as AVAILABLE if they are IN_USE but no longer reserved
-      // Skip accounts with currentBookingDate set (they have an active booking)
-      const markedAvailable = (
-        await prisma.account.updateMany({
-          where: {
-            availabilityStatus: Status.IN_USE,
-            currentBookingDate: null,
-            ...(activeAccountIds.length > 0 && {
-              id: { notIn: activeAccountIds }
-            })
-          },
-          data: {
-            availabilityStatus: Status.AVAILABLE
-          }
-        })
-      ).count;
+        const transitioningAccountIds = accountsTransitioningToInUse.map(
+          (a) => a.id
+        );
 
-      return { markedInUse, markedAvailable };
+        // Delete existing reset logs for accounts that are getting a new booking
+        // This prevents duplicate reset logs when the new booking ends
+        if (transitioningAccountIds.length > 0) {
+          await tx.accountResetLog.deleteMany({
+            where: {
+              accountId: { in: transitioningAccountIds }
+            }
+          });
+        }
+
+        // Mark reserved accounts as IN_USE (only if not already)
+        // Skip accounts with currentBookingDate set (they have an active booking)
+        const markedInUse =
+          activeAccountIds.length > 0
+            ? (
+                await tx.account.updateMany({
+                  where: {
+                    id: { in: activeAccountIds },
+                    availabilityStatus: { not: Status.IN_USE },
+                    currentBookingDate: null
+                  },
+                  data: {
+                    availabilityStatus: Status.IN_USE
+                  }
+                })
+              ).count
+            : 0;
+
+        // Mark accounts as AVAILABLE if they are IN_USE but no longer reserved
+        // Skip accounts with currentBookingDate set (they have an active booking)
+        const markedAvailable = (
+          await tx.account.updateMany({
+            where: {
+              availabilityStatus: Status.IN_USE,
+              currentBookingDate: null,
+              ...(activeAccountIds.length > 0 && {
+                id: { notIn: activeAccountIds }
+              })
+            },
+            data: {
+              availabilityStatus: Status.AVAILABLE
+            }
+          })
+        ).count;
+
+        return { markedInUse, markedAvailable };
+      });
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
