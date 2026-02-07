@@ -1326,7 +1326,8 @@ export class BookingService {
       });
 
       if (!activeBooking) {
-        throw new NotFoundError("No active booking found for this account.");
+        await this.finishLegacyBooking(accountId);
+        return null;
       }
 
       // Set endAt to now() - the cron jobs will handle the rest:
@@ -1346,6 +1347,24 @@ export class BookingService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  private finishLegacyBooking = async(accountId: number) => {
+    const activeBooking = await prisma.account.findFirst({
+      where: {
+        id: accountId,
+        currentBookingDate: { not: null },
+      }
+    });
+    
+    if (!activeBooking) throw new NotFoundError("No active booking found for this account.");
+
+    await prisma.account.update({
+      where: { id: accountId },
+      data: {
+        currentExpireAt: new Date(),
+      }
+    });
+  }
 
   callbackFaspayPayment = async (data: CallbackNotificationRequest) => {
     try {
