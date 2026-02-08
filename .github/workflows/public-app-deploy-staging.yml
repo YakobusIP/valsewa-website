@@ -11,6 +11,7 @@ on:
 jobs:
   call:
     uses: ./.github/workflows/_deploy-public-app.yml
+    secrets: inherit
     with:
       environment: staging
       deploy_path: /srv/staging/public
