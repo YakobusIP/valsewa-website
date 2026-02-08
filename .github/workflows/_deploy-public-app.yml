@@ -64,6 +64,15 @@ jobs:
             sudo rsync -rt --delete "$SRC/" "$DST/"
 
             cd "$DST"
+
+            # Setup .env
+            cat > "$DST/.env" <<EOF
+            NEXT_PUBLIC_AXIOS_BASE_URL=${{ secrets.BACKEND_BASE_URL }}
+            NODE_ENV=production
+            EOF
+            sudo chown deploy:deploy "$DST/.env"
+            sudo chmod 600 "$DST/.env"
+
             npm ci --production
 
             sudo systemctl start "${{ inputs.service_name }}"
