@@ -1,0 +1,128 @@
+name: _Deploy Backend (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      deploy_path:
+        required: true
+        type: string
+      service_name:
+        required: true
+        type: string
+      enable_timers:
+        required: true
+        type: boolean
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    concurrency:
+      group: deploy-backend-${{ inputs.environment }}
+      cancel-in-progress: true
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create backend .env
+        working-directory: backend
+        run: |
+          cat > .env.production <<EOF
+          DATABASE_URL=${{ secrets.DATABASE_URL }}
+          DIRECT_URL=${{ secrets.DIRECT_URL }}
+          ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
+          REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
+          ACCESS_TOKEN_DURATION=${{ vars.ACCESS_TOKEN_DURATION }}
+          REFRESH_TOKEN_DURATION=${{ vars.REFRESH_TOKEN_DURATION }}
+          GCS_BUCKET_NAME=${{ vars.GCS_BUCKET_NAME }}
+          BULL_REDIS_IP=${{ secrets.BULL_REDIS_IP }}
+          BULL_REDIS_PORT=${{ secrets.BULL_REDIS_PORT }}
+          ADMIN_APP_URL=${{ vars.ADMIN_APP_URL }}
+          CANONICAL_PUBLIC_APP_URL=${{ vars.CANONICAL_PUBLIC_APP_URL }}
+          PUBLIC_APP_URL=${{ vars.PUBLIC_APP_URL }}
+          HENRIKDEV_API_KEY=${{ secrets.HENRIKDEV_API_KEY }}
+          SCHEDULER_API_KEY=${{ secrets.SCHEDULER_API_KEY }}
+          BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}
+          PUB_ACCESS_TOKEN_SECRET=${{ secrets.PUB_ACCESS_TOKEN_SECRET }}
+          PUB_REFRESH_TOKEN_SECRET=${{ secrets.PUB_REFRESH_TOKEN_SECRET }}
+          PUB_ACCESS_TOKEN_DURATION=${{ vars.PUB_ACCESS_TOKEN_DURATION }}
+          PUB_REFRESH_TOKEN_DURATION=${{ vars.PUB_REFRESH_TOKEN_DURATION }}
+          SNAP_BI_MERCHANT_ID=${{ secrets.SNAP_BI_MERCHANT_ID }}
+          SNAP_BI_CLIENT_ID=${{ secrets.SNAP_BI_CLIENT_ID }}
+          SNAP_BI_PRIVATE_KEY=${{ secrets.SNAP_BI_PRIVATE_KEY }}
+          SNAP_BI_CLIENT_SECRET=${{ secrets.SNAP_BI_CLIENT_SECRET }}
+          SNAP_BI_PARTNER_ID=${{ secrets.SNAP_BI_PARTNER_ID }}
+          SNAP_BI_CHANNEL_ID=${{ secrets.SNAP_BI_CHANNEL_ID }}
+          SNAP_BI_PUBLIC_KEY=${{ secrets.SNAP_BI_PUBLIC_KEY }}
+          PAYMENT_NOTIFICATION_USER_ID=${{ secrets.PAYMENT_NOTIFICATION_USER_ID }}
+          PAYMENT_NOTIFICATION_PASSWORD=${{ secrets.PAYMENT_NOTIFICATION_PASSWORD }}
+          BOOKING_HOLD_TIME_MINUTES=${{ vars.BOOKING_HOLD_TIME_MINUTES }}
+          BOOKING_GRACE_TIME_MILLIS=${{ vars.BOOKING_GRACE_TIME_MILLIS }}
+          NODE_ENV=${{ vars.BACKEND_NODE_ENV }}
+          PORT=${{ vars.BACKEND_PORT }}
+          EOF
+
+      - name: Build backend
+        working-directory: backend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Upload backend via SCP (env-scoped tmp dir)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port:     ${{ secrets.SSH_PORT }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "backend/dist/,backend/.env.production,backend/package.json,backend/package-lock.json,backend/prisma/,backend/infrastructure/"
+          target: /tmp/deploy/${{ inputs.environment }}/backend
+          strip_components: 1
+
+      - name: Remote backend deploy & restart
+        uses: appleboy/ssh-action@v1
+        with:
+          host:     ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port:     ${{ secrets.SSH_PORT }}
+          key:      ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+
+            SRC="/tmp/deploy/${{ inputs.environment }}/backend"
+            DST="${{ inputs.deploy_path }}"
+
+            sudo systemctl stop "${{ inputs.service_name }}" || true
+
+            sudo mkdir -p "$DST"
+            sudo rsync -rt --delete "$SRC/" "$DST/"
+
+            # Deploy systemd cron units (safe even if unused)
+            sudo rsync -rt "$SRC/infrastructure/cron/" /etc/systemd/system/ || true
+            sudo systemctl daemon-reload
+
+            cd "$DST"
+
+            # Install env as /srv/.../.env (your app reads this path)
+            sudo install -m 600 -o deploy -g deploy "$SRC/.env.production" "$DST/.env"
+
+            npm ci --production
+            npx prisma generate
+            npx prisma migrate deploy
+
+            sudo systemctl start "${{ inputs.service_name }}"
+
+            # IMPORTANT: only enable timers on PROD
+            if [ "${{ inputs.enable_timers }}" = "true" ]; then
+              sudo systemctl enable --now backend-cron@check-password-expiration.timer || true
+              sudo systemctl enable --now backend-cron@check-voucher-expiration.timer || true
+              sudo systemctl enable --now backend-cron@sync-expired.timer || true
+              sudo systemctl enable --now backend-cron@sync-completed.timer || true
+              sudo systemctl enable --now backend-cron@sync-account-availability.timer || true
+              sudo systemctl enable --now backend-cron@update-rank.timer || true
+              sudo systemctl enable --now backend-cron@update-expire-at.timer || true
+            fi
