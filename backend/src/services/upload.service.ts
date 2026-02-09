@@ -12,7 +12,7 @@ import {
 } from "../lib/error";
 
 export class UploadService {
-  private static readonly IMAGES_ROOT = "/srv/images";
+  private static readonly IMAGES_ROOT = "/srv/production/images";
   private static readonly IMAGES_CDN = "https://images.valsewa.com";
 
   private async saveImageToDatabase(imageUrl: string) {
