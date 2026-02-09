@@ -1,5 +1,3 @@
-import { sourcePrisma } from "../source/client";
-import { targetPrisma } from "../target/client";
 import {
   buildPriceTierDescription,
   lrCode,
@@ -11,8 +9,11 @@ export type PriceTierIdMap = {
   lowByCode: Map<string, number>; // "S" -> LR-S id
 };
 
-export async function migratePriceTiers(): Promise<PriceTierIdMap> {
-  const tiers = await sourcePrisma.priceTier.findMany({
+export async function migratePriceTiers(
+  tx: any,
+  source: any
+): Promise<PriceTierIdMap> {
+  const tiers = await source.priceTier.findMany({
     include: { priceList: true }
   });
 
@@ -25,7 +26,7 @@ export async function migratePriceTiers(): Promise<PriceTierIdMap> {
   for (const tier of tiers) {
     const priceList = tier.priceList as unknown as SourcePriceListRow[];
 
-    const normal = await targetPrisma.priceTier.create({
+    const normal = await tx.priceTier.create({
       data: {
         id: tier.id,
         code: tier.code,
@@ -41,7 +42,7 @@ export async function migratePriceTiers(): Promise<PriceTierIdMap> {
   }
 
   // 2) Reset sequence so autoincrement won't collide
-  await resetPriceTierSequence();
+  await resetPriceTierSequence(tx);
 
   // 3) Insert LR tiers (no explicit id)
   for (const tier of tiers) {
@@ -53,7 +54,7 @@ export async function migratePriceTiers(): Promise<PriceTierIdMap> {
 
     if (!hasLow) continue;
 
-    const low = await targetPrisma.priceTier.create({
+    const low = await tx.priceTier.create({
       data: {
         code: lrCode(tier.code),
         description: buildPriceTierDescription(priceList, "LOW"),
@@ -73,8 +74,8 @@ export async function migratePriceTiers(): Promise<PriceTierIdMap> {
   return { normalByCode, lowByCode };
 }
 
-async function resetPriceTierSequence() {
-  await targetPrisma.$executeRawUnsafe(`
+async function resetPriceTierSequence(tx: any) {
+  await tx.$executeRawUnsafe(`
     SELECT setval(
       pg_get_serial_sequence('"PriceTier"', 'id'),
       COALESCE((SELECT MAX(id) FROM "PriceTier"), 1),

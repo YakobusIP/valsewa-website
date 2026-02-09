@@ -1,10 +1,12 @@
-import { sourcePrisma } from "../source/client";
-import { targetPrisma } from "../target/client";
 import { collapseBookings } from "../utils";
 import type { PriceTierIdMap } from "./priceTier";
 
-export async function migrateAccounts(priceTierMap: PriceTierIdMap) {
-  const accounts = await sourcePrisma.account.findMany({
+export async function migrateAccounts(
+  tx: any,
+  source: any,
+  priceTierMap: PriceTierIdMap
+) {
+  const accounts = await source.account.findMany({
     include: {
       skinList: true,
       Booking: true,
@@ -25,7 +27,7 @@ export async function migrateAccounts(priceTierMap: PriceTierIdMap) {
     const lowId = priceTierMap.lowByCode.get(baseTierCode);
     const targetPriceTierId = acc.isLowRank && lowId ? lowId : normalId;
 
-    await targetPrisma.account.create({
+    await tx.account.create({
       data: {
         id: acc.id,
         username: acc.username,
@@ -40,7 +42,7 @@ export async function migrateAccounts(priceTierMap: PriceTierIdMap) {
         rentHourUpdated: acc.rentHourUpdated,
         password: acc.password,
         passwordResetRequired: acc.passwordResetRequired,
-        skinList: acc.skinList.map((s) => s.name),
+        skinList: acc.skinList.map((s: any) => s.name),
         priceTierId: targetPriceTierId,
         thumbnailId: acc.thumbnailId,
         createdAt: acc.createdAt,

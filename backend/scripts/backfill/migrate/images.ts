@@ -1,15 +1,14 @@
-import { sourcePrisma } from "../source/client";
-import { targetPrisma } from "../target/client";
+export async function migrateImages(tx: any, source: any) {
+  const images = await source.imageUpload.findMany();
 
-export async function migrateImages() {
-  const images = await sourcePrisma.imageUpload.findMany();
-
-  await targetPrisma.imageUpload.createMany({
-    data: images.map((img) => ({
+  await tx.imageUpload.createMany({
+    data: images.map((img: any) => ({
       id: img.id,
       imageUrl: img.imageUrl,
       createdAt: img.createdAt,
-      updatedAt: img.updatedAt
+      updatedAt: img.updatedAt,
+
+      accountId: img.accountId
     }))
   });
 

@@ -1,10 +1,7 @@
-import { sourcePrisma } from "../source/client";
-import { targetPrisma } from "../target/client";
+export async function migrateResetLogs(tx: any, source: any) {
+  const logs = await source.accountResetLog.findMany();
 
-export async function migrateResetLogs() {
-  const logs = await sourcePrisma.accountResetLog.findMany();
-
-  await targetPrisma.accountResetLog.createMany({
+  await tx.accountResetLog.createMany({
     data: logs
   });
 
