@@ -16,4 +16,4 @@ jobs:
       environment: production
       deploy_path: /srv/production/backend
       service_name: backend-production.service
-      enable_timers: false
+      timers: "update-expire-at update-rank"

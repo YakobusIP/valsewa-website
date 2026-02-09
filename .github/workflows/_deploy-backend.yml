@@ -12,9 +12,10 @@ on:
       service_name:
         required: true
         type: string
-      enable_timers:
-        required: true
-        type: boolean
+      timers:
+        required: false
+        type: string
+        default: ""
 
 jobs:
   deploy:
@@ -63,10 +64,23 @@ jobs:
             sudo mkdir -p "$DST"
             sudo rsync -rt --delete "$SRC/" "$DST/"
 
-            # Deploy systemd cron units (safe even if unused)
-            if [ "${{ inputs.enable_timers }}" = "true" ]; then
-              sudo rsync -rt "$SRC/infrastructure/cron/" /etc/systemd/system/ || true
+            # Deploy systemd cron units (only if any timers requested)
+            if [ -n "${{ inputs.timers }}" ]; then
+              CRON_PREFIX="backend-${{ inputs.environment }}-cron"
+              
+              # Copy unit files into /etc/systemd/system/
+              sudo rsync -rt "$SRC/infrastructure/cron/${{ inputs.environment }}/" /etc/systemd/system/ || true
               sudo systemctl daemon-reload
+
+              # Disable old timers for this env (avoid leftovers)
+              sudo systemctl list-unit-files "${CRON_PREFIX}@*.timer" --no-legend 2>/dev/null | awk '{print $1}' | while read -r unit; do
+                sudo systemctl disable --now "$unit" || true
+              done
+
+              # Enable only requested timers (space-separated list)
+              for t in ${{ inputs.timers }}; do
+                sudo systemctl enable --now "${CRON_PREFIX}@${t}.timer" || true
+              done
             fi
 
             cd "$DST"
@@ -114,14 +128,3 @@ jobs:
             npx prisma migrate deploy
 
             sudo systemctl start "${{ inputs.service_name }}"
-
-            # IMPORTANT: only enable timers on PROD
-            if [ "${{ inputs.enable_timers }}" = "true" ]; then
-              sudo systemctl enable --now backend-cron@check-password-expiration.timer || true
-              sudo systemctl enable --now backend-cron@check-voucher-expiration.timer || true
-              sudo systemctl enable --now backend-cron@sync-expired.timer || true
-              sudo systemctl enable --now backend-cron@sync-completed.timer || true
-              sudo systemctl enable --now backend-cron@sync-account-availability.timer || true
-              sudo systemctl enable --now backend-cron@update-rank.timer || true
-              sudo systemctl enable --now backend-cron@update-expire-at.timer || true
-            fi
