@@ -16,18 +16,11 @@ type AccountEntityRequest = {
   totalRentHour: number;
   password: string;
   passwordResetRequired: boolean;
+  skins: string[];
   thumbnail: number;
   otherImages: number[] | null;
   priceTier: number;
-  skinCount: number;
-  skinList: number[];
-  isLowRank: boolean;
-  isRecommended: boolean;
 };
-
-type AccountWithSkins = Prisma.AccountGetPayload<{
-  include: { skinList: true };
-}>;
 
 type PublicAccount = Prisma.AccountGetPayload<{
   select: {
@@ -39,12 +32,9 @@ type PublicAccount = Prisma.AccountGetPayload<{
     currentExpireAt: true;
     totalRentHour: true;
     skinList: true;
-    skinCount: true;
     priceTier: true;
     thumbnail: true;
     otherImages: true;
-    isLowRank: true;
-    isRecommended: true;
   };
 }>;
 
@@ -54,33 +44,4 @@ type UpdateResetLogRequest = {
   passwordResetRequired: boolean;
 };
 
-type DeleteResetLogRequest = {
-  accountId: number;
-};
-
-type GetAvailableAccountsRequest = {
-  startAt: Date;
-  endAt: Date;
-};
-
-type AccountSearchFilters = {
-  query?: string;
-  lowTierOnly?: boolean;
-  tiers?: string[];
-  skinCounts?: string[];
-  ranks?: string[];
-  minPrice?: number;
-  maxPrice?: number;
-  sortBy?: string;
-  direction?: Prisma.SortOrder;
-};
-
-export type {
-  AccountEntityRequest,
-  AccountWithSkins,
-  PublicAccount,
-  UpdateResetLogRequest,
-  DeleteResetLogRequest,
-  GetAvailableAccountsRequest,
-  AccountSearchFilters
-};
+export type { AccountEntityRequest, PublicAccount, UpdateResetLogRequest };

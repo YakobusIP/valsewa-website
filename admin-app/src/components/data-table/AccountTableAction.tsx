@@ -1,9 +1,10 @@
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 
-import { bookingService } from "@/services/transaction.service";
+import { accountService } from "@/services/account.service";
 
+import AccountCurrentBookModal from "@/components/dashboard/AccountCurrentBookModal";
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
-import AddBookingModal from "@/components/dashboard/AddBookingModal";
+import AccountNextBookModal from "@/components/dashboard/AccountNextBookModal";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,7 +23,7 @@ import {
 
 import { toast } from "@/hooks/useToast";
 
-import { AccountEntity } from "@/types/account.type";
+import { AccountEntity, AccountEntityRequest } from "@/types/account.type";
 
 import { MoreHorizontalIcon } from "lucide-react";
 import { Fragment } from "react/jsx-runtime";
@@ -34,34 +35,77 @@ type Props = {
 
 export default memo(function AccountTableAction({ data, resetParent }: Props) {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
-  const [openAddBookingModal, setOpenAddBookingModal] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [isForceFinishing, setIsForceFinishing] = useState(false);
+  const [openCurrentBookingModal, setOpenCurrentBookingModal] = useState(false);
+  const [openNextBookingModal, setOpenNextBookingModal] = useState(false);
 
-  const isAccountInUse = data.availabilityStatus === "IN_USE";
+  const currentBookingExist =
+    !!data.currentBookingDate &&
+    !!data.currentBookingDuration &&
+    !!data.currentExpireAt;
 
-  const handleForceFinish = async () => {
-    setIsForceFinishing(true);
-    try {
-      await bookingService.forceFinishBooking(data.id);
-      toast({
-        title: "Success",
-        description: `Booking for ${data.accountCode} has been force finished.`
-      });
-      await resetParent();
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "An unknown error occurred";
-      toast({
-        variant: "destructive",
-        title: "Failed to force finish booking",
-        description: errorMessage
-      });
-    } finally {
-      setIsForceFinishing(false);
-      setDropdownOpen(false);
+  const nextBookingExist =
+    !!data.nextBookingDate && !!data.nextBookingDuration && !!data.nextExpireAt;
+
+  const finishCurrentBooking = useCallback(async () => {
+    if (currentBookingExist) {
+      try {
+        const response = await accountService.finishBooking(data.id);
+        await resetParent();
+
+        toast({
+          title: "All set!",
+          description: response.message
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occured";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong!",
+          description: errorMessage
+        });
+      }
     }
-  };
+  }, [currentBookingExist, data.id, resetParent]);
+
+  const moveNextBookingToCurrent = useCallback(async () => {
+    if (nextBookingExist) {
+      const payload: Partial<AccountEntityRequest> = {
+        currentBookingDate: data.nextBookingDate,
+        currentBookingDuration: data.nextBookingDuration,
+        currentExpireAt: data.nextExpireAt,
+        nextBookingDate: null,
+        nextBookingDuration: null,
+        nextExpireAt: null
+      };
+      try {
+        const response = await accountService.update(data.id, payload);
+        await resetParent();
+
+        toast({
+          title: "All set!",
+          description: response.message
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occured";
+
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong!",
+          description: errorMessage
+        });
+      }
+    }
+  }, [
+    data.id,
+    data.nextBookingDate,
+    data.nextBookingDuration,
+    data.nextExpireAt,
+    nextBookingExist,
+    resetParent
+  ]);
 
   return (
     <Fragment>
@@ -78,7 +122,7 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
             </Tooltip>
           </TooltipProvider>
         )}
-        <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
@@ -87,34 +131,30 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Details</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => {
-                setDropdownOpen(false);
-                setOpenAccountDetail(true);
-              }}
-            >
+            <DropdownMenuItem onClick={() => setOpenAccountDetail(true)}>
               View account details
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                setDropdownOpen(false);
-                setOpenAddBookingModal(true);
-              }}
-            >
-              Add new booking
+            <DropdownMenuItem onClick={() => setOpenCurrentBookingModal(true)}>
+              View current booking
             </DropdownMenuItem>
-            {isAccountInUse && (
-              <Fragment>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                <DropdownMenuItem
-                  onClick={handleForceFinish}
-                  disabled={isForceFinishing}
-                >
-                  {isForceFinishing ? "Finishing..." : "Force finish booking"}
-                </DropdownMenuItem>
-              </Fragment>
-            )}
+            <DropdownMenuItem onClick={() => setOpenNextBookingModal(true)}>
+              View next booking
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>Booking Actions</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={finishCurrentBooking}
+              disabled={!currentBookingExist}
+            >
+              Finish current booking
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={moveNextBookingToCurrent}
+              disabled={!nextBookingExist}
+            >
+              Move next booking to current
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -127,10 +167,18 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
           resetParent={resetParent}
         />
       )}
-      {openAddBookingModal && (
-        <AddBookingModal
-          open={openAddBookingModal}
-          onOpenChange={setOpenAddBookingModal}
+      {openCurrentBookingModal && (
+        <AccountCurrentBookModal
+          open={openCurrentBookingModal}
+          onOpenChange={setOpenCurrentBookingModal}
+          data={data}
+          resetParent={resetParent}
+        />
+      )}
+      {openNextBookingModal && (
+        <AccountNextBookModal
+          open={openNextBookingModal}
+          onOpenChange={setOpenNextBookingModal}
           data={data}
           resetParent={resetParent}
         />

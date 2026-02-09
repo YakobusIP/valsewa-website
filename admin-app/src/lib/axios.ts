@@ -108,6 +108,9 @@ interceptedAxios.interceptors.response.use(
             const newAccessToken = response.data.accessToken;
             setAccessToken(newAccessToken);
 
+            const newRefreshToken = response.data.refreshToken;
+            localStorage.setItem("refreshToken", newRefreshToken);
+
             processQueue(null, newAccessToken);
             if (originalRequest.headers) {
               originalRequest.headers["Authorization"] =

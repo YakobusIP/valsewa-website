@@ -1,14 +1,18 @@
 import { UploadResponse } from "./upload.type";
 
+type AspectRatio = "123" | "126" | "129";
+
 type CarouselSlide = {
   id: number;
-  image: UploadResponse;
-  duration: number;
+  image123: UploadResponse;
+  image126: UploadResponse;
+  image129: UploadResponse;
 };
 
 type CarouselSlideRequest = {
-  imageId: number;
-  duration: number;
+  image123Id: number;
+  image126Id: number;
+  image129Id: number;
 };
 
-export type { CarouselSlide, CarouselSlideRequest };
+export type { AspectRatio, CarouselSlide, CarouselSlideRequest };

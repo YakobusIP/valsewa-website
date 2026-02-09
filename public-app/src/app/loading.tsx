@@ -1,9 +1,9 @@
 "use client";
 
 // import { useEffect, useState } from "react";
-// import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
-// import Image from "next/image";
+import Image from "next/image";
 
 export default function LoadingPage() {
   // const [index, setIndex] = useState(0);
@@ -22,16 +22,8 @@ export default function LoadingPage() {
   // }, [images.length]);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden items-center justify-center gap-4 relative bg-black h-[100vh] w-[100vw]">
-      <video autoPlay muted loop playsInline className="block lg:hidden" width="full" height="full">
-        <source src="loading/Mobile.mov" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      <video autoPlay muted loop playsInline width="full" height="full" className="hidden lg:block">
-        <source src="loading/Desktop.mov" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      {/* <figure className="w-full h-full absolute z-0 max-md:hidden">
+    <div className="flex flex-col h-screen overflow-hidden items-center justify-center gap-4 relative">
+      <figure className="w-full h-full absolute z-0 max-xl:hidden">
         <AspectRatio ratio={16 / 12}>
           <Image
             src="/LS/SVG/Loading Screen_VS_Loading_1280x2800px.svg"
@@ -41,7 +33,7 @@ export default function LoadingPage() {
           />
         </AspectRatio>
       </figure>
-      <figure className="w-full h-full absolute z-0 max-lg:hidden md:hidden">
+      <figure className="w-full h-full absolute z-0 max-lg:hidden xl:hidden">
         <AspectRatio ratio={16 / 15}>
           <Image
             src="/LS/SVG/Loading Screen_VS_Loading_1280x2000px.svg"
@@ -72,7 +64,7 @@ export default function LoadingPage() {
         </AspectRatio>
       </figure>
 
-      <div className="flex flex-col items-center justify-center gap-2 md:gap-4 z-50">
+      <div className="flex flex-col items-center justify-center gap-2 xl:gap-4 z-50">
         <div className="flex items-center justify-center gap-2">
           <div className="relative w-44 h-44">
             <Image
@@ -80,8 +72,8 @@ export default function LoadingPage() {
               alt="Loading animation"
               fill
               unoptimized // <== important for GIFs to work with next/image
-            /> */}
-      {/* {images.map((src, i) => (
+            />
+            {/* {images.map((src, i) => (
               <motion.img
                 key={i}
                 src={src}
@@ -94,7 +86,7 @@ export default function LoadingPage() {
                 transition={{ duration: 0.1, ease: "easeInOut" }}
               />
             ))} */}
-      {/* </div>
+          </div>
         </div>
         <h2 className="text-white font-bold text-4xl font-valorant tracking-widest mt-[-30px]">
           Loading...
@@ -107,7 +99,7 @@ export default function LoadingPage() {
             accounts for you!
           </h2>
         </div>
-      </div> */}
+      </div>
     </div>
   );
 }
