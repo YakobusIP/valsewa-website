@@ -13,7 +13,7 @@ import {
 import { bucket } from "../lib/storage";
 
 export class UploadService {
-  private static readonly IMAGES_ROOT = "/srv/images";
+  private static readonly IMAGES_ROOT = "/srv/staging/images";
   private static readonly IMAGES_CDN = "https://images.valsewa.com";
 
   private async saveImageToDatabase(imageUrl: string, type: MediaType) {
