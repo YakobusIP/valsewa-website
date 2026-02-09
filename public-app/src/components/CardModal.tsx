@@ -94,7 +94,7 @@ const CardModal: React.FC<CardModalProps> = ({ selectedCard, onClose }) => {
 
   const dataString = selectedCard.priceTier.description;
 
-  const formattedData = dataString.match(/\d+\s*\w+\s*=\s*\d+k/g) || [];
+  const formattedData = dataString.match(/\d+\s\w+\s=\s\d+k/g) || [];
   return (
     <DialogContent className="sm:max-w-[600px] max-w-[380px] p-0 bg-[#333640] [&>button]:hidden border-0">
       <ScrollArea className="sm:max-h-[600px] max-h-[600px] no-scrollbar p-0 overflow-y-auto ">
