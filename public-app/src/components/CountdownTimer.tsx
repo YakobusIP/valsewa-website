@@ -1,47 +1,40 @@
-"use client";
+import React, { useEffect, useState } from "react";
 
-import { useEffect, useState } from "react";
-
-type CountdownTimerProps = {
-  targetDate: string; // ISO string ONLY
-};
-
-const CountdownTimer = ({ targetDate }: CountdownTimerProps) => {
+const CountdownTimer = ({ targetDate }: { targetDate: string }) => {
   const [timeLeft, setTimeLeft] = useState("");
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
-    const end = Date.parse(targetDate);
+    const countDownDate = new Date(targetDate).getTime();
 
-    if (Number.isNaN(end)) {
-      console.error("Invalid date:", targetDate);
-      return;
-    }
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = countDownDate - now;
 
-    const tick = () => {
-      const diff = end - Date.now();
-
-      if (diff <= 0) {
-        setTimeLeft("00d:00h:00m");
+      if (distance <= 0) {
+        clearInterval(interval);
+        setIsExpired(true);
         return;
       }
 
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
       setTimeLeft(
-        `${String(d).padStart(2, "0")}d:` +
-        `${String(h).padStart(2, "0")}h:` +
-        `${String(m).padStart(2, "0")}m`
+        `${String(days).padStart(2, "0")}:${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
       );
-    };
+    }, 1000);
 
-    tick(); // immediate render
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
+    return () => clearInterval(interval);
   }, [targetDate]);
 
-  return <span className="font-semibold">{timeLeft}</span>;
+  if (isExpired) return null;
+
+  return <div className="text-xl font-bold text-[#FBB201]">{timeLeft}</div>;
 };
 
 export default CountdownTimer;

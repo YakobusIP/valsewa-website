@@ -1,4 +1,4 @@
-import { Prisma, MediaType } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { generateFilename } from "../lib/utils";
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "fs";
@@ -10,15 +10,14 @@ import {
   InternalServerError,
   NotFoundError
 } from "../lib/error";
-import { bucket } from "../lib/storage";
 
 export class UploadService {
   private static readonly IMAGES_ROOT = "/srv/images";
   private static readonly IMAGES_CDN = "https://images.valsewa.com";
 
-  private async saveImageToDatabase(imageUrl: string, type: MediaType) {
+  private async saveImageToDatabase(imageUrl: string) {
     try {
-      return await prisma.imageUpload.create({ data: { imageUrl, type } });
+      return await prisma.imageUpload.create({ data: { imageUrl } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientValidationError) {
         throw new BadRequestError("Invalid request body!");
@@ -46,22 +45,6 @@ export class UploadService {
           }
 
           url = `${UploadService.IMAGES_CDN}/${filePath}`;
-        } else if (env.NODE_ENV === "staging" && bucket) {
-          const blob = bucket.file(filePath);
-          const blobStream = blob.createWriteStream({
-            resumable: false,
-            contentType: file.mimetype
-          });
-
-          await new Promise<void>((resolve, reject) => {
-            blobStream.on("error", (error) => {
-              reject(new FileStorageError(error.message));
-            });
-            blobStream.on("finish", () => resolve());
-            blobStream.end(file.buffer);
-          });
-
-          url = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
         } else {
           const localPath = path.join(__dirname, "../uploads/", filePath);
           mkdirSync(path.dirname(localPath), { recursive: true });
@@ -74,12 +57,7 @@ export class UploadService {
 
           url = `http://localhost:${env.PORT}/uploads/${filePath}`;
         }
-
-        const type = file.mimetype.startsWith("video/")
-          ? MediaType.VIDEO
-          : MediaType.IMAGE;
-
-        return await this.saveImageToDatabase(url, type);
+        return await this.saveImageToDatabase(url);
       } catch (error) {
         if (
           error instanceof BadRequestError ||
@@ -110,13 +88,6 @@ export class UploadService {
         const diskPath = path.join(UploadService.IMAGES_ROOT, filename);
         try {
           if (existsSync(diskPath)) unlinkSync(diskPath);
-        } catch (error) {
-          throw new FileStorageError((error as Error).message);
-        }
-      } else if (env.NODE_ENV === "staging" && bucket) {
-        const file = bucket.file(filename);
-        try {
-          await file.delete();
         } catch (error) {
           throw new FileStorageError((error as Error).message);
         }

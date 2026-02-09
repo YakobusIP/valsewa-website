@@ -3,11 +3,6 @@ type ApiResponseList<T> = {
   metadata: MetadataResponse;
 };
 
-type ApiResponse<T> = {
-  data: T;
-  metadata: MetadataResponse;
-};
-
 type ApiResponseError = {
   error: string;
 };
@@ -25,7 +20,6 @@ type MetadataResponse = {
 
 export type {
   ApiResponseList,
-  ApiResponse,
   ApiResponseError,
   MessageResponse,
   MetadataResponse

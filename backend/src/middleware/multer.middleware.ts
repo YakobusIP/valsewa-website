@@ -3,13 +3,10 @@ import multer from "multer";
 export const uploadMiddleware = multer({
   storage: multer.memoryStorage(),
   fileFilter: (_, file, cb) => {
-    if (
-      file.mimetype.startsWith("image/") ||
-      file.mimetype.startsWith("video/")
-    ) {
+    if (file.mimetype.startsWith("image/")) {
       cb(null, true);
     } else {
-      cb(new Error("Only image and video files are allowed!"));
+      cb(new Error("Only image files are allowed!"));
     }
   }
 });
