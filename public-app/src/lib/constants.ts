@@ -43,3 +43,30 @@ export const availabilityStatuses = [
     color: "bg-red-500"
   }
 ];
+
+// Booking & Payment Constants
+export const BOOKING_STATUS_MAP: Record<string, string> = {
+  RESERVED: "reserved",
+  EXPIRED: "expired",
+  FAILED: "failed",
+  CANCELLED: "cancelled",
+  COMPLETED: "completed"
+};
+
+export const PAYMENT_STATUS_MAP: Record<string, string> = {
+  SUCCESS: "success",
+  EXPIRED: "expired",
+  FAILED: "failed",
+  CANCELLED: "cancelled",
+  REFUNDED: "refunded"
+};
+
+export const PAYMENT_VERIFICATION_INTERVAL_MILLIS = 5000;
+
+export const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  QRIS: "QRIS",
+  VA_BNI: "VA BNI",
+  VA_PERMATA: "VA PERMATA",
+  VA_BRI: "VA BRI",
+  MANUAL: "Manual"
+};

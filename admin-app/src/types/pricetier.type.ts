@@ -1,9 +1,15 @@
 type PriceTier = {
   id: number;
   code: string;
-  description: string;
+  priceList: PriceList[];
 };
 
 type PriceTierRequest = Omit<PriceTier, "id">;
 
-export type { PriceTier, PriceTierRequest };
+type PriceList = {
+  duration: string;
+  normalPrice: number;
+  lowPrice: number;
+};
+
+export type { PriceTier, PriceTierRequest, PriceList };

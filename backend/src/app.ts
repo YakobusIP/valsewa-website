@@ -12,10 +12,17 @@ import PriceTierRouter from "./routes/pricetier.route";
 import UploadRouter from "./routes/upload.route";
 import StatisticRouter from "./routes/statistic.route";
 import CarouselSlideRouter from "./routes/carousel.route";
+import VoucherRouter from "./routes/voucher.route";
+import BookingRouter from "./routes/booking.route";
+import FaspayRouter from "./routes/faspay.route";
 import { throttleMiddleware } from "./middleware/throttle.middleware";
 
 import swaggerJSDoc, { OAS3Definition, Options } from "swagger-jsdoc";
 import { serve, setup } from "swagger-ui-express";
+import SkinRouter from "./routes/skin.route";
+import CustomerRouter from "./routes/customer.route";
+import SnapBiConfig from "./lib/snapbi/snapbi.config";
+import SettingRouter from "./routes/setting.route";
 
 const app: Express = express();
 
@@ -45,9 +52,15 @@ if (env.NODE_ENV === "development") {
 
 app.use("/api/accounts", AccountRouter);
 app.use("/api/price-tiers", PriceTierRouter);
+app.use("/api/skins", SkinRouter);
 app.use("/api/statistics", StatisticRouter);
 app.use("/api/carousels", CarouselSlideRouter);
 app.use("/api/upload", UploadRouter);
+app.use("/api/customer", CustomerRouter);
+app.use("/api/vouchers", VoucherRouter);
+app.use("/api/bookings", BookingRouter);
+app.use("/api/faspay", FaspayRouter);
+app.use("/api/settings", SettingRouter);
 
 const swaggerDefinition: OAS3Definition = {
   openapi: "3.0.0",
@@ -62,7 +75,9 @@ const swaggerDefinition: OAS3Definition = {
       description:
         env.NODE_ENV === "development"
           ? "Development server"
-          : "Production server"
+          : env.NODE_ENV === "staging"
+            ? "Staging server"
+            : "Production server"
     }
   ]
 };
@@ -74,8 +89,12 @@ const options: Options = {
 
 const swaggerSpec = swaggerJSDoc(options);
 
-app.use("/docs", serve, setup(swaggerSpec));
+if (env.NODE_ENV !== "production") {
+  app.use("/docs", serve, setup(swaggerSpec));
+}
 
 app.use(errorMiddleware);
+
+SnapBiConfig.init();
 
 export default app;

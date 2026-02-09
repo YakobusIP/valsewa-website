@@ -12,7 +12,10 @@ export default {
       fontFamily: {
         sans: ["Helvetica", "Arial", "sans-serif"],
         valorant: ["Valorant", "sans-serif"],
-        pressure: ["fpdPressure", "sans-serif"]
+        pressure: ["fpdPressure", "sans-serif"],
+        antonio: ["antonio", "sans-serif"],
+        instrumentSans: ["instrumentSans", "sans-serif"],
+        instrumentSansItalic: ["instrumentSansItalic", "sans-serif"]
       },
       colors: {
         background: "hsl(var(--background))",
@@ -63,10 +66,35 @@ export default {
         sm: "calc(var(--radius) - 4px)"
       },
       screens: {
+        "md-lg": "900px",
+        "xl-2xl": "1440px",
+        "2xl-large": "1720px",
         large: "1920px"
       },
       clipPath: {
         "diagonal-gold": "polygon(0% 0%, 100% 0%, 90% 100%, 0% 100%)"
+      },
+      keyframes: {
+        "accordion-down": {
+          from: {
+            height: "0"
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)"
+          }
+        },
+        "accordion-up": {
+          from: {
+            height: "var(--radix-accordion-content-height)"
+          },
+          to: {
+            height: "0"
+          }
+        }
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out"
       }
     }
   },

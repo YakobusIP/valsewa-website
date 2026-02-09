@@ -1,17 +1,28 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 
-import { accountService } from "@/services/account.service";
+import { accountService, isCanceledError } from "@/services/account.service";
 import { statisticService } from "@/services/statistic.service";
 
 import CarouselManagementModal from "@/components/carousel-management/CarouselManagementModal";
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
 import Navbar from "@/components/dashboard/Navbar";
+import SettingsModal from "@/components/dashboard/SettingsModal";
 import SortComponent from "@/components/dashboard/SortComponent";
 import StatisticsGrid from "@/components/dashboard/StatisticsGrid";
+import TransactionListModal from "@/components/dashboard/TransactionListModal";
+import UserListModal from "@/components/dashboard/UserListModal";
+import VoucherModal from "@/components/dashboard/VoucherModal";
 import DataTable from "@/components/data-table/DataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
 import PriceTierModal from "@/components/pricetier-management/PriceTierModal";
-import { Button } from "@/components/ui/button";
+import SkinManagementModal from "@/components/skin-management/SkinManagementModal";
 
 import { toast } from "@/hooks/useToast";
 
@@ -21,12 +32,22 @@ import { StatisticResponse } from "@/types/statistic.type";
 
 import { SORT_ORDER } from "@/lib/enums";
 
-import { CirclePlusIcon } from "lucide-react";
+import { SkinProvider } from "@/contexts/SkinContext";
+
+import CreateUserPage from "../components/dashboard/CreateUserModal";
 
 const PAGINATION_SIZE = 100;
 
 export default function Dashboard() {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
+  const [openCreateUserAccount, setOpenCreateUserAccount] = useState(false);
+  const [openUserList, setOpenUserList] = useState(false);
+  const [openVoucherModal, setOpenVoucherModal] = useState(false);
+  const [openTransactionModal, setOpenTransactionModal] = useState(false);
+  const [openSkinManagement, setOpenSkinManagement] = useState(false);
+  const [openPriceTier, setOpenPriceTier] = useState(false);
+  const [openCarouselManagement, setOpenCarouselManagement] = useState(false);
+  const [openSettings, setOpenSettings] = useState(false);
 
   const [isLoadingStatistics, setIsLoadingStatistics] = useState(false);
   const [statistics, setStatistics] = useState<StatisticResponse>();
@@ -45,6 +66,8 @@ export default function Dashboard() {
   const [searchAccount, setSearchAccount] = useState("");
   const [sortBy, setSortBy] = useState("id_tier");
   const [sortOrder, setSortOrder] = useState(SORT_ORDER.ASCENDING);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const handleSort = (key: string) => {
     setSortBy(key);
@@ -77,6 +100,13 @@ export default function Dashboard() {
   }, []);
 
   const fetchAllAccounts = useCallback(async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setIsLoadingAccount(true);
     try {
       const response = await accountService.fetchAll(
@@ -84,11 +114,19 @@ export default function Dashboard() {
         PAGINATION_SIZE,
         searchAccount,
         sortBy,
-        sortOrder
+        sortOrder,
+        abortController.signal
       );
-      setAccountList(response.data);
-      setAccountMetadata(response.metadata);
+
+      if (!abortController.signal.aborted) {
+        setAccountList(response.data);
+        setAccountMetadata(response.metadata);
+      }
     } catch (error) {
+      if (isCanceledError(error)) {
+        return;
+      }
+
       const errorMessage =
         error instanceof Error ? error.message : "An unknown error occured";
 
@@ -98,7 +136,9 @@ export default function Dashboard() {
         description: errorMessage
       });
     } finally {
-      setIsLoadingAccount(false);
+      if (!abortController.signal.aborted) {
+        setIsLoadingAccount(false);
+      }
     }
   }, [accountListPage, searchAccount, sortBy, sortOrder]);
 
@@ -168,9 +208,15 @@ export default function Dashboard() {
   }, []);
 
   const resetParent = useCallback(async () => {
+    const scrollPosition = window.scrollY || document.documentElement.scrollTop;
+
     await fetchAllAccounts();
     await fetchStatistics();
     await fetchResetLogs();
+
+    requestAnimationFrame(() => {
+      window.scrollTo(0, scrollPosition);
+    });
   }, [fetchAllAccounts, fetchStatistics, fetchResetLogs]);
 
   useEffect(() => {
@@ -190,16 +236,32 @@ export default function Dashboard() {
     document.title = "Dashboard | Valsewa Admin";
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
   const columns = useMemo(() => accountColumns(resetParent), [resetParent]);
 
   return (
     <Fragment>
       <main className="min-h-[100dvh]">
         <Navbar
-          onDebounced={(q) => setSearchAccount(q)}
+          onDebounced={setSearchAccount}
           failedJobs={failedJobs}
           resetLogs={resetLogs}
           resetParent={resetParent}
+          onOpenAddAccount={() => setOpenAccountDetail(true)}
+          onOpenSkinManagement={() => setOpenSkinManagement(true)}
+          onOpenPriceTiers={() => setOpenPriceTier(true)}
+          onOpenCarouselManagement={() => setOpenCarouselManagement(true)}
+          onOpenVouchers={() => setOpenVoucherModal(true)}
+          onOpenUserList={() => setOpenUserList(true)}
+          onOpenTransactionList={() => setOpenTransactionModal(true)}
+          onOpenSettings={() => setOpenSettings(true)}
         />
         <div className="container flex flex-col mx-auto p-4 xl:p-8 gap-4">
           <h1>Dashboard</h1>
@@ -225,15 +287,6 @@ export default function Dashboard() {
                   sortOrder={sortOrder}
                   handleSort={handleSort}
                 />
-                <PriceTierModal />
-                <CarouselManagementModal />
-                <Button
-                  className="w-full xl:w-fit"
-                  onClick={() => setOpenAccountDetail(true)}
-                >
-                  <CirclePlusIcon />
-                  Add New Account
-                </Button>
               </Fragment>
             }
           />
@@ -245,6 +298,38 @@ export default function Dashboard() {
         mode="add"
         resetParent={resetParent}
       />
+      <CreateUserPage
+        open={openCreateUserAccount}
+        onOpenChange={setOpenCreateUserAccount}
+      />
+      <UserListModal
+        open={openUserList}
+        onOpenChange={setOpenUserList}
+        onOpenCreateUser={() => {
+          setOpenUserList(false);
+          setOpenCreateUserAccount(true);
+        }}
+      />
+      <TransactionListModal
+        open={openTransactionModal}
+        onOpenChange={setOpenTransactionModal}
+      />
+      <VoucherModal
+        open={openVoucherModal}
+        onOpenChange={setOpenVoucherModal}
+      />
+      <SkinProvider>
+        <SkinManagementModal
+          open={openSkinManagement}
+          onOpenChange={setOpenSkinManagement}
+        />
+      </SkinProvider>
+      <PriceTierModal open={openPriceTier} onOpenChange={setOpenPriceTier} />
+      <CarouselManagementModal
+        open={openCarouselManagement}
+        onOpenChange={setOpenCarouselManagement}
+      />
+      <SettingsModal open={openSettings} onOpenChange={setOpenSettings} />
     </Fragment>
   );
 }
