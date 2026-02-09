@@ -22,7 +22,15 @@ export function buildPriceTierDescription(
   return priceLists
     .map((p) => {
       const value = mode === "NORMAL" ? p.normalPrice : (p.lowPrice ?? 0);
-      return `${p.duration} = ${Math.floor(value / 1000)}k`;
+
+      const match = p.duration.match(/^(\d+)([a-zA-Z]+)$/);
+      if (!match) {
+        throw new Error(`Invalid duration format: ${p.duration}`);
+      }
+
+      const [, amount, unit] = match;
+
+      return `${amount} ${unit} = ${Math.floor(value / 1000)}k`;
     })
     .join("\n");
 }
