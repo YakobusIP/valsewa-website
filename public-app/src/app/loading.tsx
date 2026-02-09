@@ -24,11 +24,11 @@ export default function LoadingPage() {
   return (
     <div className="flex flex-col h-screen overflow-hidden items-center justify-center gap-4 relative bg-black h-[100vh] w-[100vw]">
       <video autoPlay muted loop playsInline className="block lg:hidden" width="full" height="full">
-        <source src="loading/Mobile.mov" type="video/mp4" />
+        <source src="loading/Mobile.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
       <video autoPlay muted loop playsInline width="full" height="full" className="hidden lg:block">
-        <source src="loading/Desktop.mov" type="video/mp4" />
+        <source src="loading/Desktop.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
       {/* <figure className="w-full h-full absolute z-0 max-md:hidden">
