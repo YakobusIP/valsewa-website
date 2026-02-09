@@ -31,26 +31,50 @@ export function lrCode(code: string) {
   return `LR-${code}`;
 }
 
-export function collapseBookings(bookings: any[]) {
-  const sorted = bookings
-    .filter((b) => b.startAt && b.endAt)
+type BookingRow = {
+  status: string;
+  duration: string;
+  startAt: Date | string | null;
+  endAt: Date | string | null;
+};
+
+const ALLOWED_STATUSES = new Set(["RESERVED"]); // adjust if needed
+
+export function collapseBookings(bookings: BookingRow[], now = new Date()) {
+  const eligible = bookings
+    .filter((b) => {
+      if (!b.startAt || !b.endAt) return false;
+      if (!ALLOWED_STATUSES.has(b.status)) return false;
+
+      const end = new Date(b.endAt);
+      return end.getTime() > now.getTime(); // must still be active/future
+    })
     .sort(
-      (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime()
+      (a, b) =>
+        new Date(a.startAt as any).getTime() -
+        new Date(b.startAt as any).getTime()
     )
     .slice(0, 2);
 
-  const result: any = {};
+  const result: {
+    currentBookingDate?: Date;
+    currentBookingDuration?: number;
+    currentExpireAt?: Date;
+    nextBookingDate?: Date;
+    nextBookingDuration?: number;
+    nextExpireAt?: Date;
+  } = {};
 
-  if (sorted[0]) {
-    result.currentBookingDate = sorted[0].startAt;
-    result.currentBookingDuration = durationToHours(sorted[0].duration);
-    result.currentExpireAt = sorted[0].endAt;
+  if (eligible[0]) {
+    result.currentBookingDate = new Date(eligible[0].startAt as any);
+    result.currentBookingDuration = durationToHours(eligible[0].duration);
+    result.currentExpireAt = new Date(eligible[0].endAt as any);
   }
 
-  if (sorted[1]) {
-    result.nextBookingDate = sorted[1].startAt;
-    result.nextBookingDuration = durationToHours(sorted[1].duration);
-    result.nextExpireAt = sorted[1].endAt;
+  if (eligible[1]) {
+    result.nextBookingDate = new Date(eligible[1].startAt as any);
+    result.nextBookingDuration = durationToHours(eligible[1].duration);
+    result.nextExpireAt = new Date(eligible[1].endAt as any);
   }
 
   return result;
