@@ -43,7 +43,7 @@ const Navbar = () => {
           </div>
         </Link>
 
-        <Link href="https://api.whatsapp.com/send?phone=6285176983434&text=Halo%20admin%20VALJUBEL%2C%20aku%20mau%20JUAL%20akun%20Valorant%20nih!">
+        {/* <Link href="https://api.whatsapp.com/send?phone=6285176983434&text=Halo%20admin%20VALJUBEL%2C%20aku%20mau%20JUAL%20akun%20Valorant%20nih!">
           <div className="flex items-center justify-center">
             <Image
               src="/navbar/Logo - Valforum - White 2.png"
@@ -65,7 +65,7 @@ const Navbar = () => {
             />
             <p className="text-lg text-white">Beli Akun</p>
           </div>
-        </Link>
+        </Link> */}
         <Link href="https://valforum.com/jokiakun">
           <div className="flex items-center justify-center">
             <Image
