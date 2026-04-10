@@ -1,11 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Fragment, useEffect, useRef, useState } from "react";
 
 import { priceTierService } from "@/services/pricetier.service";
 
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem
+} from "@/components/ui/carousel";
+
 import { cn } from "@/lib/utils";
 
+import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
 
 const tierStyles: Record<
@@ -158,6 +165,16 @@ export default function DiscoverSection({
   const [ranks, setRanks] = useState<RankData[]>([]);
   const [pricesLoading, setPricesLoading] = useState(true);
 
+  const lrTierAutoplay = useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: false })
+  ).current;
+  const tierAutoplay = useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: false })
+  ).current;
+  const rankAutoplay = useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: false })
+  ).current;
+
   useEffect(() => {
     const fetchPrices = async () => {
       try {
@@ -251,8 +268,202 @@ export default function DiscoverSection({
     fetchPrices();
   }, []);
 
+  const renderLrTierCard = (lrtier: TierData, forCarousel = false) => (
+    <div
+      className={cn(
+        "group relative bg-[#111] rounded-2xl border border-[#787878] p-5 h-[200px] sm:h-[220px] flex flex-col justify-between overflow-hidden",
+        forCarousel && "w-[200px] sm:min-w-[260px]"
+      )}
+    >
+      {/* Available Badge */}
+      <span className="absolute top-4 left-4 bg-[#4ade80] text-black text-[10px] font-bold px-2 py-1 rounded">
+        Available
+      </span>
+
+      {/* Main Content */}
+      <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
+        <span className="sm:text-6xl text-4xl font-black italic text-white mr-2 tracking-tighter font-antonio">
+          LR
+        </span>
+        <span
+          className={cn(
+            "text-6xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
+            lrtier.color
+          )}
+        >
+          {lrtier.rankLetter}
+        </span>
+      </div>
+
+      {/* Background Glow */}
+      <div
+        className={cn(
+          "absolute inset-0 bg-gradient-to-t opacity-10 group-hover:opacity-20 transition-opacity",
+          lrtier.bgGradient
+        )}
+      />
+
+      {/* Footer */}
+      <div className="flex items-end justify-between mt-auto relative z-10">
+        <div className="flex flex-col">
+          <span className="text-white/50 text-[10px] font-medium border-none underline-offset-auto">
+            Starts From
+          </span>
+          <span className="text-white font-bold text-sm sm:text-lg leading-tight">
+            {lrtier.price}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => onSelectTier(lrtier.id.concat("-LRTIER"), "true")}
+          className={cn(
+            "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+            loading && "opacity-60 cursor-not-allowed"
+          )}
+        >
+          {loading ? "Loading..." : "See More"}
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderTierCard = (tier: TierData, forCarousel = false) => (
+    <div
+      className={cn(
+        "group relative bg-[#111] rounded-2xl border border-[#787878] p-5 h-[200px] sm:h-[220px] flex flex-col justify-between overflow-hidden",
+        forCarousel && "w-[200px] sm:min-w-[260px]"
+      )}
+    >
+      {/* Available Badge */}
+      <span className="absolute top-4 left-4 bg-[#4ade80] text-black text-[10px] font-bold px-2 py-1 rounded">
+        Available
+      </span>
+
+      {/* Main Content */}
+      <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
+        <span
+          className={cn(
+            "text-6xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
+            tier.color
+          )}
+        >
+          {tier.rankLetter}
+        </span>
+      </div>
+
+      {/* Background Glow */}
+      <div
+        className={cn(
+          "absolute inset-0 bg-gradient-to-t opacity-10 group-hover:opacity-20 transition-opacity",
+          tier.bgGradient
+        )}
+      />
+
+      {/* Footer */}
+      <div className="flex items-end justify-between mt-auto relative z-10">
+        <div className="flex flex-col">
+          <span className="text-white/50 text-[10px] font-medium border-none underline-offset-auto">
+            Starts From
+          </span>
+          <span className="text-white font-bold text-sm sm:text-lg leading-tight">
+            {tier.price}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => onSelectTier(tier.id, "false")}
+          className={cn(
+            "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+            loading && "opacity-60 cursor-not-allowed"
+          )}
+        >
+          {loading ? "Loading..." : "See More"}
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderRankCard = (rank: RankData, forCarousel = false) => (
+    <div
+      className={cn(
+        "relative h-[200px] sm:h-[220px] rounded-2xl border border-white/10 overflow-hidden",
+        "sm:bg-gradient-to-b sm:from-[#3a0f0f] sm:via-[#1a0505] sm:to-black",
+        forCarousel && "w-[200px] sm:w-[260px] flex-shrink-0"
+      )}
+    >
+      {/* Rank Title */}
+      <div className="absolute top-4 left-4 z-20 text-right">
+        <p className="text-white text-xs font-semibold tracking-wider">
+          {rank.name}
+        </p>
+      </div>
+
+      {/* Available badge */}
+      <span
+        className={cn(
+          "absolute top-10 left-4 z-20  text-[10px] font-bold px-3 py-1 rounded",
+          rank.price === "Rp -"
+            ? "bg-[#C70515] text-white"
+            : "bg-[#4ade80] text-black"
+        )}
+      >
+        {rank.price === "Rp -" ? "Not Available" : "Available"}
+      </span>
+
+      {/* Rank Image */}
+      <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+        <Image
+          src={rank.image}
+          alt={rank.name}
+          width={100}
+          height={100}
+          className="object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.35)]"
+        />
+      </div>
+
+      {/* Red Glow Background */}
+      <div
+        className={cn(
+          "absolute inset-0 bg-gradient-to-t opacity-40",
+          rank.bgGradient
+        )}
+      />
+
+      {/* Bottom Section */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 p-4 flex items-end justify-between">
+        <div className="flex flex-col">
+          <span className="text-white/50 text-[10px] font-medium">
+            Starts From
+          </span>
+          <span className="text-white font-bold text-sm sm:text-lg leading-tight">
+            {rank.price}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          disabled={loading}
+          onClick={() => onSelectRank(rank.id)}
+          className={cn(
+            "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
+            loading && "opacity-60 cursor-not-allowed"
+          )}
+        >
+          {loading ? "Loading..." : "See More"}
+        </button>
+      </div>
+
+      {/* Subtle border glow */}
+      <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10" />
+    </div>
+  );
+
   return (
-    <section className="w-full relative z-10 mb-12 mt-32">
+    <section className="w-full relative z-10 my-8 xl:my-16">
       <div className="w-full max-w-[1920px] mx-auto">
         <div className="sm:bg-gradient-to-r sm:from-black sm:via-[#5e0000] sm:to-[#C70515] sm:rounded-3xl 2md:p-8 sm:p-8 md:p-8 relative overflow-hidden sm:bg-clip-padding sm:border sm:border-transparent sm:ring-1 sm:ring-white/10 sm:shadow-2xl">
           {/* Header Section */}
@@ -307,247 +518,136 @@ export default function DiscoverSection({
           </div>
 
           {activeFilter === "LR-TIER" && (
-            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory xl:grid xl:grid-cols-5 xl:overflow-visible">
+            <>
               {pricesLoading ? (
-                <div className="col-span-5 flex justify-center items-center h-[220px]">
+                <div className="flex justify-center items-center h-[220px]">
                   <span className="text-white/50 text-sm">
                     Loading prices...
                   </span>
                 </div>
               ) : lrTiers.length === 0 ? (
-                <div className="col-span-5 flex justify-center items-center h-[220px]">
+                <div className="flex justify-center items-center h-[220px]">
                   <span className="text-white/50 text-sm">
                     No tiers available
                   </span>
                 </div>
               ) : (
-                lrTiers.map((lrtier) => (
-                  <div
-                    key={lrtier.id}
-                    className="group relative bg-[#111] rounded-2xl border border-[#787878] p-5 h-[220px] flex flex-col justify-between overflow-hidden min-w-[48%] sm:min-w-[260px] xl:min-w-0 snap-start"
+                <Fragment>
+                  {/* Mobile: Auto-sliding Carousel */}
+                  <Carousel
+                    className="xl:hidden"
+                    opts={{ loop: true, align: "start" }}
+                    plugins={[lrTierAutoplay]}
                   >
-                    {/* Available Badge */}
-                    <span className="absolute top-4 left-4 bg-[#4ade80] text-black text-[10px] font-bold px-2 py-1 rounded">
-                      Available
-                    </span>
+                    <CarouselContent className="-ml-4">
+                      {lrTiers.map((lrtier) => (
+                        <CarouselItem
+                          key={lrtier.id}
+                          className="basis-auto pl-4"
+                        >
+                          {renderLrTierCard(lrtier, true)}
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
 
-                    {/* Main Content */}
-                    <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
-                      <span className="sm:text-6xl text-2xl font-black italic text-white mr-2 tracking-tighter font-antonio">
-                        LR
-                      </span>
-                      <span
-                        className={cn(
-                          "text-5xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
-                          lrtier.color
-                        )}
-                      >
-                        {lrtier.rankLetter}
-                      </span>
-                    </div>
-
-                    {/* Background Glow */}
-                    <div
-                      className={cn(
-                        "absolute inset-0 bg-gradient-to-t opacity-10 group-hover:opacity-20 transition-opacity",
-                        lrtier.bgGradient
-                      )}
-                    />
-
-                    {/* Footer */}
-                    <div className="flex items-end justify-between mt-auto relative z-10">
-                      <div className="flex flex-col">
-                        <span className="text-white/50 text-[10px] font-medium border-none underline-offset-auto">
-                          Starts From
-                        </span>
-                        <span className="text-white font-bold text-sm sm:text-lg leading-tight">
-                          {lrtier.price}
-                        </span>
-                      </div>
-
-                      <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() =>
-                          onSelectTier(lrtier.id.concat("-LRTIER"), "true")
-                        }
-                        className={cn(
-                          "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
-                          loading && "opacity-60 cursor-not-allowed"
-                        )}
-                      >
-                        {loading ? "Loading..." : "See More"}
-                      </button>
-                    </div>
+                  {/* Desktop: Grid */}
+                  <div className="hidden xl:grid xl:grid-cols-5 gap-4">
+                    {lrTiers.map((lrtier) => (
+                      <Fragment key={lrtier.id}>
+                        {renderLrTierCard(lrtier, false)}
+                      </Fragment>
+                    ))}
                   </div>
-                ))
+                </Fragment>
               )}
-            </div>
+            </>
           )}
           {activeFilter === "TIER" && (
-            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory xl:grid xl:grid-cols-5 xl:overflow-visible">
+            <>
               {pricesLoading ? (
-                <div className="col-span-5 flex justify-center items-center h-[220px]">
+                <div className="flex justify-center items-center h-[220px]">
                   <span className="text-white/50 text-sm">
                     Loading prices...
                   </span>
                 </div>
               ) : tiers.length === 0 ? (
-                <div className="col-span-5 flex justify-center items-center h-[220px]">
+                <div className="flex justify-center items-center h-[220px]">
                   <span className="text-white/50 text-sm">
                     No tiers available
                   </span>
                 </div>
               ) : (
-                tiers.map((tier) => (
-                  <div
-                    key={tier.id}
-                    className="group relative bg-[#111] rounded-2xl border border-[#787878] p-5 h-[220px] flex flex-col justify-between overflow-hidden min-w-[48%] sm:min-w-[260px] xl:min-w-0 snap-start"
+                <Fragment>
+                  {/* Mobile: Auto-sliding Carousel */}
+                  <Carousel
+                    className="xl:hidden"
+                    opts={{ loop: true, align: "start" }}
+                    plugins={[tierAutoplay]}
                   >
-                    {/* Available Badge */}
-                    <span className="absolute top-4 left-4 bg-[#4ade80] text-black text-[10px] font-bold px-2 py-1 rounded">
-                      Available
-                    </span>
+                    <CarouselContent className="-ml-4">
+                      {tiers.map((tier) => (
+                        <CarouselItem key={tier.id} className="basis-auto pl-4">
+                          {renderTierCard(tier, true)}
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
 
-                    {/* Main Content */}
-                    <div className="flex items-baseline justify-center sm:mt-4  mt-6 relative z-10">
-                      <span
-                        className={cn(
-                          "text-5xl sm:text-8xl font-black italic tracking-tighter leading-none transform translate-y-2 font-antonio",
-                          tier.color
-                        )}
-                      >
-                        {tier.rankLetter}
-                      </span>
-                    </div>
-
-                    {/* Background Glow */}
-                    <div
-                      className={cn(
-                        "absolute inset-0 bg-gradient-to-t opacity-10 group-hover:opacity-20 transition-opacity",
-                        tier.bgGradient
-                      )}
-                    />
-
-                    {/* Footer */}
-                    <div className="flex items-end justify-between mt-auto relative z-10">
-                      <div className="flex flex-col">
-                        <span className="text-white/50 text-[10px] font-medium border-none underline-offset-auto">
-                          Starts From
-                        </span>
-                        <span className="text-white font-bold text-sm sm:text-lg leading-tight">
-                          {tier.price}
-                        </span>
-                      </div>
-
-                      <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() => onSelectTier(tier.id, "false")}
-                        className={cn(
-                          "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
-                          loading && "opacity-60 cursor-not-allowed"
-                        )}
-                      >
-                        {loading ? "Loading..." : "See More"}
-                      </button>
-                    </div>
+                  {/* Desktop: Grid */}
+                  <div className="hidden xl:grid xl:grid-cols-5 gap-4">
+                    {tiers.map((tier) => (
+                      <Fragment key={tier.id}>
+                        {renderTierCard(tier, false)}
+                      </Fragment>
+                    ))}
                   </div>
-                ))
+                </Fragment>
               )}
-            </div>
+            </>
           )}
           {activeFilter === "RANK" && (
-            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+            <>
               {pricesLoading ? (
-                <div className="w-full flex justify-center items-center h-[220px]">
+                <div className="flex justify-center items-center h-[220px]">
                   <span className="text-white/50 text-sm">
                     Loading prices...
                   </span>
                 </div>
               ) : ranks.length === 0 ? (
-                <div className="w-full flex justify-center items-center h-[220px]">
+                <div className="flex justify-center items-center h-[220px]">
                   <span className="text-white/50 text-sm">
                     No ranks available
                   </span>
                 </div>
               ) : (
-                ranks.map((rank) => (
-                  <div
-                    key={rank.id}
-                    className={cn(
-                      "relative w-[70%] sm:w-[260px] h-[220px] flex-shrink-0 rounded-2xl border border-white/10 overflow-hidden snap-start",
-                      "sm:bg-gradient-to-b sm:from-[#3a0f0f] sm:via-[#1a0505] sm:to-black"
-                    )}
+                <Fragment>
+                  {/* Mobile: Auto-sliding Carousel */}
+                  <Carousel
+                    className="xl:hidden"
+                    opts={{ loop: true, align: "start" }}
+                    plugins={[rankAutoplay]}
                   >
-                    {/* Rank Title */}
-                    <div className="absolute top-4 left-4 z-20 text-right">
-                      <p className="text-white text-xs font-semibold tracking-wider">
-                        {rank.name}
-                      </p>
-                    </div>
+                    <CarouselContent className="-ml-4">
+                      {ranks.map((rank) => (
+                        <CarouselItem key={rank.id} className="basis-auto pl-4">
+                          {renderRankCard(rank, true)}
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
 
-                    {/* Available badge */}
-                    <span
-                      className={cn(
-                        "absolute top-10 left-4 z-20  text-[10px] font-bold px-3 py-1 rounded",
-                        rank.price === "Rp -"
-                          ? "bg-[#C70515] text-white"
-                          : "bg-[#4ade80] text-black"
-                      )}
-                    >
-                      {rank.price === "Rp -" ? "Not Available" : "Available"}
-                    </span>
-
-                    {/* Rank Image */}
-                    <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-                      <Image
-                        src={rank.image}
-                        alt={rank.name}
-                        width={100}
-                        height={100}
-                        className="object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.35)]"
-                      />
-                    </div>
-
-                    {/* Red Glow Background */}
-                    <div
-                      className={cn(
-                        "absolute inset-0 bg-gradient-to-t opacity-40",
-                        rank.bgGradient
-                      )}
-                    />
-
-                    {/* Bottom Section */}
-                    <div className="absolute bottom-0 left-0 right-0 z-20 p-4 flex items-end justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-white/50 text-[10px] font-medium">
-                          Starts From
-                        </span>
-                        <span className="text-white font-bold text-sm sm:text-lg leading-tight">
-                          {rank.price}
-                        </span>
+                  {/* Desktop: Scrollable flex */}
+                  <div className="hidden xl:flex gap-4 overflow-x-auto pb-2">
+                    {ranks.map((rank) => (
+                      <div key={rank.id} className="w-[260px] flex-shrink-0">
+                        {renderRankCard(rank, false)}
                       </div>
-
-                      <button
-                        type="button"
-                        disabled={loading}
-                        onClick={() => onSelectRank(rank.id)}
-                        className={cn(
-                          "bg-[#2f54eb] hover:bg-[#1d39c4] text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-colors",
-                          loading && "opacity-60 cursor-not-allowed"
-                        )}
-                      >
-                        {loading ? "Loading..." : "See More"}
-                      </button>
-                    </div>
-
-                    {/* Subtle border glow */}
-                    <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-white/10" />
+                    ))}
                   </div>
-                ))
+                </Fragment>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>

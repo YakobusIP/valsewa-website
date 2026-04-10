@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { bookingService } from "@/services/booking.service";
 import { voucherService } from "@/services/voucher.service";
@@ -26,7 +26,7 @@ import { VoucherEntity } from "@/types/voucher.type";
 
 import { BOOKING_STATUS_MAP } from "@/lib/constants";
 import { instrumentSans, staatliches } from "@/lib/fonts";
-import { calculateVoucherDiscount, cn } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 import { XIcon } from "lucide-react";
 import { notFound, useParams, useRouter } from "next/navigation";
@@ -85,21 +85,11 @@ export default function BookingDetailPage() {
   );
   const [voucher, setVoucher] = useState<VoucherEntity | null>(null);
   const [isLoadingCancelBooking, setIsLoadingCancelBooking] = useState(false);
+  const [isBookingFree, setBookingFree] = useState(false);
+  const [totalPayment, setTotalPayment] = useState(0);
   const auth = useAuth();
 
   const { handleAsyncError } = useErrorHandler();
-
-  const discount = useMemo(() => {
-    if (!booking) return 0;
-    return calculateVoucherDiscount(voucher, booking.mainValue);
-  }, [booking, voucher]);
-
-  const totalPayment = useMemo(() => {
-    if (!booking) return 0;
-    return booking.totalValue - discount;
-  }, [booking, discount]);
-
-  const isBookingFree = booking && totalPayment === 0;
 
   const isFailed =
     booking &&
@@ -245,6 +235,8 @@ export default function BookingDetailPage() {
                 voucher={voucher}
                 setVoucher={setVoucher}
                 fetchVoucher={fetchVoucher}
+                setBookingFree={setBookingFree}
+                setTotalPayment={setTotalPayment}
                 onSubmit={onSubmit}
               />
             </div>
@@ -258,6 +250,8 @@ export default function BookingDetailPage() {
                 voucher={voucher}
                 setVoucher={setVoucher}
                 fetchVoucher={fetchVoucher}
+                setBookingFree={setBookingFree}
+                setTotalPayment={setTotalPayment}
                 onSubmit={onSubmit}
               />
 

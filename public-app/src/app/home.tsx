@@ -90,7 +90,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
         rel="noopener noreferrer"
         className="fixed bottom-4 right-4 z-50"
       >
-        <figure className="w-[120px] h-[120px] fixed bottom-4 right-4 z-50">
+        <figure className="w-[100px] h-[100px] fixed bottom-4 right-4 z-50 rounded-full bg-red-800/50">
           <Image src="/home/kananbawah.png" fill alt="Iconic" />
         </figure>
       </a>
@@ -169,11 +169,11 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
           className="snap-start snap-always px-8 lg:px-16 scroll-mt-24"
         >
           {accountList.length > 0 ? (
-            <div id="card-section" className="mt-9 mx-0 pt-10">
+            <div id="card-section" className="xl:mt-9 mx-0 xl:pt-10">
               <Card data={accountList} />
             </div>
           ) : (
-            <div id="results-section" className=" mt-48">
+            <div id="results-section" className="mt-48">
               <div className="flex items-center ps-3 pointer-events-none justify-center">
                 <svg
                   className="w-16 h-16 text-roseWhite font-bold  dark:text-gray-400 p-2"

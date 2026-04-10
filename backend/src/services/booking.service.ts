@@ -428,7 +428,7 @@ export class BookingService {
     quantity: number
   ) => {
     const mainValue = normalPrice * quantity;
-    const othersValue = isLowRank ? lowPrice * quantity : 0;
+    const othersValue = isLowRank ? (lowPrice - normalPrice) * quantity : 0;
 
     let voucherType = null;
     let voucherAmount = null;
@@ -643,7 +643,9 @@ export class BookingService {
             endAt: bookingEndAt,
             expiredAt: bookingExpiredAt,
             mainValuePerUnit: priceList.normalPrice,
-            othersValuePerUnit: account.isLowRank ? priceList.lowPrice : 0,
+            othersValuePerUnit: account.isLowRank
+              ? priceList.lowPrice - priceList.normalPrice
+              : 0,
             voucherName: voucher?.voucherName,
             voucherType,
             voucherAmount,
@@ -781,29 +783,48 @@ export class BookingService {
     try {
       const { bookingId, accountId } = data;
 
-      const booking = await prisma.booking.findUnique({
-        where: { id: bookingId, status: BookingStatus.RESERVED }
-      });
-      if (!booking) throw new NotFoundError("Booking not found");
+      return await prisma.$transaction(async (tx) => {
+        const booking = await tx.booking.findUnique({
+          where: { id: bookingId, status: BookingStatus.RESERVED }
+        });
+        if (!booking) throw new NotFoundError("Booking not found");
 
-      const account = await prisma.account.findUnique({
-        where: {
-          id: accountId,
-          availabilityStatus: { not: Status.NOT_AVAILABLE }
-        }
-      });
-      if (!account)
-        throw new NotFoundError("Account not found or not available!");
+        const originalAccount = await tx.account.findUnique({
+          where: {
+            id: booking.accountId
+          }
+        });
+        if (!originalAccount)
+          throw new NotFoundError("Original account not found!");
 
-      const updatedBooking = await prisma.booking.update({
-        where: { id: booking.id },
-        data: {
-          accountId,
-          version: { increment: 1 }
-        }
-      });
+        const account = await tx.account.findUnique({
+          where: {
+            id: accountId,
+            availabilityStatus: { not: Status.NOT_AVAILABLE }
+          }
+        });
+        if (!account)
+          throw new NotFoundError("Account not found or not available!");
 
-      return this.mapBookingDataToBookingResponse(updatedBooking);
+        if (booking.accountId === accountId)
+          return this.mapBookingDataToBookingResponse(booking);
+
+        const updatedBooking = await tx.booking.update({
+          where: { id: booking.id },
+          data: {
+            accountId,
+            version: { increment: 1 }
+          }
+        });
+
+        await tx.accountResetLog.create({
+          data: {
+            accountId: originalAccount.id
+          }
+        });
+
+        return this.mapBookingDataToBookingResponse(updatedBooking);
+      });
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
@@ -1207,54 +1228,143 @@ export class BookingService {
     try {
       const now = new Date();
 
-      const reservedAccountIds = await prisma.booking.findMany({
-        where: {
-          status: BookingStatus.RESERVED,
-          startAt: { lt: now },
-          endAt: { gt: now }
-        },
-        distinct: ["accountId"],
-        select: { accountId: true }
-      });
+      return await prisma.$transaction(async (tx) => {
+        const reservedAccountIds = await tx.booking.findMany({
+          where: {
+            status: BookingStatus.RESERVED,
+            startAt: { lt: now },
+            endAt: { gt: now }
+          },
+          distinct: ["accountId"],
+          select: { accountId: true }
+        });
 
-      const activeAccountIds = reservedAccountIds.map((v) => v.accountId);
+        const activeAccountIds = reservedAccountIds.map((v) => v.accountId);
 
-      // Mark reserved accounts as IN_USE (only if not already)
-      const markedInUse =
-        activeAccountIds.length > 0
-          ? (
-              await prisma.account.updateMany({
+        // Find accounts that are transitioning to IN_USE (were not IN_USE, now have active booking)
+        // These accounts need their existing reset logs deleted since a new booking started
+        const accountsTransitioningToInUse =
+          activeAccountIds.length > 0
+            ? await tx.account.findMany({
                 where: {
                   id: { in: activeAccountIds },
-                  availabilityStatus: { not: Status.IN_USE }
+                  availabilityStatus: { not: Status.IN_USE },
+                  currentBookingDate: null
                 },
-                data: {
-                  availabilityStatus: Status.IN_USE
-                }
+                select: { id: true }
               })
-            ).count
-          : 0;
+            : [];
 
-      // Mark accounts as AVAILABLE if they are IN_USE but no longer reserved
-      const markedAvailable = (
-        await prisma.account.updateMany({
-          where: {
-            availabilityStatus: Status.IN_USE,
-            ...(activeAccountIds.length > 0 && {
-              id: { notIn: activeAccountIds }
-            })
-          },
-          data: {
-            availabilityStatus: Status.AVAILABLE
-          }
-        })
-      ).count;
+        const transitioningAccountIds = accountsTransitioningToInUse.map(
+          (a) => a.id
+        );
 
-      return { markedInUse, markedAvailable };
+        // Delete existing reset logs for accounts that are getting a new booking
+        // This prevents duplicate reset logs when the new booking ends
+        if (transitioningAccountIds.length > 0) {
+          await tx.accountResetLog.deleteMany({
+            where: {
+              accountId: { in: transitioningAccountIds }
+            }
+          });
+        }
+
+        // Mark reserved accounts as IN_USE (only if not already)
+        // Skip accounts with currentBookingDate set (they have an active booking)
+        const markedInUse =
+          activeAccountIds.length > 0
+            ? (
+                await tx.account.updateMany({
+                  where: {
+                    id: { in: activeAccountIds },
+                    availabilityStatus: { not: Status.IN_USE },
+                    currentBookingDate: null
+                  },
+                  data: {
+                    availabilityStatus: Status.IN_USE
+                  }
+                })
+              ).count
+            : 0;
+
+        // Mark accounts as AVAILABLE if they are IN_USE but no longer reserved
+        // Skip accounts with currentBookingDate set (they have an active booking)
+        const markedAvailable = (
+          await tx.account.updateMany({
+            where: {
+              availabilityStatus: Status.IN_USE,
+              currentBookingDate: null,
+              ...(activeAccountIds.length > 0 && {
+                id: { notIn: activeAccountIds }
+              })
+            },
+            data: {
+              availabilityStatus: Status.AVAILABLE
+            }
+          })
+        ).count;
+
+        return { markedInUse, markedAvailable };
+      });
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  forceFinishBooking = async (accountId: number) => {
+    try {
+      const now = new Date();
+
+      // Find the active RESERVED booking for this account
+      const activeBooking = await prisma.booking.findFirst({
+        where: {
+          accountId,
+          status: BookingStatus.RESERVED,
+          startAt: { lte: now },
+          endAt: { gt: now }
+        }
+      });
+
+      if (!activeBooking) {
+        await this.finishLegacyBooking(accountId);
+        return null;
+      }
+
+      // Set endAt to now() - the cron jobs will handle the rest:
+      // - syncCompletedBookings will mark it COMPLETED and set passwordResetRequired
+      // - syncAccountAvailability will mark the account as AVAILABLE
+      const updatedBooking = await prisma.booking.update({
+        where: { id: activeBooking.id },
+        data: {
+          endAt: now,
+          version: { increment: 1 }
+        }
+      });
+
+      return this.mapBookingDataToBookingResponse(updatedBooking);
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  private finishLegacyBooking = async(accountId: number) => {
+    const activeBooking = await prisma.account.findFirst({
+      where: {
+        id: accountId,
+        currentBookingDate: { not: null },
+      }
+    });
+    
+    if (!activeBooking) throw new NotFoundError("No active booking found for this account.");
+
+    await prisma.account.update({
+      where: { id: accountId },
+      data: {
+        currentExpireAt: new Date(),
+      }
+    });
+  }
 
   callbackFaspayPayment = async (data: CallbackNotificationRequest) => {
     try {
@@ -1467,6 +1577,7 @@ export class BookingService {
         priceTierId?: number;
         thumbnailId?: number | null;
         nickname?: string;
+        username?: string;
         password?: string;
       };
     }
@@ -1513,6 +1624,7 @@ export class BookingService {
             priceTierCode: booking.account.priceTierId?.toString() ?? "",
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
             nickname: booking.account.nickname ?? "",
+            username: booking.account.username,
             password: booking.account.password
           }
         : undefined
@@ -1568,6 +1680,7 @@ export class BookingService {
         priceTierCode: booking.account.priceTier.code,
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
         nickname: booking.account.nickname ?? "",
+        username: active ? booking.account.username : undefined,
         password: active ? booking.account.password : undefined
       },
       payments: booking.payments

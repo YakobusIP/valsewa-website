@@ -69,6 +69,7 @@ export type BookingWithAccountEntity = BookingEntity & {
     priceTierCode: string;
     thumbnailImageUrl: string;
     nickname: string;
+    username?: string;
     password?: string;
   };
   payments?: PaymentEntity[];

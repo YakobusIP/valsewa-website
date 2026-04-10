@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   BookingWithAccountEntity,
@@ -18,6 +18,8 @@ type PaymentSummaryProps = {
   voucher: VoucherEntity | null;
   setVoucher: (value: VoucherEntity | null) => void;
   fetchVoucher: (voucherName: string) => Promise<VoucherEntity | null>;
+  setBookingFree: (value: boolean) => void;
+  setTotalPayment: (value: number) => void;
   onSubmit: () => Promise<void>;
 };
 
@@ -27,6 +29,8 @@ function PaymentSummary({
   voucher,
   setVoucher,
   fetchVoucher,
+  setBookingFree,
+  setTotalPayment,
   onSubmit
 }: PaymentSummaryProps) {
   const [loading, setLoading] = useState(false);
@@ -99,6 +103,15 @@ function PaymentSummary({
     await onSubmit();
     setLoading(false);
   };
+
+  useEffect(() => {
+    setBookingFree(isBookingFree);
+  }, [isBookingFree, setBookingFree]);
+
+  useEffect(() => {
+    setTotalPayment(totalPayment);
+  }, [totalPayment, setTotalPayment]);
+
 
   if (!booking) return null;
 

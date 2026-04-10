@@ -18,10 +18,11 @@ export default function MobileBrandSwitcher({
       {/* VALSEWA - sits in the notch area */}
       <button
         onClick={() => setActiveBrand("valsewa")}
-        className={`${baseButtonClass} ${activeBrand === "valsewa"
-          ? "bg-[#C70515] shadow-lg shadow-red-900/50"
-          : "bg-white/10 hover:bg-white/20"
-          }`}
+        className={`${baseButtonClass} ${
+          activeBrand === "valsewa"
+            ? "bg-[#770000] shadow-lg shadow-red-900/50"
+            : "bg-white/10 hover:bg-white/20"
+        }`}
       >
         <Image
           src="/header/VALSEWA.png"
@@ -35,10 +36,11 @@ export default function MobileBrandSwitcher({
       {/* VALJUBEL */}
       <button
         onClick={() => setActiveBrand("valjubel")}
-        className={`${baseButtonClass} ${activeBrand === "valjubel"
-          ? "bg-[#C70515] shadow-lg shadow-red-900/50"
-          : "bg-white/10 hover:bg-white/20"
-          }`}
+        className={`${baseButtonClass} ${
+          activeBrand === "valjubel"
+            ? "bg-[#C70515] shadow-lg shadow-red-900/50"
+            : "bg-white/10 hover:bg-white/20"
+        }`}
       >
         <Image
           src="/header/VALJUBEL.png"
@@ -52,10 +54,11 @@ export default function MobileBrandSwitcher({
       {/* VALJOKI */}
       <button
         onClick={() => setActiveBrand("valjoki")}
-        className={`${baseButtonClass} ${activeBrand === "valjoki"
-          ? "bg-[#C70515] shadow-lg shadow-red-900/50"
-          : "bg-white/10 hover:bg-white/20"
-          }`}
+        className={`${baseButtonClass} ${
+          activeBrand === "valjoki"
+            ? "bg-[#C70515] shadow-lg shadow-red-900/50"
+            : "bg-white/10 hover:bg-white/20"
+        }`}
       >
         <Image
           src="/header/VALJOKI.png"

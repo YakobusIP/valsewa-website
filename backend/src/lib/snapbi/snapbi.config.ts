@@ -31,7 +31,7 @@ export default class SnapBiConfig {
     "https://debit-sandbox.faspay.co.id";
 
   private static readonly SNAP_BI_PRODUCTION_BASE_URL =
-    "https://debit.faspay.co.id";
+    "https://web.faspay.co.id";
 
   static getBaseUrl(): string {
     return this.isProduction

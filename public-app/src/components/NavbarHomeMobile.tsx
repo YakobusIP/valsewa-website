@@ -71,7 +71,7 @@ const NavbarHomeMobile = ({
         {/* LEFT */}
         <div className="flex items-center flex-1">
           <button onClick={handleSearchClick}>
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/10 transition">
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg md:hover:bg-white/10 transition">
               <Image
                 src="/header/Frame.svg"
                 alt="Search"

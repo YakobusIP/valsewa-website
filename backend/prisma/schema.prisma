@@ -61,6 +61,8 @@ model AccountResetLog {
   account          Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   previousExpireAt DateTime?
   resetAt          DateTime  @default(now())
+
+  @@index([resetAt]) // for delete many reset logs
 }
 
 model PriceTier {
@@ -224,6 +226,8 @@ model Booking {
   @@index([accountId, status, endAt]) // availability check
   @@index([customerId, createdAt(sort: Desc)]) // history
   @@index([status, expiredAt]) // cleanup
+  @@index([status, endAt]) // for sync completed bookings
+  @@index([status, startAt]) // for sync account availability
 }
 
 model Payment {

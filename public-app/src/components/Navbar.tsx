@@ -21,7 +21,7 @@ interface NavbarProps {
 }
 
 const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
-  const router = useRouter()
+  const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 

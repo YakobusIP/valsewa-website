@@ -30,7 +30,7 @@ class AccountRouter {
       "/public/recommended",
       this.accountController.getRecommendedAccounts
     );
-    this.router.get("/public/:id", this.accountController.getAccountById);
+    this.router.get("/public/:id", this.accountController.getAccountByIdPublic);
     this.router.get(
       "/failed-jobs",
       authMiddleware,
@@ -62,6 +62,11 @@ class AccountRouter {
       "/update-rank",
       schedulerMiddleware,
       this.accountController.updateAllAccountsRank
+    );
+    this.router.post(
+      "/update-expire-at",
+      schedulerMiddleware,
+      this.accountController.updateExpireAt
     );
     this.router.put(
       "/finish-booking/:id",
