@@ -25,6 +25,7 @@ type AccountEntity = {
   skinList: Skin[];
   isLowRank: boolean;
   isRecommended: boolean;
+  requirePasswordReset: boolean;
 };
 
 type AccountEntityRequest = Omit<

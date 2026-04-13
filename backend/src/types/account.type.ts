@@ -23,6 +23,7 @@ type AccountEntityRequest = {
   skinList: number[];
   isLowRank: boolean;
   isRecommended: boolean;
+  requirePasswordReset?: boolean;
 };
 
 type AccountWithSkins = Prisma.AccountGetPayload<{

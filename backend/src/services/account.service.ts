@@ -945,16 +945,22 @@ export class AccountService {
             currentBookingDate: null,
             currentBookingDuration: null,
             currentExpireAt: null,
-            passwordResetRequired: true,
+            ...(account.requirePasswordReset
+              ? { passwordResetRequired: true }
+              : {}),
             totalRentHour: {
               increment: account.currentBookingDuration || 0
             }
           }
         });
 
-        return await tx.accountResetLog.create({
-          data: { accountId: id, previousExpireAt: account.currentExpireAt }
-        });
+        if (account.requirePasswordReset) {
+          return await tx.accountResetLog.create({
+            data: { accountId: id, previousExpireAt: account.currentExpireAt }
+          });
+        }
+
+        return null;
       });
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -1070,7 +1076,9 @@ export class AccountService {
               currentBookingDate: null,
               currentExpireAt: null,
               currentBookingDuration: null,
-              passwordResetRequired: true,
+              ...(account.requirePasswordReset
+                ? { passwordResetRequired: true }
+                : {}),
               availabilityStatus: "AVAILABLE",
               totalRentHour: {
                 increment: account.currentBookingDuration || 0
@@ -1078,12 +1086,14 @@ export class AccountService {
             }
           });
 
-          await tx.accountResetLog.create({
-            data: {
-              accountId: account.id,
-              previousExpireAt: account.currentExpireAt
-            }
-          });
+          if (account.requirePasswordReset) {
+            await tx.accountResetLog.create({
+              data: {
+                accountId: account.id,
+                previousExpireAt: account.currentExpireAt
+              }
+            });
+          }
         }
 
         await tx.accountResetLog.deleteMany({

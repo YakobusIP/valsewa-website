@@ -932,11 +932,13 @@ export class BookingService {
           }
         });
 
-        await tx.accountResetLog.create({
-          data: {
-            accountId: originalAccount.id
-          }
-        });
+        if (originalAccount.requirePasswordReset) {
+          await tx.accountResetLog.create({
+            data: {
+              accountId: originalAccount.id
+            }
+          });
+        }
 
         return this.mapBookingDataToBookingResponse(updatedBooking);
       });
@@ -1291,21 +1293,42 @@ export class BookingService {
           }
         });
 
-        await tx.account.updateMany({
+        const accountsForReset = await tx.account.findMany({
           where: {
-            id: { in: accountIds }
+            id: { in: accountIds },
+            requirePasswordReset: true
           },
-          data: {
-            passwordResetRequired: true
-          }
+          select: { id: true }
         });
+        const resetAccountIds = accountsForReset.map((a) => a.id);
+        const resetAccountIdSet = new Set(resetAccountIds);
 
-        await tx.accountResetLog.createMany({
-          data: completedBookings.map((booking) => ({
-            accountId: booking.accountId,
-            previousExpireAt: booking.endAt ?? null
-          }))
-        });
+        if (resetAccountIdSet.size > 0) {
+          await tx.account.updateMany({
+            where: {
+              id: { in: resetAccountIds }
+            },
+            data: {
+              passwordResetRequired: true
+            }
+          });
+
+          const logByAccountId = new Map<
+            number,
+            { accountId: number; previousExpireAt: Date | null }
+          >();
+          for (const booking of completedBookings) {
+            if (!resetAccountIdSet.has(booking.accountId)) continue;
+            logByAccountId.set(booking.accountId, {
+              accountId: booking.accountId,
+              previousExpireAt: booking.endAt ?? null
+            });
+          }
+
+          await tx.accountResetLog.createMany({
+            data: [...logByAccountId.values()]
+          });
+        }
 
         const rentHourByAccount = new Map<number, number>();
         for (const booking of completedBookings) {
@@ -1463,23 +1486,24 @@ export class BookingService {
     }
   };
 
-  private finishLegacyBooking = async(accountId: number) => {
+  private finishLegacyBooking = async (accountId: number) => {
     const activeBooking = await prisma.account.findFirst({
       where: {
         id: accountId,
-        currentBookingDate: { not: null },
+        currentBookingDate: { not: null }
       }
     });
-    
-    if (!activeBooking) throw new NotFoundError("No active booking found for this account.");
+
+    if (!activeBooking)
+      throw new NotFoundError("No active booking found for this account.");
 
     await prisma.account.update({
       where: { id: accountId },
       data: {
-        currentExpireAt: new Date(),
+        currentExpireAt: new Date()
       }
     });
-  }
+  };
 
   callbackFaspayPayment = async (data: CallbackNotificationRequest) => {
     try {

@@ -99,7 +99,8 @@ const formSchema = z.object({
     .optional(),
   totalRentHour: z.string().nonempty("Total rent duration is required"),
   isLowRank: z.boolean().optional().default(false),
-  isRecommended: z.boolean().optional().default(false)
+  isRecommended: z.boolean().optional().default(false),
+  requirePasswordReset: z.boolean().optional().default(false)
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -193,7 +194,8 @@ export default function AccountDetailModal({
             otherImages: data.otherImages ? data.otherImages : [],
             totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
             isLowRank: data.isLowRank,
-            isRecommended: data.isRecommended
+            isRecommended: data.isRecommended,
+            requirePasswordReset: data.requirePasswordReset
           }
         : {
             username: "",
@@ -209,7 +211,8 @@ export default function AccountDetailModal({
             otherImages: [],
             totalRentHour: "0d 0h",
             isLowRank: false,
-            isRecommended: false
+            isRecommended: false,
+            requirePasswordReset: false
           },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -564,7 +567,8 @@ export default function AccountDetailModal({
         otherImages: data.otherImages || [],
         totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
         isLowRank: data.isLowRank,
-        isRecommended: data.isRecommended
+        isRecommended: data.isRecommended,
+        requirePasswordReset: data.requirePasswordReset
       });
     } else if (mode === "add") {
       form.reset({
@@ -580,7 +584,8 @@ export default function AccountDetailModal({
         otherImages: [],
         totalRentHour: "0d 0h",
         isLowRank: undefined,
-        isRecommended: undefined
+        isRecommended: undefined,
+        requirePasswordReset: false
       });
     }
   }, [mode, data, form]);
@@ -865,7 +870,7 @@ export default function AccountDetailModal({
                   />
                 </div>
 
-                <div className="order-1 xl:order-2 xl:ml-auto">
+                <div className="order-1 xl:order-2 xl:ml-auto flex flex-col sm:flex-row sm:flex-wrap gap-4 xl:gap-6 items-start sm:items-end">
                   <FormField
                     control={form.control}
                     name="isRecommended"
@@ -882,6 +887,26 @@ export default function AccountDetailModal({
 
                         <FormLabel className="font-normal cursor-pointer">
                           Recommended
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="requirePasswordReset"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                        <FormControl>
+                          <Checkbox
+                            checked={!!field.value}
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked === true)
+                            }
+                          />
+                        </FormControl>
+
+                        <FormLabel className="font-normal cursor-pointer">
+                          Require password reset
                         </FormLabel>
                       </FormItem>
                     )}
