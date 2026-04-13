@@ -278,6 +278,10 @@ export class AccountService {
     return { min, max };
   }
 
+  private compactAccountCode(code: string): string {
+    return code.replace(/-/g, "").toLowerCase();
+  }
+
   private buildPublicAccountsWhere(
     filters: AccountSearchFilters
   ): Prisma.AccountWhereInput {
@@ -433,6 +437,7 @@ export class AccountService {
 
       let filteredData: AccountWithSkins[] = data;
       if (query && query.trim().length > 0) {
+        const trimmedQuery = query.trim();
         const fuseOptions: IFuseOptions<AccountWithSkins> = {
           keys: [
             "nickname",
@@ -445,8 +450,23 @@ export class AccountService {
         };
 
         const fuse = new Fuse(data, fuseOptions);
-        const fuseResults = fuse.search(query);
-        filteredData = fuseResults.map((result) => result.item);
+        const fuseResults = fuse.search(trimmedQuery);
+        const fuseItems = fuseResults.map((result) => result.item);
+        const fuseIds = new Set(fuseItems.map((a) => a.id));
+
+        const queryCompact = this.compactAccountCode(trimmedQuery);
+        const codeMatches =
+          queryCompact.length > 0
+            ? data.filter(
+                (a) =>
+                  !fuseIds.has(a.id) &&
+                  this.compactAccountCode(a.accountCode).includes(
+                    queryCompact
+                  )
+              )
+            : [];
+
+        filteredData = [...fuseItems, ...codeMatches];
       }
 
       const accountIds = filteredData.map((a) => a.id);
