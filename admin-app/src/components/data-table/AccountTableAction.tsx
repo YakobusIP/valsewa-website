@@ -35,6 +35,8 @@ type Props = {
 export default memo(function AccountTableAction({ data, resetParent }: Props) {
   const [openAccountDetail, setOpenAccountDetail] = useState(false);
   const [openAddBookingModal, setOpenAddBookingModal] = useState(false);
+  const [openEditCurrentBookingModal, setOpenEditCurrentBookingModal] =
+    useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isForceFinishing, setIsForceFinishing] = useState(false);
 
@@ -104,6 +106,16 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
               Add new booking
             </DropdownMenuItem>
             {isAccountInUse && (
+              <DropdownMenuItem
+                onClick={() => {
+                  setDropdownOpen(false);
+                  setOpenEditCurrentBookingModal(true);
+                }}
+              >
+                Edit current booking
+              </DropdownMenuItem>
+            )}
+            {isAccountInUse && (
               <Fragment>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
@@ -133,6 +145,16 @@ export default memo(function AccountTableAction({ data, resetParent }: Props) {
           onOpenChange={setOpenAddBookingModal}
           data={data}
           resetParent={resetParent}
+          variant="create"
+        />
+      )}
+      {openEditCurrentBookingModal && (
+        <AddBookingModal
+          open={openEditCurrentBookingModal}
+          onOpenChange={setOpenEditCurrentBookingModal}
+          data={data}
+          resetParent={resetParent}
+          variant="edit-current"
         />
       )}
     </Fragment>

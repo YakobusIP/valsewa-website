@@ -26,6 +26,7 @@ import {
   BookingResponse,
   CallbackNotificationRequest,
   CreateAdminBookingRequest,
+  EditCurrentBookingRequest,
   CreateBookingRequest,
   CreateManualBookingRequest,
   OverrideBookingRequest,
@@ -707,6 +708,120 @@ export class BookingService {
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  getActiveBookingForAdminByAccountId = async (
+    accountId: number
+  ): Promise<BookingResponse> => {
+    try {
+      const now = new Date();
+      const booking = await prisma.booking.findFirst({
+        where: {
+          accountId,
+          status: BookingStatus.RESERVED,
+          startAt: { lte: now },
+          endAt: { gt: now }
+        }
+      });
+
+      if (!booking) {
+        throw new NotFoundError("No active booking found for this account.");
+      }
+
+      return this.mapBookingDataToBookingResponse(booking);
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  editCurrentBookingByAccountId = async (
+    accountId: number,
+    data: EditCurrentBookingRequest
+  ): Promise<BookingResponse> => {
+    try {
+      const { duration, totalValue } = data;
+
+      if (totalValue < 0) {
+        throw new BadRequestError("Total price must be 0 or greater.");
+      }
+
+      const durationInHours = parseDurationToHours(duration);
+      if (!Number.isFinite(durationInHours) || durationInHours <= 0) {
+        throw new BadRequestError(
+          "Duration must be a positive length (e.g. 2h or 1d)."
+        );
+      }
+
+      return await prisma.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT id FROM "Account" WHERE id = ${accountId} FOR UPDATE`;
+
+        const now = new Date();
+        const booking = await tx.booking.findFirst({
+          where: {
+            accountId,
+            status: BookingStatus.RESERVED,
+            startAt: { lte: now },
+            endAt: { gt: now }
+          }
+        });
+
+        if (!booking?.startAt) {
+          throw new NotFoundError("No active booking found for this account.");
+        }
+
+        const newEndAt = addHours(
+          booking.startAt,
+          durationInHours * booking.quantity
+        );
+
+        if (newEndAt <= booking.startAt) {
+          throw new BadRequestError("Invalid booking window.");
+        }
+
+        if (newEndAt <= now) {
+          throw new BadRequestError(
+            "The new end time must be after now so the booking remains active."
+          );
+        }
+
+        const overlapping = await tx.booking.findFirst({
+          where: {
+            accountId,
+            id: { not: booking.id },
+            AND: [
+              { status: { in: [BookingStatus.HOLD, BookingStatus.RESERVED] } },
+              { startAt: { lt: newEndAt } },
+              { endAt: { gt: booking.startAt } }
+            ]
+          },
+          select: { id: true }
+        });
+
+        if (overlapping) {
+          throw new PrismaUniqueError(
+            "Account not available for the requested time range."
+          );
+        }
+
+        const updated = await tx.booking.update({
+          where: { id: booking.id },
+          data: {
+            duration,
+            endAt: newEndAt,
+            totalValue,
+            version: { increment: 1 }
+          }
+        });
+
+        return this.mapBookingDataToBookingResponse(updated);
+      });
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
+      if (error instanceof PrismaUniqueError) throw error;
       throw new InternalServerError((error as Error).message);
     }
   };

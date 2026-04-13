@@ -44,6 +44,11 @@ export type CreateAdminBookingRequest = {
   totalValue: number;
 };
 
+export type EditCurrentBookingRequest = {
+  duration: string;
+  totalValue: number;
+};
+
 export type OverrideBookingRequest = {
   bookingId: string;
   accountId: number;

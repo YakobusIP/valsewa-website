@@ -46,6 +46,16 @@ class BookingRouter {
       this.bookingController.getAccountRented
     );
     this.router.get(
+      "/active-for-account/:accountId",
+      authMiddleware,
+      this.bookingController.getActiveBookingForAccount
+    );
+    this.router.put(
+      "/edit-current/:accountId",
+      authMiddleware,
+      this.bookingController.editCurrentBooking
+    );
+    this.router.get(
       "/:id",
       customerMiddleware,
       this.bookingController.getBookingById

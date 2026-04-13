@@ -257,6 +257,61 @@ export class BookingController {
     }
   };
 
+  getActiveBookingForAccount = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const accountId = parseInt(req.params.accountId, 10);
+      if (!Number.isFinite(accountId) || accountId < 1) {
+        throw new BadRequestError("A valid account ID is required.");
+      }
+
+      const result =
+        await this.bookingService.getActiveBookingForAdminByAccountId(
+          accountId
+        );
+
+      return res.status(200).json({ data: result });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  editCurrentBooking = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const accountId = parseInt(req.params.accountId, 10);
+      const { duration, totalValue } = req.body;
+
+      if (!Number.isFinite(accountId) || accountId < 1) {
+        throw new BadRequestError("A valid account ID is required.");
+      }
+
+      if (!duration || totalValue === undefined || totalValue === null) {
+        throw new BadRequestError("Missing required fields.");
+      }
+
+      const totalNum = Number(totalValue);
+      if (!Number.isFinite(totalNum)) {
+        throw new BadRequestError("Total price must be a valid number.");
+      }
+
+      const result = await this.bookingService.editCurrentBookingByAccountId(
+        accountId,
+        { duration, totalValue: totalNum }
+      );
+
+      return res.status(200).json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   overrideBooking = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { bookingId, accountId } = req.body;
