@@ -115,14 +115,6 @@ components:
           type: string
           format: date-time
 
-    UpdateAccountMFARequest:
-      type: object
-      required:
-        - isMfa
-      properties:
-        isMfa:
-          type: boolean
-
     TokenPayload:
       type: object
       properties:
@@ -1003,37 +995,6 @@ paths:
       responses:
         "201":
           description: "Account reset logs updated successfully."
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
-  /api/accounts/update-mfa/{id}:
-    put:
-      tags:
-        - Accounts
-      summary: "Update account MFA."
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          description: "The ID of the account MFA to update."
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UpdateAccountMFARequest"
-      responses:
-        "201":
-          description: "Account updated successfully."
           content:
             application/json:
               schema:
