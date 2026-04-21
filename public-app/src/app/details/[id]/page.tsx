@@ -177,12 +177,12 @@ export default function AccountDetailPage() {
     (priceList: PriceList) => {
       if (!priceList) return 0;
       return (
-        account?.isLowRank
-          ? Number(priceList.lowPrice)
-          : Number(priceList.normalPrice)
+        account?.isCompetitive
+          ? Number(priceList.compPrice)
+          : Number(priceList.unratedPrice)
       );
     },
-    [account?.isLowRank]
+    [account?.isCompetitive]
   );
 
   const calculateTotalPrice = useMemo(() => {
@@ -350,9 +350,9 @@ export default function AccountDetailPage() {
               {/* COL 2 ROW 2 — PRICE TIER + STATUS */}
               <div className="flex items-center gap-3">
                 <div className="bg-purple-600 text-white px-2 py-0.5 text-xs rounded-sm">
-                  {account.isLowRank
-                    ? `LR-${account.priceTier.code}`
-                    : account.priceTier.code}
+                  {account.isCompetitive
+                    ? account.priceTier.code
+                    : `UR-${account.priceTier.code}`}
                 </div>
               </div>
             </div>

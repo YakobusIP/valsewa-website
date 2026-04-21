@@ -98,7 +98,7 @@ const formSchema = z.object({
     )
     .optional(),
   totalRentHour: z.string().nonempty("Total rent duration is required"),
-  isLowRank: z.boolean().optional().default(false),
+  isCompetitive: z.boolean().optional().default(false),
   isRecommended: z.boolean().optional().default(false),
   requirePasswordReset: z.boolean().optional().default(false)
 });
@@ -193,7 +193,7 @@ export default function AccountDetailModal({
             thumbnail: data.thumbnail,
             otherImages: data.otherImages ? data.otherImages : [],
             totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
-            isLowRank: data.isLowRank,
+            isCompetitive: data.isCompetitive,
             isRecommended: data.isRecommended,
             requirePasswordReset: data.requirePasswordReset
           }
@@ -210,7 +210,7 @@ export default function AccountDetailModal({
             thumbnail: undefined,
             otherImages: [],
             totalRentHour: "0d 0h",
-            isLowRank: false,
+            isCompetitive: false,
             isRecommended: false,
             requirePasswordReset: false
           },
@@ -566,7 +566,7 @@ export default function AccountDetailModal({
         thumbnail: data.thumbnail,
         otherImages: data.otherImages || [],
         totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
-        isLowRank: data.isLowRank,
+        isCompetitive: data.isCompetitive,
         isRecommended: data.isRecommended,
         requirePasswordReset: data.requirePasswordReset
       });
@@ -583,7 +583,7 @@ export default function AccountDetailModal({
         thumbnail: undefined,
         otherImages: [],
         totalRentHour: "0d 0h",
-        isLowRank: undefined,
+        isCompetitive: undefined,
         isRecommended: undefined,
         requirePasswordReset: false
       });
@@ -739,7 +739,7 @@ export default function AccountDetailModal({
                 <div className="ml-auto">
                   <FormField
                     control={form.control}
-                    name="isLowRank"
+                    name="isCompetitive"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
                         <FormControl>
@@ -752,7 +752,7 @@ export default function AccountDetailModal({
                         </FormControl>
 
                         <FormLabel className="font-normal cursor-pointer">
-                          Low Rank Price
+                          Competitive Price
                         </FormLabel>
                       </FormItem>
                     )}

@@ -99,8 +99,8 @@ const Card: React.FC<CardProps> = ({ data }) => {
                               text-[0.4rem] sm:text-xs font-bold text-white bg-red-600
                               sm:h-5 h-auto py-0.1 rounded pl-1 pr-1 sm:pl-2 sm:pr-2"
                             >
-                              {item.isLowRank
-                                ? `LR-${item.priceTier.code}`
+                              {item.isCompetitive
+                                ? `${item.priceTier.code}-COMP`
                                 : item.priceTier.code}
                             </span>
                           </span>

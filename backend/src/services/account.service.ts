@@ -60,23 +60,19 @@ export class AccountService {
   ];
 
   private priceTierOrder = [
-    "LR-SSS⁺",
-    "SSS⁺",
-    "LR-SSS",
+    "SSS-COMP",
     "SSS",
-    "LR-V",
-    "V",
-    "LR-S",
+    "S-COMP",
     "S",
-    "LR-A",
+    "A-COMP",
     "A",
-    "LR-B",
+    "B-COMP",
     "B",
-    "LR-C",
+    "C-COMP",
     "C"
   ];
 
-  private idTierOrder = ["SSS", "V", "S", "A", "B", "C"];
+  private idTierOrder = ["SSS", "S", "A", "B", "C"];
 
   // private sortAccountsByRank = <T extends { accountRank: string }>(
   //   data: T[],
@@ -285,26 +281,26 @@ export class AccountService {
   private buildPublicAccountsWhere(
     filters: AccountSearchFilters
   ): Prisma.AccountWhereInput {
-    const { lowTierOnly, tiers, skinCounts, ranks, minPrice, maxPrice } =
+    const { compeOnly, tiers, skinCounts, ranks, minPrice, maxPrice } =
       filters;
 
     const where: Prisma.AccountWhereInput = {
       availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
     };
 
-    const LR_LABEL = "-LRTIER";
+    const COMP_LABEL = "-COMP";
 
     const normalizeCode = (s: string) => s.trim().toUpperCase();
-    const normalTierCodes =
-      tiers?.filter((t) => !t.endsWith(LR_LABEL)).map(normalizeCode) ?? [];
+    const unratedTierCodes =
+      tiers?.filter((t) => !t.endsWith(COMP_LABEL)).map(normalizeCode) ?? [];
 
-    const lowTierCodes =
+    const compTierCodes =
       tiers
-        ?.filter((t) => t.endsWith(LR_LABEL))
-        .map((t) => normalizeCode(t.replace(LR_LABEL, ""))) ?? [];
+        ?.filter((t) => t.endsWith(COMP_LABEL))
+        .map((t) => normalizeCode(t.replace(COMP_LABEL, ""))) ?? [];
 
-    if (typeof lowTierOnly === "boolean") {
-      where.isLowRank = lowTierOnly;
+    if (typeof compeOnly === "boolean") {
+      where.isCompetitive = compeOnly;
     }
 
     const andConditions: Prisma.AccountWhereInput[] = [];
@@ -317,31 +313,31 @@ export class AccountService {
       const min = minPrice ?? 0;
       const max = maxPrice ?? 99999999999;
 
-      if (lowTierOnly === true) {
+      if (compeOnly === true) {
         where.priceTier = {
           ...(where.priceTier || {}),
-          priceList: { some: { lowPrice: { gte: min, lte: max } } }
+          priceList: { some: { compPrice: { gte: min, lte: max } } }
         } as any;
-      } else if (lowTierOnly === false) {
+      } else if (compeOnly === false) {
         where.priceTier = {
           ...(where.priceTier || {}),
-          priceList: { some: { normalPrice: { gte: min, lte: max } } }
+          priceList: { some: { unratedPrice: { gte: min, lte: max } } }
         } as any;
       } else {
         andConditions.push({
           OR: [
             {
-              isLowRank: false,
+              isCompetitive: false,
               priceTier: {
-                ...(tiers?.length ? { code: { in: normalTierCodes } } : {}),
-                priceList: { some: { normalPrice: { gte: min, lte: max } } }
+                ...(tiers?.length ? { code: { in: unratedTierCodes } } : {}),
+                priceList: { some: { unratedPrice: { gte: min, lte: max } } }
               }
             },
             {
-              isLowRank: true,
+              isCompetitive: true,
               priceTier: {
-                ...(tiers?.length ? { code: { in: lowTierCodes } } : {}),
-                priceList: { some: { lowPrice: { gte: min, lte: max } } }
+                ...(tiers?.length ? { code: { in: compTierCodes } } : {}),
+                priceList: { some: { compPrice: { gte: min, lte: max } } }
               }
             }
           ]
@@ -352,17 +348,17 @@ export class AccountService {
     if (tiers?.length) {
       const or: Prisma.AccountWhereInput[] = [];
 
-      if (normalTierCodes.length) {
+      if (unratedTierCodes.length) {
         or.push({
-          priceTier: { code: { in: normalTierCodes } },
-          isLowRank: false
+          priceTier: { code: { in: unratedTierCodes } },
+          isCompetitive: false
         });
       }
 
-      if (lowTierCodes.length) {
+      if (compTierCodes.length) {
         or.push({
-          priceTier: { code: { in: lowTierCodes } },
-          isLowRank: true
+          priceTier: { code: { in: compTierCodes } },
+          isCompetitive: true
         });
       }
 
@@ -574,7 +570,7 @@ export class AccountService {
           priceTier: { include: { priceList: true } },
           thumbnail: true,
           otherImages: true,
-          isLowRank: true,
+          isCompetitive: true,
           isRecommended: true
         }
       });
@@ -700,7 +696,7 @@ export class AccountService {
           priceTier: true,
           thumbnail: true,
           otherImages: true,
-          isLowRank: true,
+          isCompetitive: true,
           isRecommended: true
         }
       });

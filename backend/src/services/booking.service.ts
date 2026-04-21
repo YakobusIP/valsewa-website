@@ -420,16 +420,16 @@ export class BookingService {
   };
 
   private calculateValues = (
-    normalPrice: number,
-    lowPrice: number,
-    isLowRank: boolean,
+    unratedPrice: number,
+    compPrice: number,
+    isCompetitive: boolean,
     duration: string,
     voucher: VoucherResponse | null,
     paymentMethod: PaymentMethodType | null,
     quantity: number
   ) => {
-    const mainValue = normalPrice * quantity;
-    const othersValue = isLowRank ? (lowPrice - normalPrice) * quantity : 0;
+    const mainValue = unratedPrice * quantity;
+    const othersValue = isCompetitive ? (compPrice - unratedPrice) * quantity : 0;
 
     let voucherType = null;
     let voucherAmount = null;
@@ -544,7 +544,7 @@ export class BookingService {
           },
           select: {
             id: true,
-            isLowRank: true
+            isCompetitive: true
           }
         }),
         // price list
@@ -552,8 +552,8 @@ export class BookingService {
           where: { id: priceListId },
           select: {
             id: true,
-            normalPrice: true,
-            lowPrice: true,
+            unratedPrice: true,
+            compPrice: true,
             duration: true
           }
         }),
@@ -594,9 +594,9 @@ export class BookingService {
         discount,
         totalValue
       } = this.calculateValues(
-        priceList.normalPrice,
-        priceList.lowPrice,
-        account.isLowRank,
+        priceList.unratedPrice,
+        priceList.compPrice,
+        account.isCompetitive,
         priceList.duration,
         voucher,
         null,
@@ -643,9 +643,9 @@ export class BookingService {
             startAt: bookingStartAt,
             endAt: bookingEndAt,
             expiredAt: bookingExpiredAt,
-            mainValuePerUnit: priceList.normalPrice,
-            othersValuePerUnit: account.isLowRank
-              ? priceList.lowPrice - priceList.normalPrice
+            mainValuePerUnit: priceList.unratedPrice,
+            othersValuePerUnit: account.isCompetitive
+              ? priceList.compPrice - priceList.unratedPrice
               : 0,
             voucherName: voucher?.voucherName,
             voucherType,
@@ -1001,7 +1001,7 @@ export class BookingService {
       } = this.calculateValues(
         booking.mainValuePerUnit,
         booking.othersValuePerUnit ?? 0,
-        booking.account.isLowRank,
+        booking.account.isCompetitive,
         booking.duration,
         voucher,
         paymentMethodType,

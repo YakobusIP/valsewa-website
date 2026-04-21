@@ -44,8 +44,8 @@ export const priceTierColumns: ColumnDef<PriceTier>[] = [
     size: "auto" as unknown as number
   },
   {
-    accessorKey: "normalList",
-    header: "Normal Price List",
+    accessorKey: "unratedList",
+    header: "Unrated Price List",
     cell: ({ row }) => {
       const data = row.original;
 
@@ -53,7 +53,7 @@ export const priceTierColumns: ColumnDef<PriceTier>[] = [
         ? data.priceList
             .map(
               (item) =>
-                `${item.duration} = ${formatShortIDR(Number(item.normalPrice))}`
+                `${item.duration} = ${formatShortIDR(Number(item.unratedPrice))}`
             )
             .join("\n")
         : "";
@@ -63,8 +63,8 @@ export const priceTierColumns: ColumnDef<PriceTier>[] = [
     size: "auto" as unknown as number
   },
   {
-    accessorKey: "lowList",
-    header: "Low Rank Price List",
+    accessorKey: "compeList",
+    header: "Competitive Price List",
     cell: ({ row }) => {
       const data = row.original;
 
@@ -72,7 +72,7 @@ export const priceTierColumns: ColumnDef<PriceTier>[] = [
         ? data.priceList
             .map(
               (item) =>
-                `${item.duration} = ${formatShortIDR(Number(item.lowPrice))}`
+                `${item.duration} = ${formatShortIDR(Number(item.compPrice))}`
             )
             .join("\n")
         : "";

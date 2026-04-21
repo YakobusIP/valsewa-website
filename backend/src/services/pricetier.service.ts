@@ -119,8 +119,8 @@ export class PriceTierService {
             ? {
                 create: payload.priceList.map((item) => ({
                   duration: item.duration,
-                  normalPrice: item.normalPrice,
-                  lowPrice: item.lowPrice
+                  unratedPrice: item.unratedPrice,
+                  compPrice: item.compPrice
                 }))
               }
             : undefined
@@ -165,8 +165,8 @@ export class PriceTierService {
               priceList: {
                 create: replaceList.map((item) => ({
                   duration: item.duration,
-                  normalPrice: item.normalPrice,
-                  lowPrice: item.lowPrice
+                  unratedPrice: item.unratedPrice,
+                  compPrice: item.compPrice
                 }))
               }
             },
@@ -231,8 +231,8 @@ export class PriceTierService {
             data: {
               tierId,
               duration: item.duration,
-              normalPrice: item.normalPrice,
-              lowPrice: item.lowPrice
+              unratedPrice: item.unratedPrice,
+              compPrice: item.compPrice
             }
           })
         )
@@ -256,9 +256,9 @@ export class PriceTierService {
         where: { id: itemId },
         data: {
           duration: data.duration,
-          normalPrice:
-            data.normalPrice !== undefined ? data.normalPrice : undefined,
-          lowPrice: data.lowPrice !== undefined ? data.lowPrice : undefined
+          unratedPrice:
+            data.unratedPrice !== undefined ? data.unratedPrice : undefined,
+          compPrice: data.compPrice !== undefined ? data.compPrice : undefined
         }
       });
     } catch (error) {
@@ -308,9 +308,9 @@ export class PriceTierService {
         if (tier.priceList.length === 0) continue;
 
         const minNormalPrice = Math.min(
-          ...tier.priceList.map((p) => p.normalPrice)
+          ...tier.priceList.map((p) => p.unratedPrice)
         );
-        const minLowPrice = Math.min(...tier.priceList.map((p) => p.lowPrice));
+        const minLowPrice = Math.min(...tier.priceList.map((p) => p.compPrice));
 
         normalTiers.push({
           id: tier.code,
@@ -366,7 +366,7 @@ export class PriceTierService {
           if (priceList.length === 0) continue;
 
           const prices = priceList.map((p) =>
-            account.isLowRank ? p.lowPrice : p.normalPrice
+            account.isCompetitive ? p.compPrice : p.unratedPrice
           );
           const accountMinPrice = Math.min(...prices);
 

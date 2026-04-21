@@ -181,7 +181,7 @@ export default function DiscoverSection({
         const pricesData = await priceTierService.fetchPublicPrices();
 
         const lrPriceMap = new Map(
-          pricesData?.lrTiers?.map((t) => [t.id, t.price]) || []
+          pricesData?.compTiers?.map((t) => [t.id, t.price]) || []
         );
         const tierPriceMap = new Map(
           pricesData?.tiers?.map((t) => [t.id, t.price]) || []

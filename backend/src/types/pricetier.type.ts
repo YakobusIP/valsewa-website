@@ -1,7 +1,7 @@
 type PriceListItem = {
   duration: string;
-  normalPrice: number;
-  lowPrice: number;
+  unratedPrice: number;
+  compPrice: number;
 };
 
 type CreatePriceTierRequest = {
