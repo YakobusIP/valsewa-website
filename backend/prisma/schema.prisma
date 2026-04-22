@@ -48,6 +48,8 @@ model Account {
   thumbnail   ImageUpload? @relation("Thumbnail", fields: [thumbnailId], references: [id])
   thumbnailId Int?         @unique
 
+  isMfa Boolean @default(false)
+
   otherImages ImageUpload[] @relation("OtherImages")
 
   resetLogs AccountResetLog[]

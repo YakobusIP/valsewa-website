@@ -94,6 +94,7 @@ export type BookingResponse = {
     nickname: string;
     username?: string;
     password?: string;
+    isMfa?: boolean;
   };
   payments?: Payment[];
   customer?: {
