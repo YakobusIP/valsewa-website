@@ -71,6 +71,7 @@ export type BookingWithAccountEntity = BookingEntity & {
     nickname: string;
     username?: string;
     password?: string;
+    isMfa?: boolean;
   };
   payments?: PaymentEntity[];
 };

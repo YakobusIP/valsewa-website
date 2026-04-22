@@ -100,8 +100,7 @@ export default function PaymentSuccessPage() {
   const showCredentials = useMemo(() => {
     return (
       booking?.active === true &&
-      booking?.account?.username &&
-      booking?.account?.password
+      booking?.account?.username
     );
   }, [booking]);
 
@@ -216,23 +215,30 @@ export default function PaymentSuccessPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Riot Password</span>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleCopyPassword(booking.account.password!)
-                      }
-                      className="flex items-center gap-2 font-medium text-white hover:text-red-600"
-                    >
-                      <span className="select-text">
-                        {booking.account.password}
+                    {booking.account.isMfa ? (
+                      // TODO: Adjust as needed
+                      <span className="font-medium text-white">
+                        Multi-Factor Authentication is Enabled.
                       </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleCopyPassword(booking.account.password!)
+                        }
+                        className="flex items-center gap-2 font-medium text-white hover:text-red-600"
+                      >
+                        <span className="select-text">
+                          {booking.account.password}
+                        </span>
 
-                      {passwordCopied ? (
-                        <CheckIcon className="w-4 h-4" />
-                      ) : (
-                        <CopyIcon className="w-4 h-4" />
-                      )}
-                    </button>
+                        {passwordCopied ? (
+                          <CheckIcon className="w-4 h-4" />
+                        ) : (
+                          <CopyIcon className="w-4 h-4" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </>
               )}
