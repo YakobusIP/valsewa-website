@@ -220,45 +220,60 @@ export default function BookingDetailPage() {
               <PaymentCountdown expiredAt={booking.expiredAt} />
             )}
 
-            <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-32 mt-6 sm:mt-8 lg:mt-10">
-              <div className="w-full space-y-6 sm:space-y-8 lg:space-y-10">
+            <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-5 mt-6 sm:mt-8 lg:mt-10">
+              <div className="flex flex-col w-full space-y-3 sm:space-y-4 lg:space-y-5">
+                <div className="bg-[#1C1C1C]">
+                  <BookingDetail booking={booking} />
+                </div>
+                <div className="bg-[#1C1C1C]">
+                  <PaymentMethods
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
+                  />
+                </div>
+
+              </div>
+              <div className="bg-[#1C1C1C] w-full">
+                <PaymentSummary
+                  booking={booking}
+                  paymentMethod={paymentMethod}
+                  voucher={voucher}
+                  setVoucher={setVoucher}
+                  fetchVoucher={fetchVoucher}
+                  setBookingFree={setBookingFree}
+                  setTotalPayment={setTotalPayment}
+                  onSubmit={onSubmit}
+                />
+              </div>
+
+            </div>
+
+            <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
+              <div className="bg-[#1C1C1C]">
                 <BookingDetail booking={booking} />
+              </div>
+
+              <div className="bg-[#1C1C1C]">
                 <PaymentMethods
                   paymentMethod={paymentMethod}
                   setPaymentMethod={setPaymentMethod}
                 />
               </div>
 
-              <PaymentSummary
-                booking={booking}
-                paymentMethod={paymentMethod}
-                voucher={voucher}
-                setVoucher={setVoucher}
-                fetchVoucher={fetchVoucher}
-                setBookingFree={setBookingFree}
-                setTotalPayment={setTotalPayment}
-                onSubmit={onSubmit}
-              />
-            </div>
+              <div className="bg-[#1C1C1C]">
+                <PaymentSummary
+                  booking={booking}
+                  paymentMethod={paymentMethod}
+                  voucher={voucher}
+                  setVoucher={setVoucher}
+                  fetchVoucher={fetchVoucher}
+                  setBookingFree={setBookingFree}
+                  setTotalPayment={setTotalPayment}
+                  onSubmit={onSubmit}
+                />
+              </div>
 
-            <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
-              <BookingDetail booking={booking} />
 
-              <PaymentSummary
-                booking={booking}
-                paymentMethod={paymentMethod}
-                voucher={voucher}
-                setVoucher={setVoucher}
-                fetchVoucher={fetchVoucher}
-                setBookingFree={setBookingFree}
-                setTotalPayment={setTotalPayment}
-                onSubmit={onSubmit}
-              />
-
-              <PaymentMethods
-                paymentMethod={paymentMethod}
-                setPaymentMethod={setPaymentMethod}
-              />
 
               <div className="flex flex-col gap-2 space-y-2 text-center text-white">
                 <button

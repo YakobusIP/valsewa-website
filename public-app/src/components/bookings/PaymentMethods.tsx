@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useMemo } from "react";
 
 import { PAYMENT_METHOD_REQUEST } from "@/types/booking.type";
@@ -9,6 +11,11 @@ import Image from "next/image";
 import PaymentMethodCard from "./PaymentMethodCard";
 
 const VA_METHODS = [
+  {
+    type: PAYMENT_METHOD_REQUEST.QRIS,
+    label: "QRIS",
+    logo: "/paymentMethods/QRIS.svg"
+  },
   {
     type: PAYMENT_METHOD_REQUEST.VA_BNI,
     label: "VA BNI",
@@ -35,10 +42,10 @@ function PaymentMethods({
   paymentMethod,
   setPaymentMethod
 }: PaymentMethodsProps) {
-  const handleQRISSelect = useMemo(
-    () => () => setPaymentMethod(PAYMENT_METHOD_REQUEST.QRIS),
-    [setPaymentMethod]
-  );
+  // const handleQRISSelect = useMemo(
+  //   () => () => setPaymentMethod(PAYMENT_METHOD_REQUEST.QRIS),
+  //   [setPaymentMethod]
+  // );
 
   const handleVASelect = useMemo(
     () => (type: PAYMENT_METHOD_REQUEST) => () => setPaymentMethod(type),
@@ -46,54 +53,51 @@ function PaymentMethods({
   );
 
   return (
-    <div className={instrumentSans.className}>
+    <div className={`p-[20px] flex flex-col ${instrumentSans.className}`}>
       <h1
-        className={`text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 leading-[1.2] ${staatliches.className}`}
+        className={`text-xl sm:text-3xl font-semibold mb-4 sm:mb-2 leading-[1.2] ${staatliches.className}`}
       >
-        SELECT A PAYMENT METHOD
+        CHECKOUT
       </h1>
+      <h3
+        className={`text-xs sm:text-xl mb-4 sm:mb-6 leading-[1.2] ${instrumentSans.className}`}
+      >
+        Select a payment method
+      </h3>
 
       <div
         className="flex flex-col gap-6 sm:gap-8"
         role="radiogroup"
         aria-label="Payment methods"
       >
-        <PaymentMethodCard
-          active={paymentMethod === PAYMENT_METHOD_REQUEST.QRIS}
-          onClick={handleQRISSelect}
-          label="QRIS"
-        >
-          <Image
-            src="/paymentMethods/QRIS.svg"
-            alt="QRIS payment method"
-            height={128}
-            width={128}
-            className="w-24 h-24 sm:w-32 sm:h-32 object-contain"
-            priority
-          />
-        </PaymentMethodCard>
+
 
         <div>
-          <p className="mb-3 text-sm sm:text-base flex items-center gap-2 text-white font-semibold">
-            Other Methods
-          </p>
-
           <div className="flex flex-wrap gap-3 sm:gap-4">
             {VA_METHODS.map((method) => (
-              <PaymentMethodCard
-                key={method.type}
-                active={paymentMethod === method.type}
-                onClick={handleVASelect(method.type)}
-                label={method.label}
-              >
-                <Image
-                  src={method.logo}
-                  alt={`${method.label} payment method`}
-                  height={64}
-                  width={64}
-                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
-                />
-              </PaymentMethodCard>
+              <div key={method.type} className="w-auto">
+                <PaymentMethodCard
+                  active={paymentMethod === method.type}
+                  onClick={handleVASelect(method.type)}
+                  label={method.label}
+                  className="w-full h-full"
+                >
+                  <div className="flex flex-col items-center w-full h-full p-2">
+                    {/* <div className="h-16 sm:h-28 flex items-center justify-center"> */}
+                    <Image
+                      src={method.logo}
+                      alt={`${method.label} payment method`}
+                      width={128}
+                      height={128}
+                      className="object-contain h-[85%]"
+                    />
+                    {/* </div> */}
+                    <p className="text-xs sm:text-sm text-center mt-1">
+                      {method.label}
+                    </p>
+                  </div>
+                </PaymentMethodCard>
+              </div>
             ))}
           </div>
         </div>
