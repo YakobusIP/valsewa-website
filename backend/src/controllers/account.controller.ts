@@ -362,4 +362,17 @@ export class AccountController {
       return next(error);
     }
   };
+
+  updateAccountMFA = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await this.accountService.updateAccountMFA(
+        parseInt(req.params.id),
+        req.body
+      );
+
+      return res.status(201).json({ message: "Account updated successfully." });
+    } catch (error) {
+      return next(error);
+    }
+  };
 }

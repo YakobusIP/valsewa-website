@@ -93,6 +93,11 @@ class AccountRouter {
       authMiddleware,
       this.accountController.deleteManyAccounts
     );
+    this.router.put(
+      "/update-mfa/:id",
+      authMiddleware,
+      this.accountController.updateAccountMFA
+    )
   }
 }
 

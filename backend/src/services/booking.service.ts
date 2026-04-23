@@ -1718,6 +1718,7 @@ export class BookingService {
         nickname?: string;
         username?: string;
         password?: string;
+        isMfa?: boolean;
       };
     }
   ): BookingResponse => {
@@ -1764,7 +1765,8 @@ export class BookingService {
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
             nickname: booking.account.nickname ?? "",
             username: booking.account.username,
-            password: booking.account.password
+            password: booking.account.password,
+            isMfa: booking.account.isMfa
           }
         : undefined
     };
@@ -1788,6 +1790,8 @@ export class BookingService {
     ) {
       status = BookingStatus.EXPIRED;
     }
+
+    const isMfa = booking.account.isMfa ?? false;
 
     return {
       id: booking.id,
@@ -1820,7 +1824,8 @@ export class BookingService {
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
         nickname: booking.account.nickname ?? "",
         username: active ? booking.account.username : undefined,
-        password: active ? booking.account.password : undefined
+        password: (active && !isMfa) ? booking.account.password : undefined,
+        isMfa,
       },
       payments: booking.payments
     };
