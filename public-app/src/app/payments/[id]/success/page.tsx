@@ -155,7 +155,7 @@ export default function PaymentSuccessPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
           
           {/* LEFT: Booking Details */}
-          <div className="flex flex-col items-center text-center space-y-6">
+          <div className="flex flex-col items-center text-center space-y-4">
 
             {/* ✅ WhatsApp CTA (ONLY MFA) */}
             {isMfaEnabled && (
@@ -182,24 +182,25 @@ export default function PaymentSuccessPage() {
               You&apos;re all set! Here&apos;s your booking details:
             </p>
 
-            {/* Credentials (ONLY NON-MFA) */}
-            {!isMfaEnabled && showCredentials && (
-              <div className="space-y-2 w-full max-w-md text-sm">
+            {showCredentials && (
+              <div className="space-y-4 w-full max-w-md text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-400">Riot Username</span>
                   <span>{booking.account.username}</span>
                 </div>
 
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Riot Password</span>
-                  <button
-                    onClick={() => handleCopyPassword(booking.account.password!)}
-                    className="flex items-center gap-2"
-                  >
-                    {booking.account.password}
-                    {passwordCopied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
-                  </button>
-                </div>
+                {booking?.account?.password && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Riot Password</span>
+                    <button
+                      onClick={() => handleCopyPassword(booking.account.password!)}
+                      className="flex items-center gap-2"
+                    >
+                      {booking.account.password}
+                      {passwordCopied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
