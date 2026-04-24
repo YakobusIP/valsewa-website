@@ -1,4 +1,5 @@
 import { PAYMENT_METHOD_REQUEST } from "@/types/booking.type";
+import { OperationalHoursEntity } from "@/types/setting.type";
 import { TYPE } from "@/types/voucher.type";
 
 import { type ClassValue, clsx } from "clsx";
@@ -103,3 +104,44 @@ export function calculateDaysRented(
 
   return Math.max(0, days);
 }
+
+export function isOutsideOperationalHours(operationalHours: OperationalHoursEntity | null): boolean {
+  if (!operationalHours) return false;
+
+  const now = new Date();
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: operationalHours.timezone,
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(now);
+
+  const hour = Number(parts.find(p => p.type === "hour")?.value || 0);
+  const minute = Number(parts.find(p => p.type === "minute")?.value || 0);
+
+  const nowInTimezone = new Date();
+  nowInTimezone.setHours(hour, minute, 0, 0);
+
+  const [openHour, openMinute] = operationalHours.open.split(":").map(Number);
+  const [closeHour, closeMinute] = operationalHours.close.split(":").map(Number);
+
+  const openTime = new Date();
+  openTime.setHours(openHour, openMinute, 0, 0);
+
+  const closeTime = new Date();
+  closeTime.setHours(closeHour, closeMinute, 0, 0);
+
+  closeTime.setMinutes(
+    closeTime.getMinutes() - operationalHours.lastOrderBufferInMinutes
+  );
+
+  console.log("nowInTimezone:", nowInTimezone)
+  console.log("openTime:", openTime)
+  console.log("closeTime:", closeTime)
+  console.log("nowInTimezone < openTime:", nowInTimezone < openTime)
+  console.log("nowInTimezone > closeTime:", nowInTimezone > closeTime)
+
+  return nowInTimezone < openTime || nowInTimezone > closeTime;
+};

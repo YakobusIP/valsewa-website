@@ -50,6 +50,7 @@ type AccountEntity = {
   nickname: string;
   isLowRank: boolean;
   isRecommended: boolean;
+  isMfa: boolean;
 };
 
 export type CarouselSlide = {
