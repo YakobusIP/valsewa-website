@@ -991,6 +991,10 @@ export class AccountService {
 
       const updateData: Prisma.AccountUpdateInput = { ...scalars };
 
+      if (updateData.isMfa) {
+        await this.validateMfaEnablement(currentAccount);
+      }
+
       if (deleteResetLogs) {
         await prisma.accountResetLog.deleteMany({ where: { accountId: id } });
       }
@@ -1046,9 +1050,8 @@ export class AccountService {
         data: updateData
       });
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw error;
-      }
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
 
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
