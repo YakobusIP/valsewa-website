@@ -105,7 +105,7 @@ type AccountsPublicParams = {
   limit?: number;
   q?: string;
 
-  competitive_only?: boolean;
+  compe_only?: boolean;
   tiers?: string[];
   skin_counts?: string[];
   ranks?: string[];
