@@ -26,6 +26,7 @@ type AccountEntity = {
   isLowRank: boolean;
   isRecommended: boolean;
   requirePasswordReset: boolean;
+  isMfa: boolean;
 };
 
 type AccountEntityRequest = Omit<

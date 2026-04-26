@@ -23,6 +23,7 @@ type AccountEntityRequest = {
   skinList: number[];
   isLowRank: boolean;
   isRecommended: boolean;
+  isMfa?: boolean;
   requirePasswordReset?: boolean;
 };
 
@@ -46,6 +47,7 @@ type PublicAccount = Prisma.AccountGetPayload<{
     otherImages: true;
     isLowRank: true;
     isRecommended: true;
+    isMfa: true;
   };
 }>;
 
@@ -76,6 +78,10 @@ type AccountSearchFilters = {
   direction?: Prisma.SortOrder;
 };
 
+type UpdateAccountMFARequest = {
+  isMfa: boolean;
+}
+
 export type {
   AccountEntityRequest,
   AccountWithSkins,
@@ -83,5 +89,6 @@ export type {
   UpdateResetLogRequest,
   DeleteResetLogRequest,
   GetAvailableAccountsRequest,
-  AccountSearchFilters
+  AccountSearchFilters,
+  UpdateAccountMFARequest
 };

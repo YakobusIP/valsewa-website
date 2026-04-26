@@ -93,3 +93,11 @@ export const parseStringArray = (value: unknown) => {
 
   return cleaned.length ? cleaned : undefined;
 };
+
+export const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+export const validateTime = (time: string) => {
+  if (!TIME_REGEX.test(time)) {
+    throw new Error(`Invalid time format: ${time}. Use HH:mm`);
+  }
+};

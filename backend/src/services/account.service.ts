@@ -22,7 +22,8 @@ import {
   DeleteResetLogRequest,
   GetAvailableAccountsRequest,
   PublicAccount,
-  UpdateResetLogRequest
+  UpdateResetLogRequest,
+  UpdateAccountMFARequest
 } from "../types/account.type";
 import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
@@ -575,7 +576,8 @@ export class AccountService {
           thumbnail: true,
           otherImages: true,
           isLowRank: true,
-          isRecommended: true
+          isRecommended: true,
+          isMfa: true
         }
       });
 
@@ -701,7 +703,8 @@ export class AccountService {
           thumbnail: true,
           otherImages: true,
           isLowRank: true,
-          isRecommended: true
+          isRecommended: true,
+          isMfa: true
         }
       });
 
@@ -988,6 +991,10 @@ export class AccountService {
 
       const updateData: Prisma.AccountUpdateInput = { ...scalars };
 
+      if (updateData.isMfa) {
+        await this.validateMfaEnablement(currentAccount);
+      }
+
       if (deleteResetLogs) {
         await prisma.accountResetLog.deleteMany({ where: { accountId: id } });
       }
@@ -1043,9 +1050,8 @@ export class AccountService {
         data: updateData
       });
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw error;
-      }
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
 
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -1182,4 +1188,49 @@ export class AccountService {
       throw new InternalServerError((error as Error).message);
     }
   };
+  
+  updateAccountMFA = async (
+    id: number,
+    data: UpdateAccountMFARequest,
+  ) => {
+    try {
+      const account = await prisma.account.findUnique({
+        where: { id },
+      });
+
+      if (!account) throw new NotFoundError("Account not found!");
+
+      const { isMfa } = data;
+
+      if (isMfa) {
+        await this.validateMfaEnablement(account);
+      }
+
+      return await prisma.account.update({
+        where: { id },
+        data: { isMfa },
+      });
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
+
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  private validateMfaEnablement = async (account: Account) => {
+    // Validation for legacy bookings
+    if (account.nextBookingDate) throw new BadRequestError("Account not eligible for MFA enablement");
+
+    // Validation for new bookings
+    const activeBooking = await prisma.booking.findFirst({
+        where: {
+          accountId: account.id,
+          status: BookingStatus.RESERVED,
+          startAt: { gte: new Date() }
+        }
+      });
+
+    if (activeBooking) throw new BadRequestError("Account not eligible for MFA enablement");
+  }
 }
