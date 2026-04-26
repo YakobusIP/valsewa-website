@@ -105,10 +105,10 @@ export function calculateDaysRented(
   return Math.max(0, days);
 }
 
-export function isOutsideOperationalHours(operationalHours: OperationalHoursEntity | null): boolean {
+export function isOutsideOperationalHours(date: Date | null, operationalHours: OperationalHoursEntity | null): boolean {
   if (!operationalHours) return false;
 
-  const now = new Date();
+  const startAt = date ?? new Date();
 
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: operationalHours.timezone,
@@ -116,13 +116,13 @@ export function isOutsideOperationalHours(operationalHours: OperationalHoursEnti
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
-  }).formatToParts(now);
+  }).formatToParts(startAt);
 
   const hour = Number(parts.find(p => p.type === "hour")?.value || 0);
   const minute = Number(parts.find(p => p.type === "minute")?.value || 0);
 
-  const nowInTimezone = new Date();
-  nowInTimezone.setHours(hour, minute, 0, 0);
+  const startAtInTimezone = new Date();
+  startAtInTimezone.setHours(hour, minute, 0, 0);
 
   const [openHour, openMinute] = operationalHours.open.split(":").map(Number);
   const [closeHour, closeMinute] = operationalHours.close.split(":").map(Number);
@@ -137,5 +137,5 @@ export function isOutsideOperationalHours(operationalHours: OperationalHoursEnti
     closeTime.getMinutes() - operationalHours.lastOrderBufferInMinutes
   );
 
-  return nowInTimezone < openTime || nowInTimezone > closeTime;
+  return startAtInTimezone < openTime || startAtInTimezone > closeTime;
 };

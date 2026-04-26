@@ -106,7 +106,9 @@ export default function AccountDetailPage() {
     }
 
     if (!selectedDuration) return;
-    if (account?.isMfa && isOutsideOperationalHours(operationalHours)) {
+
+    const startAt = getStartDateTime();
+    if (account?.isMfa && isOutsideOperationalHours(startAt, operationalHours)) {
       await loadRecommendedAccounts();
       setShowOutsideHoursModal(true);
       return;
@@ -114,7 +116,6 @@ export default function AccountDetailPage() {
 
     try {
       setSubmitting(true);
-      const startAt = getStartDateTime();
       const booking = await bookingService.createBooking({
         customerId: customerId ?? undefined,
         accountId: parseInt(id),
