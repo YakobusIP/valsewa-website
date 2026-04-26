@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { format, isValid, parse } from "date-fns";
+import { OperationalHours } from "../types/setting.type";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -100,4 +101,23 @@ export const validateTime = (time: string) => {
   if (!TIME_REGEX.test(time)) {
     throw new Error(`Invalid time format: ${time}. Use HH:mm`);
   }
+};
+
+export function isOutsideOperationalHours(startAt: Date, operationalHours: OperationalHours | null): boolean {
+  if (!startAt || !operationalHours) return false;
+
+  const [openHour, openMinute] = operationalHours.open.split(":").map(Number);
+  const [closeHour, closeMinute] = operationalHours.close.split(":").map(Number);
+
+  const openTime = new Date();
+  openTime.setHours(openHour, openMinute, 0, 0);
+
+  const closeTime = new Date();
+  closeTime.setHours(closeHour, closeMinute, 0, 0);
+
+  closeTime.setMinutes(
+    closeTime.getMinutes() - operationalHours.lastOrderBufferInMinutes
+  );
+
+  return startAt < openTime || startAt > closeTime;
 };

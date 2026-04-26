@@ -137,11 +137,5 @@ export function isOutsideOperationalHours(operationalHours: OperationalHoursEnti
     closeTime.getMinutes() - operationalHours.lastOrderBufferInMinutes
   );
 
-  console.log("nowInTimezone:", nowInTimezone)
-  console.log("openTime:", openTime)
-  console.log("closeTime:", closeTime)
-  console.log("nowInTimezone < openTime:", nowInTimezone < openTime)
-  console.log("nowInTimezone > closeTime:", nowInTimezone > closeTime)
-
   return nowInTimezone < openTime || nowInTimezone > closeTime;
 };
