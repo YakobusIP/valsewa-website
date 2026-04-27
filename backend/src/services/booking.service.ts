@@ -18,7 +18,12 @@ import {
   NotFoundError,
   PrismaUniqueError
 } from "../lib/error";
-import { addHours, addMinutes, isOutsideOperationalHours, parseDurationToHours } from "../lib/utils";
+import {
+  addHours,
+  addMinutes,
+  isOutsideOperationalHours,
+  parseDurationToHours
+} from "../lib/utils";
 import { subDays } from "date-fns";
 import { prisma } from "../lib/prisma";
 import {
@@ -77,8 +82,19 @@ export const PAYMENT_METHODS_MAP: Record<
   [PaymentMethodRequest.MANUAL]: { paymentMethodType: PaymentMethodType.MANUAL }
 };
 
+const sanitizeVirtualAccountDisplayName = (
+  raw: string | null | undefined
+): string | undefined => {
+  if (raw == null) return undefined;
+  const letters = raw.replace(/[^A-Za-z]/g, "").toUpperCase();
+  return letters.length > 0 ? letters : undefined;
+};
+
 export class BookingService {
-  constructor(private readonly faspayClient: FaspayClient, private readonly settingService: SettingService) {}
+  constructor(
+    private readonly faspayClient: FaspayClient,
+    private readonly settingService: SettingService
+  ) {}
 
   private parseBookingNumber = (input: string): bigint | undefined => {
     const re = new RegExp(`^VS-(\\d{7})$`);
@@ -1104,7 +1120,7 @@ export class BookingService {
 
       const bankAccountName =
         paymentMethodType === PaymentMethodType.VIRTUAL_ACCOUNT
-          ? (booking.customer?.username ?? undefined)
+          ? sanitizeVirtualAccountDisplayName(booking.customer?.username)
           : undefined;
 
       const updatedPayment = await this.processPaymentProvider(
@@ -1836,8 +1852,8 @@ export class BookingService {
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
         nickname: booking.account.nickname ?? "",
         username: active ? booking.account.username : undefined,
-        password: (active && !isMfa) ? booking.account.password : undefined,
-        isMfa,
+        password: active && !isMfa ? booking.account.password : undefined,
+        isMfa
       },
       payments: booking.payments
     };
