@@ -101,8 +101,8 @@ function buildAccountsPublicQuery(params: AccountsPublicParams) {
   if (params.direction) sp.set("direction", params.direction);
 
   // boolean: if you want "all" to omit this param, just pass undefined from UI
-  if (typeof params.low_tier_only === "boolean") {
-    sp.set("low_tier_only", String(params.low_tier_only));
+  if (typeof params.compe_only === "boolean") {
+    sp.set("compe_only", String(params.compe_only));
   }
 
   // arrays as repeated keys: tiers=B&tiers=C ...
