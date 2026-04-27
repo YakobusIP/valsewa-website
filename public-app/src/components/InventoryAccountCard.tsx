@@ -14,7 +14,6 @@ import CountdownTimer from "./CountdownTimer";
 export type InventoryAccountCardProps = {
   item: AccountEntity;
   linkClassName?: string;
-  /** Shorter 4:3 cap (max 300px tall) for carousels / tight layouts */
   compact?: boolean;
 };
 
@@ -29,10 +28,10 @@ export default function InventoryAccountCard({
     <Link
       href={`/details/${item.id}`}
       className={cn(
-        "block w-full min-w-0 max-w-[400px] cursor-pointer font-instrumentSans transition-all duration-300",
+        "block w-full min-w-0 max-w-[600px] cursor-pointer font-instrumentSans transition-all duration-300",
         "mx-auto",
         compact
-          ? "h-auto max-h-[300px] aspect-[4/3] overflow-hidden"
+          ? "h-auto max-h-[450px] aspect-[4/3] overflow-hidden"
           : "h-full",
         !inUse && "hover:scale-[1.02]",
         linkClassName
@@ -138,7 +137,7 @@ export default function InventoryAccountCard({
                   alt="Thumbnail"
                   className="rounded-sm object-cover"
                   unoptimized
-                  sizes="(max-width: 400px) 100vw, 400px"
+                  sizes="(max-width: 600px) 100vw, 600px"
                 />
               </div>
               {!inUse && (
