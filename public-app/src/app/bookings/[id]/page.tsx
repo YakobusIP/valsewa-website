@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 
 import { XIcon } from "lucide-react";
 import { notFound, useParams, useRouter } from "next/navigation";
+import CancelBookingButton from "@/components/bookings/CancelBookingButton";
 
 function LoadingState() {
   return (
@@ -202,7 +203,7 @@ export default function BookingDetailPage() {
 
       <div
         className={cn(
-          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10 items-center w-full",
+          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10 items-center w-full lg:px-20",
           instrumentSans.className
         )}
       >
@@ -210,17 +211,26 @@ export default function BookingDetailPage() {
           <BookingStatusView booking={booking} />
         ) : (
           <>
-            <ProgressStepper
-              stepIdx={1}
-              handleCancelBooking={handleCancelBooking}
-              isLoadingCancelBooking={isLoadingCancelBooking}
-            />
+            <div>
+              <div className="hidden lg:flex pr-20 gap-6">
+                <CancelBookingButton
+                  cancelBooking={handleCancelBooking}
+                  isLoadingCancelBooking={isLoadingCancelBooking}
+                />
+                <ProgressStepper
+                  stepIdx={1}
+                />
+              </div>
+            </div>
 
-            {booking && booking.expiredAt && (
-              <PaymentCountdown expiredAt={booking.expiredAt} />
-            )}
+            <div className="lg:px-20">
+              {booking && booking.expiredAt && (
+                <PaymentCountdown expiredAt={booking.expiredAt} />
+              )}
+            </div>
 
-            <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-5 mt-6 sm:mt-8 lg:mt-10">
+
+            <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-5 mt-6 sm:mt-8 lg:mt-10 lg:px-20">
               <div className="flex flex-col w-full space-y-3 sm:space-y-4 lg:space-y-5">
                 <div className="bg-[#1C1C1C]">
                   <BookingDetail booking={booking} />
@@ -292,7 +302,13 @@ export default function BookingDetailPage() {
                     ? "Loading..."
                     : `${isBookingFree ? "Free" : "IDR " + totalPayment.toLocaleString()} | Rent Now`}
                 </button>
-                <p className="text-xs sm:text-sm">Any Questions?</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-gray-300"></div>
+                  <p className="text-xs sm:text-sm whitespace-nowrap">
+                    Any Questions?
+                  </p>
+                  <div className="flex-1 h-px bg-gray-300"></div>
+                </div>
                 <button
                   type="button"
                   className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"

@@ -57,7 +57,7 @@ function BookingDetail({ booking }: BookingDetailProps) {
                 alt={`${booking.account.accountRank} rank badge`}
                 width={50}
                 height={50}
-                className="object-contain w-8 h-8 sm:w-12 sm:h-12 md:w-[50px] md:h-[50px]"
+                className="object-contain min-w-8 min-h-8 sm:min-w-10 sm:min-h-10 md:min-w-[50px] md:min-h-[50px]"
                 priority
               />
             </div>
@@ -82,13 +82,13 @@ function BookingDetail({ booking }: BookingDetailProps) {
         </div>
       </div>
       <div className="sm:pt-6 pt-4">
-        <div className="mt-auto space-y-6 text-sm sm:text-base font-semibold text-gray-300">
+        <div className="mt-auto space-y-6 text-sm sm:text-base text-gray-300">
           <div className="flex justify-between">
-            <p>Duration</p>
+            <p className="font-semibold">Duration</p>
             <p className="break-words">{formattedDuration}</p>
           </div>
           <div className="flex justify-between flex-wrap">
-            <p className="break-words">
+            <p className="font-semibold break-words">
               IDR {booking.mainValuePerUnit.toLocaleString()}
             </p>
             <p>× {booking.quantity}</p>

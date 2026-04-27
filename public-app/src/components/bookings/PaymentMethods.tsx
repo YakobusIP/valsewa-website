@@ -73,7 +73,7 @@ function PaymentMethods({
 
 
         <div>
-          <div className="flex flex-wrap gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-none sm:flex sm:flex-wrap gap-3 sm:gap-4">
             {VA_METHODS.map((method) => (
               <div key={method.type} className="w-auto">
                 <PaymentMethodCard
@@ -82,8 +82,7 @@ function PaymentMethods({
                   label={method.label}
                   className="w-full h-full"
                 >
-                  <div className="flex flex-col items-center w-full h-full p-2">
-                    {/* <div className="h-16 sm:h-28 flex items-center justify-center"> */}
+                  <div className="flex flex-col items-center w-full h-full py-2">
                     <Image
                       src={method.logo}
                       alt={`${method.label} payment method`}
@@ -91,7 +90,6 @@ function PaymentMethods({
                       height={128}
                       className="object-contain h-[85%]"
                     />
-                    {/* </div> */}
                     <p className="text-xs sm:text-sm text-center mt-1">
                       {method.label}
                     </p>

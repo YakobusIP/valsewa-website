@@ -69,7 +69,9 @@ export default {
         "md-lg": "900px",
         "xl-2xl": "1440px",
         "2xl-large": "1720px",
-        large: "1920px"
+        large: "1920px",
+        desktop: "1728px",
+        tablet: "768px"
       },
       clipPath: {
         "diagonal-gold": "polygon(0% 0%, 100% 0%, 90% 100%, 0% 100%)"
