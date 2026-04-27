@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 
+import InventoryAccountCard from "@/components/InventoryAccountCard";
 import {
   Carousel,
   CarouselContent,
@@ -20,8 +21,6 @@ import { OperationalHoursEntity } from "@/types/setting.type";
 
 import { format, subMinutes } from "date-fns";
 import { Clock3, X } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 
 function lastOrderFromClose(
   close: string,
@@ -73,7 +72,7 @@ export default function OutsideOperationalHoursModal({
         if (!next) onClose();
       }}
     >
-      <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto border-red-700 bg-black p-8 text-white sm:rounded-2xl [&>button:last-child]:hidden">
+      <DialogContent className="box-border min-w-0 max-h-[90vh] max-w-[80rem] w-full max-[1727px]:w-[min(90vw,80rem)] overflow-x-hidden overflow-y-auto border-red-700 bg-black p-4 text-white sm:rounded-2xl sm:p-8 [&>button:last-child]:hidden">
         <button
           type="button"
           onClick={onClose}
@@ -83,19 +82,19 @@ export default function OutsideOperationalHoursModal({
           <X size={28} />
         </button>
 
-        <DialogHeader className="flex flex-col items-center gap-6 text-center sm:text-center">
-          <Clock3 className="h-12 w-12" aria-hidden />
-          <DialogTitle className="text-4xl font-bold uppercase text-white">
+        <DialogHeader className="flex min-w-0 max-w-full flex-col items-center gap-6 text-center sm:text-center">
+          <Clock3 className="h-12 w-12 shrink-0" aria-hidden />
+          <DialogTitle className="max-w-full break-words text-3xl font-bold uppercase text-white md:text-4xl">
             Outside Operational Hours
           </DialogTitle>
           <DialogDescription asChild>
-            <div className="flex w-full flex-col items-center text-center text-lg text-white">
-              <p>Our operational hour is from</p>
-              <p className="mt-2 font-bold">
+            <div className="flex w-full min-w-0 max-w-full flex-col items-center text-center text-base text-white sm:text-lg">
+              <p className="max-w-full">Our operational hour is from</p>
+              <p className="mt-2 max-w-full font-bold">
                 {hoursLabel ? `${hoursLabel} WIB` : "—"}
               </p>
-              <p className="mt-2">Try again within our operational hour.</p>
-              <p className="mt-8 font-semibold">
+              <p className="mt-2 max-w-full">Try again within our operational hour.</p>
+              <p className="mt-8 max-w-full break-words font-semibold">
                 Or see our account recommendations that doesn’t require MFA
                 verification:
               </p>
@@ -103,55 +102,32 @@ export default function OutsideOperationalHoursModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-6 md:hidden">
-          <Carousel
-            opts={{ align: "center", loop: true }}
-          >
-            <CarouselContent>
+        <div className="mt-6 min-w-0 max-w-full min-[1728px]:hidden">
+          <Carousel className="w-full min-w-0" opts={{ align: "center", loop: true }}>
+            <CarouselContent className="min-w-0">
               {accounts.map((account) => (
-                <CarouselItem key={account.id} className="basis-[80%]">
-                  <Link href={`/details/${account.id}`}>
-                    <div className="rounded-xl overflow-hidden border border-white/20">
-                      <div className="relative aspect-video">
-                        <Image
-                          src={
-                            account.thumbnail?.imageUrl ??
-                            "/defaultPicture/default.jpg"
-                          }
-                          alt="Recommended"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    </div>
-                  </Link>
+                <CarouselItem
+                  key={account.id}
+                  className="!max-w-[min(100%,416px)] w-[min(100%,416px)] !basis-[min(100%,416px)] shrink-0"
+                >
+                  <InventoryAccountCard
+                    compact
+                    item={account}
+                    linkClassName="w-full"
+                  />
                 </CarouselItem>
               ))}
             </CarouselContent>
           </Carousel>
         </div>
 
-        <div className="mt-6 hidden md:flex flex-wrap justify-center gap-4 pb-2">
+        <div className="mt-6 hidden min-w-0 w-full min-[1728px]:flex min-[1728px]:flex-wrap min-[1728px]:content-start min-[1728px]:items-stretch min-[1728px]:gap-4 min-[1728px]:pb-2">
           {accounts.map((account) => (
-            <Link
+            <InventoryAccountCard
               key={account.id}
-              href={`/details/${account.id}`}
-              className="min-w-[280px] flex-shrink-0"
-            >
-              <div className="rounded-xl overflow-hidden border border-white/20">
-                <div className="relative aspect-video">
-                  <Image
-                    src={
-                      account.thumbnail?.imageUrl ??
-                      "/defaultPicture/default.jpg"
-                    }
-                    alt="Recommended"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              </div>
-            </Link>
+              item={account}
+              linkClassName="!mx-0 h-auto min-w-0 max-w-[400px] grow basis-0"
+            />
           ))}
         </div>
       </DialogContent>
