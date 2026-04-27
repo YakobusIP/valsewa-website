@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 
 import { cn } from "@/lib/utils";
 
-import { ChevronDown } from "lucide-react";
 
 export const COMP_TIERS = ["C - COMP", "B - COMP", "A - COMP", "S - COMP", "SSS - COMP"] as const;
 export const UNRATED_TIERS = ["C", "B", "A", "S", "SSS"] as const;
@@ -64,14 +63,19 @@ export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
       <button
         onClick={() => setIsOpen((v) => !v)}
         className={cn(
-          "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm text-white transition whitespace-nowrap",
+          "w-[210px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition",
           isOpen ? "border-white bg-white/10" : "border-white/30 hover:border-white"
         )}
       >
         <span className={selectedTiers.length === 0 ? "text-white/70" : "text-white"}>
           {label ?? "Tier"}
         </span>
-        <ChevronDown className={cn("w-4 h-4 text-white/50 transition-transform", isOpen && "rotate-180")} />
+        <svg
+          className={cn("w-2.5 h-1.5 fill-white shrink-0 transition-transform ml-2", isOpen && "rotate-180")}
+          viewBox="0 0 10 6"
+        >
+          <path d="M0 0L5 6L10 0H0Z" />
+        </svg>
       </button>
 
       <div

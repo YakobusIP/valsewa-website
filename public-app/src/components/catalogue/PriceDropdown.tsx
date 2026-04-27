@@ -6,7 +6,6 @@ import { Slider } from "@/components/ui/slider";
 
 import { cn } from "@/lib/utils";
 
-import { ChevronDown } from "lucide-react";
 
 const PRICE_MIN = 0;
 const PRICE_MAX = 1_000_000;
@@ -51,13 +50,17 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
       <button
         onClick={() => setIsOpen((v) => !v)}
         className={cn(
-          "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm text-white transition whitespace-nowrap",
-          isOpen ? "border-white bg-white/10" : "border-white/30 hover:border-white",
-          !isDefault && "text-white"
+          "w-[270px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition",
+          isOpen ? "border-white bg-white/10" : "border-white/30 hover:border-white"
         )}
       >
         <span className={isDefault ? "text-white/70" : "text-white"}>{label}</span>
-        <ChevronDown className={cn("w-4 h-4 text-white/50 transition-transform", isOpen && "rotate-180")} />
+        <svg
+          className={cn("w-2.5 h-1.5 fill-white shrink-0 transition-transform ml-2", isOpen && "rotate-180")}
+          viewBox="0 0 10 6"
+        >
+          <path d="M0 0L5 6L10 0H0Z" />
+        </svg>
       </button>
 
       <div

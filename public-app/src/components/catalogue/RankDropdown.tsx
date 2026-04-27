@@ -6,7 +6,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { cn } from "@/lib/utils";
 
-import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 
 export const RANKS = [
@@ -60,35 +59,37 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
       <button
         onClick={() => setIsOpen((v) => !v)}
         className={cn(
-          "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm text-white transition whitespace-nowrap",
+          "w-[170px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition",
           isOpen
             ? "border-white bg-white/10"
             : "border-white/30 hover:border-white"
         )}
       >
-        {selectedRanks.length === 0 ? (
-          <span className="text-white/70">Rank</span>
-        ) : (
-          <>
-            <Image
-              src={firstRank!.image}
-              width={18}
-              height={18}
-              alt={firstRank!.id}
-              className="shrink-0"
-            />
-            <span>{firstRank!.name}</span>
-            {extraCount > 0 && (
-              <span className="text-white/60">+{extraCount}</span>
-            )}
-          </>
-        )}
-        <ChevronDown
-          className={cn(
-            "w-4 h-4 text-white/50 transition-transform",
-            isOpen && "rotate-180"
+        <span className="flex items-center gap-2 truncate">
+          {selectedRanks.length === 0 ? (
+            <span className="text-white/70">Rank</span>
+          ) : (
+            <>
+              <Image
+                src={firstRank!.image}
+                width={18}
+                height={18}
+                alt={firstRank!.id}
+                className="shrink-0"
+              />
+              <span className="truncate">{firstRank!.name}</span>
+              {extraCount > 0 && (
+                <span className="text-white/60 shrink-0">+{extraCount}</span>
+              )}
+            </>
           )}
-        />
+        </span>
+        <svg
+          className={cn("w-2.5 h-1.5 fill-white shrink-0 transition-transform ml-2", isOpen && "rotate-180")}
+          viewBox="0 0 10 6"
+        >
+          <path d="M0 0L5 6L10 0H0Z" />
+        </svg>
       </button>
 
       {/* Dropdown panel */}
