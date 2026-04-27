@@ -3,6 +3,7 @@ import { FaspayService } from "../services/faspay.service";
 import { FaspayController } from "../controllers/faspay.controller";
 import { FaspayClient } from "../faspay/faspay.client";
 import { BookingService } from "../services/booking.service";
+import { SettingService } from "../services/setting.service";
 
 class faspayServiceRouter {
   public router: Router;
@@ -10,11 +11,13 @@ class faspayServiceRouter {
   private faspayClient: FaspayClient;
   private faspayService: FaspayService;
   private faspayController: FaspayController;
+  private settingService: SettingService;
 
   constructor() {
     this.router = Router();
     this.faspayClient = new FaspayClient();
-    this.bookingService = new BookingService(this.faspayClient);
+    this.settingService = new SettingService();
+    this.bookingService = new BookingService(this.faspayClient, this.settingService);
     this.faspayService = new FaspayService(this.bookingService);
     this.faspayController = new FaspayController(
       this.faspayService,

@@ -25,6 +25,8 @@ export default function SettingsModal({
 }) {
   const [loading, setLoading] = useState(false);
   const [reminderText, setReminderText] = useState("");
+  const [openTime, setOpenTime] = useState("");
+  const [closeTime, setCloseTime] = useState("");
 
   const SETTING_KEY = "reminder_text";
 
@@ -46,14 +48,55 @@ export default function SettingsModal({
     }
   };
 
+  const fetchOperationalHours = async () => {
+    try {
+      const data = await settingService.getOperationalHours();
+      setOpenTime(data.open);
+      setCloseTime(data.close);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          variant: "destructive",
+          title: "Error fetching operational hours",
+          description: error.message
+        });
+      }
+    }
+  };
+
   const handleSave = async () => {
     setLoading(true);
     try {
-      await settingService.updateSetting(SETTING_KEY, reminderText);
+      const promises: Promise<unknown>[] = [];
+
+      promises.push(
+        settingService.updateSetting(SETTING_KEY, reminderText)
+      );
+
+      if (openTime || closeTime) {
+        if (!openTime || !closeTime) {
+          throw new Error("Operational hours must be fully filled");
+        }
+
+        if (openTime >= closeTime) {
+          throw new Error("Open time must be earlier than close time");
+        }
+
+        promises.push(
+          settingService.updateOperationalHours({
+            open: openTime,
+            close: closeTime
+          })
+        );
+      }
+
+      await Promise.all(promises);
+
       toast({
         title: "Settings saved",
-        description: "Reminder text has been updated successfully."
+        description: "All settings updated successfully."
       });
+
       onOpenChange(false);
     } catch (error) {
       if (error instanceof Error) {
@@ -71,6 +114,7 @@ export default function SettingsModal({
   useEffect(() => {
     if (open) {
       fetchReminderText();
+      fetchOperationalHours();
     }
   }, [open]);
 
@@ -96,6 +140,37 @@ export default function SettingsModal({
               {"{password}"}, {"{accountCode}"}, dan {"{expired}"}.
             </p>
           </div>
+          <div className="grid gap-4 py-2">
+          <div className="grid gap-2">
+            <Label>Operational Hours (WIB)</Label>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs text-muted-foreground">Open</Label>
+                <input
+                  type="time"
+                  value={openTime}
+                  onChange={(e) => setOpenTime(e.target.value)}
+                  className="border border-gray-300 rounded-md px-2 py-2"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <Label className="text-xs text-muted-foreground">Close</Label>
+                <input
+                  type="time"
+                  value={closeTime}
+                  onChange={(e) => setCloseTime(e.target.value)}
+                  className="border border-gray-300 rounded-md px-2 py-2"
+                />
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Last order akan otomatis dihitung 30 menit sebelum jam tutup.
+            </p>
+          </div>
+        </div>
         </div>
         <DialogFooter>
           <Button onClick={handleSave} disabled={loading}>

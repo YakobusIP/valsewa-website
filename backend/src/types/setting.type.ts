@@ -8,7 +8,7 @@ type OperationalHours = {
 type UpdateOperationalHoursRequest = {
   open: string;
   close: string;
-  lastOrderBufferInMinutes?: number;
+  lastOrderBufferInMinutes: number;
   timezone?: string;
 };
 

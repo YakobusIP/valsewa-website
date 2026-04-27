@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { fetchAccountById } from "@/services/accountService";
+import {
+  fetchAccountById,
+  fetchRecommendedAccounts
+} from "@/services/accountService";
 import { bookingService } from "@/services/booking.service";
 
 import LoginPage from "@/components/LoginPage";
@@ -24,13 +27,16 @@ import { toast } from "@/hooks/useToast";
 
 import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
 
-import { getRankImageUrl } from "@/lib/utils";
+import { getRankImageUrl, isOutsideOperationalHours } from "@/lib/utils";
 
 import { isAxiosError } from "axios";
 import { ChevronDown, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, useParams, useRouter } from "next/navigation";
+import { OperationalHoursEntity } from "@/types/setting.type";
+import { fetchOperationalHours } from "@/services/setting.service";
+import OutsideOperationalHoursModal from "@/components/OutsideOperationalHoursModal";
 
 export default function AccountDetailPage() {
   const router = useRouter();
@@ -59,6 +65,11 @@ export default function AccountDetailPage() {
   const [navbarLoginOpen, setNavbarLoginOpen] = useState(false); // NEW state for navbar login
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  // Operational Hours
+  const [showOutsideHoursModal, setShowOutsideHoursModal] = useState(false);
+  const [operationalHours, setOperationalHours] = useState<OperationalHoursEntity | null>(null);
+  const [nonMfaRecommendedAccounts, setNonMfaRecommendedAccounts] = useState<AccountEntity[]>([]);
+
   const handleCardClick = (id: string) => {
     router?.push(`/details/${id}`);
   };
@@ -69,6 +80,12 @@ export default function AccountDetailPage() {
       .catch(() => setAccount(null))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    fetchOperationalHours()
+      .then((data) => setOperationalHours(data))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     setSelectedDuration(null);
@@ -92,9 +109,16 @@ export default function AccountDetailPage() {
     }
 
     if (!selectedDuration) return;
+
+    const startAt = getStartDateTime();
+    if (account?.isMfa && isOutsideOperationalHours(operationalHours)) {
+      await loadRecommendedAccounts();
+      setShowOutsideHoursModal(true);
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const startAt = getStartDateTime();
       const booking = await bookingService.createBooking({
         customerId: customerId ?? undefined,
         accountId: parseInt(id),
@@ -208,6 +232,15 @@ export default function AccountDetailPage() {
 
     return `${hours}h`;
   }
+
+  const loadRecommendedAccounts = async () => {
+    try {
+      const data = await fetchRecommendedAccounts();
+      setNonMfaRecommendedAccounts(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   if (loading) {
     return (
@@ -667,6 +700,12 @@ export default function AccountDetailPage() {
         open={isSearchOpen}
         onOpenChange={setIsSearchOpen}
         onSelectAccount={handleCardClick}
+      />
+      <OutsideOperationalHoursModal
+        open={showOutsideHoursModal}
+        onClose={() => setShowOutsideHoursModal(false)}
+        operationalHours={operationalHours}
+        accounts={nonMfaRecommendedAccounts}
       />
     </main>
   );
