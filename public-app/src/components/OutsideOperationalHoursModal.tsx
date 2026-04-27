@@ -108,7 +108,7 @@ export default function OutsideOperationalHoursModal({
               {accounts.map((account) => (
                 <CarouselItem
                   key={account.id}
-                  className="!max-w-[min(100%,416px)] w-[min(100%,416px)] !basis-[min(100%,416px)] shrink-0"
+                  className="!max-w-[min(100%,616px)] w-[min(100%,616px)] !basis-[min(100%,616px)] shrink-0"
                 >
                   <InventoryAccountCard
                     compact
@@ -126,7 +126,7 @@ export default function OutsideOperationalHoursModal({
             <InventoryAccountCard
               key={account.id}
               item={account}
-              linkClassName="!mx-0 h-auto min-w-0 max-w-[400px] grow basis-0"
+              linkClassName="!mx-0 h-auto min-w-0 max-w-[600px] grow basis-0"
             />
           ))}
         </div>
