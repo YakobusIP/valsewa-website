@@ -285,7 +285,7 @@ export default function BookingDetailPage() {
 
 
 
-              <div className="flex flex-col gap-2 space-y-2 text-center text-white">
+              {/* <div className="flex flex-col gap-2 space-y-2 text-center text-white bg-[#1C1C1C]">
                 <button
                   type="button"
                   onClick={onSubmit}
@@ -321,7 +321,7 @@ export default function BookingDetailPage() {
                 >
                   Ask Our Team
                 </button>
-              </div>
+              </div> */}
             </div>
           </>
         )}

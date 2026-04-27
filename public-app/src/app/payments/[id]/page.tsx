@@ -261,7 +261,10 @@ export default function PaymentDetailPage() {
             </div>
 
 
-            <div className="max-desktop:flex max-desktop:flex-col grid grid-cols-2 items-center pt-16 w-full gap-4 mx-auto mt-4 lg:mt-8 max-w-[1000px]">
+            <div
+              className={`${payment.qrUrl ? "grid grid-cols-2" : "flex flex-col"
+                } max-desktop:flex max-desktop:flex-col items-center pt-16 w-full gap-4 mx-auto tablet:mt-4 mt-2 lg:mt-8 max-w-[1000px]`}
+            >
               <div className="flex-1 w-auto flex flex-col items-center gap-5">
                 {payment.qrUrl && (
                   <div className="w-full p-3 sm:p-4 overflow-hidden bg-white rounded-md mx-auto max-w-64 sm:max-w-72 max-h-64 sm:max-h-72">
@@ -302,25 +305,30 @@ export default function PaymentDetailPage() {
                     <p className="text-sm sm:text-base">{paymentMethodLabel}</p>
                   </div>
                   {payment.bankAccountNo && (
-                    <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
-                      <p className="font-semibold text-sm sm:text-base">
-                        VA Number
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => handleCopyVaNo(payment.bankAccountNo!)}
-                        className="flex items-center gap-2 font-medium text-white hover:text-red-600 text-sm sm:text-base"
-                      >
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-row sm:flex-row sm:justify-between gap-12 tablet:gap-32">
+                        <p className="font-semibold text-sm sm:text-base">
+                          Copy VA Number
+                        </p>
                         <span className="select-text break-all">
                           {payment.bankAccountNo}
                         </span>
-
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyVaNo(payment.bankAccountNo!)}
+                        className="w-full py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-md bg-[#C70515] hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
+                      >
                         {vaNoCopied ? (
-                          <CheckIcon className="w-4 h-4 flex-shrink-0" />
+                          <div className="flex items-center justify-center gap-2">
+                            <CheckIcon className="w-4 h-4 shrink-0" /> <p>Copied!</p>
+                          </div>
                         ) : (
-                          <CopyIcon className="w-4 h-4 flex-shrink-0" />
+                          "Copy VA Number"
                         )}
+
                       </button>
+
                     </div>
                   )}
                 </div>
@@ -330,7 +338,7 @@ export default function PaymentDetailPage() {
                     <button
                       type="button"
                       onClick={onDownloadQR}
-                      className="flex items-center justify-center w-full gap-2 py-2.5 sm:py-3 mb-4 text-base sm:text-lg lg:text-xl font-semibold transition bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
+                      className="flex items-center justify-center w-full px-24 gap-2 py-2.5 sm:py-3 mb-4 text-base sm:text-lg lg:text-xl font-semibold transition bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
                       aria-label="Download QR code"
                     >
                       <p>Download QR</p>

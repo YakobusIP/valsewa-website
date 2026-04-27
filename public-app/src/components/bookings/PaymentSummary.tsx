@@ -130,7 +130,7 @@ function PaymentSummary({
         </h1>
         <div className="mt-2">
           <label className="text-xs sm:text-sm text-[#D9D9D9]">Promo Code</label>
-          <div className="flex flex-row gap-2 border border-[#F9FAFB] rounded-lg p-3 mt-2">
+          <div className="flex flex-row gap-2 max-tablet:gap-0 border border-[#F9FAFB] rounded-lg p-3 mt-2">
             <input
               type="text"
               value={voucherName}
@@ -207,7 +207,7 @@ function PaymentSummary({
         </span>
       </div>
 
-      <div className="hidden lg:flex flex-col gap-2 space-y-2 text-center text-white">
+      <div className="flex flex-col gap-2 space-y-2 text-center text-white">
         <button
           type="button"
           onClick={handleSubmit}

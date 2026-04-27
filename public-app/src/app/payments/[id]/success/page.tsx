@@ -257,7 +257,7 @@ export default function PaymentSuccessPage() {
           </div>
 
           {/* Attention Bottom */}
-          <div className=" tablet:hidden flex flex-col items-center text-center bg-[#C70515] justify-center font-staatliches w-[80%] mx-auto">
+          <div className=" tablet:hidden flex flex-col rounded-lg items-center text-center bg-[#C70515] justify-center font-staatliches w-[80%] mx-auto">
             <div className="flex flex-col items-center gap-3 text-center w-full px-8 pt-10">
               <AlertTriangleIcon className="w-10 h-10 text-black fill-white" />
               <h2 className="text-4xl font-bold">
@@ -296,16 +296,16 @@ export default function PaymentSuccessPage() {
               </div>
             </div>
 
-            <div className="text-sm pt-4 text-[#F9FAFB] space-y-2 px-8 w-full">
-              <div className="flex items-center justify-center font-bold ">
+            <div className="text-sm pt-4 text-[#F9FAFB] space-y-2 px-8">
+              <div className="flex items-center justify-center font-bold">
                 Cancelation
               </div>
-              <p className="text-left">This booking is <b>final</b> and cannot be modified after confirmation.</p>
-              <p className="text-left">Please note that <b>cancellation is non-refundable</b>.</p>
+              <p>This booking is <b>final</b> and cannot be modified after confirmation.</p>
+              <p>Please note that <b>cancellation is non-refundable</b>.</p>
             </div>
 
-            <div className="text-sm pt-4 text-[#F9FAFB] space-y-2 px-8 pb-10">
-              <p className="text-left">
+            <div className="text-sm pt-4 text-[#F9FAFB] space-y-2 pb-8 px-8">
+              <p>
                 If you encounter any difficulties or have questions, please contact our{" "}
                 <span
                   className="text-yellow-400 underline cursor-pointer"
@@ -325,7 +325,7 @@ export default function PaymentSuccessPage() {
         </div>
         {/* RIGHT: ATTENTION */}
         {showAttention && (
-          <div className="hidden tablet:block fixed bottom-5 right-5 border border-white/20 rounded-lg p-8 space-y-5 max-h-[90%] max-w-[50%] w-1/3 bg-[#C70515] font-staatliches">
+          <div className="hidden tablet:block fixed bottom-5 right-5 border border-white/20 rounded-lg p-8 space-y-5 max-h-[90%] max-w-[50%] w-1/3 lg:w-1/4 desktop:w-1/5 h-auto bg-[#C70515] font-staatliches">
             <button
               onClick={() => setShowAttention(false)}
               className="hidden tablet:block desktop:hidden absolute top-3 right-3 text-white hover:text-gray-200 font-bold"
