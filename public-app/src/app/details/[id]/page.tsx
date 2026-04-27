@@ -711,8 +711,7 @@ export default function AccountDetailPage() {
       <OutsideOperationalHoursModal
         open={showOutsideHoursModal}
         onClose={() => setShowOutsideHoursModal(false)}
-        openHour={operationalHours?.open ?? "-"}
-        closeHour={operationalHours?.close ?? "-"}
+        operationalHours={operationalHours}
         accounts={nonMfaRecommendedAccounts}
       />
     </main>
