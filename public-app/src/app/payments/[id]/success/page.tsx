@@ -39,6 +39,7 @@ export default function PaymentSuccessPage() {
   const [booking, setBooking] = useState<BookingWithAccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const [showAttention, setShowAttention] = useState(true);
 
   const WHATSAPP_CONFIG = {
     phoneNumber: "6285175343447",
@@ -152,10 +153,10 @@ export default function PaymentSuccessPage() {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
-          
+        <div className="grid gap-10 lg:gap-10">
+
           {/* LEFT: Booking Details */}
-          <div className="flex flex-col items-center text-center space-y-4">
+          <div className="flex flex-col items-center text-center space-y-4 h-auto">
 
             {/* ✅ WhatsApp CTA (ONLY MFA) */}
             {isMfaEnabled && (
@@ -224,7 +225,7 @@ export default function PaymentSuccessPage() {
 
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Status</span>
-                <div className="flex items-center gap-2 text-green-400">
+                <div className="flex items-center gap-2 font-bold">
                   <span className="w-2 h-2 bg-green-400 rounded-full" />
                   Ready to Use
                 </div>
@@ -239,7 +240,7 @@ export default function PaymentSuccessPage() {
             {/* Discord */}
             <button
               onClick={() => window.open("https://discord.gg/ywqTZSTwRY")}
-              className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg flex items-center gap-3"
+              className="bg-[#2F40FF] hover:bg-blue-700 px-6 py-3 rounded-lg flex items-center gap-3"
             >
               <FaDiscord />
               Join Discord Community
@@ -248,49 +249,64 @@ export default function PaymentSuccessPage() {
             {/* Back */}
             <button
               onClick={onBackToHome}
-              className="flex items-center gap-2 text-gray-300"
+              className="flex items-center gap-2 text-gray-300 underline"
             >
               <HomeIcon size={18} />
               Back to Home Page
             </button>
           </div>
 
-          {/* RIGHT: ATTENTION */}
-          <div className="border border-white/20 rounded-lg p-8 space-y-5">
-            <div className="flex items-center gap-3">
-              <AlertTriangleIcon />
-              <h2 className="text-2xl font-bold">
+          {/* Attention Bottom */}
+          <div className=" tablet:hidden flex flex-col rounded-lg items-center text-center bg-[#C70515] justify-center font-staatliches w-[80%] mx-auto">
+            <div className="flex flex-col items-center gap-3 text-center w-full px-8 pt-10">
+              <AlertTriangleIcon className="w-10 h-10 text-black fill-white" />
+              <h2 className="text-4xl font-bold">
                 ATTENTION
                 <br />
                 HOW TO AVOID PENALTY?
               </h2>
             </div>
 
-            <div className="space-y-4 text-sm">
-              <div className="flex gap-3">
-                <span className="w-6 h-6 flex items-center justify-center bg-white text-black rounded-full">
+            <div className="space-y-4 text-sm text-[#F9FAFB] px-8">
+              <div className="flex items-center justify-center font-bold">
+                Rent Time
+              </div>
+              <div className="flex gap-4">
+                <span className="w-6 h-6 shrink-0 flex items-center justify-center bg-white text-black rounded-full">
                   1
                 </span>
-                <p>
-                  Your rental period ends at: <b>{endDate}</b>
-                </p>
+                <span className="flex flex-col text-left">
+                  <p>
+                    Your rental period ends at:
+                  </p>
+                  <p className="bg-[#7C000A] px-2 py-1 rounded-sm">
+                    <b>({endDate})</b>
+                  </p>
+                </span>
+
               </div>
 
-              <div className="flex gap-3">
-                <span className="w-6 h-6 flex items-center justify-center bg-white text-black rounded-full">
+              <div className="flex gap-4">
+                <span className="w-6 h-6 shrink-0 flex items-center justify-center bg-white text-black rounded-full">
                   2
                 </span>
-                <p>
+                <p className="text-left">
                   Ensure the account is logged out on time, or a fine will be charged.
                 </p>
               </div>
             </div>
 
-            <div className="text-sm text-gray-300 border-t pt-4 space-y-2">
-              <p>This booking is final and cannot be modified.</p>
-              <p>Cancellation is non-refundable.</p>
+            <div className="text-sm pt-4 text-[#F9FAFB] space-y-2 px-8">
+              <div className="flex items-center justify-center font-bold">
+                Cancelation
+              </div>
+              <p>This booking is <b>final</b> and cannot be modified after confirmation.</p>
+              <p>Please note that <b>cancellation is non-refundable</b>.</p>
+            </div>
+
+            <div className="text-sm pt-4 text-[#F9FAFB] space-y-2 pb-8 px-8">
               <p>
-                Contact{" "}
+                If you encounter any difficulties or have questions, please contact our{" "}
                 <span
                   className="text-yellow-400 underline cursor-pointer"
                   onClick={() =>
@@ -302,10 +318,84 @@ export default function PaymentSuccessPage() {
                 >
                   Customer Service
                 </span>
+                {" "}team for assistance.
               </p>
             </div>
           </div>
         </div>
+        {/* RIGHT: ATTENTION */}
+        {showAttention && (
+          <div className="hidden tablet:block fixed bottom-5 right-5 border border-white/20 rounded-lg p-8 space-y-5 max-h-[90%] max-w-[50%] w-1/3 lg:w-1/4 desktop:w-1/5 h-auto bg-[#C70515] font-staatliches">
+            <button
+              onClick={() => setShowAttention(false)}
+              className="hidden tablet:block desktop:hidden absolute top-3 right-3 text-white hover:text-gray-200 font-bold"
+            >
+              ✕
+            </button>
+            <div className="flex flex-col items-center gap-3 text-center w-full">
+              <AlertTriangleIcon className="w-10 h-10 text-black fill-white" />
+              <h2 className="text-4xl font-bold">
+                ATTENTION
+                <br />
+                HOW TO AVOID PENALTY?
+              </h2>
+            </div>
+
+            <div className="space-y-4 text-sm text-[#F9FAFB]">
+              <div className="flex items-center justify-center font-bold">
+                Rent Time
+              </div>
+              <div className="flex gap-3">
+                <span className="w-6 h-6 shrink-0 flex items-center justify-center bg-white text-black rounded-full">
+                  1
+                </span>
+                <span className="flex flex-col">
+                  <p>
+                    Your rental period ends at:
+                  </p>
+                  <p className="bg-[#7C000A] px-2 py-1 rounded-sm">
+                    <b>({endDate})</b>
+                  </p>
+                </span>
+
+              </div>
+
+              <div className="flex gap-3">
+                <span className="w-6 h-6 shrink-0 flex items-center justify-center bg-white text-black rounded-full">
+                  2
+                </span>
+                <p>
+                  Ensure the account is logged out on time, or a fine will be charged.
+                </p>
+              </div>
+            </div>
+
+            <div className="text-sm pt-4 text-[#F9FAFB] space-y-2">
+              <div className="flex items-center justify-center font-bold">
+                Cancelation
+              </div>
+              <p>This booking is <b>final</b> and cannot be modified after confirmation.</p>
+              <p>Please note that <b>cancellation is non-refundable</b>.</p>
+            </div>
+
+            <div className="text-sm pt-4 text-[#F9FAFB] space-y-2">
+              <p>
+                If you encounter any difficulties or have questions, please contact our{" "}
+                <span
+                  className="text-yellow-400 underline cursor-pointer"
+                  onClick={() =>
+                    window.open(
+                      "https://wa.me/6285175343447",
+                      "_blank"
+                    )
+                  }
+                >
+                  Customer Service
+                </span>
+                {" "}team for assistance.
+              </p>
+            </div>
+          </div>)}
       </div>
     </main>
   );

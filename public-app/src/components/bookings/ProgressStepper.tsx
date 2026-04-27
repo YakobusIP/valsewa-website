@@ -5,36 +5,23 @@ import { cn } from "@/lib/utils";
 
 import { CheckIcon, DollarSign, MoreHorizontal } from "lucide-react";
 
-import CancelBookingButton from "./CancelBookingButton";
-
 type ProgressStepperProps = {
   stepIdx: number;
-  handleCancelBooking: () => Promise<void>;
-  isLoadingCancelBooking: boolean;
 };
 
 function ProgressStepper({
   stepIdx,
-  handleCancelBooking,
-  isLoadingCancelBooking
 }: ProgressStepperProps) {
   const isActive = useCallback((idx: number) => idx <= stepIdx, [stepIdx]);
 
   return (
     <nav
       className={cn(
-        "flex gap-3 sm:gap-4 lg:gap-6 text-xs sm:text-sm font-bold items-center text-white",
+        "flex gap-3 sm:gap-4 lg:gap-6 text-xs sm:text-sm font-bold items-center text-white w-full",
         instrumentSans.className
       )}
       aria-label="Booking progress"
     >
-      <div className="hidden lg:flex">
-        <CancelBookingButton
-          cancelBooking={handleCancelBooking}
-          isLoadingCancelBooking={isLoadingCancelBooking}
-        />
-      </div>
-
       <div className="flex flex-col w-full gap-1 sm:gap-2">
         <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
           <div
