@@ -1,4 +1,5 @@
 import { PAYMENT_METHOD_REQUEST } from "@/types/booking.type";
+import { OperationalHoursEntity } from "@/types/setting.type";
 import { TYPE } from "@/types/voucher.type";
 
 import { type ClassValue, clsx } from "clsx";
@@ -102,4 +103,38 @@ export function calculateDaysRented(
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   return Math.max(0, days);
+}
+
+const DEFAULT_OPERATIONS_TZ = "Asia/Jakarta";
+
+export function isOutsideOperationalHours(
+  operationalHours: OperationalHoursEntity | null,
+  at: Date = new Date()
+): boolean {
+  if (!operationalHours) return false;
+
+  const tz = operationalHours.timezone || DEFAULT_OPERATIONS_TZ;
+  const buffer = operationalHours.lastOrderBufferInMinutes ?? 30;
+
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  }).formatToParts(at);
+
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
+  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+  const second = Number(parts.find((p) => p.type === "second")?.value ?? 0);
+  const nowMinutes = hour * 60 + minute + second / 60;
+
+  const [openH, openM] = operationalHours.open.split(":").map(Number);
+  const [closeH, closeM] = operationalHours.close.split(":").map(Number);
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
+  let lastOrderMinutes = closeMinutes - buffer;
+  if (lastOrderMinutes < 0) lastOrderMinutes += 24 * 60;
+
+  return nowMinutes < openMinutes || nowMinutes > lastOrderMinutes;
 }

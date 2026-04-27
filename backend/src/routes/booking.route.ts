@@ -5,17 +5,20 @@ import { authMiddleware } from "../middleware/auth.middleware";
 import { customerMiddleware } from "../middleware/customer.middleware";
 import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 import { FaspayClient } from "../faspay/faspay.client";
+import { SettingService } from "../services/setting.service";
 
 class BookingRouter {
   public router: Router;
   private bookingService: BookingService;
   private faspayClient: FaspayClient;
   private bookingController: BookingController;
+  private settingService: SettingService;
 
   constructor() {
     this.router = Router();
     this.faspayClient = new FaspayClient();
-    this.bookingService = new BookingService(this.faspayClient);
+    this.settingService = new SettingService();
+    this.bookingService = new BookingService(this.faspayClient, this.settingService);
     this.bookingController = new BookingController(
       this.bookingService,
       this.faspayClient

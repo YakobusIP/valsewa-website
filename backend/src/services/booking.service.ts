@@ -18,7 +18,12 @@ import {
   NotFoundError,
   PrismaUniqueError
 } from "../lib/error";
-import { addHours, addMinutes, parseDurationToHours } from "../lib/utils";
+import {
+  addHours,
+  addMinutes,
+  isOutsideOperationalHours,
+  parseDurationToHours
+} from "../lib/utils";
 import { subDays } from "date-fns";
 import { prisma } from "../lib/prisma";
 import {
@@ -38,6 +43,7 @@ import {
 import { FaspayClient } from "../faspay/faspay.client";
 import { Metadata } from "../types/metadata.type";
 import { env } from "../lib/env";
+import { SettingService } from "./setting.service";
 
 export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<
   PaymentStatus,
@@ -76,8 +82,19 @@ export const PAYMENT_METHODS_MAP: Record<
   [PaymentMethodRequest.MANUAL]: { paymentMethodType: PaymentMethodType.MANUAL }
 };
 
+const sanitizeVirtualAccountDisplayName = (
+  raw: string | null | undefined
+): string | undefined => {
+  if (raw == null) return undefined;
+  const letters = raw.replace(/[^A-Za-z]/g, "").toUpperCase();
+  return letters.length > 0 ? letters : undefined;
+};
+
 export class BookingService {
-  constructor(private readonly faspayClient: FaspayClient) {}
+  constructor(
+    private readonly faspayClient: FaspayClient,
+    private readonly settingService: SettingService
+  ) {}
 
   private parseBookingNumber = (input: string): bigint | undefined => {
     const re = new RegExp(`^VS-(\\d{7})$`);
@@ -508,7 +525,8 @@ export class BookingService {
         reservedBookingCount,
         account,
         priceList,
-        voucher
+        voucher,
+        operationalHours
       ] = await Promise.all([
         // customer
         customerId
@@ -544,7 +562,8 @@ export class BookingService {
           },
           select: {
             id: true,
-            isCompetitive: true
+            isCompetitive: true,
+            isMfa: true
           }
         }),
         // price list
@@ -558,7 +577,9 @@ export class BookingService {
           }
         }),
         // voucher
-        voucherId ? this.getValidVoucherById(voucherId) : Promise.resolve(null)
+        voucherId ? this.getValidVoucherById(voucherId) : Promise.resolve(null),
+        // operational hours
+        this.settingService.getOperationalHours()
       ]);
 
       if (customerId && !customer) {
@@ -609,6 +630,12 @@ export class BookingService {
       const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
       const bookingStartAt = immediate ? bookingExpiredAt : startAt;
       const bookingEndAt = addHours(bookingStartAt, durationInHours * quantity);
+
+      if (account.isMfa && isOutsideOperationalHours(operationalHours, now)) {
+        throw new BadRequestError(
+          `Booking is MFA enabled and outside operational hours (WIB window), open: ${operationalHours?.open}.`
+        );
+      }
 
       const booking = await prisma.$transaction(async (tx) => {
         // Prevent race condition
@@ -664,6 +691,7 @@ export class BookingService {
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
       throw new InternalServerError((error as Error).message);
     }
   };
@@ -1092,7 +1120,7 @@ export class BookingService {
 
       const bankAccountName =
         paymentMethodType === PaymentMethodType.VIRTUAL_ACCOUNT
-          ? (booking.customer?.username ?? undefined)
+          ? sanitizeVirtualAccountDisplayName(booking.customer?.username)
           : undefined;
 
       const updatedPayment = await this.processPaymentProvider(
@@ -1824,8 +1852,8 @@ export class BookingService {
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
         nickname: booking.account.nickname ?? "",
         username: active ? booking.account.username : undefined,
-        password: (active && !isMfa) ? booking.account.password : undefined,
-        isMfa,
+        password: active && !isMfa ? booking.account.password : undefined,
+        isMfa
       },
       payments: booking.payments
     };
