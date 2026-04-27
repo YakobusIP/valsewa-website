@@ -103,21 +103,24 @@ export const validateTime = (time: string) => {
   }
 };
 
-export function isOutsideOperationalHours(startAt: Date, operationalHours: OperationalHours | null): boolean {
-  if (!startAt || !operationalHours) return false;
+export function isOutsideOperationalHours(
+  operationalHours: OperationalHours | null,
+  at: Date = new Date()
+): boolean {
+  if (!operationalHours || !at) return false;
 
-  const [openHour, openMinute] = operationalHours.open.split(":").map(Number);
-  const [closeHour, closeMinute] = operationalHours.close.split(":").map(Number);
+  const tz = operationalHours.timezone ?? WIB_TZ;
+  const buffer = operationalHours.lastOrderBufferInMinutes ?? 30;
 
-  const openTime = new Date();
-  openTime.setHours(openHour, openMinute, 0, 0);
+  const z = dayjs(at).tz(tz);
+  const nowMinutes = z.hour() * 60 + z.minute() + z.second() / 60;
 
-  const closeTime = new Date();
-  closeTime.setHours(closeHour, closeMinute, 0, 0);
+  const [openH, openM] = operationalHours.open.split(":").map(Number);
+  const [closeH, closeM] = operationalHours.close.split(":").map(Number);
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
+  let lastOrderMinutes = closeMinutes - buffer;
+  if (lastOrderMinutes < 0) lastOrderMinutes += 24 * 60;
 
-  closeTime.setMinutes(
-    closeTime.getMinutes() - operationalHours.lastOrderBufferInMinutes
-  );
-
-  return startAt < openTime || startAt > closeTime;
-};
+  return nowMinutes < openMinutes || nowMinutes > lastOrderMinutes;
+}

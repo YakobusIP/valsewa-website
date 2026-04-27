@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { fetchAccountById, fetchAccounts } from "@/services/accountService";
+import {
+  fetchAccountById,
+  fetchRecommendedAccounts
+} from "@/services/accountService";
 import { bookingService } from "@/services/booking.service";
 
 import LoginPage from "@/components/LoginPage";
@@ -108,7 +111,7 @@ export default function AccountDetailPage() {
     if (!selectedDuration) return;
 
     const startAt = getStartDateTime();
-    if (account?.isMfa && isOutsideOperationalHours(startAt, operationalHours)) {
+    if (account?.isMfa && isOutsideOperationalHours(operationalHours)) {
       await loadRecommendedAccounts();
       setShowOutsideHoursModal(true);
       return;
@@ -232,12 +235,8 @@ export default function AccountDetailPage() {
 
   const loadRecommendedAccounts = async () => {
     try {
-      const data = await fetchAccounts("", "asc", "id_tier");
-      setNonMfaRecommendedAccounts(
-        data
-          .filter((acc) => (!acc.isMfa && acc.availabilityStatus == 'AVAILABLE'))
-          .slice(0, 3)
-      );
+      const data = await fetchRecommendedAccounts();
+      setNonMfaRecommendedAccounts(data);
     } catch (error) {
       console.error(error);
     }

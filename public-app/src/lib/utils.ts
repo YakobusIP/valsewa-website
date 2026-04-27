@@ -105,37 +105,36 @@ export function calculateDaysRented(
   return Math.max(0, days);
 }
 
-export function isOutsideOperationalHours(date: Date | null, operationalHours: OperationalHoursEntity | null): boolean {
+const DEFAULT_OPERATIONS_TZ = "Asia/Jakarta";
+
+export function isOutsideOperationalHours(
+  operationalHours: OperationalHoursEntity | null,
+  at: Date = new Date()
+): boolean {
   if (!operationalHours) return false;
 
-  const startAt = date ?? new Date();
+  const tz = operationalHours.timezone || DEFAULT_OPERATIONS_TZ;
+  const buffer = operationalHours.lastOrderBufferInMinutes ?? 30;
 
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: operationalHours.timezone,
+    timeZone: tz,
     hour12: false,
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit",
-  }).formatToParts(startAt);
+    second: "2-digit"
+  }).formatToParts(at);
 
-  const hour = Number(parts.find(p => p.type === "hour")?.value || 0);
-  const minute = Number(parts.find(p => p.type === "minute")?.value || 0);
+  const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0);
+  const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0);
+  const second = Number(parts.find((p) => p.type === "second")?.value ?? 0);
+  const nowMinutes = hour * 60 + minute + second / 60;
 
-  const startAtInTimezone = new Date();
-  startAtInTimezone.setHours(hour, minute, 0, 0);
+  const [openH, openM] = operationalHours.open.split(":").map(Number);
+  const [closeH, closeM] = operationalHours.close.split(":").map(Number);
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
+  let lastOrderMinutes = closeMinutes - buffer;
+  if (lastOrderMinutes < 0) lastOrderMinutes += 24 * 60;
 
-  const [openHour, openMinute] = operationalHours.open.split(":").map(Number);
-  const [closeHour, closeMinute] = operationalHours.close.split(":").map(Number);
-
-  const openTime = new Date();
-  openTime.setHours(openHour, openMinute, 0, 0);
-
-  const closeTime = new Date();
-  closeTime.setHours(closeHour, closeMinute, 0, 0);
-
-  closeTime.setMinutes(
-    closeTime.getMinutes() - operationalHours.lastOrderBufferInMinutes
-  );
-
-  return startAtInTimezone < openTime || startAtInTimezone > closeTime;
-};
+  return nowMinutes < openMinutes || nowMinutes > lastOrderMinutes;
+}

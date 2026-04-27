@@ -615,8 +615,10 @@ export class BookingService {
       const bookingStartAt = immediate ? bookingExpiredAt : startAt;
       const bookingEndAt = addHours(bookingStartAt, durationInHours * quantity);
 
-      if (account.isMfa && isOutsideOperationalHours(bookingStartAt, operationalHours)) {
-        throw new BadRequestError(`Booking is MFA enabled and outside operational hours, open hour: ${operationalHours?.open}.`);
+      if (account.isMfa && isOutsideOperationalHours(operationalHours, now)) {
+        throw new BadRequestError(
+          `Booking is MFA enabled and outside operational hours (WIB window), open: ${operationalHours?.open}.`
+        );
       }
 
       const booking = await prisma.$transaction(async (tx) => {
