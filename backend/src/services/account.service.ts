@@ -457,9 +457,7 @@ export class AccountService {
             ? data.filter(
                 (a) =>
                   !fuseIds.has(a.id) &&
-                  this.compactAccountCode(a.accountCode).includes(
-                    queryCompact
-                  )
+                  this.compactAccountCode(a.accountCode).includes(queryCompact)
               )
             : [];
 
@@ -675,15 +673,19 @@ export class AccountService {
 
   getRecommendedAccounts = async (): Promise<PublicAccount[]> => {
     try {
-      const accounts = await prisma.account.findMany({
+      const now = new Date();
+
+      const candidates = await prisma.account.findMany({
         where: {
-          isRecommended: true,
-          availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
+          isMfa: false,
+          availabilityStatus: Status.AVAILABLE,
+          Booking: {
+            none: {
+              status: { in: [BookingStatus.HOLD, BookingStatus.RESERVED] },
+              endAt: { gt: now }
+            }
+          }
         },
-        orderBy: {
-          totalRentHour: "desc"
-        },
-        take: 3,
         select: {
           id: true,
           nickname: true,
@@ -701,10 +703,17 @@ export class AccountService {
           isCompetitive: true,
           isRecommended: true,
           isMfa: true
-        }
+        },
+        take: 500
       });
 
-      return accounts;
+      const shuffled = [...candidates];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      return shuffled.slice(0, 3);
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -987,6 +996,10 @@ export class AccountService {
 
       const updateData: Prisma.AccountUpdateInput = { ...scalars };
 
+      if (updateData.isMfa) {
+        await this.validateMfaEnablement(currentAccount);
+      }
+
       if (deleteResetLogs) {
         await prisma.accountResetLog.deleteMany({ where: { accountId: id } });
       }
@@ -1042,9 +1055,8 @@ export class AccountService {
         data: updateData
       });
     } catch (error) {
-      if (error instanceof NotFoundError) {
-        throw error;
-      }
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
 
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -1181,14 +1193,11 @@ export class AccountService {
       throw new InternalServerError((error as Error).message);
     }
   };
-  
-  updateAccountMFA = async (
-    id: number,
-    data: UpdateAccountMFARequest,
-  ) => {
+
+  updateAccountMFA = async (id: number, data: UpdateAccountMFARequest) => {
     try {
       const account = await prisma.account.findUnique({
-        where: { id },
+        where: { id }
       });
 
       if (!account) throw new NotFoundError("Account not found!");
@@ -1201,7 +1210,7 @@ export class AccountService {
 
       return await prisma.account.update({
         where: { id },
-        data: { isMfa },
+        data: { isMfa }
       });
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
@@ -1213,17 +1222,19 @@ export class AccountService {
 
   private validateMfaEnablement = async (account: Account) => {
     // Validation for legacy bookings
-    if (account.nextBookingDate) throw new BadRequestError("Account not eligible for MFA enablement");
+    if (account.nextBookingDate)
+      throw new BadRequestError("Account not eligible for MFA enablement");
 
     // Validation for new bookings
     const activeBooking = await prisma.booking.findFirst({
-        where: {
-          accountId: account.id,
-          status: BookingStatus.RESERVED,
-          startAt: { gte: new Date() }
-        }
-      });
+      where: {
+        accountId: account.id,
+        status: BookingStatus.RESERVED,
+        startAt: { gte: new Date() }
+      }
+    });
 
-    if (activeBooking) throw new BadRequestError("Account not eligible for MFA enablement");
-  }
+    if (activeBooking)
+      throw new BadRequestError("Account not eligible for MFA enablement");
+  };
 }

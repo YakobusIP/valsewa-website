@@ -100,7 +100,8 @@ const formSchema = z.object({
   totalRentHour: z.string().nonempty("Total rent duration is required"),
   isCompetitive: z.boolean().optional().default(false),
   isRecommended: z.boolean().optional().default(false),
-  requirePasswordReset: z.boolean().optional().default(false)
+  requirePasswordReset: z.boolean().optional().default(false),
+  isMfa: z.boolean().optional().default(false)
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -195,7 +196,8 @@ export default function AccountDetailModal({
             totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
             isCompetitive: data.isCompetitive,
             isRecommended: data.isRecommended,
-            requirePasswordReset: data.requirePasswordReset
+            requirePasswordReset: data.requirePasswordReset,
+            isMfa: data.isMfa
           }
         : {
             username: "",
@@ -212,7 +214,8 @@ export default function AccountDetailModal({
             totalRentHour: "0d 0h",
             isCompetitive: false,
             isRecommended: false,
-            requirePasswordReset: false
+            requirePasswordReset: false,
+            isMfa: false
           },
     mode: "onSubmit",
     reValidateMode: "onChange"
@@ -568,7 +571,8 @@ export default function AccountDetailModal({
         totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
         isCompetitive: data.isCompetitive,
         isRecommended: data.isRecommended,
-        requirePasswordReset: data.requirePasswordReset
+        requirePasswordReset: data.requirePasswordReset,
+        isMfa: data.isMfa
       });
     } else if (mode === "add") {
       form.reset({
@@ -585,7 +589,8 @@ export default function AccountDetailModal({
         totalRentHour: "0d 0h",
         isCompetitive: undefined,
         isRecommended: undefined,
-        requirePasswordReset: false
+        requirePasswordReset: false,
+        isMfa: false
       });
     }
   }, [mode, data, form]);
@@ -907,6 +912,26 @@ export default function AccountDetailModal({
 
                         <FormLabel className="font-normal cursor-pointer">
                           Require password reset
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="isMfa"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                        <FormControl>
+                          <Checkbox
+                            checked={!!field.value}
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked === true)
+                            }
+                          />
+                        </FormControl>
+
+                        <FormLabel className="font-normal cursor-pointer">
+                          MFA Enabled
                         </FormLabel>
                       </FormItem>
                     )}

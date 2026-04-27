@@ -50,6 +50,7 @@ type AccountEntity = {
   nickname: string;
   isCompetitive: boolean;
   isRecommended: boolean;
+  isMfa: boolean;
 };
 
 export type CarouselSlide = {

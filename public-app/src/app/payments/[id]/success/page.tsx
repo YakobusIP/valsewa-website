@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
 
 import { AlertTriangleIcon, CheckIcon, CopyIcon, HomeIcon } from "lucide-react";
 import { notFound, useParams, useRouter } from "next/navigation";
-import { FaDiscord } from "react-icons/fa6";
+import { FaDiscord, FaWhatsapp } from "react-icons/fa6";
 
 function LoadingState() {
   return (
@@ -39,6 +39,11 @@ export default function PaymentSuccessPage() {
   const [booking, setBooking] = useState<BookingWithAccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [passwordCopied, setPasswordCopied] = useState(false);
+
+  const WHATSAPP_CONFIG = {
+    phoneNumber: "6285175343447",
+    mfaMessage: "Halo admin VALSEWA aku mau request MFA dengan booking code: ",
+  };
 
   const auth = useAuth();
 
@@ -104,6 +109,12 @@ export default function PaymentSuccessPage() {
     );
   }, [booking]);
 
+  const isMfaEnabled = useMemo(() => booking?.account?.isMfa, [booking]);
+
+  const generateMFAWhatsAppLink = () => {
+    return `https://wa.me/${WHATSAPP_CONFIG.phoneNumber}?text=${encodeURIComponent(WHATSAPP_CONFIG.mfaMessage + booking?.id)}`;
+  }
+
   if (loading) {
     return <LoadingState />;
   }
@@ -141,169 +152,157 @@ export default function PaymentSuccessPage() {
           </h1>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
-          {/* Left Panel - Attention/Penalty Information */}
-          <div className="bg-red-600 rounded-lg p-8 sm:p-12 lg:p-16 space-y-4">
-            <div className="flex items-center gap-4 mb-8">
-              <AlertTriangleIcon className="w-12 h-12 text-white" />
-              <h2 className={cn("text-3xl text-white", staatliches.className)}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
+          
+          {/* LEFT: Booking Details */}
+          <div className="flex flex-col items-center text-center space-y-4">
+
+            {/* ✅ WhatsApp CTA (ONLY MFA) */}
+            {isMfaEnabled && (
+              <button
+                onClick={() => window.open(generateMFAWhatsAppLink(), "_blank")}
+                className="flex items-center justify-center gap-4 max-w-md px-6 py-4 bg-green-500 hover:bg-green-600 rounded-xl transition"
+              >
+                <div className="flex items-center justify-center w-10 h-10 bg-white/10 rounded-full">
+                  <FaWhatsapp className="w-6 h-6 text-white" />
+                </div>
+
+                <div className="flex flex-col text-left leading-tight">
+                  <span className="text-sm text-white/80">
+                    Send QR code to
+                  </span>
+                  <span className="text-base font-semibold text-white">
+                    Valsewa by Whatsapp
+                  </span>
+                </div>
+              </button>
+            )}
+
+            <p className="text-gray-300">
+              You&apos;re all set! Here&apos;s your booking details:
+            </p>
+
+            {showCredentials && (
+              <div className="space-y-4 w-full max-w-md text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Riot Username</span>
+                  <span>{booking.account.username}</span>
+                </div>
+
+                {booking?.account?.password && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Riot Password</span>
+                    <button
+                      onClick={() => handleCopyPassword(booking.account.password!)}
+                      className="flex items-center gap-2"
+                    >
+                      {booking.account.password}
+                      {passwordCopied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Account Code */}
+            <div className="flex justify-between w-full max-w-md text-sm">
+              <span className="text-gray-400">Account Code</span>
+              <span>{booking.account.accountCode}</span>
+            </div>
+
+            {/* Expiration Box */}
+            <div className="bg-neutral-800 w-full max-w-md p-5 rounded-lg space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Start Date</span>
+                <span className="font-semibold">{startDate}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span className="text-gray-400">Expiration</span>
+                <span className="font-semibold">{endDate}</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Status</span>
+                <div className="flex items-center gap-2 text-green-400">
+                  <span className="w-2 h-2 bg-green-400 rounded-full" />
+                  Ready to Use
+                </div>
+              </div>
+            </div>
+
+            {/* Review Text */}
+            <p className="text-yellow-400 text-sm">
+              Consider leaving a review and recommend us to your friends!
+            </p>
+
+            {/* Discord */}
+            <button
+              onClick={() => window.open("https://discord.gg/ywqTZSTwRY")}
+              className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg flex items-center gap-3"
+            >
+              <FaDiscord />
+              Join Discord Community
+            </button>
+
+            {/* Back */}
+            <button
+              onClick={onBackToHome}
+              className="flex items-center gap-2 text-gray-300"
+            >
+              <HomeIcon size={18} />
+              Back to Home Page
+            </button>
+          </div>
+
+          {/* RIGHT: ATTENTION */}
+          <div className="border border-white/20 rounded-lg p-8 space-y-5">
+            <div className="flex items-center gap-3">
+              <AlertTriangleIcon />
+              <h2 className="text-2xl font-bold">
                 ATTENTION
                 <br />
                 HOW TO AVOID PENALTY?
               </h2>
             </div>
 
-            <div className="space-y-3 text-white flex flex-col gap-2">
-              <div className="flex gap-4 items-center">
-                <div className="flex flex-shrink-0 items-center justify-center w-6 h-6 rounded-full bg-white border text-black font-bold">
+            <div className="space-y-4 text-sm">
+              <div className="flex gap-3">
+                <span className="w-6 h-6 flex items-center justify-center bg-white text-black rounded-full">
                   1
-                </div>
+                </span>
                 <p>
-                  Logout of your account before rental period ends (
-                  <b>{endDate}</b>)
+                  Your rental period ends at: <b>{endDate}</b>
                 </p>
               </div>
-              <div className="flex gap-4 items-center">
-                <div className="flex flex-shrink-0 items-center justify-center w-6 h-6 rounded-full bg-white border text-black font-bold">
+
+              <div className="flex gap-3">
+                <span className="w-6 h-6 flex items-center justify-center bg-white text-black rounded-full">
                   2
-                </div>
+                </span>
                 <p>
-                  Ensure the account is logged out on time, or a fine will be
-                  charged
+                  Ensure the account is logged out on time, or a fine will be charged.
                 </p>
               </div>
             </div>
 
-            <div className="pt-4 space-y-2 text-sm text-white border-t border-red-500">
+            <div className="text-sm text-gray-300 border-t pt-4 space-y-2">
+              <p>This booking is final and cannot be modified.</p>
+              <p>Cancellation is non-refundable.</p>
               <p>
-                This booking is final and cannot be modified after confirmation.
-              </p>
-              <p>Please note that cancellation is non-refundable.</p>
-              <p>
-                If you encounter any difficulties or have questions, please
-                contact our{" "}
+                Contact{" "}
                 <span
+                  className="text-yellow-400 underline cursor-pointer"
                   onClick={() =>
                     window.open(
-                      "https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong",
+                      "https://wa.me/6285175343447",
                       "_blank"
                     )
                   }
-                  className="font-semibold text-yellow-300 underline hover:cursor-pointer"
                 >
                   Customer Service
-                </span>{" "}
-                team for assistance.
+                </span>
               </p>
-            </div>
-          </div>
-
-          {/* Right Panel - Booking Details */}
-          <div className="flex flex-col bg-neutral-800 rounded-lg p-8 sm:p-12 lg:p-16 space-y-6 gap-2">
-            <h2 className="text-xl font-semibold text-white">
-              You&apos;re all set! here&apos;s your booking details:
-            </h2>
-
-            <div className="space-y-3 text-sm my-4">
-              {showCredentials && (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Riot Username</span>
-                    <span className="font-medium text-white">
-                      {booking.account.username}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Riot Password</span>
-                    {booking.account.isMfa ? (
-                      // TODO: Adjust as needed
-                      <span className="font-medium text-white">
-                        Multi-Factor Authentication is Enabled.
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleCopyPassword(booking.account.password!)
-                        }
-                        className="flex items-center gap-2 font-medium text-white hover:text-red-600"
-                      >
-                        <span className="select-text">
-                          {booking.account.password}
-                        </span>
-
-                        {passwordCopied ? (
-                          <CheckIcon className="w-4 h-4" />
-                        ) : (
-                          <CopyIcon className="w-4 h-4" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </>
-              )}
-
-              <div className="flex justify-between">
-                <span className="text-gray-400">Account Code</span>
-                <span className="font-medium text-white">
-                  {booking.account.accountCode}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-400">Start</span>
-                <span className="font-medium text-white">{startDate}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-400">Expiration</span>
-                <span className="font-medium text-white">{endDate}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-400">Status</span>
-                <span
-                  className={`inline-block w-fit px-3 py-1 text-sm font-medium ${showCredentials ? "text-neutral-700 bg-white" : "text-white bg-neutral-700"} rounded`}
-                >
-                  {showCredentials ? "Ready to Use" : "Inactive"}
-                </span>
-              </div>
-            </div>
-
-            {showCredentials && (
-              <div className="p-4 bg-yellow-500/20 border border-yellow-500/50 rounded-lg">
-                <p className="text-sm text-yellow-300">
-                  After successfully logging in, please consider leaving a
-                  review and recommend us to your friends!
-                </p>
-              </div>
-            )}
-
-            <div className="flex flex-col gap-4">
-              <button
-                type="button"
-                onClick={() =>
-                  window.open("https://discord.gg/ywqTZSTwRY", "_blank")
-                }
-                className="flex items-center justify-center gap-4 w-full py-3 px-4 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black"
-              >
-                <FaDiscord className="w-6 h-6" />
-                <div className="flex flex-col items-start">
-                  <span className="text-sm">Join Discord Community </span>
-                  <span>
-                    & Get <b>@Juragan Valsewa</b> Role!
-                  </span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={onBackToHome}
-                className="flex items-center justify-center gap-4 w-full py-3 px-4 text-white bg-neutral-700 rounded-lg hover:bg-neutral-600 transition focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
-              >
-                <HomeIcon className="w-6 h-6" />
-                <span>Back to Home Page</span>
-              </button>
             </div>
           </div>
         </div>
