@@ -16,7 +16,7 @@ class SettingRouter {
   }
 
   private initializeRoutes() {
-    this.router.get("/operational-hours", authMiddleware, this.settingController.getOperationalHours);
+    this.router.get("/operational-hours", this.settingController.getOperationalHours);
     this.router.put(
       "/operational-hours",
       authMiddleware,

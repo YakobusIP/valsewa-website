@@ -506,6 +506,21 @@ components:
         paidAt: { type: string, format: date-time, nullable: true }
         refundedAt: { type: string, format: date-time, nullable: true }
 
+    OperationalHours:
+      type: object
+      properties:
+        open: { type: string, example: "00:00" }
+        close: { type: string, example: "23:59" }
+        lastOrderBufferInMinutes: { type: integer }
+        timezone: { type: string }
+
+    UpdateOperationalHoursRequest:
+      type: object
+      properties:
+        open: { type: string, example: "00:00" }
+        close: { type: string, example: "23:59" }
+        lastOrderBufferInMinutes: { type: integer }
+
     ErrorResponse:
       type: object
       properties:
@@ -2160,3 +2175,37 @@ paths:
                 properties:
                   response: { type: string }
                   response_code: { type: string }
+
+  /api/settings/operational-hours:
+    get:
+      tags:
+        - Settings
+      summary: "Get operational hours."
+      responses:
+        "200":
+          description: "Account reset logs updated successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationalHours"
+    put:
+      tags:
+        - Settings
+      summary: "Update operational hours."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOperationalHoursRequest"
+      responses:
+        "200":
+          description: "Account reset logs updated successfully."
+          content:
+            application/json:
+              schema:
+                properties:
+                  key: { type: string }
+                  value: { type: string }

@@ -159,11 +159,11 @@ const CarouselContent = React.forwardRef<
   const { carouselRef, orientation } = useCarousel();
 
   return (
-    <div ref={carouselRef} className="overflow-hidden">
+    <div ref={carouselRef} className="min-w-0 w-full overflow-hidden">
       <div
         ref={ref}
         className={cn(
-          "flex",
+          "flex min-w-0",
           orientation === "horizontal" ? "-ml-4" : "-mt-4 flex-col",
           className
         )}

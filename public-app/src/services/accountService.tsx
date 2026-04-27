@@ -6,7 +6,7 @@ export async function fetchAccounts(
   search: string,
   direction: string,
   sortBy: string
-) {
+): Promise<AccountEntity[]> {
   try {
     const url = `${
       process.env.NEXT_PUBLIC_AXIOS_BASE_URL
@@ -129,5 +129,16 @@ export async function fetchAccountsPublic(
   } catch (err) {
     console.error("fetchAccountsPublic error:", err);
     return null;
+  }
+}
+
+export async function fetchNonMfaRecommendedAccounts(): Promise<AccountEntity[]> {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/recommended`;
+    const response = await axios.get(url);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching recommended accounts:", error);
+    return [];
   }
 }
