@@ -8,22 +8,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover";
 
 import { Skin } from "@/types/skin.type";
 
-import { ArrowUpDown, Check, Search, SlidersHorizontal, X } from "lucide-react";
+import { ArrowUpDown, Search, SlidersHorizontal, X } from "lucide-react";
 import Image from "next/image";
 
 import { SORT_OPTIONS, SortOption } from "./SortDropdown";
@@ -50,7 +44,6 @@ export function FilterBarMobile({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [skinQuery, setSkinQuery] = useState("");
   const [skins, setSkins] = useState<Skin[]>([]);
-  const [isSortOpen, setIsSortOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

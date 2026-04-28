@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 
 import { Skin } from "@/types/skin.type";
 
-import { Search, X } from "lucide-react";
+import { Search } from "lucide-react";
 import Image from "next/image";
 
 interface SkinSearchModalProps {
