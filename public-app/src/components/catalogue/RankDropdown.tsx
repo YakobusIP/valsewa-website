@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import Image from "next/image";
-
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
@@ -12,6 +10,8 @@ import {
 } from "@/components/ui/popover";
 
 import { cn } from "@/lib/utils";
+
+import Image from "next/image";
 
 export const RANKS = [
   { id: "Unrated", name: "Unrated", image: "/rank/unranked.webp" },
@@ -70,9 +70,7 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
                 />
                 <span>{firstRank!.name}</span>
                 {extraCount > 0 && (
-                  <span className="text-white/60 shrink-0">
-                    +{extraCount}
-                  </span>
+                  <span className="text-white/60 shrink-0">+{extraCount}</span>
                 )}
               </>
             )}
@@ -121,7 +119,6 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
               >
                 <Checkbox
                   checked={checked}
-                  onCheckedChange={() => toggle(rank.id)}
                   className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 pointer-events-none"
                 />
 
