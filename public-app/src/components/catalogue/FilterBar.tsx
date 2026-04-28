@@ -147,9 +147,9 @@ export function FilterBar({
   return (
     <>
       <div ref={sentinelRef} aria-hidden className="hidden md:block h-px" />
-      <div className="hidden md:block sticky top-[88px] lg:top-[92px] z-40 -mt-12 w-full px-4 md:px-8 lg:px-16">
+      <div className={cn("hidden md:block sticky top-[88px] lg:top-[92px] z-40 -mt-12 w-full", isStuck ? "" : "px-4 md:px-8 lg:px-16")}>
         <div className="flex justify-center">
-          <div className="w-full max-w-[1600px] bg-black border border-white/30 rounded-2xl px-6 py-4 shadow-2xl">
+          <div className={"w-full mx-8 bg-black border border-white/30 rounded-2xl px-6 py-4 shadow-2xl"}>
             {/* Main row */}
             <div className="flex items-center gap-3 overflow-x-auto">
               {/* LEFT: dropdowns */}
