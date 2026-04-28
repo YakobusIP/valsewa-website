@@ -83,7 +83,7 @@ export function CatalogueNavbar({
           {/* LEFT: Logo + Brand Switcher */}
           <div className="flex items-center gap-4 md:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 pl-7 md:pl-6 lg:pl-9 xl:pl-7">
             <div className="relative">
-              {!isScrolled && (
+              {(
                 <figure className="relative w-[70px] md:w-[80px] lg:w-[100px] 2xl:w-[130px]">
                   <Image
                     src="/header/Logo Header Valforum.png"
@@ -94,27 +94,12 @@ export function CatalogueNavbar({
                   />
                 </figure>
               )}
-              {isScrolled && (
-                <Link href="/">
-                  <figure className="relative md:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
-                    <Image
-                      src="/header/VALSEWA.png"
-                      alt="logo"
-                      height={80}
-                      width={170}
-                      className="object-contain"
-                    />
-                  </figure>
-                </Link>
-              )}
             </div>
 
             {/* Brand Switcher */}
             <div
               className={`relative transition-all duration-300 ${
-                isScrolled
-                  ? "opacity-0 translate-y-[-10px] pointer-events-none"
-                  : "opacity-100 translate-y-0"
+                "opacity-100 translate-y-0"
               }`}
             >
               <div className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">

@@ -45,7 +45,7 @@ const NavbarHomeMobile = ({
   };
 
   const handleSearchClick = () => {
-    router.push("/catalogue");
+    router.push("/search");
   };
   const { isAuthenticated, username, customerId } = useAuth();
   const [isOpen, setIsOpen] = useState(false);

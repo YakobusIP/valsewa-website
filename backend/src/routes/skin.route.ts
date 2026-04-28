@@ -23,7 +23,7 @@ class SkinRouter {
 
   private initializeRoutes() {
     this.router.get("/image", authMiddleware, this.skinController.getSkinImage);
-    this.router.get("/", authMiddleware, this.skinController.getAllSkins);
+    this.router.get("/", this.skinController.getAllSkins);
     this.router.get("/:id", authMiddleware, this.skinController.getSkinById);
     this.router.post("/", authMiddleware, this.skinController.createSkin);
     this.router.put("/:id", authMiddleware, this.skinController.updateSkin);

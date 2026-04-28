@@ -2,12 +2,24 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { fetchSkins } from "@/services/skin.service";
+
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
-import { fetchSkins } from "@/services/skin.service";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
 
 import { Skin } from "@/types/skin.type";
 
@@ -33,7 +45,7 @@ export function FilterBarMobile({
   onSortChange,
   currentSort,
   fallbackSkins = [],
-  onAnyFilterChange,
+  onAnyFilterChange
 }: FilterBarMobileProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [skinQuery, setSkinQuery] = useState("");
@@ -53,7 +65,8 @@ export function FilterBarMobile({
     return skins.filter((s) => s.name.toLowerCase().includes(q));
   }, [skins, skinQuery]);
 
-  const currentSortLabel = SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Date Added";
+  const currentSortLabel =
+    SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Date Added";
 
   const openSearch = () => {
     setIsSearchOpen(true);
@@ -100,7 +113,9 @@ export function FilterBarMobile({
           <div className="space-y-1 max-h-[55vh] overflow-y-auto">
             {filteredSkins.length === 0 ? (
               <p className="text-white/40 text-sm text-center py-6">
-                {skins.length === 0 ? "Log in to search skins." : "No skins matched."}
+                {skins.length === 0
+                  ? "Log in to search skins."
+                  : "No skins matched."}
               </p>
             ) : (
               filteredSkins.map((skin) => {
@@ -109,17 +124,29 @@ export function FilterBarMobile({
                   <div
                     key={skin.id}
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer"
-                    onClick={() => { onToggleSkin(skin); onAnyFilterChange(); }}
+                    onClick={() => {
+                      onToggleSkin(skin);
+                      onAnyFilterChange();
+                    }}
                   >
                     <Checkbox
                       id={`mobile-skin-${skin.id}`}
                       checked={checked}
-                      onCheckedChange={() => { onToggleSkin(skin); onAnyFilterChange(); }}
+                      onCheckedChange={() => {
+                        onToggleSkin(skin);
+                        onAnyFilterChange();
+                      }}
                       className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 shrink-0"
                     />
                     <div className="relative w-[40px] h-[64px] shrink-0 rounded overflow-hidden bg-neutral-900">
                       {skin.imageUrl ? (
-                        <Image src={skin.imageUrl} fill alt={skin.name} className="object-contain" unoptimized />
+                        <Image
+                          src={skin.imageUrl}
+                          fill
+                          alt={skin.name}
+                          className="object-contain"
+                          unoptimized
+                        />
                       ) : (
                         <div className="w-full h-full bg-neutral-800" />
                       )}
@@ -141,6 +168,7 @@ export function FilterBarMobile({
       {/* Filter + Sort row (hidden during skin search) */}
       {!isSearchOpen && (
         <div className="flex items-center justify-between gap-2">
+          {/* FILTER BUTTON */}
           <button
             onClick={onOpenFilterSheet}
             className="flex items-center gap-2 border border-white/30 rounded-xl px-4 py-2.5 text-white text-sm hover:border-white transition"
@@ -149,30 +177,36 @@ export function FilterBarMobile({
             Filter
           </button>
 
-          <Popover open={isSortOpen} onOpenChange={setIsSortOpen}>
-            <PopoverTrigger asChild>
+          {/* SORT DROPDOWN */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 border border-white/30 rounded-xl px-4 py-2.5 text-white text-sm hover:border-white transition">
                 <ArrowUpDown className="w-4 h-4" />
                 {currentSortLabel}
               </button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="bg-neutral-900 border-white/20 text-white p-2 w-52"
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
               align="end"
               sideOffset={8}
+              className="bg-neutral-900 border-white/20 text-white w-52"
             >
-              {SORT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => { onSortChange(opt.value); setIsSortOpen(false); }}
-                  className="flex items-center justify-between w-full px-3 py-2.5 hover:bg-white/10 rounded-lg text-sm transition"
-                >
-                  {opt.label}
-                  {currentSort === opt.value && <Check className="w-4 h-4 text-red-500" />}
-                </button>
-              ))}
-            </PopoverContent>
-          </Popover>
+              <DropdownMenuRadioGroup
+                value={currentSort}
+                onValueChange={(value) => onSortChange(value as SortOption)}
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <DropdownMenuRadioItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="text-sm"
+                  >
+                    {opt.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       )}
     </div>

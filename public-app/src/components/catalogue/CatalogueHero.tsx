@@ -125,7 +125,7 @@ export function CatalogueHero({ activeBrand, setActiveBrand, sentinelRef }: Cata
 
         {/* Tablet notch mask (md → xl) */}
         <svg
-          className="absolute inset-0 w-full h-full pointer-events-none hidden md:block xl:hidden"
+          className="absolute inset-0 w-full h-1/3 pointer-events-none hidden md:block xl:hidden"
           viewBox="0 0 768 1280"
           preserveAspectRatio="none"
         >

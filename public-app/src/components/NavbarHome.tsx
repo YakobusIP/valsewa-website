@@ -30,7 +30,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
     setIsComponentOpen(true); // open login modal
   };
   const handleSearchClick = () => {
-    router.push("/catalogue");
+    router.push("/search");
   };
   const { isAuthenticated, username, customerId } = useAuth();
   const { booking } = useActiveBooking(customerId?.toString() ?? "");

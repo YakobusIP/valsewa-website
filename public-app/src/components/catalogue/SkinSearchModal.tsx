@@ -2,11 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { fetchSkins } from "@/services/skin.service";
+
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { fetchSkins } from "@/services/skin.service";
 
 import { Skin } from "@/types/skin.type";
 
@@ -26,7 +32,7 @@ export function SkinSearchModal({
   onClose,
   selectedSkins,
   onToggleSkin,
-  fallbackSkins = [],
+  fallbackSkins = []
 }: SkinSearchModalProps) {
   const [skins, setSkins] = useState<Skin[]>([]);
   const [query, setQuery] = useState("");
@@ -41,7 +47,9 @@ export function SkinSearchModal({
       setSkins(result.length > 0 ? result : fallbackSkins);
       setIsLoading(false);
     });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [open, fallbackSkins]);
 
   const filteredSkins = useMemo(() => {
@@ -50,36 +58,18 @@ export function SkinSearchModal({
     return skins.filter((s) => s.name.toLowerCase().includes(q));
   }, [skins, query]);
 
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-    >
-      <div className="bg-neutral-950 border border-white/20 rounded-2xl w-3/4 max-h-[85vh] flex flex-col shadow-2xl">
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="bg-neutral-950 border-white/20 max-w-3xl max-h-[85vh] flex flex-col p-0">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-3 shrink-0">
-          <h2 className="text-white font-semibold font-instrumentSans text-lg">Search Skins</h2>
-          <button
-            onClick={onClose}
-            className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition text-white/60 hover:text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+        <DialogHeader className="px-6 pt-5 pb-3 shrink-0 border-b border-white/10">
+          <DialogTitle className="text-white font-semibold font-instrumentSans text-lg">
+            Search Skins
+          </DialogTitle>
+        </DialogHeader>
 
         {/* Search */}
-        <div className="px-6 pb-3 shrink-0">
+        <div className="px-6 py-3 shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
             <Input
@@ -95,10 +85,14 @@ export function SkinSearchModal({
         {/* List */}
         <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-5">
           {isLoading ? (
-            <p className="text-white/40 text-sm text-center py-8">Loading skins...</p>
+            <p className="text-white/40 text-sm text-center py-8">
+              Loading skins...
+            </p>
           ) : filteredSkins.length === 0 ? (
             <p className="text-white/40 text-sm text-center py-8">
-              {skins.length === 0 ? "No skins available. Please log in to search skins." : "No skins matched."}
+              {skins.length === 0
+                ? "No skins available. Please log in to search skins."
+                : "No skins matched."}
             </p>
           ) : (
             <div className="space-y-1">
@@ -143,7 +137,7 @@ export function SkinSearchModal({
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { Skin } from "@/types/skin.type";
 
@@ -43,35 +43,7 @@ export function FilterBar({
   onAnyFilterChange,
   fallbackSkins = []
 }: FilterBarProps) {
-  const barRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollPositionRef = useRef<number>(0);
-  const [overlap, setOverlap] = useState(53);
   const [skinModalOpen, setSkinModalOpen] = useState(false);
-  const [isSticky, setIsSticky] = useState(false);
-
-  useLayoutEffect(() => {
-    if (barRef.current) {
-      const h = barRef.current.getBoundingClientRect().height;
-      setOverlap(Math.round(h * (2 / 3)));
-    }
-
-    // Store the initial scroll position where FilterBar is located
-    if (containerRef.current) {
-      scrollPositionRef.current = containerRef.current.offsetTop;
-    }
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsSticky(window.scrollY >= scrollPositionRef.current);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
 
   const removeSkin = (id: number) => {
     onSkinsChange(selectedSkins.filter((s) => s.id !== id));
@@ -106,33 +78,13 @@ export function FilterBar({
 
   return (
     <>
-      <div
-        ref={containerRef}
-        className={cn(
-          "hidden md:block sticky z-40 w-full",
-          isSticky ? "top-[80px] lg:top-[84px] bg-black" : "top-0"
-        )}
-        style={!isSticky ? { marginTop: -overlap } : undefined}
-      >
-        <div
-          className={cn(
-            "flex justify-center",
-            isSticky ? "px-0" : "px-4 md:px-8 lg:px-16"
-          )}
-        >
-          <div
-            ref={barRef}
-            className={cn(
-              "w-full bg-black",
-              isSticky
-                ? "max-w-none px-6 md:px-8 lg:px-16 py-4 border-none"
-                : "max-w-[1600px] border border-white/30 rounded-2xl px-6 py-4 shadow-2xl"
-            )}
-          >
+      <div className="hidden md:block sticky top-[88px] lg:top-[92px] z-40 w-full px-4 md:px-8 lg:px-16">
+        <div className="flex justify-center">
+          <div className="w-full max-w-[1600px] bg-black border border-white/30 rounded-2xl px-6 py-4 shadow-2xl">
             {/* Main row */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 overflow-x-auto">
               {/* LEFT: dropdowns */}
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-3 shrink-0">
                 <RankDropdown
                   selectedRanks={selectedRanks}
                   onChange={handleRanksChange}
@@ -148,27 +100,30 @@ export function FilterBar({
               </div>
 
               {/* RIGHT: daily-drop + skin search */}
-              <div className="flex items-center gap-3 ml-auto">
-                <button className="flex items-center justify-center w-48 h-10 border border-white/30 rounded-xl hover:border-white transition shrink-0">
+              <div className="flex items-center gap-3 ml-auto shrink-0">
+                <button className="flex items-center justify-center h-10 border border-white/30 rounded-xl hover:border-white transition shrink-0 px-3">
                   <Image
                     src="/daily-drop-catalogue.svg"
                     alt="Daily Drop"
-                    width={160}
-                    height={40}
+                    width={120}
+                    height={35}
+                    className="object-contain"
                   />
                 </button>
 
                 <button
                   onClick={() => setSkinModalOpen(true)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition min-w-[200px]",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition shrink-0",
                     skinModalOpen
                       ? "border-white bg-white/10 text-white"
                       : "border-white/30 hover:border-white text-white/50"
                   )}
                 >
                   <Search className="w-4 h-4 shrink-0" />
-                  <span className="truncate">Search by skin na...</span>
+                  <span className="truncate whitespace-nowrap">
+                    Search skin na..
+                  </span>
                 </button>
               </div>
             </div>

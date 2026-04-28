@@ -1,12 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-
-import { Checkbox } from "@/components/ui/checkbox";
-
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 import Image from "next/image";
+
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
+
+import { cn } from "@/lib/utils";
 
 export const RANKS = [
   { id: "Unrated", name: "Unrated", image: "/rank/unranked.webp" },
@@ -27,21 +32,7 @@ interface RankDropdownProps {
 }
 
 export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleOutsideClick(e: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
+  const [open, setOpen] = useState(false);
 
   const toggle = (id: string) => {
     onChange(
@@ -55,56 +46,65 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
   const extraCount = selectedRanks.length - 1;
 
   return (
-    <div ref={containerRef} className="relative">
-      <button
-        onClick={() => setIsOpen((v) => !v)}
-        className={cn(
-          "w-[170px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition",
-          isOpen
-            ? "border-white bg-white/10"
-            : "border-white/30 hover:border-white"
-        )}
-      >
-        <span className="flex items-center gap-2 truncate">
-          {selectedRanks.length === 0 ? (
-            <span className="text-white/70">Rank</span>
-          ) : (
-            <>
-              <Image
-                src={firstRank!.image}
-                width={18}
-                height={18}
-                alt={firstRank!.id}
-                className="shrink-0"
-              />
-              <span className="truncate">{firstRank!.name}</span>
-              {extraCount > 0 && (
-                <span className="text-white/60 shrink-0">+{extraCount}</span>
-              )}
-            </>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "2xl-large:w-[170px] md:w-[100px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition",
+            open
+              ? "border-white bg-white/10"
+              : "border-white/30 hover:border-white"
           )}
-        </span>
-        <svg
-          className={cn("w-2.5 h-1.5 fill-white shrink-0 transition-transform ml-2", isOpen && "rotate-180")}
-          viewBox="0 0 10 6"
         >
-          <path d="M0 0L5 6L10 0H0Z" />
-        </svg>
-      </button>
+          <span className="flex items-center gap-2 truncate">
+            {selectedRanks.length === 0 ? (
+              <span className="text-white/70">Rank</span>
+            ) : (
+              <>
+                <Image
+                  src={firstRank!.image}
+                  width={18}
+                  height={18}
+                  alt={firstRank!.id}
+                  className="shrink-0"
+                />
+                <span className="truncate">{firstRank!.name}</span>
+                {extraCount > 0 && (
+                  <span className="text-white/60 shrink-0">
+                    +{extraCount}
+                  </span>
+                )}
+              </>
+            )}
+          </span>
 
-      {/* Dropdown panel */}
-      <div
+          <svg
+            className={cn(
+              "w-2.5 h-1.5 fill-white shrink-0 transition-transform ml-2",
+              open && "rotate-180"
+            )}
+            viewBox="0 0 10 6"
+          >
+            <path d="M0 0L5 6L10 0H0Z" />
+          </svg>
+        </button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        align="start"
+        sideOffset={8}
         className={cn(
-          "absolute top-full left-0 mt-2 z-50 bg-neutral-900 border border-white/20 rounded-xl shadow-xl min-w-[220px] overflow-hidden",
-          "transition-all duration-500",
-          isOpen
-            ? "opacity-100 translate-y-0 pointer-events-auto"
-            : "opacity-0 -translate-y-2 pointer-events-none"
+          "p-2 z-50 bg-neutral-900 border border-white/20 rounded-xl shadow-xl min-w-[220px]",
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+          "data-[side=bottom]:slide-in-from-top-2"
         )}
       >
-        <div className="p-2 max-h-[320px] overflow-y-auto">
+        <div className="max-h-[320px] overflow-y-auto">
           {RANKS.map((rank) => {
             const checked = selectedRanks.includes(rank.id);
+
             return (
               <div
                 key={rank.id}
@@ -120,11 +120,11 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
                 }}
               >
                 <Checkbox
-                  id={`rank-filter-${rank.id}`}
                   checked={checked}
                   onCheckedChange={() => toggle(rank.id)}
                   className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 pointer-events-none"
                 />
+
                 <Image
                   src={rank.image}
                   width={20}
@@ -132,12 +132,13 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
                   alt={rank.id}
                   className="shrink-0"
                 />
+
                 <span className="text-sm text-white">{rank.name}</span>
               </div>
             );
           })}
         </div>
-      </div>
-    </div>
+      </PopoverContent>
+    </Popover>
   );
 }

@@ -1,10 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { ArrowUpDown } from "lucide-react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 
 import { cn } from "@/lib/utils";
-
-import { ArrowUpDown, Check, ChevronDown } from "lucide-react";
 
 export type SortOption = "dateAdded" | "mostRented" | "cheapest" | "availableNow";
 
@@ -28,58 +35,48 @@ interface SortDropdownProps {
 }
 
 export function SortDropdown({ currentSort, onChange }: SortDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleOutsideClick(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
-
-  const currentLabel = SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Date Added";
+  const currentLabel =
+    SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Date Added";
 
   return (
-    <div ref={containerRef} className="relative">
-      <button
-        onClick={() => setIsOpen((v) => !v)}
-        className={cn(
-          "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm text-white transition whitespace-nowrap",
-          isOpen ? "border-white bg-white/10" : "border-white/30 hover:border-white"
-        )}
-      >
-        <ArrowUpDown className="w-4 h-4 text-white/50" />
-        <span>Sorted by {currentLabel}</span>
-        <ChevronDown className={cn("w-4 h-4 text-white/50 transition-transform", isOpen && "rotate-180")} />
-      </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className={cn(
+            "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm text-white transition whitespace-nowrap",
+            "border border-white/30 hover:border-white",
+            "md:border-none md:bg-white/0 md:hover:bg-white/10"
+          )}
+        >
+          <ArrowUpDown className="w-4 h-4 text-white/50" />
+          <span>Sorted by {currentLabel}</span>
+        </button>
+      </DropdownMenuTrigger>
 
-      <div
-        className={cn(
-          "absolute top-full right-0 mt-2 z-50 bg-neutral-900 border border-white/20 rounded-xl shadow-xl min-w-[220px] p-2",
-          "transition-all duration-300",
-          isOpen
-            ? "opacity-100 translate-y-0 pointer-events-auto"
-            : "opacity-0 -translate-y-2 pointer-events-none"
-        )}
+      <DropdownMenuContent
+        align="end"
+        className="w-[220px] bg-neutral-900 border border-white/20 text-white"
       >
-        <p className="px-3 py-2 text-xs text-white/40 font-semibold uppercase tracking-wide border-b border-white/10 mb-1">
+        <DropdownMenuLabel className="text-xs text-white/40 uppercase tracking-wide">
           Sort By
-        </p>
-        {SORT_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => { onChange(opt.value); setIsOpen(false); }}
-            className="flex items-center justify-between w-full px-3 py-2.5 hover:bg-white/10 rounded-lg text-sm text-white transition"
-          >
-            {opt.label}
-            {currentSort === opt.value && <Check className="w-4 h-4 text-red-500" />}
-          </button>
-        ))}
-      </div>
-    </div>
+        </DropdownMenuLabel>
+
+        <DropdownMenuRadioGroup
+          value={currentSort}
+          onValueChange={(value) => onChange(value as SortOption)}
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <DropdownMenuRadioItem
+              key={opt.value}
+              value={opt.value}
+              className="cursor-pointer"
+            >
+              {opt.label}
+              
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
