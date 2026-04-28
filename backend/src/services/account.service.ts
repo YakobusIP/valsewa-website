@@ -312,7 +312,7 @@ export class AccountService {
 
     if (hasPrice) {
       const min = minPrice ?? 0;
-      const max = maxPrice ?? 99999999999;
+      const max = maxPrice ?? 2147483647;
 
       if (compeOnly === true) {
         where.priceTier = {

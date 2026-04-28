@@ -113,7 +113,6 @@ export function SkinSearchModal({
                   <div
                     key={skin.id}
                     className="flex items-center gap-4 p-2 rounded-lg hover:bg-white/5 cursor-pointer"
-                    onClick={() => onToggleSkin(skin)}
                   >
                     <Checkbox
                       id={`skin-modal-${skin.id}`}
@@ -121,7 +120,7 @@ export function SkinSearchModal({
                       onCheckedChange={() => onToggleSkin(skin)}
                       className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 shrink-0"
                     />
-                    <div className="relative w-[100px] h-[160px] shrink-0 rounded overflow-hidden bg-neutral-900">
+                    <div className="relative w-[160px] h-[100px] shrink-0 rounded overflow-hidden bg-neutral-900">
                       {skin.imageUrl ? (
                         <Image
                           src={skin.imageUrl}

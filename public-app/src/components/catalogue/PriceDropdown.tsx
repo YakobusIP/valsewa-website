@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   DropdownMenu,
@@ -10,6 +10,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 
 import { cn } from "@/lib/utils";
+
 import { Input } from "../ui/input";
 
 const PRICE_MIN = 0;
@@ -26,8 +27,9 @@ interface PriceDropdownProps {
 
 export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
   const [open, setOpen] = useState(false);
+  const [localRange, setLocalRange] = useState<[number, number]>(priceRange);
 
-  const [min, max] = priceRange;
+  const [min, max] = localRange;
   const isDefault = min === PRICE_MIN && max === PRICE_MAX;
 
   let label = "Price";
@@ -39,12 +41,16 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
     }
   }
 
+  useEffect(() => {
+    setLocalRange(priceRange);
+  }, [priceRange]);
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            "2xl-large:w-[270px] md:w-[120px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition",
+            "min-w-[100px] md:min-w-[120px] 2xl-large:min-w-[150px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition whitespace-nowrap",
             open
               ? "border-white bg-white/10"
               : "border-white/30 hover:border-white"
@@ -85,11 +91,17 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
               <Input
                 type="number"
                 inputMode="numeric"
-                value={min}
+                value={localRange[0]}
                 min={PRICE_MIN}
                 max={max}
                 step={5000}
-                onChange={(e) => onChange([Number(e.target.value || 0), max])}
+                onChange={(e) => {
+                  const value = Number(e.target.value || 0);
+                  setLocalRange([value, localRange[1]]);
+                }}
+                onBlur={() => {
+                  onChange(localRange);
+                }}
                 className="h-10 rounded-lg bg-white border-neutral-800 text-black"
               />
             </div>
@@ -99,22 +111,33 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
               <Input
                 type="number"
                 inputMode="numeric"
-                value={max}
+                value={localRange[1]}
                 min={min}
                 max={PRICE_MAX}
                 step={5000}
-                onChange={(e) => onChange([min, Number(e.target.value || 0)])}
+                onChange={(e) => {
+                  const value = Number(e.target.value || 0);
+                  setLocalRange([localRange[0], value]);
+                }}
+                onBlur={() => {
+                  onChange(localRange);
+                }}
                 className="h-10 rounded-lg bg-white border-neutral-800 text-black"
               />
             </div>
           </div>
 
           <Slider
-            value={[min, max]}
+            value={localRange}
             min={PRICE_MIN}
             max={PRICE_MAX}
             step={5000}
             onValueChange={(v) => {
+              const a = v[0] ?? PRICE_MIN;
+              const b = v[1] ?? PRICE_MAX;
+              setLocalRange([Math.min(a, b), Math.max(a, b)]);
+            }}
+            onValueCommit={(v) => {
               const a = v[0] ?? PRICE_MIN;
               const b = v[1] ?? PRICE_MAX;
               onChange([Math.min(a, b), Math.max(a, b)]);

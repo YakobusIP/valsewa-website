@@ -50,13 +50,13 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "2xl-large:min-w-[170px] md:w-[100px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition",
+            "min-w-[100px] md:min-w-[120px] 2xl-large:min-w-[150px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition whitespace-nowrap",
             open
               ? "border-white bg-white/10"
               : "border-white/30 hover:border-white"
           )}
         >
-          <span className="flex items-center gap-2 truncate">
+          <span className="flex items-center gap-2 whitespace-nowrap">
             {selectedRanks.length === 0 ? (
               <span className="text-white/70">Rank</span>
             ) : (
@@ -68,7 +68,7 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
                   alt={firstRank!.id}
                   className="shrink-0"
                 />
-                <span className="truncate">{firstRank!.name}</span>
+                <span>{firstRank!.name}</span>
                 {extraCount > 0 && (
                   <span className="text-white/60 shrink-0">
                     +{extraCount}

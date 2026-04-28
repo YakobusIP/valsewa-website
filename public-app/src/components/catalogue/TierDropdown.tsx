@@ -56,7 +56,7 @@ export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "2xl-large:w-[210px] md:w-[120px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition",
+            "min-w-[100px] md:min-w-[120px] 2xl-large:min-w-[150px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition whitespace-nowrap",
             open
               ? "border-white bg-white/10"
               : "border-white/30 hover:border-white"

@@ -188,7 +188,6 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
         onOpenFilterSheet={() => setIsFilterSheetOpen(true)}
         onSortChange={setSortOption}
         currentSort={sortOption}
-        fallbackSkins={fallbackSkins}
         onAnyFilterChange={triggerAutoScroll}
       />
 
