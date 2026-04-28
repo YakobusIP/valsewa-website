@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 import { Skin } from "@/types/skin.type";
 
@@ -45,6 +45,59 @@ export function FilterBar({
 }: FilterBarProps) {
   const [skinModalOpen, setSkinModalOpen] = useState(false);
 
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [truncateAt, setTruncateAt] = useState<number | null>(null);
+
+  useLayoutEffect(() => {
+    if (!measureRef.current || selectedSkins.length === 0) {
+      setTruncateAt(null);
+      return;
+    }
+
+    const measure = () => {
+      const container = measureRef.current!;
+      const containerWidth = container.offsetWidth;
+
+      const chips = Array.from(container.children) as HTMLElement[];
+
+      let totalWidth = 0;
+      let fitCount = 0;
+
+      for (let i = 0; i < chips.length; i++) {
+        const chipWidth = chips[i].offsetWidth;
+
+        // reserve space for "+N" chip if needed
+        const remaining = selectedSkins.length - i - 1;
+        const plusWidth = remaining > 0 ? 40 : 0; // approx "+99" width
+
+        if (totalWidth + chipWidth + plusWidth > (0.9*containerWidth)) {
+          break;
+        }
+
+        totalWidth += chipWidth + 8; // gap-2 = 8px
+        fitCount++;
+      }
+
+      if (fitCount >= selectedSkins.length) {
+        setTruncateAt(null);
+      } else {
+        setTruncateAt(fitCount);
+      }
+    };
+
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(measureRef.current);
+
+    return () => observer.disconnect();
+  }, [selectedSkins]);
+
+  const skinsToShow =
+    truncateAt !== null ? selectedSkins.slice(0, truncateAt) : selectedSkins;
+  const hiddenCount =
+    truncateAt !== null ? selectedSkins.length - truncateAt : 0;
+
   const removeSkin = (id: number) => {
     onSkinsChange(selectedSkins.filter((s) => s.id !== id));
   };
@@ -78,7 +131,7 @@ export function FilterBar({
 
   return (
     <>
-      <div className="hidden md:block sticky top-[88px] lg:top-[92px] z-40 w-full px-4 md:px-8 lg:px-16">
+      <div className="hidden md:block sticky top-[88px] lg:top-[92px] z-40 -mt-12 w-full px-4 md:px-8 lg:px-16">
         <div className="flex justify-center">
           <div className="w-full max-w-[1600px] bg-black border border-white/30 rounded-2xl px-6 py-4 shadow-2xl">
             {/* Main row */}
@@ -135,24 +188,49 @@ export function FilterBar({
 
             {/* Skin chips row */}
             {selectedSkins.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {selectedSkins.map((skin) => (
-                  <div
-                    key={skin.id}
-                    className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-white text-xs"
-                  >
-                    <span>{skin.name}</span>
-                    <button
-                      onClick={() => {
-                        removeSkin(skin.id);
-                        onAnyFilterChange();
-                      }}
-                      className="text-white/60 hover:text-white transition"
+              <div className="relative mt-3">
+                {/* Invisible measurement div — always renders all chips to detect wrapping */}
+                <div
+                  ref={measureRef}
+                  className="absolute top-0 left-0 right-0 flex flex-wrap gap-2 opacity-0 pointer-events-none"
+                  aria-hidden
+                >
+                  {selectedSkins.map((skin) => (
+                    <div
+                      data-chip
+                      key={skin.id}
+                      className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-white text-xs"
                     >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                ))}
+                      <span className="whitespace-nowrap">{skin.name}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Visible chips (truncated to first row) */}
+                <div className="flex flex-nowrap gap-2 overflow-hidden">
+                  {skinsToShow.map((skin) => (
+                    <div
+                      key={skin.id}
+                      className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-white text-xs"
+                    >
+                      <span className="whitespace-nowrap">{skin.name}</span>
+                      <button
+                        onClick={() => {
+                          removeSkin(skin.id);
+                          onAnyFilterChange();
+                        }}
+                        className="text-white/60 hover:text-white transition"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  {hiddenCount > 0 && (
+                    <div className="flex items-center bg-white/10 rounded-full px-3 py-1 text-white text-xs">
+                      +{hiddenCount}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

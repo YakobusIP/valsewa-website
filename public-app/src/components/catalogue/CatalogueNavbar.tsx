@@ -79,7 +79,7 @@ export function CatalogueNavbar({
           isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
         }`}
       >
-        <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between">
+        <div className="mx-auto max-w-full h-[84px] md:h-[80px] flex items-center justify-between">
           {/* LEFT: Logo + Brand Switcher */}
           <div className="flex items-center gap-4 md:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 pl-7 md:pl-6 lg:pl-9 xl:pl-7">
             <div className="relative">

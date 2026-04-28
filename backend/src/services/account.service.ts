@@ -282,7 +282,7 @@ export class AccountService {
   private buildPublicAccountsWhere(
     filters: AccountSearchFilters
   ): Prisma.AccountWhereInput {
-    const { compeOnly, tiers, skinCounts, ranks, minPrice, maxPrice } =
+    const { compeOnly, tiers, skinCounts, ranks, skinIds, minPrice, maxPrice } =
       filters;
 
     const where: Prisma.AccountWhereInput = {
@@ -394,6 +394,13 @@ export class AccountService {
       }
       if (skinCountConditions.length > 0) {
         andConditions.push({ OR: skinCountConditions });
+      }
+    }
+
+    // Each skin ID must be present on the account (AND logic)
+    if (skinIds?.length) {
+      for (const skinId of skinIds) {
+        andConditions.push({ skinList: { some: { id: skinId } } });
       }
     }
 

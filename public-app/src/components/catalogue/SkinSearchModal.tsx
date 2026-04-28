@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { fetchSkins } from "@/services/skin.service";
 
@@ -34,29 +34,42 @@ export function SkinSearchModal({
   onToggleSkin,
   fallbackSkins = []
 }: SkinSearchModalProps) {
-  const [skins, setSkins] = useState<Skin[]>([]);
+  const [filteredSkins, setFilteredSkins] = useState<Skin[]>([]);
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
 
   useEffect(() => {
-    if (!open) return;
+    const handler = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 350);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [query]);
+
+  useEffect(() => {
+    if (!open) {
+      setFilteredSkins([]);
+      setQuery("");
+      return;
+    }
+
     let cancelled = false;
     setIsLoading(true);
-    fetchSkins().then((result) => {
+
+    // Fetch from backend with current query (or initial fetch with no query)
+    fetchSkins(debouncedQuery || undefined, 50).then((result) => {
       if (cancelled) return;
-      setSkins(result.length > 0 ? result : fallbackSkins);
+      setFilteredSkins(result.length > 0 ? result : []);
       setIsLoading(false);
     });
+
     return () => {
       cancelled = true;
     };
-  }, [open, fallbackSkins]);
-
-  const filteredSkins = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return skins;
-    return skins.filter((s) => s.name.toLowerCase().includes(q));
-  }, [skins, query]);
+  }, [open, debouncedQuery, fallbackSkins]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -90,9 +103,9 @@ export function SkinSearchModal({
             </p>
           ) : filteredSkins.length === 0 ? (
             <p className="text-white/40 text-sm text-center py-8">
-              {skins.length === 0
-                ? "No skins available. Please log in to search skins."
-                : "No skins matched."}
+              {query
+                ? "No skins matched your search."
+                : "No skins available. Please log in to search skins."}
             </p>
           ) : (
             <div className="space-y-1">

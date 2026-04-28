@@ -72,6 +72,7 @@ type AccountSearchFilters = {
   tiers?: string[];
   skinCounts?: string[];
   ranks?: string[];
+  skinIds?: number[];
   minPrice?: number;
   maxPrice?: number;
   sortBy?: string;

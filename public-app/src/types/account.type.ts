@@ -110,6 +110,7 @@ type AccountsPublicParams = {
   tiers?: string[];
   skin_counts?: string[];
   ranks?: string[];
+  skin_ids?: number[];
 
   min_price?: number;
   max_price?: number;

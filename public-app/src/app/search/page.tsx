@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function CataloguePage() {
   const initialAccounts =
-    (await fetchAccountsPublic({ limit: 200, sortBy: "id", direction: "desc" })) ?? [];
+    (await fetchAccountsPublic({ limit: 50, sortBy: "id", direction: "desc" })) ?? [];
 
   return (
     <div className="min-h-screen bg-[#0F0F0F]">

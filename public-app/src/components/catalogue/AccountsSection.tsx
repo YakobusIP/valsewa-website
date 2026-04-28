@@ -24,7 +24,7 @@ const AccountsSection = forwardRef<HTMLElement, AccountsSectionProps>(
     return (
       <section
         ref={ref}
-        className="bg-[#0F0F0F] px-4 md:px-8 lg:px-16 pt-10 pb-16"
+        className="bg-black px-4 md:px-8 lg:px-8 pt-10 pb-16"
       >
         {/* Desktop / tablet header */}
         <div className="hidden md:flex items-end justify-between mb-8">

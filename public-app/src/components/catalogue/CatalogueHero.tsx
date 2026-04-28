@@ -77,7 +77,7 @@ function getMobilePath(brand: BrandType) {
   return MOBILE_LEFT_PATH;
 }
 
-const OUTER_BG = "#0F0F0F";
+const OUTER_BG = "#000000";
 
 const BRANDS: { id: BrandType; logo: string }[] = [
   { id: "valsewa",  logo: "/header/VALSEWA.png" },
@@ -89,7 +89,7 @@ export function CatalogueHero({ activeBrand, setActiveBrand, sentinelRef }: Cata
   const mobilePath = getMobilePath(activeBrand);
 
   return (
-    <section className="relative h-[600px] md:h-screen bg-[#0F0F0F]">
+    <section className="relative h-[600px] md:h-screen bg-black">
 
       {/* ── Hero image + gradient + notch masks (clipped layer) ─────────── */}
       <div className="absolute top-[64px] md:top-[10px] inset-x-4 md:inset-x-5 lg:inset-x-8 bottom-0 overflow-hidden pointer-events-none">

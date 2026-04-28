@@ -109,6 +109,7 @@ function buildAccountsPublicQuery(params: AccountsPublicParams) {
   params.tiers?.forEach((t) => sp.append("tiers", t));
   params.skin_counts?.forEach((s) => sp.append("skin_counts", s));
   params.ranks?.forEach((r) => sp.append("ranks", r));
+  params.skin_ids?.forEach((id) => sp.append("skin_ids", String(id)));
 
   return sp;
 }

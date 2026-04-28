@@ -60,6 +60,7 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
   const [debouncedRanks]  = useDebounce(selectedRanks, 400);
   const [debouncedTiers]  = useDebounce(selectedTiers, 400);
   const [debouncedPrice]  = useDebounce(priceRange, 600);
+  const [debouncedSkins]  = useDebounce(selectedSkins, 400);
 
   // Scrollbar width CSS variable (same as home.tsx)
   useEffect(() => {
@@ -106,11 +107,12 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
       setIsLoading(true);
       const { sortBy, direction } = SORT_MAP[sortOption];
       const result = await fetchAccountsPublic({
-        limit: 200,
+        limit: 50,
         ranks:     debouncedRanks.length  ? debouncedRanks  : undefined,
         tiers:     debouncedTiers.length  ? processTiers(debouncedTiers) : undefined,
         min_price: debouncedPrice[0] > 0  ? debouncedPrice[0] : undefined,
         max_price: debouncedPrice[1] < 1_000_000 ? debouncedPrice[1] : undefined,
+        skin_ids:  debouncedSkins.length  ? debouncedSkins.map((s) => s.id) : undefined,
         sortBy,
         direction,
       });
@@ -121,17 +123,7 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
     }
     run();
     return () => { cancelled = true; };
-  }, [debouncedRanks, debouncedTiers, debouncedPrice, sortOption]);
-
-  // Skin-filtered accounts (AND logic — client-side)
-  const filteredAccounts = useMemo(() => {
-    if (selectedSkins.length === 0) return accounts;
-    return accounts.filter((acc) =>
-      selectedSkins.every((skin) =>
-        acc.skinList?.some((s) => s.id === skin.id)
-      )
-    );
-  }, [accounts, selectedSkins]);
+  }, [debouncedRanks, debouncedTiers, debouncedPrice, debouncedSkins, sortOption]);
 
   // Unique skins from fetched accounts (fallback for skin search when not authenticated)
   const fallbackSkins = useMemo<Skin[]>(() => {
@@ -162,7 +154,7 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F0F]">
+    <div className="min-h-screen bg-black">
       <CatalogueNavbar
         activeBrand={activeBrand}
         setActiveBrand={setActiveBrand}
@@ -204,7 +196,7 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
       {/* Accounts section */}
       <AccountsSection
         ref={accountsSectionRef}
-        accounts={filteredAccounts}
+        accounts={accounts}
         isLoading={isLoading}
         sortOption={sortOption}
         onSortChange={setSortOption}
@@ -221,7 +213,7 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
         onTiersChange={setSelectedTiers}
         priceRange={priceRange}
         onPriceChange={setPriceRange}
-        matchingCount={filteredAccounts.length}
+        matchingCount={accounts.length}
         onApply={() => { setIsFilterSheetOpen(false); triggerAutoScroll(); }}
         onResetAll={resetAllFilters}
       />

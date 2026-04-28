@@ -69,6 +69,10 @@ export class AccountController {
       // Rank filters - e.g. ["Gold", "Iron", "Radiant"]
       const ranks = parseStringArray(req.query.ranks);
 
+      // Skin ID filters — account must contain ALL of these skins (AND logic)
+      const skinIdsRaw = parseStringArray(req.query.skin_ids);
+      const skinIds = skinIdsRaw?.map(Number).filter((n) => !isNaN(n));
+
       // Price range filter
       const minPriceRaw = req.query.min_price as string | undefined;
       const maxPriceRaw = req.query.max_price as string | undefined;
@@ -81,6 +85,7 @@ export class AccountController {
         tiers,
         skinCounts,
         ranks,
+        skinIds: skinIds?.length ? skinIds : undefined,
         minPrice,
         maxPrice,
         sortBy,
