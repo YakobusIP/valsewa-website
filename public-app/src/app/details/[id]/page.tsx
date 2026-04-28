@@ -33,7 +33,7 @@ import { isAxiosError } from "axios";
 import { ChevronDown, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound, useParams, useRouter } from "next/navigation";
+import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
 import { OperationalHoursEntity } from "@/types/setting.type";
 import { fetchOperationalHours } from "@/services/setting.service";
 import OutsideOperationalHoursModal from "@/components/OutsideOperationalHoursModal";
@@ -43,6 +43,10 @@ export default function AccountDetailPage() {
 
   const params = useParams<{ id: string }>();
   const id = params?.id;
+  const searchParams = useSearchParams();
+  const isDailyDrop = searchParams.get("mode") === "dailydrop";
+  const ddPriceListId = isDailyDrop ? Number(searchParams.get("priceListId")) : null;
+  const ddDiscount = isDailyDrop ? Number(searchParams.get("discount")) : 0;
 
   const [account, setAccount] = useState<AccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,10 +80,16 @@ export default function AccountDetailPage() {
 
   useEffect(() => {
     fetchAccountById(id)
-      .then((res) => setAccount(res))
+      .then((res) => {
+        setAccount(res);
+        if (isDailyDrop && ddPriceListId && res?.priceTier?.priceList) {
+          const match = res.priceTier.priceList.find((p) => p.id === ddPriceListId);
+          if (match) setSelectedDuration({ label: match.duration, value: match });
+        }
+      })
       .catch(() => setAccount(null))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, isDailyDrop, ddPriceListId]);
 
   useEffect(() => {
     fetchOperationalHours()
@@ -200,18 +210,28 @@ export default function AccountDetailPage() {
   const calculateBasePrice = useCallback(
     (priceList: PriceList) => {
       if (!priceList) return 0;
-      return (
-        account?.isCompetitive
-          ? Number(priceList.compPrice)
-          : Number(priceList.unratedPrice)
-      );
+      const raw = account?.isCompetitive
+        ? Number(priceList.compPrice)
+        : Number(priceList.unratedPrice);
+      return isDailyDrop && ddDiscount > 0
+        ? Math.round(raw * (1 - ddDiscount / 100))
+        : raw;
+    },
+    [account?.isCompetitive, isDailyDrop, ddDiscount]
+  );
+
+  const calculateOriginalPrice = useCallback(
+    (priceList: PriceList) => {
+      if (!priceList) return 0;
+      return account?.isCompetitive
+        ? Number(priceList.compPrice)
+        : Number(priceList.unratedPrice);
     },
     [account?.isCompetitive]
   );
 
   const calculateTotalPrice = useMemo(() => {
     if (!selectedDuration || qty === 0) return 0;
-
     return calculateBasePrice(selectedDuration.value) * qty;
   }, [selectedDuration, qty, calculateBasePrice]);
 
@@ -479,11 +499,15 @@ export default function AccountDetailPage() {
                 </button>
 
                 <button
-                  onClick={() => setMode("BOOK")}
+                  disabled={isDailyDrop}
+                  onClick={() => !isDailyDrop && setMode("BOOK")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${mode === "BOOK"
-                      ? "bg-red-600 text-white"
-                      : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${
+                      isDailyDrop
+                        ? "bg-neutral-800 text-neutral-600 cursor-not-allowed"
+                        : mode === "BOOK"
+                        ? "bg-red-600 text-white"
+                        : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   BOOK FOR LATER
@@ -495,28 +519,41 @@ export default function AccountDetailPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                   {priceList.map((item) => {
                     const isActive = selectedDuration?.label === item.duration;
+                    const isLocked = isDailyDrop && !isActive;
 
                     return (
                       <div
                         key={item.id}
                         onClick={() =>
+                          !isLocked &&
                           setSelectedDuration({
                             label: item.duration,
                             value: item
                           })
                         }
-                        className={`border rounded-md py-2 cursor-pointer transition
-                          ${isActive
-                            ? "border-red-600 bg-red-600/10"
-                            : "border-neutral-700 hover:border-red-600"
+                        className={`border rounded-md py-2 transition
+                          ${isLocked ? "border-neutral-800 opacity-40 cursor-not-allowed" :isActive
+                            ? "border-red-600 bg-red-600/10 cursor-pointer"
+                            : "border-neutral-700 hover:border-red-600 cursor-pointer"
                           }`}
                       >
                         <p className="text-xs font-semibold uppercase">
                           {item.duration}
                         </p>
-                        <p className="sm:text-[11px] text-xs text-neutral-400">
-                          IDR {calculateBasePrice(item).toLocaleString("id-ID")}
-                        </p>
+                        {isDailyDrop && isActive ? (
+                          <>
+                            <p className="text-[10px] text-neutral-500 line-through">
+                              IDR {calculateOriginalPrice(item).toLocaleString("id-ID")}
+                            </p>
+                            <p className="sm:text-[11px] text-xs text-red-400 font-semibold">
+                              IDR {calculateBasePrice(item).toLocaleString("id-ID")}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="sm:text-[11px] text-xs text-neutral-400">
+                            IDR {calculateBasePrice(item).toLocaleString("id-ID")}
+                          </p>
+                        )}
                       </div>
                     );
                   })}

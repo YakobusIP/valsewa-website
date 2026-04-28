@@ -32,7 +32,8 @@ import {
   SearchIcon,
   SettingsIcon,
   ShirtIcon,
-  UserRoundCogIcon
+  UserRoundCogIcon,
+  ZapIcon
 } from "lucide-react";
 import { useDebounce } from "use-debounce";
 
@@ -50,6 +51,7 @@ type Props = {
   onOpenPriceTiers: () => void;
   onOpenCarouselManagement: () => void;
   onOpenVouchers: () => void;
+  onOpenDailyDrop: () => void;
   onOpenUserList: () => void;
   onOpenTransactionList: () => void;
   onOpenSettings: () => void;
@@ -83,6 +85,7 @@ export default function Navbar({
   onOpenPriceTiers,
   onOpenCarouselManagement,
   onOpenVouchers,
+  onOpenDailyDrop,
   onOpenUserList,
   onOpenTransactionList,
   onOpenSettings
@@ -162,6 +165,21 @@ export default function Navbar({
                         </div>
                         <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
                           Manage vouchers.
+                        </p>
+                      </a>
+                    </NavigationMenuLink>
+                  </li>
+                  <li>
+                    <NavigationMenuLink asChild>
+                      <a
+                        className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
+                        onClick={() => onOpenDailyDrop()}
+                      >
+                        <div className="text-sm font-medium leading-none">
+                          Daily Drop
+                        </div>
+                        <p className="line-clamp-2 text-sm leading-snug text-muted-foreground">
+                          Manage daily drop.
                         </p>
                       </a>
                     </NavigationMenuLink>
@@ -299,6 +317,16 @@ export default function Navbar({
                     >
                       <CoinsIcon />
                       Vouchers
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button
+                      variant="ghost"
+                      className="justify-start px-2 w-full hover:text-foreground"
+                      onClick={onOpenDailyDrop}
+                    >
+                      <ZapIcon />
+                      Daily Drop
                     </Button>
                   </SheetClose>
                 </div>
