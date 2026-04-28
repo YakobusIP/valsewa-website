@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Skin } from "@/types/skin.type";
 
@@ -41,9 +41,24 @@ export function FilterBar({
   onSkinsChange,
   onResetAll,
   onAnyFilterChange,
-  fallbackSkins = []
 }: FilterBarProps) {
   const [skinModalOpen, setSkinModalOpen] = useState(false);
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const [isStuck, setIsStuck] = useState(false);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsStuck(!entry.isIntersecting),
+      { rootMargin: "-92px 0px 0px 0px", threshold: 0 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, []);
 
   const measureRef = useRef<HTMLDivElement>(null);
   const [truncateAt, setTruncateAt] = useState<number | null>(null);
@@ -131,6 +146,7 @@ export function FilterBar({
 
   return (
     <>
+      <div ref={sentinelRef} aria-hidden className="hidden md:block h-px" />
       <div className="hidden md:block sticky top-[88px] lg:top-[92px] z-40 -mt-12 w-full px-4 md:px-8 lg:px-16">
         <div className="flex justify-center">
           <div className="w-full max-w-[1600px] bg-black border border-white/30 rounded-2xl px-6 py-4 shadow-2xl">
@@ -167,7 +183,8 @@ export function FilterBar({
                 <button
                   onClick={() => setSkinModalOpen(true)}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition shrink-0",
+                    "flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm transition-all duration-300 shrink-0",
+                    isStuck ? "min-w-[220px]" : "",
                     skinModalOpen
                       ? "border-white bg-white/10 text-white"
                       : "border-white/30 hover:border-white text-white/50"
@@ -175,7 +192,7 @@ export function FilterBar({
                 >
                   <Search className="w-4 h-4 shrink-0" />
                   <span className="truncate whitespace-nowrap">
-                    Search skin na..
+                    {isStuck ? "Search skin name" : "Search skin na.."}
                   </span>
                 </button>
               </div>
@@ -227,7 +244,7 @@ export function FilterBar({
                   ))}
                   {hiddenCount > 0 && (
                     <div className="flex items-center bg-white/10 rounded-full px-3 py-1 text-white text-xs">
-                      +{hiddenCount}
+                      +{hiddenCount} more
                     </div>
                   )}
                 </div>
@@ -266,7 +283,6 @@ export function FilterBar({
             : [...selectedSkins, skin];
           handleSkinsChange(next);
         }}
-        fallbackSkins={fallbackSkins}
       />
     </>
   );

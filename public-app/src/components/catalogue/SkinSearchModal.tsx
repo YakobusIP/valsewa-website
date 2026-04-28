@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { fetchSkins } from "@/services/skin.service";
 
@@ -31,12 +31,12 @@ export function SkinSearchModal({
   open,
   onClose,
   selectedSkins,
-  onToggleSkin,
-  fallbackSkins = []
+  onToggleSkin
 }: SkinSearchModalProps) {
   const [filteredSkins, setFilteredSkins] = useState<Skin[]>([]);
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState(query);
 
   useEffect(() => {
@@ -50,26 +50,24 @@ export function SkinSearchModal({
   }, [query]);
 
   useEffect(() => {
-    if (!open) {
-      setFilteredSkins([]);
-      setQuery("");
-      return;
-    }
+    if (!open) return;
+
+    if (!debouncedQuery && hasFetched) return; // prevent refetch
 
     let cancelled = false;
     setIsLoading(true);
 
-    // Fetch from backend with current query (or initial fetch with no query)
     fetchSkins(debouncedQuery || undefined, 50).then((result) => {
       if (cancelled) return;
-      setFilteredSkins(result.length > 0 ? result : []);
+      setFilteredSkins(result);
       setIsLoading(false);
+      setHasFetched(true);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [open, debouncedQuery, fallbackSkins]);
+  }, [open, debouncedQuery, hasFetched]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

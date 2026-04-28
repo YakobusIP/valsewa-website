@@ -50,7 +50,7 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "2xl-large:w-[170px] md:w-[100px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition",
+            "2xl-large:min-w-[170px] md:w-[100px] flex items-center justify-between px-4 py-2.5 rounded-xl border text-sm text-white transition",
             open
               ? "border-white bg-white/10"
               : "border-white/30 hover:border-white"

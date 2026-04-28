@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 
-import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { Slider } from "@/components/ui/slider";
 
 import { cn } from "@/lib/utils";
+import { Input } from "../ui/input";
 
 const PRICE_MIN = 0;
 const PRICE_MAX = 1_000_000;
@@ -75,9 +76,39 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
         }}
       >
         <div
-          onPointerDown={(e) => e.stopPropagation()} 
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <p className="text-[11px] text-white">Min</p>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={min}
+                min={PRICE_MIN}
+                max={max}
+                step={5000}
+                onChange={(e) => onChange([Number(e.target.value || 0), max])}
+                className="h-10 rounded-lg bg-white border-neutral-800 text-black"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-[11px] text-white">Max</p>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={max}
+                min={min}
+                max={PRICE_MAX}
+                step={5000}
+                onChange={(e) => onChange([min, Number(e.target.value || 0)])}
+                className="h-10 rounded-lg bg-white border-neutral-800 text-black"
+              />
+            </div>
+          </div>
+
           <Slider
             value={[min, max]}
             min={PRICE_MIN}

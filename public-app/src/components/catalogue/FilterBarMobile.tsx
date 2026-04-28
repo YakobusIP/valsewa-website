@@ -44,13 +44,8 @@ export function FilterBarMobile({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [skinQuery, setSkinQuery] = useState("");
   const [skins, setSkins] = useState<Skin[]>([]);
+  const [hasFetched, setHasFetched] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    fetchSkins().then((result) => {
-      setSkins(result.length > 0 ? result : fallbackSkins);
-    });
-  }, [fallbackSkins]);
 
   const filteredSkins = useMemo(() => {
     const q = skinQuery.trim().toLowerCase();
@@ -61,9 +56,15 @@ export function FilterBarMobile({
   const currentSortLabel =
     SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Date Added";
 
-  const openSearch = () => {
+  const openSearch = async () => {
     setIsSearchOpen(true);
     setTimeout(() => inputRef.current?.focus(), 50);
+
+    if (!hasFetched) {
+    const result = await fetchSkins();
+    setSkins(result.length > 0 ? result : fallbackSkins);
+    setHasFetched(true);
+  }
   };
 
   const closeSearch = () => {

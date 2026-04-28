@@ -179,7 +179,6 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
         onSkinsChange={(v) => { setSelectedSkins(v); triggerAutoScroll(); }}
         onResetAll={resetAllFilters}
         onAnyFilterChange={triggerAutoScroll}
-        fallbackSkins={fallbackSkins}
       />
 
       {/* Mobile filter bar */}
