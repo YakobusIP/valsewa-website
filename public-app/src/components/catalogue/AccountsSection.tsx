@@ -84,7 +84,7 @@ const AccountsSectionInner = forwardRef<HTMLElement, AccountsSectionProps>(
                 key={account.id}
                 onClick={() =>
                   window.open(
-                    `/details/${account.id}`,
+                    `/accounts/${account.id}`,
                     "_blank",
                     "noopener,noreferrer"
                   )

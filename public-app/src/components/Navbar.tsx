@@ -44,7 +44,7 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
   };
 
   const handleCardClick = (id: string) => {
-    router?.push(`/details/${id}`);
+    router?.push(`/accounts/${id}`);
   };
   const { isAuthenticated, username, customerId } = useAuth();
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
