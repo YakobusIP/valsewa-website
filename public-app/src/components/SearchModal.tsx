@@ -92,18 +92,16 @@ const RANKS = [
 
 const SKIN_COUNTS = ["0-5", "6-10", "11-15", "16-20"] as const;
 const TIER_CODES = [
-  "C - NORMAL TIER",
-  "B - NORMAL TIER",
-  "V - NORMAL TIER",
-  "S - NORMAL TIER",
-  "SSS - NORMAL TIER",
-  "SSS⁺ - NORMAL TIER",
-  "C - LR TIER",
-  "B - LR TIER",
-  "V - LR TIER",
-  "S - LR TIER",
-  "SSS - LR TIER",
-  "SSS⁺ - LR TIER"
+  "C",
+  "B",
+  "A",
+  "S",
+  "SSS",
+  "C - COMP",
+  "B - COMP",
+  "A - COMP",
+  "S - COMP",
+  "SSS - COMP",
 ] as const;
 const clamp = (n: number, min: number, max: number) =>
   Math.min(Math.max(n, min), max);

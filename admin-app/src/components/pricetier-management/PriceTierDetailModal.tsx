@@ -39,8 +39,8 @@ const priceListSchema = z.object({
       DURATION_RE,
       "Duration must be like '1d 5h or 1d or 5h' (hours 0–23)"
     ),
-  normalPrice: z.coerce.number().min(0, "Normal price must be 0 or more"),
-  lowPrice: z.coerce.number().min(0, "Low rank price must be 0 or more")
+  unratedPrice: z.coerce.number().min(0, "Unrated price must be 0 or more"),
+  compPrice: z.coerce.number().min(0, "Competitive price must be 0 or more")
 });
 
 const formSchema = z.object({
@@ -105,7 +105,7 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
   }, [open, mode, data, form, replace]);
 
   const addRow = () => {
-    append({ duration: "", normalPrice: 0, lowPrice: 0 });
+    append({ duration: "", unratedPrice: 0, compPrice: 0 });
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -191,8 +191,8 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
               <div className="rounded-md border">
                 <div className="grid grid-cols-[1.2fr_1fr_1fr_auto] gap-2 border-b bg-muted/40 p-2 text-sm font-medium">
                   <div>Duration</div>
-                  <div>Normal Price</div>
-                  <div>Low Rank Price</div>
+                  <div>Unrated Price</div>
+                  <div>Competitive Price</div>
                   <div className="w-10" />
                 </div>
 
@@ -228,7 +228,7 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
 
                       <FormField
                         control={form.control}
-                        name={`priceList.${index}.normalPrice`}
+                        name={`priceList.${index}.unratedPrice`}
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>
@@ -250,7 +250,7 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
 
                       <FormField
                         control={form.control}
-                        name={`priceList.${index}.lowPrice`}
+                        name={`priceList.${index}.compPrice`}
                         render={({ field }) => (
                           <FormItem>
                             <FormControl>

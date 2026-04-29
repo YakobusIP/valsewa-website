@@ -93,8 +93,8 @@ export default function InventoryAccountCard({
                         : "h-auto py-0.1 text-[0.4rem] sm:h-5 sm:px-2 sm:text-xs"
                     )}
                   >
-                    {item.isLowRank
-                      ? `LR-${item.priceTier.code}`
+                    {item.isCompetitive
+                      ? `COMPE-${item.priceTier.code}`
                       : item.priceTier.code}
                   </span>
                 </span>

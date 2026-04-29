@@ -57,8 +57,8 @@ export class AccountController {
       const sortBy = req.query.sortBy as string | undefined;
       const direction = req.query.direction as Prisma.SortOrder | undefined;
 
-      // Low rank tier filter: true = LR only, false = normal only, undefined = all
-      const lowTierOnly = parseBooleanOptional(req.query.low_tier_only);
+      // Compe rank filter: true = Compe only, false = Unrated only, undefined = all
+      const compeOnly = parseBooleanOptional(req.query.compe_only);
 
       // Tier filters - e.g. ["S", "V", "B"] - just the tier code
       const tiers = parseStringArray(req.query.tiers);
@@ -69,6 +69,10 @@ export class AccountController {
       // Rank filters - e.g. ["Gold", "Iron", "Radiant"]
       const ranks = parseStringArray(req.query.ranks);
 
+      // Skin ID filters — account must contain ALL of these skins (AND logic)
+      const skinIdsRaw = parseStringArray(req.query.skin_ids);
+      const skinIds = skinIdsRaw?.map(Number).filter((n) => !isNaN(n));
+
       // Price range filter
       const minPriceRaw = req.query.min_price as string | undefined;
       const maxPriceRaw = req.query.max_price as string | undefined;
@@ -77,10 +81,11 @@ export class AccountController {
 
       const filters = {
         query,
-        lowTierOnly,
+        compeOnly,
         tiers,
         skinCounts,
         ranks,
+        skinIds: skinIds?.length ? skinIds : undefined,
         minPrice,
         maxPrice,
         sortBy,
