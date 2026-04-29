@@ -83,8 +83,19 @@ export const PAYMENT_METHODS_MAP: Record<
   [PaymentMethodRequest.MANUAL]: { paymentMethodType: PaymentMethodType.MANUAL }
 };
 
+const sanitizeVirtualAccountDisplayName = (
+  raw: string | null | undefined
+): string | undefined => {
+  if (raw == null) return undefined;
+  const letters = raw.replace(/[^A-Za-z]/g, "").toUpperCase();
+  return letters.length > 0 ? letters : undefined;
+};
+
 export class BookingService {
-  constructor(private readonly faspayClient: FaspayClient, private readonly settingService: SettingService) {}
+  constructor(
+    private readonly faspayClient: FaspayClient,
+    private readonly settingService: SettingService
+  ) {}
 
   private parseBookingNumber = (input: string): bigint | undefined => {
     const re = new RegExp(`^VS-(\\d{7})$`);
@@ -427,16 +438,16 @@ export class BookingService {
   };
 
   private calculateValues = (
-    normalPrice: number,
-    lowPrice: number,
-    isLowRank: boolean,
+    unratedPrice: number,
+    compPrice: number,
+    isCompetitive: boolean,
     duration: string,
     voucher: VoucherResponse | null,
     paymentMethod: PaymentMethodType | null,
     quantity: number
   ) => {
-    const mainValue = normalPrice * quantity;
-    const othersValue = isLowRank ? (lowPrice - normalPrice) * quantity : 0;
+    const mainValue = unratedPrice * quantity;
+    const othersValue = isCompetitive ? (compPrice - unratedPrice) * quantity : 0;
 
     let voucherType = null;
     let voucherAmount = null;
@@ -552,7 +563,7 @@ export class BookingService {
           },
           select: {
             id: true,
-            isLowRank: true,
+            isCompetitive: true,
             isMfa: true
           }
         }),
@@ -561,8 +572,8 @@ export class BookingService {
           where: { id: priceListId },
           select: {
             id: true,
-            normalPrice: true,
-            lowPrice: true,
+            unratedPrice: true,
+            compPrice: true,
             duration: true
           }
         }),
@@ -605,9 +616,9 @@ export class BookingService {
         discount,
         totalValue
       } = this.calculateValues(
-        priceList.normalPrice,
-        priceList.lowPrice,
-        account.isLowRank,
+        priceList.unratedPrice,
+        priceList.compPrice,
+        account.isCompetitive,
         priceList.duration,
         voucher,
         null,
@@ -660,9 +671,9 @@ export class BookingService {
             startAt: bookingStartAt,
             endAt: bookingEndAt,
             expiredAt: bookingExpiredAt,
-            mainValuePerUnit: priceList.normalPrice,
-            othersValuePerUnit: account.isLowRank
-              ? priceList.lowPrice - priceList.normalPrice
+            mainValuePerUnit: priceList.unratedPrice,
+            othersValuePerUnit: account.isCompetitive
+              ? priceList.compPrice - priceList.unratedPrice
               : 0,
             voucherName: voucher?.voucherName,
             voucherType,
@@ -1019,7 +1030,7 @@ export class BookingService {
       } = this.calculateValues(
         booking.mainValuePerUnit,
         booking.othersValuePerUnit ?? 0,
-        booking.account.isLowRank,
+        booking.account.isCompetitive,
         booking.duration,
         voucher,
         paymentMethodType,
@@ -1110,7 +1121,7 @@ export class BookingService {
 
       const bankAccountName =
         paymentMethodType === PaymentMethodType.VIRTUAL_ACCOUNT
-          ? (booking.customer?.username ?? undefined)
+          ? sanitizeVirtualAccountDisplayName(booking.customer?.username)
           : undefined;
 
       const updatedPayment = await this.processPaymentProvider(
@@ -1896,8 +1907,8 @@ export class BookingService {
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
         nickname: booking.account.nickname ?? "",
         username: active ? booking.account.username : undefined,
-        password: (active && !isMfa) ? booking.account.password : undefined,
-        isMfa,
+        password: active && !isMfa ? booking.account.password : undefined,
+        isMfa
       },
       payments: booking.payments
     };

@@ -4,7 +4,7 @@ export type PriceItem = {
 };
 
 export type PublicPricesResponse = {
-  lrTiers: PriceItem[];
+  compTiers: PriceItem[];
   tiers: PriceItem[];
   ranks: PriceItem[];
 };

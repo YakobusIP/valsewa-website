@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { useRouter } from "next/navigation";
+
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -12,7 +14,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import LoginPage from "./LoginPage";
-import SearchPage from "./SearchPage";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 interface NavbarHomeMobileProps {
@@ -24,8 +25,8 @@ const NavbarHomeMobile = ({
   activeBrand,
   isScrolled
 }: NavbarHomeMobileProps) => {
+  const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const getLogo = () => {
     switch (activeBrand) {
@@ -44,7 +45,7 @@ const NavbarHomeMobile = ({
   };
 
   const handleSearchClick = () => {
-    setIsSearchOpen(true);
+    router.push("/search");
   };
   const { isAuthenticated, username, customerId } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -197,7 +198,6 @@ const NavbarHomeMobile = ({
           <LoginPage onClose={() => setIsComponentOpen(false)} />
         )}
 
-        {isSearchOpen && <SearchPage onClose={() => setIsSearchOpen(false)} />}
       </div>
     </div>
   );

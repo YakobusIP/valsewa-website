@@ -38,7 +38,7 @@ model Account {
   skinCount              Int       @default(0)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
-  isLowRank              Boolean   @default(false)
+  isCompetitive          Boolean   @default(false)
   isRecommended          Boolean   @default(false)
   requirePasswordReset   Boolean   @default(false)
 
@@ -82,8 +82,8 @@ model PriceTier {
 model PriceList {
   id          Int    @id @default(autoincrement())
   duration    String
-  normalPrice Int
-  lowPrice    Int
+  unratedPrice Int
+  compPrice    Int
 
   tierId Int
   tier   PriceTier @relation(fields: [tierId], references: [id], onDelete: Cascade)

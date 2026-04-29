@@ -15,7 +15,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
-import { SearchModal } from "./SearchModal";
 import { Button } from "./ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 
@@ -28,13 +27,12 @@ interface NavbarProps {
 function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
   };
   const handleSearchClick = () => {
-    setIsSearchOpen(true);
+    router.push("/search");
   };
   const { isAuthenticated, username, customerId } = useAuth();
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
@@ -327,13 +325,6 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
           <LoginPage onClose={() => setIsComponentOpen(false)} />
         )}
 
-        {isSearchOpen && (
-          <SearchModal
-            onSelectAccount={handleCardClick}
-            onOpenChange={setIsSearchOpen}
-            open
-          />
-        )}
       </div>
     </div>
   );
