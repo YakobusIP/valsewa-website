@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import CountdownTimer from "./CountdownTimer";
+import { staatliches } from "@/lib/fonts";
 
 export type InventoryAccountCardProps = {
   item: AccountEntity;
@@ -41,7 +42,7 @@ export default function InventoryAccountCard({
       <div className="h-full rounded-sm p-[1px] bg-gradient-to-b from-white/40 via-black to-white/40">
         <div
           className={cn(
-            "relative rounded-sm overflow-hidden bg-gradient-to-b from-black to-[#7A0610] flex flex-col",
+            "relative rounded-sm overflow-hidden bg-black flex flex-col",
             compact ? "h-full min-h-0" : "h-full min-h-0 justify-between"
           )}
         >
@@ -52,14 +53,14 @@ export default function InventoryAccountCard({
           {/* HEADER */}
           <div
             className={cn(
-              "flex shrink-0 items-center justify-between",
-              compact ? "px-2 py-1.5" : "px-2 sm:px-4 pt-4"
+              "flex shrink-0 items-center justify-between gap-5 tablet:gap-4",
+              compact ? "px-2 py-1.5" : "px-2 tablet:px-2 pt-4 desktop:px-4"
             )}
           >
             <div
               className={cn(
                 "flex items-center",
-                compact ? "gap-1" : "gap-1 sm:gap-2"
+                compact ? "gap-1" : "gap-1 tablet:gap-1 desktop:gap-2"
               )}
             >
               <Image
@@ -68,56 +69,34 @@ export default function InventoryAccountCard({
                 height={0}
                 sizes="100vw"
                 className={cn(
-                  compact ? "h-5 w-5" : "w-7 h-7 sm:w-[42px] sm:h-[42px]"
+                  compact ? "h-5 w-5" : "w-6 h-6 tablet:w-7 tablet:h-7 desktop:w-[50px] desktop:h-[50px]"
                 )}
                 alt="Rank"
               />
-              <div className="flex flex-col gap-0">
+              <div className={cn(
+                "flex flex-col gap-0",
+                staatliches.className
+              )}>
                 <p
                   className={cn(
-                    "font-semibold text-white",
+                    "text-white whitespace-nowrap",
                     compact
-                      ? "text-[0.5rem] leading-tight"
-                      : "text-[0.4rem] sm:text-sm"
+                      ? "text-sm leading-tight"
+                      : "text-[10px] tablet:text-xs desktop:text-3xl"
                   )}
                 >
                   {item.accountRank} | {item.accountCode}
                 </p>
-                <span className="flex items-top justify-top">
-                  <span
-                    className={cn(
-                      "inline-flex items-center justify-center text-center font-bold text-white",
-                      "bg-red-600 rounded pl-1 pr-1",
-                      compact
-                        ? "py-0.5 text-[0.5rem] leading-tight"
-                        : "h-auto py-0.1 text-[0.4rem] sm:h-5 sm:px-2 sm:text-xs"
-                    )}
-                  >
-                    {item.isCompetitive
-                      ? `COMPE-${item.priceTier.code}`
-                      : item.priceTier.code}
-                  </span>
-                </span>
               </div>
             </div>
 
             <div
               className={cn(
-                "flex cursor-pointer items-center justify-center gap-0.5 text-blue-400 hover:text-blue-300",
-                compact ? "text-[0.5rem]" : "text-[0.4rem] sm:text-xs"
+                "flex cursor-pointer items-center justify-center gap-0.5 text-blue-400 hover:text-blue-300 pl-4 max-w-[70px] tablet:max-w-[90px] desktop:max-w-full",
+                compact ? "text-[0.5rem]" : "text-[0.4rem] tablet:text-xs"
               )}
             >
-              Account Info
-              <span
-                className={cn(
-                  "inline-flex items-center justify-center rounded-full bg-blue-400 text-black font-bold",
-                  compact
-                    ? "h-3.5 w-3.5 text-[0.45rem]"
-                    : "h-2 w-2 sm:h-3 sm:w-3"
-                )}
-              >
-                ?
-              </span>
+              {item.isCompetitive ? <img src="/cardneed/compe.svg"></img> : <img src="/cardneed/unrated.svg"></img>}
             </div>
           </div>
 
@@ -140,28 +119,59 @@ export default function InventoryAccountCard({
                   sizes="(max-width: 600px) 100vw, 600px"
                 />
               </div>
-              {!inUse && (
-                <div className="absolute left-2 top-1 z-20 rounded-sm bg-gradient-to-r from-[#4FDF6D] to-[#BBFD7B] px-1.5 py-0.5 text-[0.5rem] font-medium text-black">
-                  Available
-                </div>
-              )}
+
               {inUse && (
-                <div className="absolute left-2 top-1 z-20 flex items-center justify-center rounded-sm bg-black/70">
-                  <div className="rounded-sm bg-white px-1.5 py-0.5 text-[0.5rem] text-black">
-                    Time Left{" "}
-                    {item.currentExpireAt && (
-                      <CountdownTimer
-                        targetDate={String(item.currentExpireAt)}
-                      />
-                    )}
+                <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                  <div className="w-[85%] max-w-[320px] rounded-2xl border border-white/20 bg-[#0B0B0B] px-6 py-5 text-white shadow-xl">
+
+                    {/* TOP: ON RENT */}
+                    <div className={cn(
+                      "flex items-center gap-3",
+                      staatliches.className
+                    )}>
+                      <div className="relative flex items-center justify-center">
+                        <div className="w-5 h-5 rounded-full bg-red-600 animate-pulse" />
+                        <div className="absolute w-8 h-8 rounded-full bg-red-600/30 blur-md" />
+                      </div>
+                      <h2 className="text-xl">ON RENT</h2>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="my-4 h-[1px] w-full bg-white/20" />
+
+                    {/* Available in */}
+                    <p className="text-center text-xs text-gray-400 mb-2">
+                      AVAILABLE IN:
+                    </p>
+
+                    {/* Countdown */}
+                    <div className="flex items-center justify-center gap-2 text-lg font-semibold">
+                      <svg
+                        className="w-5 h-5 text-gray-300"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+
+                      {item.currentExpireAt && (
+                        <CountdownTimer targetDate={String(item.currentExpireAt)} />
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex w-full justify-center px-2 pt-4 sm:px-4">
+            <div className="flex w-full justify-center px-2 pt-4 desktop:px-4">
               <div className="relative w-full">
-                <div className="sm:hidden">
+                <div className="tablet:hidden">
                   <AspectRatio ratio={1 / 1}>
                     <Image
                       src={
@@ -175,7 +185,7 @@ export default function InventoryAccountCard({
                     />
                   </AspectRatio>
                 </div>
-                <div className="hidden sm:block">
+                <div className="hidden tablet:block">
                   <AspectRatio ratio={16 / 9}>
                     <Image
                       src={
@@ -189,31 +199,38 @@ export default function InventoryAccountCard({
                     />
                   </AspectRatio>
                 </div>
-
-                {!inUse && (
-                  <div
-                    className="absolute top-5 left-4 bg-gradient-to-r from-[#4FDF6D] to-[#BBFD7B] px-3 py-1 text-[0.4rem] text-black
-                              sm:top-6 sm:left-6 sm:text-xs"
-                  >
-                    Available
-                  </div>
-                )}
-
                 {inUse && (
-                  <div
-                    className="absolute top-5 left-4 z-20 flex items-center justify-center
-                              rounded-sm bg-black/70 sm:top-6 sm:left-6"
-                  >
-                    <div
-                      className="rounded-sm bg-white px-2 py-1 text-[0.4rem] text-black sm:px-3
-                                sm:py-1 sm:text-xs lg:text-sm"
-                    >
-                      Time Left{" "}
-                      {item.currentExpireAt && (
-                        <CountdownTimer
-                          targetDate={String(item.currentExpireAt)}
-                        />
-                      )}
+                  <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                    <div className="w-[85%] max-w-[320px] rounded-2xl border border-white/20 bg-[#0B0B0B] tablet:px-6 px-3 py-5 text-white shadow-xl">
+
+                      {/* TOP: ON RENT */}
+                      <div className={cn(
+                        "flex items-center justify-center gap-2 desktop:gap-3 desktop:text-5xl tablet:text-2xl text-xl",
+                        staatliches.className
+                      )}>
+                        <div className="relative flex items-center justify-center">
+                          <div className="desktop:w-5 desktop:h-5 tablet:w-4 tablet:h-4 w-3 h-3 rounded-full bg-red-600 animate-pulse" />
+                          <div className="absolute desktop:w-8 desktop:h-8 tablet:w-6 tablet:h-6 w-4 h-4 rounded-full bg-red-600/30 blur-md" />
+                        </div>
+                        <h2 className="">ON RENT</h2>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="desktop:my-4 my-2 h-[1px] w-full bg-white/20" />
+
+                      {/* Available in */}
+                      <p className="text-center text-xs text-gray-400 desktop:mb-2 mb-1">
+                        AVAILABLE IN:
+                      </p>
+
+                      {/* Countdown */}
+                      <div className="flex items-center justify-center gap-1 desktop:gap-1 text-xs tablet:text-sm desktop:text-lg font-semibold">
+                        <Image src="/cardneed/time.svg" alt="time" width={20} height={20} className="pt-1" />
+
+                        {item.currentExpireAt && (
+                          <CountdownTimer targetDate={String(item.currentExpireAt)} />
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -225,15 +242,15 @@ export default function InventoryAccountCard({
           <div
             className={cn(
               "shrink-0",
-              compact ? "px-2 py-1" : "px-2 py-1 sm:px-4 sm:py-4"
+              compact ? "px-2 py-1" : "px-2 py-1 desktop:px-4 tablet:py-4 flex justify-end"
             )}
           >
             <div
               className={cn(
-                "inline-flex items-center justify-center bg-white/10 text-white",
+                "inline-flex items-center justify-center text-white",
                 compact
                   ? "rounded px-2 py-0.5 text-[0.5rem]"
-                  : "rounded-sm px-3 py-1 text-[0.4rem] sm:text-xs"
+                  : "rounded-sm px-3 py-1 text-[0.4rem] tablet:text-xs"
               )}
             >
               <span>Skins Amount</span>

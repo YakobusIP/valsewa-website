@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -15,6 +15,7 @@ import Link from "next/link";
 
 import LoginPage from "./LoginPage";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { customerService } from "@/services/customer.service";
 
 interface NavbarHomeMobileProps {
   activeBrand: "valsewa" | "valjubel" | "valjoki";
@@ -50,6 +51,19 @@ const NavbarHomeMobile = ({
   const { isAuthenticated, username, customerId } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
+  const [streak, setStreak] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setStreak(null);
+      return;
+    }
+
+    customerService
+      .getMyStreak()
+      .then((data) => setStreak(data.currentStreak))
+      .catch(() => setStreak(null));
+  }, [isAuthenticated]);
 
   const bookingReserved = booking?.find(
     (i) =>
@@ -64,9 +78,8 @@ const NavbarHomeMobile = ({
 
   return (
     <div
-      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${
-        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-      }`}
+      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+        }`}
     >
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-8">
         {/* LEFT */}
@@ -110,6 +123,21 @@ const NavbarHomeMobile = ({
               />
             </div>
           </Link>
+
+          {/* Streak */}
+          {isAuthenticated && streak !== null && (
+            <div className="flex items-center px-4 py-2 border border-white/30 rounded-xl transition cursor-pointer">
+              <Image
+                src="/header/streak icon.svg"
+                alt="Streak"
+                width={40}
+                height={40}
+              />
+              <span className="text-white text-xs md:text-sm font-semibold">
+                {streak}
+              </span>
+            </div>
+          )}
 
           {/* SIGN IN */}
           {!isAuthenticated && (

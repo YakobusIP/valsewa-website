@@ -171,7 +171,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
           </div>
         </div>
         {/* NAV RIGHT SIDE */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center desktop:gap-4 gap-2 pl-2">
           {/* SEARCH */}
           <button onClick={handleSearchClick}>
             <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
@@ -261,14 +261,14 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
           {isAuthenticated && (
             <HoverCard openDelay={200}>
               <HoverCardTrigger asChild>
-                <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer">
+                <div className="flex items-center gap-1 desktop:px-4 px-2 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer">
                   <Image
                     src="/header/SignUp Icon.svg"
                     alt="User"
                     width={18}
                     height={18}
                   />
-                  <span className="text-white text-xs md:text-sm font-semibold">
+                  <span className="text-white text-xs md:text-sm font-semibold text-left">
                     {username}
                   </span>
                 </div>
