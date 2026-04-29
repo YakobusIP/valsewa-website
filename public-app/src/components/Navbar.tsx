@@ -18,6 +18,8 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 import { customerService } from "@/services/customer.service";
 import { Button } from "./ui/button";
 
+import StreakCountdown from "./StreakCountdown";
+
 interface NavbarProps {
   onLoginModalOpenChange?: (isOpen: boolean) => void;
 }
@@ -26,7 +28,11 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const [, setTick] = useState(0);
   const [streak, setStreak] = useState<number | null>(null);
+  const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
+  const [isCountdownVisible, setIsCountdownVisible] = useState(false);
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
@@ -57,13 +63,22 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
   useEffect(() => {
     if (!isAuthenticated) {
       setStreak(null);
+      setLastEligibleRent(null);
       return;
     }
 
     customerService
       .getMyStreak()
-      .then((data) => setStreak(data.currentStreak))
-      .catch(() => setStreak(null));
+      .then((data) => {
+        setStreak(data.currentStreak);
+        setLastEligibleRent(
+          data.lastEligibleRent ? new Date(data.lastEligibleRent) : null
+        );
+      })
+      .catch(() => {
+        setStreak(null);
+        setLastEligibleRent(null);
+      });
   }, [isAuthenticated]);
   return (
     <div className="fixed top-0 z-50 w-full bg-[#000000] shadow-md shadow-black/5">
@@ -124,12 +139,28 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
           {/* Streak */}
           {isAuthenticated && streak !== null && (
             <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
-              <Image
-                src="/header/streak icon.svg"
-                alt="Streak"
-                width={40}
-                height={40}
+              <StreakCountdown
+                lastEligibleRent={lastEligibleRent}
+                onVisibilityChange={setIsCountdownVisible}
+                className="text-white text-xs font-bold mr-1"
               />
+
+              {/* ICON SWITCH */}
+              {isCountdownVisible ? (
+                <Image
+                  src="/header/time run out icon.svg"
+                  alt="timer"
+                  width={20}
+                  height={20}
+                />
+              ) : (
+                <Image
+                  src="/header/streak icon.svg"
+                  alt="streak"
+                  width={40}
+                  height={40}
+                />
+              )}
               <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
                 {streak}
               </span>

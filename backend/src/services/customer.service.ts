@@ -139,14 +139,14 @@ export class CustomerService {
     try {
       const customer = await prisma.customer.findUnique({
         where: { id },
-        select: { currentStreak: true }
+        select: { currentStreak: true, lastEligibleRent: true }
       });
 
       if (!customer) {
         throw new Error("Customer not found");
       }
 
-      return { currentStreak: customer.currentStreak };
+      return { currentStreak: customer.currentStreak, lastEligibleRent: customer.lastEligibleRent };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }

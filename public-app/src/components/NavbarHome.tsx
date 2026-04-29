@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import LoginPage from "./LoginPage";
 import { Button } from "./ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+import StreakCountdown from "./StreakCountdown";
 
 interface NavbarProps {
   activeBrand: "valsewa" | "valjubel" | "valjoki";
@@ -25,6 +26,15 @@ interface NavbarProps {
 }
 
 function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
+
+  const { isAuthenticated, username, customerId } = useAuth();
+  const { booking } = useActiveBooking(customerId?.toString() ?? "");
+
+  const [, setTick] = useState(0);
+  const [streak, setStreak] = useState<number | null>(null);
+  const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
+  const [isCountdownVisible, setIsCountdownVisible] = useState(false);
+
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
 
@@ -34,27 +44,24 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
   const handleSearchClick = () => {
     router.push("/search");
   };
-  const { isAuthenticated, username, customerId } = useAuth();
-  const { booking } = useActiveBooking(customerId?.toString() ?? "");
+
 
   const bookingReserved = booking?.find(
     (i) =>
       i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now()
   );
   const accountCode = bookingReserved?.account.accountCode;
+
   const rentedDays = calculateDaysRented(
     bookingReserved?.startAt ?? null,
     bookingReserved?.endAt ?? null
   );
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
-  const [, setTick] = useState(0);
-  const [streak, setStreak] = useState<number | null>(null);
-
   useEffect(() => {
     const interval = setInterval(() => {
       setTick((prev) => prev + 1);
-    }, 60000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -62,18 +69,23 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
   useEffect(() => {
     if (!isAuthenticated) {
       setStreak(null);
+      setLastEligibleRent(null);
       return;
     }
 
     customerService
       .getMyStreak()
-      .then((data) => setStreak(data.currentStreak))
-      .catch(() => setStreak(null));
+      .then((data) => {
+        setStreak(data.currentStreak);
+        setLastEligibleRent(
+          data.lastEligibleRent ? new Date(data.lastEligibleRent) : null
+        );
+      })
+      .catch(() => {
+        setStreak(null);
+        setLastEligibleRent(null);
+      });
   }, [isAuthenticated]);
-
-  const handleCardClick = (id: string) => {
-    router?.push(`/details/${id}`);
-  };
 
   return (
     <div
@@ -213,12 +225,29 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
           {/* Streak */}
           {isAuthenticated && streak !== null && (
             <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
-              <Image
-                src="/header/streak icon.svg"
-                alt="Streak"
-                width={40}
-                height={40}
+              <StreakCountdown
+                lastEligibleRent={lastEligibleRent}
+                onVisibilityChange={setIsCountdownVisible}
+                className="text-white text-xs font-bold mr-1"
               />
+
+              {/* ICON SWITCH */}
+              {isCountdownVisible ? (
+                <Image
+                  src="/header/time run out icon.svg"
+                  alt="timer"
+                  width={20}
+                  height={20}
+                />
+              ) : (
+                <Image
+                  src="/header/streak icon.svg"
+                  alt="streak"
+                  width={40}
+                  height={40}
+                />
+              )}
+
               <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
                 {streak}
               </span>
@@ -261,7 +290,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
           {isAuthenticated && (
             <HoverCard openDelay={200}>
               <HoverCardTrigger asChild>
-                <div className="flex items-center justify-center gap-1 desktop:px-4 px-1 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer w-full">
+                <div className="flex items-center justify-center gap-1 desktop:px-4 px-3 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer w-auto">
                   <Image
                     src="/header/SignUp Icon.svg"
                     alt="User"
