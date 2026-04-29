@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 
 import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 
+import { customerService } from "@/services/customer.service";
+
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -49,6 +51,8 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
   const [, setTick] = useState(0);
+  const [streak, setStreak] = useState<number | null>(null);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setTick((prev) => prev + 1);
@@ -57,15 +61,26 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setStreak(null);
+      return;
+    }
+
+    customerService
+      .getMyStreak()
+      .then((data) => setStreak(data.currentStreak))
+      .catch(() => setStreak(null));
+  }, [isAuthenticated]);
+
   const handleCardClick = (id: string) => {
     router?.push(`/details/${id}`);
   };
 
   return (
     <div
-      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-16 ${
-        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-      }`}
+      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-16 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+        }`}
     >
       <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between">
         <div className="flex items-center gap-4 md:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 2xl-large:gap-12 large:gap-14 pl-7 md:pl-6 lg:pl-9 xl:pl-7">
@@ -98,21 +113,19 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
           </div>
           {/* BRAND SWITCHER - scales down on lg, full size on xl+ */}
           <div
-            className={`relative transition-all duration-300 ${
-              isScrolled
-                ? "opacity-0 translate-y-[-10px] pointer-events-none"
-                : "opacity-100 translate-y-0"
-            }`}
+            className={`relative transition-all duration-300 ${isScrolled
+              ? "opacity-0 translate-y-[-10px] pointer-events-none"
+              : "opacity-100 translate-y-0"
+              }`}
           >
             <div className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
               {/* VALSEWA */}
               <div
                 onClick={() => setActiveBrand("valsewa")}
-                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valsewa"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
+                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valsewa"
+                  ? "bg-black shadow-md"
+                  : "hover:bg-white/10"
+                  }`}
               >
                 <Image
                   src="/header/VALSEWA.png"
@@ -126,11 +139,10 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               {/* VALJUBEL */}
               <div
                 onClick={() => setActiveBrand("valjubel")}
-                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valjubel"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
+                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjubel"
+                  ? "bg-black shadow-md"
+                  : "hover:bg-white/10"
+                  }`}
               >
                 <Image
                   src="/header/VALJUBEL.png"
@@ -144,11 +156,10 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               {/* VALJOKI */}
               <div
                 onClick={() => setActiveBrand("valjoki")}
-                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valjoki"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
+                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjoki"
+                  ? "bg-black shadow-md"
+                  : "hover:bg-white/10"
+                  }`}
               >
                 <Image
                   src="/header/VALJOKI.png"
@@ -201,6 +212,21 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
             </Button>
           </Link>
 
+          {/* Streak */}
+          {isAuthenticated && streak !== null && (
+            <div className="flex items-center px-4 py-2 border border-white/30 rounded-xl transition cursor-pointer">
+              <Image
+                src="/header/streak icon.svg"
+                alt="Streak"
+                width={40}
+                height={40}
+              />
+              <span className="text-white text-xs md:text-sm font-semibold">
+                {streak}
+              </span>
+            </div>
+          )}
+
           {/* SIGN IN */}
           {!isAuthenticated && (
             <Fragment>
@@ -234,7 +260,6 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               </Button>
             </Fragment>
           )}
-
           {isAuthenticated && (
             <HoverCard openDelay={200}>
               <HoverCardTrigger asChild>

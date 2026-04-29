@@ -259,6 +259,9 @@ export default function BookingDetailPage() {
             </div>
 
             <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
+              <ProgressStepper
+                stepIdx={1}
+              />
               <div className="bg-[#1C1C1C]">
                 <BookingDetail booking={booking} />
               </div>

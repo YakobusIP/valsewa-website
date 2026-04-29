@@ -18,7 +18,13 @@ import {
   NotFoundError,
   PrismaUniqueError
 } from "../lib/error";
-import { addHours, addMinutes, isOutsideOperationalHours, parseDurationToHours } from "../lib/utils";
+import { addHours, addMinutes, isOutsideOperationalHours, parseDurationToHours, WIB_TZ } from "../lib/utils";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 import { subDays } from "date-fns";
 import { prisma } from "../lib/prisma";
 import {
@@ -1713,6 +1719,60 @@ export class BookingService {
           rentHourUpdated: true
         }
       });
+
+      if (booking.customerId) {
+        const customer = await tx.customer.findUnique({
+          where: { id: booking.customerId }
+        });
+
+        if (customer) {
+          const now = new Date();
+          const operationalHours = await this.settingService.getOperationalHours();
+
+          if (!isOutsideOperationalHours(operationalHours, now)) {
+            const tz = operationalHours?.timezone ?? WIB_TZ;
+            const closeTime = operationalHours?.close || "23:59";
+            const [closeH, closeM] = closeTime.split(":").map(Number);
+            console.log('close time: ', closeTime, closeH, closeM);
+
+            const tomorrowEnd = dayjs(now)
+              .tz(tz)
+              .add(1, "day")
+              .hour(closeH)
+              .minute(closeM)
+              .second(59)
+              .millisecond(999)
+              .toDate();
+
+            let newStreak = 1;
+
+            if (!customer.lastEligibleRent) {
+              newStreak = 1;
+            } else {
+              const lastBookingDayEnd = dayjs(customer.lastEligibleRent)
+                .tz(tz)
+                .subtract(1, "day")
+                .toDate();
+
+              if (now.getTime() <= lastBookingDayEnd.getTime()) {
+                newStreak = customer.currentStreak;
+              } else if (now.getTime() <= customer.lastEligibleRent.getTime()) {
+                newStreak = customer.currentStreak + 1;
+              } else {
+                newStreak = 0;
+              }
+            }
+
+            await tx.customer.update({
+              where: { id: customer.id },
+              data: {
+                currentStreak: newStreak,
+                lastEligibleRent: tomorrowEnd
+              }
+            });
+          }
+        }
+      }
     }
 
     return this.mapPaymentDataToPaymentResponse(updatedPayment);

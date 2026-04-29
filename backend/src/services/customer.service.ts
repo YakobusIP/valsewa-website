@@ -135,6 +135,23 @@ export class CustomerService {
     }
   };
 
+  getMyStreak = async (id: number) => {
+    try {
+      const customer = await prisma.customer.findUnique({
+        where: { id },
+        select: { currentStreak: true }
+      });
+
+      if (!customer) {
+        throw new Error("Customer not found");
+      }
+
+      return { currentStreak: customer.currentStreak };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
   checkPasswordExpiration = async () => {
     try {
       const today = new Date();

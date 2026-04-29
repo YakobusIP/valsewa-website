@@ -37,8 +37,8 @@ function BookingDetail({ booking }: BookingDetailProps) {
         PURCHASE DETAILS
       </h1>
 
-      <div className="flex flex-row sm:flex-row gap-2 sm:gap-6">
-        <div className="w-full overflow-hidden rounded-md max-w-30 sm:max-w-80 max-h-30">
+      <div className="flex flex-row gap-2 sm:gap-6">
+        <div className="w-1/2 overflow-hidden rounded-md max-w-30 sm:max-w-80 max-h-30">
           <Image
             src={booking.account.thumbnailImageUrl}
             alt={`${booking.account.accountRank} ${booking.account.accountCode} account thumbnail`}
