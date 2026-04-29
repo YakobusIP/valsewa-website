@@ -2,6 +2,7 @@ import { Router } from "express";
 import { CustomerService } from "../services/customer.service";
 import { CustomerController } from "../controllers/customer.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { customerMiddleware } from "../middleware/customer.middleware";
 import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 
 class CustomerRouter {
@@ -43,6 +44,11 @@ class CustomerRouter {
       "/check-password-expiration",
       schedulerMiddleware,
       this.customerController.checkPasswordExpiration
+    );
+    this.router.get(
+      "/me/streak",
+      customerMiddleware,
+      this.customerController.getMyStreak
     );
   }
 }

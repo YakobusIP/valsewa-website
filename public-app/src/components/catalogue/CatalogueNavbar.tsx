@@ -23,7 +23,8 @@ import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-
+import { customerService } from "@/services/customer.service";
+import StreakCountdown from "../StreakCountdown";
 type BrandType = "valsewa" | "valjubel" | "valjoki";
 
 interface CatalogueNavbarProps {
@@ -54,6 +55,19 @@ export function CatalogueNavbar({
   const { isAuthenticated, username, customerId } = useAuth();
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
+  const [, setTick] = useState(0);
+  const [streak, setStreak] = useState<number | null>(null);
+  const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
+  const [isCountdownVisible, setIsCountdownVisible] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const bookingReserved = booking?.find(
     (i) =>
       i.status === "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now()
@@ -65,19 +79,34 @@ export function CatalogueNavbar({
   );
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
-  const [, setTick] = useState(0);
   useEffect(() => {
-    const interval = setInterval(() => setTick((p) => p + 1), 60000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!isAuthenticated) {
+      setStreak(null);
+      setLastEligibleRent(null);
+      return;
+    }
+
+    customerService
+      .getMyStreak()
+      .then((data) => {
+        setStreak(data.currentStreak);
+        setLastEligibleRent(
+          data.lastEligibleRent ? new Date(data.lastEligibleRent) : null
+        );
+      })
+      .catch(() => {
+        setStreak(null);
+        setLastEligibleRent(null);
+      });
+  }, [isAuthenticated]);
+
 
   return (
     <>
       {/* ─── DESKTOP / TABLET (md+) ─── */}
       <div
-        className={`hidden md:block fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-8 ${
-          isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-        }`}
+        className={`hidden tablet:block fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-8 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+          }`}
       >
         <div className="mx-auto max-w-full h-[84px] md:h-[80px] flex items-center justify-between">
           {/* LEFT: Logo + Brand Switcher */}
@@ -98,9 +127,8 @@ export function CatalogueNavbar({
 
             {/* Brand Switcher */}
             <div
-              className={`relative transition-all duration-300 ${
-                "opacity-100 translate-y-0"
-              }`}
+              className={`relative transition-all duration-300 ${"opacity-100 translate-y-0"
+                }`}
             >
               <div className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
                 {(["valsewa", "valjubel", "valjoki"] as BrandType[]).map(
@@ -108,11 +136,10 @@ export function CatalogueNavbar({
                     <div
                       key={brand}
                       onClick={() => setActiveBrand(brand)}
-                      className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-4 rounded-xl cursor-pointer transition ${
-                        activeBrand === brand
-                          ? "bg-black shadow-md"
-                          : "hover:bg-white/10"
-                      }`}
+                      className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-4 rounded-xl cursor-pointer transition ${activeBrand === brand
+                        ? "bg-black shadow-md"
+                        : "hover:bg-white/10"
+                        }`}
                     >
                       <Image
                         src={`/header/${brand.toUpperCase()}.png`}
@@ -129,7 +156,7 @@ export function CatalogueNavbar({
           </div>
 
           {/* RIGHT: Top Up + Auth */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center desktop:gap-4 gap-2 pl-2">
             <Link href="https://valforum.com/top-up">
               <Button className="hidden lg:flex border border-white/30 rounded-xl hover:border-white transition">
                 <Image
@@ -154,6 +181,37 @@ export function CatalogueNavbar({
                 />
               </Button>
             </Link>
+
+            {/* Streak */}
+            {isAuthenticated && streak !== null && (
+              <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
+                <StreakCountdown
+                  lastEligibleRent={lastEligibleRent}
+                  onVisibilityChange={setIsCountdownVisible}
+                  className="text-white text-xs font-bold mr-1"
+                />
+
+                {/* ICON SWITCH */}
+                {isCountdownVisible ? (
+                  <Image
+                    src="/header/time run out icon.svg"
+                    alt="timer"
+                    width={20}
+                    height={20}
+                  />
+                ) : (
+                  <Image
+                    src="/header/streak icon.svg"
+                    alt="streak"
+                    width={40}
+                    height={40}
+                  />
+                )}
+                <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                  {streak}
+                </span>
+              </div>
+            )}
 
             {!isAuthenticated && (
               <Fragment>
@@ -191,7 +249,7 @@ export function CatalogueNavbar({
             {isAuthenticated && (
               <HoverCard openDelay={200}>
                 <HoverCardTrigger asChild>
-                  <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer">
+                  <div className="flex items-center justify-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer">
                     <Image
                       src="/header/SignUp Icon.svg"
                       alt="User"
@@ -246,9 +304,8 @@ export function CatalogueNavbar({
 
       {/* ─── MOBILE (below md) ─── */}
       <div
-        className={`md:hidden fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${
-          isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-        }`}
+        className={`tablet:hidden fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+          }`}
       >
         <div className="mx-auto max-w-[1920px] h-[64px] flex items-center justify-between px-4">
           {/* CENTER: brand logo */}
@@ -277,6 +334,18 @@ export function CatalogueNavbar({
                 />
               </div>
             </Link>
+
+            {/* Streak */}
+            {isAuthenticated && streak !== null && (
+              <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
+                <Image
+                  src="/header/streak-mobile.svg"
+                  alt="Streak"
+                  width={18}
+                  height={18}
+                />
+              </div>
+            )}
 
             {!isAuthenticated && (
               <button

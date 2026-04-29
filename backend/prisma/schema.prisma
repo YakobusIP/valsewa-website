@@ -140,6 +140,8 @@ model Customer {
   passwordChangedAt DateTime  @default(now())
   isActive          Boolean   @default(true)
   passwordExpireAt  DateTime?
+  currentStreak     Int       @default(0)
+  lastEligibleRent  DateTime?
 
   Booking Booking[]
 }

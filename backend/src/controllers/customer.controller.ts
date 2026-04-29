@@ -86,4 +86,18 @@ export class CustomerController {
       return next(error);
     }
   };
+
+  getMyStreak = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const customerId = req.customer?.id;
+      if (!customerId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const result = await this.customerService.getMyStreak(customerId);
+      return res.json(result);
+    } catch (error) {
+      return next(error);
+    }
+  };
 }
