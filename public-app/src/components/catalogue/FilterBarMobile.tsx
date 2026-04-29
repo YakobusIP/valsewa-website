@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { fetchSkins } from "@/services/skin.service";
 
@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 import { Skin } from "@/types/skin.type";
 
@@ -53,6 +52,16 @@ export function FilterBarMobile({
     return skins.filter((s) => s.name.toLowerCase().includes(q));
   }, [skins, skinQuery]);
 
+  const selectedSkinIds = useMemo(
+    () => new Set(selectedSkins.map((s) => s.id)),
+    [selectedSkins]
+  );
+
+  const toggleSkinFilter = (skin: Skin) => {
+    onToggleSkin(skin);
+    onAnyFilterChange();
+  };
+
   const currentSortLabel =
     SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Date Added";
 
@@ -61,10 +70,10 @@ export function FilterBarMobile({
     setTimeout(() => inputRef.current?.focus(), 50);
 
     if (!hasFetched) {
-    const result = await fetchSkins();
-    setSkins(result.length > 0 ? result : fallbackSkins);
-    setHasFetched(true);
-  }
+      const result = await fetchSkins();
+      setSkins(result.length > 0 ? result : fallbackSkins);
+      setHasFetched(true);
+    }
   };
 
   const closeSearch = () => {
@@ -113,24 +122,28 @@ export function FilterBarMobile({
               </p>
             ) : (
               filteredSkins.map((skin) => {
-                const checked = selectedSkins.some((s) => s.id === skin.id);
+                const checked = selectedSkinIds.has(skin.id);
                 return (
                   <div
                     key={skin.id}
+                    role="checkbox"
+                    aria-checked={checked}
+                    tabIndex={0}
                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer"
-                    onClick={() => {
-                      onToggleSkin(skin);
-                      onAnyFilterChange();
+                    onClick={() => toggleSkinFilter(skin)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleSkinFilter(skin);
+                      }
                     }}
                   >
                     <Checkbox
                       id={`mobile-skin-${skin.id}`}
                       checked={checked}
-                      onCheckedChange={() => {
-                        onToggleSkin(skin);
-                        onAnyFilterChange();
-                      }}
-                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 shrink-0"
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 shrink-0 pointer-events-none"
                     />
                     <div className="relative w-[40px] h-[64px] shrink-0 rounded overflow-hidden bg-neutral-900">
                       {skin.imageUrl ? (
@@ -145,12 +158,9 @@ export function FilterBarMobile({
                         <div className="w-full h-full bg-neutral-800" />
                       )}
                     </div>
-                    <Label
-                      htmlFor={`mobile-skin-${skin.id}`}
-                      className="text-sm text-white cursor-pointer flex-1 min-w-0 truncate"
-                    >
+                    <span className="text-sm text-white flex-1 min-w-0 truncate">
                       {skin.name}
-                    </Label>
+                    </span>
                   </div>
                 );
               })

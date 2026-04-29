@@ -77,7 +77,7 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
         sideOffset={8}
         className="z-50 bg-neutral-900 border border-white/20 rounded-xl shadow-xl min-w-[280px] p-4"
         onCloseAutoFocus={(e) => e.preventDefault()} // prevent focus jump
-        onInteractOutside={(e) => {
+        onInteractOutside={() => {
           // allow outside click to close
         }}
       >

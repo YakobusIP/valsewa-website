@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, memo } from "react";
 
 import InventoryAccountCard from "@/components/InventoryAccountCard";
 
@@ -16,16 +16,13 @@ interface AccountsSectionProps {
   onResetFilters: () => void;
 }
 
-const AccountsSection = forwardRef<HTMLElement, AccountsSectionProps>(
+const AccountsSectionInner = forwardRef<HTMLElement, AccountsSectionProps>(
   function AccountsSection(
     { accounts, isLoading, sortOption, onSortChange, onResetFilters },
     ref
   ) {
     return (
-      <section
-        ref={ref}
-        className="bg-black px-4 md:px-8 lg:px-8 pt-10 pb-16"
-      >
+      <section ref={ref} className="bg-black px-4 md:px-8 lg:px-8 pt-10 pb-16">
         {/* Desktop / tablet header */}
         <div className="hidden md:flex items-end justify-between mb-8">
           <div>
@@ -107,4 +104,5 @@ const AccountsSection = forwardRef<HTMLElement, AccountsSectionProps>(
   }
 );
 
+const AccountsSection = memo(AccountsSectionInner);
 export default AccountsSection;

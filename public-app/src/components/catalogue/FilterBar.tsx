@@ -40,7 +40,7 @@ export function FilterBar({
   selectedSkins,
   onSkinsChange,
   onResetAll,
-  onAnyFilterChange,
+  onAnyFilterChange
 }: FilterBarProps) {
   const [skinModalOpen, setSkinModalOpen] = useState(false);
 
@@ -69,6 +69,10 @@ export function FilterBar({
       return;
     }
 
+    if (skinModalOpen) {
+      return;
+    }
+
     const measure = () => {
       const container = measureRef.current!;
       const containerWidth = container.offsetWidth;
@@ -85,7 +89,7 @@ export function FilterBar({
         const remaining = selectedSkins.length - i - 1;
         const plusWidth = remaining > 0 ? 40 : 0; // approx "+99" width
 
-        if (totalWidth + chipWidth + plusWidth > (0.9*containerWidth)) {
+        if (totalWidth + chipWidth + plusWidth > 0.9 * containerWidth) {
           break;
         }
 
@@ -106,7 +110,7 @@ export function FilterBar({
     observer.observe(measureRef.current);
 
     return () => observer.disconnect();
-  }, [selectedSkins]);
+  }, [selectedSkins, skinModalOpen]);
 
   const skinsToShow =
     truncateAt !== null ? selectedSkins.slice(0, truncateAt) : selectedSkins;
@@ -147,9 +151,18 @@ export function FilterBar({
   return (
     <>
       <div ref={sentinelRef} aria-hidden className="hidden md:block h-px" />
-      <div className={cn("hidden md:block sticky top-[88px] lg:top-[92px] z-40 -mt-12 w-full", isStuck ? "" : "px-4 md:px-8 lg:px-16")}>
+      <div
+        className={cn(
+          "hidden md:block sticky top-[88px] lg:top-[92px] z-40 -mt-12 w-full",
+          isStuck ? "" : "px-4 md:px-8 lg:px-16"
+        )}
+      >
         <div className="flex justify-center">
-          <div className={"w-full mx-8 bg-black border border-white/30 rounded-2xl px-6 py-4 shadow-2xl"}>
+          <div
+            className={
+              "w-full mx-8 bg-black border border-white/30 rounded-2xl px-6 py-4 shadow-2xl"
+            }
+          >
             {/* Main row */}
             <div className="flex items-center gap-3 overflow-x-auto">
               {/* LEFT: dropdowns */}

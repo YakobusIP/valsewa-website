@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
@@ -104,19 +103,24 @@ export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
                   <div
                     key={t}
                     className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/10 cursor-pointer"
+                    role="checkbox"
+                    aria-checked={checked}
+                    tabIndex={0}
+                    onClick={() => toggle(t)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggle(t);
+                      }
+                    }}
                   >
                     <Checkbox
-                      id={`tier-${t}`}
                       checked={checked}
-                      onCheckedChange={() => toggle(t)}
-                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 pointer-events-none"
                     />
-                    <Label
-                      htmlFor={`tier-${t}`}
-                      className="text-sm text-white cursor-pointer"
-                    >
-                      {tierLabel(t)}
-                    </Label>
+                    <span className="text-sm text-white">{tierLabel(t)}</span>
                   </div>
                 );
               })}
@@ -135,19 +139,24 @@ export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
                   <div
                     key={t}
                     className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/10 cursor-pointer"
+                    role="checkbox"
+                    aria-checked={checked}
+                    tabIndex={0}
                     onClick={() => toggle(t)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggle(t);
+                      }
+                    }}
                   >
                     <Checkbox
-                      id={`tier-unrated-${t}`}
                       checked={checked}
-                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 pointer-events-none"
                     />
-                    <Label
-                      htmlFor={`tier-unrated-${t}`}
-                      className="text-sm text-white cursor-pointer"
-                    >
-                      {t}
-                    </Label>
+                    <span className="text-sm text-white">{t}</span>
                   </div>
                 );
               })}

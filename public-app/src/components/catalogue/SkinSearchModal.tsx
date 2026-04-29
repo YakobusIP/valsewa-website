@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { fetchSkins } from "@/services/skin.service";
 
@@ -12,7 +12,6 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 import { Skin } from "@/types/skin.type";
 
@@ -69,6 +68,11 @@ export function SkinSearchModal({
     };
   }, [open, debouncedQuery, hasFetched]);
 
+  const selectedIds = useMemo(
+    () => new Set(selectedSkins.map((s) => s.id)),
+    [selectedSkins]
+  );
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="bg-neutral-950 border-white/20 max-w-3xl max-h-[85vh] flex flex-col p-0">
@@ -108,17 +112,28 @@ export function SkinSearchModal({
           ) : (
             <div className="space-y-1">
               {filteredSkins.map((skin) => {
-                const checked = selectedSkins.some((s) => s.id === skin.id);
+                const checked = selectedIds.has(skin.id);
                 return (
                   <div
                     key={skin.id}
+                    role="checkbox"
+                    aria-checked={checked}
+                    tabIndex={0}
+                    onClick={() => onToggleSkin(skin)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        onToggleSkin(skin);
+                      }
+                    }}
                     className="flex items-center gap-4 p-2 rounded-lg hover:bg-white/5 cursor-pointer"
                   >
                     <Checkbox
                       id={`skin-modal-${skin.id}`}
                       checked={checked}
-                      onCheckedChange={() => onToggleSkin(skin)}
-                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 shrink-0"
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 shrink-0 pointer-events-none"
                     />
                     <div className="relative w-[160px] h-[100px] shrink-0 rounded overflow-hidden bg-neutral-900">
                       {skin.imageUrl ? (
@@ -135,12 +150,9 @@ export function SkinSearchModal({
                         </div>
                       )}
                     </div>
-                    <Label
-                      htmlFor={`skin-modal-${skin.id}`}
-                      className="text-sm text-white cursor-pointer flex-1"
-                    >
+                    <span className="text-sm text-white flex-1">
                       {skin.name}
-                    </Label>
+                    </span>
                   </div>
                 );
               })}

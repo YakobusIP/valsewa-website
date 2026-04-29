@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { fetchAccountsPublic } from "@/services/accountService";
 
 import AccountsSection from "@/components/catalogue/AccountsSection";
 import { CatalogueHero } from "@/components/catalogue/CatalogueHero";
@@ -9,8 +11,6 @@ import { FilterBar } from "@/components/catalogue/FilterBar";
 import { FilterBarMobile } from "@/components/catalogue/FilterBarMobile";
 import { FilterBottomSheet } from "@/components/catalogue/FilterBottomSheet";
 import { SORT_MAP, SortOption } from "@/components/catalogue/SortDropdown";
-
-import { fetchAccountsPublic } from "@/services/accountService";
 
 import { AccountEntity } from "@/types/account.type";
 import { Skin } from "@/types/skin.type";
@@ -25,18 +25,26 @@ interface CatalogueClientProps {
 
 function processTiers(tiers: string[]): string[] {
   return tiers.map((t) =>
-    t.toUpperCase().trim().replace(/\s*-\s*/g, "-").replace(/\s+/g, "")
+    t
+      .toUpperCase()
+      .trim()
+      .replace(/\s*-\s*/g, "-")
+      .replace(/\s+/g, "")
   );
 }
 
-export default function CatalogueClient({ initialAccounts }: CatalogueClientProps) {
+export default function CatalogueClient({
+  initialAccounts
+}: CatalogueClientProps) {
   // Brand
   const [activeBrand, setActiveBrand] = useState<BrandType>("valsewa");
 
   // Filters
   const [selectedRanks, setSelectedRanks] = useState<string[]>([]);
   const [selectedTiers, setSelectedTiers] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1_000_000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    0, 1_000_000
+  ]);
   const [selectedSkins, setSelectedSkins] = useState<Skin[]>([]);
 
   // Sort
@@ -57,15 +65,19 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
   const accountsSectionRef = useRef<HTMLElement>(null);
 
   // Debounced filter values
-  const [debouncedRanks]  = useDebounce(selectedRanks, 400);
-  const [debouncedTiers]  = useDebounce(selectedTiers, 400);
-  const [debouncedPrice]  = useDebounce(priceRange, 600);
-  const [debouncedSkins]  = useDebounce(selectedSkins, 400);
+  const [debouncedRanks] = useDebounce(selectedRanks, 400);
+  const [debouncedTiers] = useDebounce(selectedTiers, 400);
+  const [debouncedPrice] = useDebounce(priceRange, 600);
+  const [debouncedSkins] = useDebounce(selectedSkins, 400);
 
   // Scrollbar width CSS variable (same as home.tsx)
   useEffect(() => {
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.documentElement.style.setProperty("--scrollbar-width", `${scrollbarWidth}px`);
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+    document.documentElement.style.setProperty(
+      "--scrollbar-width",
+      `${scrollbarWidth}px`
+    );
   }, []);
 
   // Scroll listener
@@ -89,13 +101,16 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
   }, []);
 
   // Auto-scroll to accounts when filter changes while in hero area
-  const triggerAutoScroll = () => {
+  const triggerAutoScroll = useCallback(() => {
     if (!isPastHero) setShouldAutoScroll(true);
-  };
+  }, [isPastHero]);
 
   useEffect(() => {
     if (shouldAutoScroll && !isLoading) {
-      accountsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      accountsSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
       setShouldAutoScroll(false);
     }
   }, [shouldAutoScroll, isLoading]);
@@ -108,13 +123,16 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
       const { sortBy, direction } = SORT_MAP[sortOption];
       const result = await fetchAccountsPublic({
         limit: 50,
-        ranks:     debouncedRanks.length  ? debouncedRanks  : undefined,
-        tiers:     debouncedTiers.length  ? processTiers(debouncedTiers) : undefined,
-        min_price: debouncedPrice[0] > 0  ? debouncedPrice[0] : undefined,
-        max_price: debouncedPrice[1] < 1_000_000 ? debouncedPrice[1] : undefined,
-        skin_ids:  debouncedSkins.length  ? debouncedSkins.map((s) => s.id) : undefined,
+        ranks: debouncedRanks.length ? debouncedRanks : undefined,
+        tiers: debouncedTiers.length ? processTiers(debouncedTiers) : undefined,
+        min_price: debouncedPrice[0] > 0 ? debouncedPrice[0] : undefined,
+        max_price:
+          debouncedPrice[1] < 1_000_000 ? debouncedPrice[1] : undefined,
+        skin_ids: debouncedSkins.length
+          ? debouncedSkins.map((s) => s.id)
+          : undefined,
         sortBy,
-        direction,
+        direction
       });
       if (!cancelled) {
         setAccounts(result ?? []);
@@ -122,8 +140,16 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
       }
     }
     run();
-    return () => { cancelled = true; };
-  }, [debouncedRanks, debouncedTiers, debouncedPrice, debouncedSkins, sortOption]);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    debouncedRanks,
+    debouncedTiers,
+    debouncedPrice,
+    debouncedSkins,
+    sortOption
+  ]);
 
   // Unique skins from fetched accounts (fallback for skin search when not authenticated)
   const fallbackSkins = useMemo<Skin[]>(() => {
@@ -136,22 +162,29 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
     return Array.from(map.values());
   }, [accounts]);
 
-  const resetAllFilters = () => {
+  const resetAllFilters = useCallback(() => {
     setSelectedRanks([]);
     setSelectedTiers([]);
     setPriceRange([0, 1_000_000]);
     setSelectedSkins([]);
     setSortOption("mostRented");
-  };
+  }, []);
 
-  const toggleSkin = (skin: Skin) => {
+  const toggleSkin = useCallback((skin: Skin) => {
     setSelectedSkins((prev) =>
       prev.some((s) => s.id === skin.id)
         ? prev.filter((s) => s.id !== skin.id)
         : [...prev, skin]
     );
-    triggerAutoScroll();
-  };
+  }, []);
+
+  const setSkinsFromFilter = useCallback((skins: Skin[]) => {
+    setSelectedSkins(skins);
+  }, []);
+
+  const openFilterSheet = useCallback(() => {
+    setIsFilterSheetOpen(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-black">
@@ -170,13 +203,13 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
       {/* Desktop/tablet sticky filter bar */}
       <FilterBar
         selectedRanks={selectedRanks}
-        onRanksChange={(v) => { setSelectedRanks(v); triggerAutoScroll(); }}
+        onRanksChange={setSelectedRanks}
         selectedTiers={selectedTiers}
-        onTiersChange={(v) => { setSelectedTiers(v); triggerAutoScroll(); }}
+        onTiersChange={setSelectedTiers}
         priceRange={priceRange}
-        onPriceChange={(v) => { setPriceRange(v); triggerAutoScroll(); }}
+        onPriceChange={setPriceRange}
         selectedSkins={selectedSkins}
-        onSkinsChange={(v) => { setSelectedSkins(v); triggerAutoScroll(); }}
+        onSkinsChange={setSkinsFromFilter}
         onResetAll={resetAllFilters}
         onAnyFilterChange={triggerAutoScroll}
       />
@@ -185,9 +218,10 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
       <FilterBarMobile
         selectedSkins={selectedSkins}
         onToggleSkin={toggleSkin}
-        onOpenFilterSheet={() => setIsFilterSheetOpen(true)}
+        onOpenFilterSheet={openFilterSheet}
         onSortChange={setSortOption}
         currentSort={sortOption}
+        fallbackSkins={fallbackSkins}
         onAnyFilterChange={triggerAutoScroll}
       />
 
@@ -212,7 +246,10 @@ export default function CatalogueClient({ initialAccounts }: CatalogueClientProp
         priceRange={priceRange}
         onPriceChange={setPriceRange}
         matchingCount={accounts.length}
-        onApply={() => { setIsFilterSheetOpen(false); triggerAutoScroll(); }}
+        onApply={() => {
+          setIsFilterSheetOpen(false);
+          triggerAutoScroll();
+        }}
         onResetAll={resetAllFilters}
       />
     </div>

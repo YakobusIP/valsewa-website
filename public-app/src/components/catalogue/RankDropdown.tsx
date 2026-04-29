@@ -107,7 +107,8 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
               <div
                 key={rank.id}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-white/10 cursor-pointer transition"
-                role="button"
+                role="checkbox"
+                aria-checked={checked}
                 tabIndex={0}
                 onClick={() => toggle(rank.id)}
                 onKeyDown={(e) => {
@@ -119,6 +120,8 @@ export function RankDropdown({ selectedRanks, onChange }: RankDropdownProps) {
               >
                 <Checkbox
                   checked={checked}
+                  tabIndex={-1}
+                  aria-hidden="true"
                   className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 pointer-events-none"
                 />
 
