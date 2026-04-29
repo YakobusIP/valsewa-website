@@ -124,14 +124,16 @@ const NavbarHomeMobile = ({
             </div>
           </Link>
           {/* Streak */}
-          <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
-            <Image
-              src="/header/streak-mobile.svg"
-              alt="Streak"
-              width={18}
-              height={18}
-            />
-          </div>
+          {isAuthenticated && streak !== null && (
+            <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
+              <Image
+                src="/header/streak-mobile.svg"
+                alt="Streak"
+                width={18}
+                height={18}
+              />
+            </div>
+          )}
 
           {/* SIGN IN */}
           {!isAuthenticated && (
