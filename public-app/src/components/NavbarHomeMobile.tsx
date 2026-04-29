@@ -111,7 +111,7 @@ const NavbarHomeMobile = ({
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center justify-end gap-2 flex-1">
+        <div className="flex items-center justify-end gap-1 flex-1">
           {/* TOP UP */}
           <Link href="https://valforum.com/top-up">
             <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
@@ -126,16 +126,13 @@ const NavbarHomeMobile = ({
 
           {/* Streak */}
           {isAuthenticated && streak !== null && (
-            <div className="flex items-center px-4 py-2 border border-white/30 rounded-xl transition cursor-pointer">
+            <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
               <Image
-                src="/header/streak icon.svg"
+                src="/header/streak-mobile.svg"
                 alt="Streak"
-                width={40}
-                height={40}
+                width={18}
+                height={18}
               />
-              <span className="text-white text-xs md:text-sm font-semibold">
-                {streak}
-              </span>
             </div>
           )}
 
