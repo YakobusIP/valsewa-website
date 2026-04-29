@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +15,10 @@ import { useRouter } from "next/navigation";
 import LoginPage from "./LoginPage";
 import { SearchModal } from "./SearchModal";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+import { customerService } from "@/services/customer.service";
+import { Button } from "./ui/button";
+
+import StreakCountdown from "./StreakCountdown";
 
 interface NavbarProps {
   onLoginModalOpenChange?: (isOpen: boolean) => void;
@@ -24,6 +28,11 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  const [, setTick] = useState(0);
+  const [streak, setStreak] = useState<number | null>(null);
+  const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
+  const [isCountdownVisible, setIsCountdownVisible] = useState(false);
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
@@ -51,6 +60,26 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
   );
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setStreak(null);
+      setLastEligibleRent(null);
+      return;
+    }
+
+    customerService
+      .getMyStreak()
+      .then((data) => {
+        setStreak(data.currentStreak);
+        setLastEligibleRent(
+          data.lastEligibleRent ? new Date(data.lastEligibleRent) : null
+        );
+      })
+      .catch(() => {
+        setStreak(null);
+        setLastEligibleRent(null);
+      });
+  }, [isAuthenticated]);
   return (
     <div className="fixed top-0 z-50 w-full bg-[#000000] shadow-md shadow-black/5">
       <div className="mx-auto max-w-[1920px] pt-5 h-[84px] md:h-[80px] flex items-center justify-between px-5 ">
@@ -83,49 +112,106 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
 
           {/* TOP UP */}
           <Link href="https://valforum.com/top-up">
-            <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl hover:border-white transition cursor-pointer">
+            <Button className="hidden lg:flex border border-white/30 rounded-xl hover:border-white transition">
               <Image
                 src="/header/Diamond.svg"
                 alt="Top Up"
                 width={18}
                 height={18}
               />
-              <span className="text-white text-sm font-bold font-instrumentSans">
+              <span className="text-white text-xs tablet:text-sm font-bold font-instrumentSans">
                 Top Up
               </span>
-            </div>
+            </Button>
+            <Button
+              size="icon"
+              className="lg:hidden border border-white/30 rounded-xl hover:border-white transition"
+            >
+              <Image
+                src="/header/Diamond.svg"
+                alt="Top Up"
+                width={18}
+                height={18}
+              />
+            </Button>
           </Link>
+
+          {/* Streak */}
+          {isAuthenticated && streak !== null && (
+            <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
+              <StreakCountdown
+                lastEligibleRent={lastEligibleRent}
+                onVisibilityChange={setIsCountdownVisible}
+                className="text-white text-xs font-bold mr-1"
+              />
+
+              {/* ICON SWITCH */}
+              {isCountdownVisible ? (
+                <Image
+                  src="/header/time run out icon.svg"
+                  alt="timer"
+                  width={20}
+                  height={20}
+                />
+              ) : (
+                <Image
+                  src="/header/streak icon.svg"
+                  alt="streak"
+                  width={40}
+                  height={40}
+                />
+              )}
+              <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                {streak}
+              </span>
+            </div>
+          )}
 
           {/* SIGN IN */}
           {!isAuthenticated && (
-            <button
-              onClick={handleLoginClick}
-              className="flex items-center gap-2 px-4 py-2 border border-black rounded-xl bg-white hover:bg-gray-100 transition"
-            >
-              <Image
-                src="/header/SignUp Icon.svg"
-                alt="Sign In"
-                width={18}
-                height={18}
-                className="filter invert"
-              />
-              <span className="text-black text-sm font-semibold">
-                Login/Sign Up
-              </span>
-            </button>
+            <Fragment>
+              <Button
+                onClick={handleLoginClick}
+                className="hidden lg:flex border border-black rounded-xl bg-white hover:bg-gray-100 transition"
+              >
+                <Image
+                  src="/header/SignUp Icon.svg"
+                  alt="Sign In"
+                  width={18}
+                  height={18}
+                  className="filter invert"
+                />
+                <span className="text-black text-xs tablet:text-sm font-semibold hidden lg:block">
+                  Login/Sign Up
+                </span>
+              </Button>
+              <Button
+                onClick={handleLoginClick}
+                size="icon"
+                className="lg:hidden border border-black rounded-xl bg-white hover:bg-gray-100 transition"
+              >
+                <Image
+                  src="/header/SignUp Icon.svg"
+                  alt="Sign In"
+                  width={18}
+                  height={18}
+                  className="filter invert"
+                />
+              </Button>
+            </Fragment>
           )}
-
           {isAuthenticated && (
             <HoverCard openDelay={200}>
               <HoverCardTrigger asChild>
-                <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer">
+                <div className="flex items-center justify-center gap-1 desktop:px-4 px-1 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer w-full">
                   <Image
                     src="/header/SignUp Icon.svg"
                     alt="User"
                     width={18}
                     height={18}
+                    className="max-desktop:w-[12px] max-desktop:h-[12px]"
                   />
-                  <span className="text-white text-xs md:text-sm font-semibold">
+                  <span className="text-white text-xs desktop:text-sm font-semibold">
                     {username}
                   </span>
                 </div>

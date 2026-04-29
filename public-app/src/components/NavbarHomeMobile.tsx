@@ -53,6 +53,17 @@ const NavbarHomeMobile = ({
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
   const [streak, setStreak] = useState<number | null>(null);
 
+  const bookingReserved = booking?.find(
+    (i) =>
+      i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now()
+  );
+  const accountCode = bookingReserved?.account.accountCode;
+  const rentedDays = calculateDaysRented(
+    bookingReserved?.startAt ?? null,
+    bookingReserved?.endAt ?? null
+  );
+  const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
+
   useEffect(() => {
     if (!isAuthenticated) {
       setStreak(null);
@@ -65,27 +76,16 @@ const NavbarHomeMobile = ({
       .catch(() => setStreak(null));
   }, [isAuthenticated]);
 
-  const bookingReserved = booking?.find(
-    (i) =>
-      i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now()
-  );
-  const accountCode = bookingReserved?.account.accountCode;
-  const rentedDays = calculateDaysRented(
-    bookingReserved?.startAt ?? null,
-    bookingReserved?.endAt ?? null
-  );
-  const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
-
   return (
     <div
       className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
         }`}
     >
-      <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-8">
+      <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-8 gap-1">
         {/* LEFT */}
-        <div className="flex items-center flex-1">
+        <div className="flex items-center w-auto">
           <button onClick={handleSearchClick}>
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg md:hover:bg-white/10 transition">
+            <div className="flex items-center justify-left w-10 h-10 rounded-lg md:hover:bg-white/10 transition">
               <Image
                 src="/header/Frame.svg"
                 alt="Search"
@@ -123,7 +123,6 @@ const NavbarHomeMobile = ({
               />
             </div>
           </Link>
-
           {/* Streak */}
           {isAuthenticated && streak !== null && (
             <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
@@ -158,7 +157,7 @@ const NavbarHomeMobile = ({
                 <button
                   onClick={() => setIsOpen(!isOpen)}
                   onMouseEnter={() => setIsOpen(true)}
-                  className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#C70515] hover:bg-[#a90411] transition"
+                  className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-gray-200 transition bg-[#C70515]"
                 >
                   <Image
                     src="/header/SignUp Icon.svg"

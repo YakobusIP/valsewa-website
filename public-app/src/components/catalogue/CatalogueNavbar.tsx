@@ -24,7 +24,7 @@ import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { customerService } from "@/services/customer.service";
-
+import StreakCountdown from "../StreakCountdown";
 type BrandType = "valsewa" | "valjubel" | "valjoki";
 
 interface CatalogueNavbarProps {
@@ -55,7 +55,18 @@ export function CatalogueNavbar({
   const { isAuthenticated, username, customerId } = useAuth();
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
+  const [, setTick] = useState(0);
   const [streak, setStreak] = useState<number | null>(null);
+  const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
+  const [isCountdownVisible, setIsCountdownVisible] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const bookingReserved = booking?.find(
     (i) =>
@@ -68,11 +79,27 @@ export function CatalogueNavbar({
   );
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
-  const [, setTick] = useState(0);
   useEffect(() => {
-    const interval = setInterval(() => setTick((p) => p + 1), 60000);
-    return () => clearInterval(interval);
-  }, []);
+    if (!isAuthenticated) {
+      setStreak(null);
+      setLastEligibleRent(null);
+      return;
+    }
+
+    customerService
+      .getMyStreak()
+      .then((data) => {
+        setStreak(data.currentStreak);
+        setLastEligibleRent(
+          data.lastEligibleRent ? new Date(data.lastEligibleRent) : null
+        );
+      })
+      .catch(() => {
+        setStreak(null);
+        setLastEligibleRent(null);
+      });
+  }, [isAuthenticated]);
+
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -170,14 +197,30 @@ export function CatalogueNavbar({
 
             {/* Streak */}
             {isAuthenticated && streak !== null && (
-              <div className="flex items-center px-4 py-2 border border-white/30 rounded-xl transition cursor-pointer">
-                <Image
-                  src="/header/streak icon.svg"
-                  alt="Streak"
-                  width={40}
-                  height={40}
+              <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
+                <StreakCountdown
+                  lastEligibleRent={lastEligibleRent}
+                  onVisibilityChange={setIsCountdownVisible}
+                  className="text-white text-xs font-bold mr-1"
                 />
-                <span className="text-white text-xs md:text-sm font-semibold">
+
+                {/* ICON SWITCH */}
+                {isCountdownVisible ? (
+                  <Image
+                    src="/header/time run out icon.svg"
+                    alt="timer"
+                    width={20}
+                    height={20}
+                  />
+                ) : (
+                  <Image
+                    src="/header/streak icon.svg"
+                    alt="streak"
+                    width={40}
+                    height={40}
+                  />
+                )}
+                <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
                   {streak}
                 </span>
               </div>

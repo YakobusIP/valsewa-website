@@ -98,15 +98,15 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
         <figure className="w-[100px] h-[100px] fixed bottom-4 right-4 z-50 rounded-full bg-red-800/50">
           <Image src="/home/kananbawah.png" fill alt="Iconic" />
         </figure>
-      </a> */}
-      <div className="max-md:hidden">
+      </a>*/}
+      <div className="max-tablet:hidden">
         <NavbarHome
           activeBrand={activeBrand}
           setActiveBrand={setActiveBrand}
           isScrolled={isScrolled}
         />
       </div>
-      <div className="md:hidden">
+      <div className="tablet:hidden">
         <NavbarHomeMobile activeBrand={activeBrand} isScrolled={isScrolled} />
       </div>
       <main
