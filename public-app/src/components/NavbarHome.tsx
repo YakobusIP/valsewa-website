@@ -80,12 +80,12 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
       className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-16 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
         }`}
     >
-      <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between">
-        <div className="flex items-center gap-4 md:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 2xl-large:gap-12 large:gap-14 pl-7 md:pl-6 lg:pl-9 xl:pl-7">
+      <div className="mx-auto max-w-[1920px] h-[84px] tablet:h-[80px] flex items-center justify-between">
+        <div className="flex items-center gap-4 tablet:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 2xl-large:gap-12 large:gap-14 pl-7 tablet:pl-6 lg:pl-9 xl:pl-7">
           {/* Logo wrapper - positioned to align with hero notch on desktop, scales down on lg */}
           <div className="relative">
             {!isScrolled && (
-              <figure className="relative w-[70px] md:w-[80px] lg:w-[100px] 2xl:w-[130px]">
+              <figure className="relative w-[70px] tablet:w-[80px] lg:w-[100px] 2xl:w-[130px]">
                 <Image
                   src="/header/Logo Header Valforum.png"
                   alt="logo"
@@ -97,7 +97,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
             )}
             {isScrolled && (
               <Link href="/">
-                <figure className="relative md:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
+                <figure className="relative tablet:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
                   <Image
                     src="/header/VALSEWA.png"
                     alt="logo"
@@ -120,7 +120,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               {/* VALSEWA */}
               <div
                 onClick={() => setActiveBrand("valsewa")}
-                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valsewa"
+                className={`flex items-center justify-center px-3 tablet:px-2 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valsewa"
                   ? "bg-black shadow-md"
                   : "hover:bg-white/10"
                   }`}
@@ -130,14 +130,14 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                   alt="VALSEWA"
                   width={130}
                   height={28}
-                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
+                  className="object-contain w-[80px] tablet:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
 
               {/* VALJUBEL */}
               <div
                 onClick={() => setActiveBrand("valjubel")}
-                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjubel"
+                className={`flex items-center justify-center px-3 tablet:px-2 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjubel"
                   ? "bg-black shadow-md"
                   : "hover:bg-white/10"
                   }`}
@@ -147,14 +147,14 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                   alt="VALJUBEL"
                   width={130}
                   height={28}
-                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
+                  className="object-contain w-[80px] tablet:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
 
               {/* VALJOKI */}
               <div
                 onClick={() => setActiveBrand("valjoki")}
-                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjoki"
+                className={`flex items-center justify-center px-3 tablet:px-2 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjoki"
                   ? "bg-black shadow-md"
                   : "hover:bg-white/10"
                   }`}
@@ -164,14 +164,14 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                   alt="VALJOKI"
                   width={130}
                   height={28}
-                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
+                  className="object-contain w-[80px] tablet:w-[80px] 2xl:w-[130px] h-auto"
                 />
               </div>
             </div>
           </div>
         </div>
         {/* NAV RIGHT SIDE */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center desktop:gap-4 gap-2">
           {/* SEARCH */}
           <button onClick={handleSearchClick}>
             <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
@@ -193,7 +193,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                 width={18}
                 height={18}
               />
-              <span className="text-white text-xs md:text-sm font-bold font-instrumentSans">
+              <span className="text-white text-xs tablet:text-sm font-bold font-instrumentSans">
                 Top Up
               </span>
             </Button>
@@ -212,14 +212,14 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
 
           {/* Streak */}
           {isAuthenticated && streak !== null && (
-            <div className="flex items-center px-4 py-2 border border-white/30 rounded-xl transition cursor-pointer">
+            <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
               <Image
                 src="/header/streak icon.svg"
                 alt="Streak"
                 width={40}
                 height={40}
               />
-              <span className="text-white text-xs md:text-sm font-semibold">
+              <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
                 {streak}
               </span>
             </div>
@@ -239,7 +239,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                   height={18}
                   className="filter invert"
                 />
-                <span className="text-black text-xs md:text-sm font-semibold hidden lg:block">
+                <span className="text-black text-xs tablet:text-sm font-semibold hidden lg:block">
                   Login/Sign Up
                 </span>
               </Button>
@@ -261,14 +261,15 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
           {isAuthenticated && (
             <HoverCard openDelay={200}>
               <HoverCardTrigger asChild>
-                <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer">
+                <div className="flex items-center justify-center gap-1 desktop:px-4 px-1 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer w-full">
                   <Image
                     src="/header/SignUp Icon.svg"
                     alt="User"
                     width={18}
                     height={18}
+                    className="max-desktop:w-[12px] max-desktop:h-[12px]"
                   />
-                  <span className="text-white text-xs md:text-sm font-semibold">
+                  <span className="text-white text-xs desktop:text-sm font-semibold">
                     {username}
                   </span>
                 </div>
@@ -281,7 +282,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               >
                 <div className="space-y-4">
                   {/* User Info */}
-                  <div className="flex items-center gap-3 cursor-default">
+                  <div className="flex items-center justify-center gap-3 cursor-default">
                     <User className="w-8 h-8" />
                     <span className="font-semibold text-xl">{username}</span>
                   </div>

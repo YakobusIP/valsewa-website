@@ -259,10 +259,10 @@ export default function AccountDetailPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <div className="relative max-lg:hidden">
+      <div className="relative max-tablet:hidden">
         <Navbar onLoginModalOpenChange={setNavbarLoginOpen} />
       </div>
-      <div className="lg:hidden">
+      <div className="tablet:hidden">
         <NavbarMobile />
       </div>
 
