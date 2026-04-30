@@ -7,6 +7,7 @@ import { fetchAccountsPublic } from "@/services/accountService";
 import AccountsSection from "@/components/catalogue/AccountsSection";
 import { CatalogueHero } from "@/components/catalogue/CatalogueHero";
 import { CatalogueNavbar } from "@/components/catalogue/CatalogueNavbar";
+import { DailyDropModal } from "@/components/dailydrop/DailyDropModal";
 import { FilterBar } from "@/components/catalogue/FilterBar";
 import { FilterBarMobile } from "@/components/catalogue/FilterBarMobile";
 import { FilterBottomSheet } from "@/components/catalogue/FilterBottomSheet";
@@ -59,6 +60,7 @@ export default function CatalogueClient({
   const [isPastHero, setIsPastHero] = useState(false);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const [shouldAutoScroll, setShouldAutoScroll] = useState(false);
+  const [isDailyDropOpen, setIsDailyDropOpen] = useState(false);
 
   // Refs
   const heroSentinelRef = useRef<HTMLDivElement>(null);
@@ -212,6 +214,7 @@ export default function CatalogueClient({
         onSkinsChange={setSkinsFromFilter}
         onResetAll={resetAllFilters}
         onAnyFilterChange={triggerAutoScroll}
+        onOpenDailyDrop={() => setIsDailyDropOpen(true)}
       />
 
       {/* Mobile filter bar */}
@@ -223,6 +226,7 @@ export default function CatalogueClient({
         currentSort={sortOption}
         fallbackSkins={fallbackSkins}
         onAnyFilterChange={triggerAutoScroll}
+        onOpenDailyDrop={() => setIsDailyDropOpen(true)}
       />
 
       {/* Accounts section */}
@@ -233,6 +237,11 @@ export default function CatalogueClient({
         sortOption={sortOption}
         onSortChange={setSortOption}
         onResetFilters={resetAllFilters}
+      />
+
+      <DailyDropModal
+        open={isDailyDropOpen}
+        onClose={() => setIsDailyDropOpen(false)}
       />
 
       {/* Mobile filter bottom sheet */}

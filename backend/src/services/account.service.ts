@@ -28,6 +28,7 @@ import {
 import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
 import { parseDurationToHours } from "../lib/utils";
+import { getOperationalWindow } from "../lib/operational-window";
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
@@ -423,6 +424,9 @@ export class AccountService {
         orderBy: {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
+        omit: {
+          legacySkinList: true
+        },
         include: {
           priceTier: true,
           thumbnail: true,
@@ -672,7 +676,12 @@ export class AccountService {
 
   getAllDatabaseAccounts = async (filter?: Prisma.AccountWhereInput) => {
     try {
-      return await prisma.account.findMany({ where: filter });
+      return await prisma.account.findMany({
+        where: filter,
+        omit: {
+          legacySkinList: true
+        }
+      });
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -730,6 +739,9 @@ export class AccountService {
     try {
       const account = await prisma.account.findUnique({
         where: { id },
+        omit: {
+          legacySkinList: true
+        },
         include: {
           priceTier: {
             include: {
@@ -795,7 +807,8 @@ export class AccountService {
         omit: {
           password: true,
           passwordResetRequired: true,
-          rentHourUpdated: true
+          rentHourUpdated: true,
+          legacySkinList: true
         },
         where: { id },
         include: {
@@ -832,6 +845,15 @@ export class AccountService {
         take: 2
       });
 
+      const { start: opStart, end: opEnd } = await getOperationalWindow();
+      const dailyDrop = await prisma.dailyDrop.findFirst({
+        where: {
+          accountId: account.id,
+          date: { gte: opStart, lte: opEnd }
+        },
+        select: { discount: true, priceListId: true }
+      });
+
       return {
         ...account,
         // Priority: booking data > account data > null
@@ -846,7 +868,8 @@ export class AccountService {
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
           : (account.nextBookingDuration ?? null),
-        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null
+        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null,
+        dailyDrop
       };
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -899,6 +922,9 @@ export class AccountService {
         where: {
           availabilityStatus: { not: Status.NOT_AVAILABLE },
           id: { notIn: unavailableAccounts.map((v) => v.accountId) }
+        },
+        omit: {
+          legacySkinList: true
         }
       });
 
@@ -928,6 +954,9 @@ export class AccountService {
           availabilityStatus: scalars.availabilityStatus as Status,
           otherImages: { connect: otherImages?.map((id) => ({ id })) },
           priceTier: { connect: { id: priceTier } }
+        },
+        omit: {
+          legacySkinList: true
         }
       });
     } catch (error) {
@@ -1059,7 +1088,10 @@ export class AccountService {
 
       return await prisma.account.update({
         where: { id },
-        data: updateData
+        data: updateData,
+        omit: {
+          legacySkinList: true
+        }
       });
     } catch (error) {
       if (error instanceof NotFoundError) throw error;

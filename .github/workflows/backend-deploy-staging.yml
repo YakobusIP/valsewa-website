@@ -16,4 +16,3 @@ jobs:
       environment: staging
       deploy_path: /srv/staging/backend
       service_name: backend-staging.service
-      timers: "check-password-expiration check-voucher-expiration sync-expired sync-completed sync-account-availability update-expire-at"

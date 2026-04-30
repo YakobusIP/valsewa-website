@@ -8,6 +8,7 @@ import { voucherService } from "@/services/voucher.service";
 import Navbar from "@/components/Navbar";
 import NavbarMobile from "@/components/NavbarMobile";
 import BookingDetail from "@/components/bookings/BookingDetail";
+import CancelBookingButton from "@/components/bookings/CancelBookingButton";
 import PaymentCountdown from "@/components/bookings/PaymentCountdown";
 import PaymentMethods from "@/components/bookings/PaymentMethods";
 import PaymentSummary from "@/components/bookings/PaymentSummary";
@@ -30,7 +31,6 @@ import { cn } from "@/lib/utils";
 
 import { XIcon } from "lucide-react";
 import { notFound, useParams, useRouter } from "next/navigation";
-import CancelBookingButton from "@/components/bookings/CancelBookingButton";
 
 function LoadingState() {
   return (
@@ -87,7 +87,7 @@ export default function BookingDetailPage() {
   const [voucher, setVoucher] = useState<VoucherEntity | null>(null);
   const [isLoadingCancelBooking, setIsLoadingCancelBooking] = useState(false);
   const [isBookingFree, setBookingFree] = useState(false);
-  const [totalPayment, setTotalPayment] = useState(0);
+  const [, setTotalPayment] = useState(0);
   const auth = useAuth();
 
   const { handleAsyncError } = useErrorHandler();
@@ -217,9 +217,7 @@ export default function BookingDetailPage() {
                   cancelBooking={handleCancelBooking}
                   isLoadingCancelBooking={isLoadingCancelBooking}
                 />
-                <ProgressStepper
-                  stepIdx={1}
-                />
+                <ProgressStepper stepIdx={1} />
               </div>
             </div>
 
@@ -228,7 +226,6 @@ export default function BookingDetailPage() {
                 <PaymentCountdown expiredAt={booking.expiredAt} />
               )}
             </div>
-
 
             <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-5 mt-6 sm:mt-8 lg:mt-10 lg:px-20">
               <div className="flex flex-col w-full space-y-3 sm:space-y-4 lg:space-y-5">
@@ -241,7 +238,6 @@ export default function BookingDetailPage() {
                     setPaymentMethod={setPaymentMethod}
                   />
                 </div>
-
               </div>
               <div className="bg-[#1C1C1C] w-full">
                 <PaymentSummary
@@ -255,13 +251,10 @@ export default function BookingDetailPage() {
                   onSubmit={onSubmit}
                 />
               </div>
-
             </div>
 
             <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
-              <ProgressStepper
-                stepIdx={1}
-              />
+              <ProgressStepper stepIdx={1} />
               <div className="bg-[#1C1C1C]">
                 <BookingDetail booking={booking} />
               </div>
@@ -285,8 +278,6 @@ export default function BookingDetailPage() {
                   onSubmit={onSubmit}
                 />
               </div>
-
-
 
               {/* <div className="flex flex-col gap-2 space-y-2 text-center text-white bg-[#1C1C1C]">
                 <button

@@ -9,7 +9,8 @@
     "lint": "eslint . --ext ts --report-unused-disable-directives --max-warnings 0",
     "format": "prettier . --write",
     "format-check": "prettier . --check",
-    "dev": "nodemon --watch .env --watch src src/server.ts"
+    "dev": "nodemon --watch .env --watch src src/server.ts",
+    "backfill:prod": "ts-node scripts/backfill/index.ts"
   },
   "keywords": [],
   "author": "",

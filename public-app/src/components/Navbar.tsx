@@ -2,6 +2,8 @@
 
 import { Fragment, useEffect, useState } from "react";
 
+import { customerService } from "@/services/customer.service";
+
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -14,11 +16,9 @@ import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
 import { SearchModal } from "./SearchModal";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
-import { customerService } from "@/services/customer.service";
-import { Button } from "./ui/button";
-
 import StreakCountdown from "./StreakCountdown";
+import { Button } from "./ui/button";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 
 interface NavbarProps {
   onLoginModalOpenChange?: (isOpen: boolean) => void;
@@ -28,8 +28,6 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const [, setTick] = useState(0);
   const [streak, setStreak] = useState<number | null>(null);
   const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
   const [isCountdownVisible, setIsCountdownVisible] = useState(false);

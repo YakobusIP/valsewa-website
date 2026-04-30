@@ -28,6 +28,7 @@ type AccountEntityRequest = {
 };
 
 type AccountWithSkins = Prisma.AccountGetPayload<{
+  omit: { legacySkinList: true };
   include: { skinList: true };
 }>;
 
@@ -81,7 +82,7 @@ type AccountSearchFilters = {
 
 type UpdateAccountMFARequest = {
   isMfa: boolean;
-}
+};
 
 export type {
   AccountEntityRequest,

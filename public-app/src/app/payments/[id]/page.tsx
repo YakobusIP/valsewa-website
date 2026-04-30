@@ -6,6 +6,7 @@ import { bookingService } from "@/services/booking.service";
 
 import Navbar from "@/components/Navbar";
 import NavbarMobile from "@/components/NavbarMobile";
+import CancelBookingButton from "@/components/bookings/CancelBookingButton";
 import PaymentCountdown from "@/components/bookings/PaymentCountdown";
 import ProgressStepper from "@/components/bookings/ProgressStepper";
 
@@ -24,10 +25,9 @@ import { PAYMENT_STATUS_MAP } from "@/lib/constants";
 import { instrumentSans, staatliches } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
-import { ArrowDownToLineIcon, CheckIcon, CopyIcon, XIcon } from "lucide-react";
+import { ArrowDownToLineIcon, CheckIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import { notFound, useParams, useRouter } from "next/navigation";
-import CancelBookingButton from "@/components/bookings/CancelBookingButton";
 
 function LoadingState() {
   return (
@@ -249,9 +249,7 @@ export default function PaymentDetailPage() {
                   cancelBooking={handleCancelBooking}
                   isLoadingCancelBooking={isLoadingCancelBooking}
                 />
-                <ProgressStepper
-                  stepIdx={2}
-                />
+                <ProgressStepper stepIdx={2} />
               </div>
             </div>
             <div className="lg:px-20">
@@ -260,10 +258,10 @@ export default function PaymentDetailPage() {
               )}
             </div>
 
-
             <div
-              className={`${payment.qrUrl ? "grid grid-cols-2" : "flex flex-col"
-                } max-desktop:flex max-desktop:flex-col items-center pt-16 w-full gap-4 mx-auto tablet:mt-4 mt-2 lg:mt-8 max-w-[1000px]`}
+              className={`${
+                payment.qrUrl ? "grid grid-cols-2" : "flex flex-col"
+              } max-desktop:flex max-desktop:flex-col items-center pt-16 w-full gap-4 mx-auto tablet:mt-4 mt-2 lg:mt-8 max-w-[1000px]`}
             >
               <div className="flex-1 w-auto flex flex-col items-center gap-5">
                 {payment.qrUrl && (
@@ -321,14 +319,13 @@ export default function PaymentDetailPage() {
                       >
                         {vaNoCopied ? (
                           <div className="flex items-center justify-center gap-2">
-                            <CheckIcon className="w-4 h-4 shrink-0" /> <p>Copied!</p>
+                            <CheckIcon className="w-4 h-4 shrink-0" />{" "}
+                            <p>Copied!</p>
                           </div>
                         ) : (
                           "Copy VA Number"
                         )}
-
                       </button>
-
                     </div>
                   )}
                 </div>
@@ -361,7 +358,6 @@ export default function PaymentDetailPage() {
                   </button>
                 </div>
               </div>
-
             </div>
           </>
         )}
