@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
+    fetchAccountByCode,
     fetchAccountById,
     fetchRecommendedAccounts
 } from "@/services/accountService";
@@ -40,14 +41,13 @@ import OutsideOperationalHoursModal from "@/components/OutsideOperationalHoursMo
 import { staatliches } from "@/lib/fonts";
 import { IoCaretDown, IoPersonSharp } from "react-icons/io5";
 import NavbarHome from "@/components/NavbarHome";
-import NavbarHomeMobile from "@/components/NavbarHomeMobile";
 import CountdownTimer from "@/components/CountdownTimer";
 
 export default function AccountDetailsPage() {
     const router = useRouter();
 
-    const params = useParams<{ id: string }>();
-    const id = params?.id;
+    const params = useParams<{ code: string }>();
+    const code = params?.code;
 
     const [account, setAccount] = useState<AccountEntity | null>(null);
     const [loading, setLoading] = useState(true);
@@ -68,7 +68,6 @@ export default function AccountDetailsPage() {
     const { isAuthenticated, customerId } = useAuth();
     const [showLogin, setShowLogin] = useState(false);
     const [navbarLoginOpen, setNavbarLoginOpen] = useState(false); // NEW state for navbar login
-    const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeBrand, setActiveBrand] = useState<
         "valsewa" | "valjubel" | "valjoki"
@@ -81,16 +80,14 @@ export default function AccountDetailsPage() {
     const [operationalHours, setOperationalHours] = useState<OperationalHoursEntity | null>(null);
     const [nonMfaRecommendedAccounts, setNonMfaRecommendedAccounts] = useState<AccountEntity[]>([]);
 
-    const handleCardClick = (id: string) => {
-        router?.push(`/accounts/${id}`);
-    };
-
     useEffect(() => {
-        fetchAccountById(id)
+        if (!code) return;
+
+        fetchAccountByCode(code)
             .then((res) => setAccount(res))
             .catch(() => setAccount(null))
             .finally(() => setLoading(false));
-    }, [id]);
+    }, [code]);
 
     useEffect(() => {
         fetchOperationalHours()
@@ -138,7 +135,7 @@ export default function AccountDetailsPage() {
             setSubmitting(true);
             const booking = await bookingService.createBooking({
                 customerId: customerId ?? undefined,
-                accountId: parseInt(id),
+                accountId: account?.id ?? 0,
                 priceListId: selectedDuration.value.id,
                 quantity: qty,
                 ...(mode === "BOOK" && startAt ? { startAt } : {})
@@ -1214,11 +1211,6 @@ export default function AccountDetailsPage() {
             </div>
             {showLogin && <LoginPage onClose={() => setShowLogin(false)} />}
 
-            <SearchModal
-                open={isSearchOpen}
-                onOpenChange={setIsSearchOpen}
-                onSelectAccount={handleCardClick}
-            />
             <OutsideOperationalHoursModal
                 open={showOutsideHoursModal}
                 onClose={() => setShowOutsideHoursModal(false)}

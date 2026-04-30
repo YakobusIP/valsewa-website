@@ -74,7 +74,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
     }
 
     return (
-      <Link href={`/accounts/${account.id}`} target="_blank" className="cursor-pointer">
+      <Link href={`/accounts/${account.accountCode}`} target="_blank" className="cursor-pointer">
         <div
           className={cn(
             "group relative rounded-xl overflow-auto lg:overflow-hidden transition-all duration-300 hover:scale-[1.02]",

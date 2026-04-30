@@ -27,7 +27,7 @@ export default function InventoryAccountCard({
 
   return (
     <Link
-      href={`/accounts/${item.id}`}
+      href={`/accounts/${item.accountCode}`}
       className={cn(
         "block w-full min-w-0 max-w-[600px] cursor-pointer font-instrumentSans transition-all duration-300",
         "mx-auto",

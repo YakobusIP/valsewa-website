@@ -533,9 +533,9 @@ export function SearchModal({
                         return (
                           <Link
                             key={acc.id}
-                            href={`/accounts/${acc.id}`}
+                            href={`/accounts/${acc.accountCode}`}
                             onClick={() => {
-                              onSelectAccount?.(acc.id.toString());
+                              onSelectAccount?.(acc.accountCode.toString());
                             }}
                             className="block w-full text-left rounded-xl bg-neutral-900/40 hover:bg-red-600 transition px-4 py-3"
                           >
