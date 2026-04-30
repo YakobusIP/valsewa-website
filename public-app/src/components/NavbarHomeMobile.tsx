@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { useRouter } from "next/navigation";
+import { customerService } from "@/services/customer.service";
 
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,10 +12,10 @@ import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { customerService } from "@/services/customer.service";
 
 interface NavbarHomeMobileProps {
   activeBrand: "valsewa" | "valjubel" | "valjoki";
@@ -78,8 +78,9 @@ const NavbarHomeMobile = ({
 
   return (
     <div
-      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-        }`}
+      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${
+        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+      }`}
     >
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-8 gap-1">
         {/* LEFT */}
@@ -111,7 +112,7 @@ const NavbarHomeMobile = ({
         </div>
 
         {/* RIGHT */}
-        <div className="flex items-center justify-end gap-1 flex-1">
+        <div className="flex items-center justify-end gap-1">
           {/* TOP UP */}
           <Link href="https://valforum.com/top-up">
             <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
@@ -221,7 +222,6 @@ const NavbarHomeMobile = ({
         {isComponentOpen && (
           <LoginPage onClose={() => setIsComponentOpen(false)} />
         )}
-
       </div>
     </div>
   );

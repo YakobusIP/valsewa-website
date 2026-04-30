@@ -1,13 +1,16 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { type CSSProperties, Fragment, useEffect, useState } from "react";
+
+import { customerService } from "@/services/customer.service";
+
+import DesktopBrandSwitcher from "@/components/hero/DesktopBrandSwitcher";
+import { heroChromeVars } from "@/components/hero/heroChromeMetrics";
 
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 
 import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
-
-import { customerService } from "@/services/customer.service";
 
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
@@ -15,9 +18,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
+import StreakCountdown from "./StreakCountdown";
 import { Button } from "./ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
-import StreakCountdown from "./StreakCountdown";
 
 interface NavbarProps {
   activeBrand: "valsewa" | "valjubel" | "valjoki";
@@ -26,7 +29,6 @@ interface NavbarProps {
 }
 
 function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
-
   const { isAuthenticated, username, customerId } = useAuth();
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
@@ -44,7 +46,6 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
   const handleSearchClick = () => {
     router.push("/search");
   };
-
 
   const bookingReserved = booking?.find(
     (i) =>
@@ -89,15 +90,17 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-16 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-        }`}
+      style={heroChromeVars as CSSProperties}
+      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 px-8 lg:px-16 ${
+        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+      }`}
     >
       <div className="mx-auto max-w-[1920px] h-[84px] tablet:h-[80px] flex items-center justify-between">
-        <div className="flex items-center gap-4 tablet:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 2xl-large:gap-12 large:gap-14 pl-7 tablet:pl-6 lg:pl-9 xl:pl-7">
+        <div className="flex items-center gap-[var(--hero-logo-switcher-gap)] pl-[var(--hero-nav-left-offset)]">
           {/* Logo wrapper - positioned to align with hero notch on desktop, scales down on lg */}
-          <div className="relative">
+          <div className="relative -translate-y-1">
             {!isScrolled && (
-              <figure className="relative w-[70px] tablet:w-[80px] lg:w-[100px] 2xl:w-[130px]">
+              <figure className="relative w-[var(--hero-valforum-logo-width)]">
                 <Image
                   src="/header/Logo Header Valforum.png"
                   alt="logo"
@@ -121,65 +124,17 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               </Link>
             )}
           </div>
-          {/* BRAND SWITCHER - scales down on lg, full size on xl+ */}
           <div
-            className={`relative transition-all duration-300 ${isScrolled
-              ? "opacity-0 translate-y-[-10px] pointer-events-none"
-              : "opacity-100 translate-y-0"
-              }`}
+            className={`relative transition-all duration-300 ${
+              isScrolled
+                ? "opacity-0 translate-y-[-10px] pointer-events-none"
+                : "opacity-100 translate-y-0"
+            }`}
           >
-            <div className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
-              {/* VALSEWA */}
-              <div
-                onClick={() => setActiveBrand("valsewa")}
-                className={`flex items-center justify-center px-3 tablet:px-2 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valsewa"
-                  ? "bg-black shadow-md"
-                  : "hover:bg-white/10"
-                  }`}
-              >
-                <Image
-                  src="/header/VALSEWA.png"
-                  alt="VALSEWA"
-                  width={130}
-                  height={28}
-                  className="object-contain w-[80px] tablet:w-[80px] 2xl:w-[130px] h-auto"
-                />
-              </div>
-
-              {/* VALJUBEL */}
-              <div
-                onClick={() => setActiveBrand("valjubel")}
-                className={`flex items-center justify-center px-3 tablet:px-2 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjubel"
-                  ? "bg-black shadow-md"
-                  : "hover:bg-white/10"
-                  }`}
-              >
-                <Image
-                  src="/header/VALJUBEL.png"
-                  alt="VALJUBEL"
-                  width={130}
-                  height={28}
-                  className="object-contain w-[80px] tablet:w-[80px] 2xl:w-[130px] h-auto"
-                />
-              </div>
-
-              {/* VALJOKI */}
-              <div
-                onClick={() => setActiveBrand("valjoki")}
-                className={`flex items-center justify-center px-3 tablet:px-2 py-2 rounded-xl cursor-pointer transition ${activeBrand === "valjoki"
-                  ? "bg-black shadow-md"
-                  : "hover:bg-white/10"
-                  }`}
-              >
-                <Image
-                  src="/header/VALJOKI.png"
-                  alt="VALJOKI"
-                  width={130}
-                  height={28}
-                  className="object-contain w-[80px] tablet:w-[80px] 2xl:w-[130px] h-auto"
-                />
-              </div>
-            </div>
+            <DesktopBrandSwitcher
+              activeBrand={activeBrand}
+              setActiveBrand={setActiveBrand}
+            />
           </div>
         </div>
         {/* NAV RIGHT SIDE */}
@@ -354,7 +309,6 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
         {isComponentOpen && (
           <LoginPage onClose={() => setIsComponentOpen(false)} />
         )}
-
       </div>
     </div>
   );

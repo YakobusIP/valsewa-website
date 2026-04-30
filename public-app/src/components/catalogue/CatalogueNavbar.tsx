@@ -1,8 +1,12 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { type CSSProperties, Fragment, useEffect, useState } from "react";
+
+import { customerService } from "@/services/customer.service";
 
 import LoginPage from "@/components/LoginPage";
+import DesktopBrandSwitcher from "@/components/hero/DesktopBrandSwitcher";
+import { heroChromeVars } from "@/components/hero/heroChromeMetrics";
 import { Button } from "@/components/ui/button";
 import {
   HoverCard,
@@ -23,8 +27,9 @@ import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { customerService } from "@/services/customer.service";
+
 import StreakCountdown from "../StreakCountdown";
+
 type BrandType = "valsewa" | "valjubel" | "valjoki";
 
 interface CatalogueNavbarProps {
@@ -118,53 +123,28 @@ export function CatalogueNavbar({
     <>
       {/* ─── DESKTOP / TABLET (md+) ─── */}
       <div
-        className={`hidden tablet:block fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-8 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-          }`}
+        style={heroChromeVars as CSSProperties}
+        className={`hidden tablet:block fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-8 ${
+          isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+        }`}
       >
         <div className="mx-auto max-w-full h-[84px] md:h-[80px] flex items-center justify-between">
-          {/* LEFT: Logo + Brand Switcher */}
-          <div className="flex items-center gap-4 md:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 pl-7 md:pl-6 lg:pl-9 xl:pl-7">
-            <div className="relative">
-              {(
-                <figure className="relative w-[70px] md:w-[80px] lg:w-[100px] 2xl:w-[130px]">
-                  <Image
-                    src="/header/Logo Header Valforum.png"
-                    alt="logo"
-                    height={50}
-                    width={130}
-                    className="object-contain w-full h-auto"
-                  />
-                </figure>
-              )}
-            </div>
+          <div className="flex items-center gap-[var(--hero-logo-switcher-gap)] pl-[var(--hero-nav-left-offset)]">
+            <figure className="relative w-[var(--hero-valforum-logo-width)]">
+              <Image
+                src="/header/Logo Header Valforum.png"
+                alt="logo"
+                height={50}
+                width={130}
+                className="object-contain w-full h-auto"
+              />
+            </figure>
 
-            {/* Brand Switcher */}
-            <div
-              className={`relative transition-all duration-300 ${"opacity-100 translate-y-0"
-                }`}
-            >
-              <div className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
-                {(["valsewa", "valjubel", "valjoki"] as BrandType[]).map(
-                  (brand) => (
-                    <div
-                      key={brand}
-                      onClick={() => setActiveBrand(brand)}
-                      className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-4 rounded-xl cursor-pointer transition ${activeBrand === brand
-                        ? "bg-black shadow-md"
-                        : "hover:bg-white/10"
-                        }`}
-                    >
-                      <Image
-                        src={`/header/${brand.toUpperCase()}.png`}
-                        alt={brand.toUpperCase()}
-                        width={130}
-                        height={28}
-                        className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
-                      />
-                    </div>
-                  )
-                )}
-              </div>
+            <div className="relative transition-all duration-300">
+              <DesktopBrandSwitcher
+                activeBrand={activeBrand}
+                setActiveBrand={setActiveBrand}
+              />
             </div>
           </div>
 
@@ -317,8 +297,9 @@ export function CatalogueNavbar({
 
       {/* ─── MOBILE (below md) ─── */}
       <div
-        className={`tablet:hidden fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
-          }`}
+        className={`tablet:hidden fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${
+          isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+        }`}
       >
         <div className="mx-auto max-w-[1920px] h-[64px] flex items-center justify-between px-4">
           {/* CENTER: brand logo */}
