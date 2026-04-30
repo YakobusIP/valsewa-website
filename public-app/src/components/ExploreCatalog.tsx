@@ -53,19 +53,19 @@ export default function ExploreCatalog() {
 
         <div className="flex gap-6 mt-3 text-white text-[9px] tablet:text-xs flex-wrap justify-center">
           <span className="flex items-center gap-2">
-            <Image src="/home/instagram.svg" alt="" width={16} height={16} />
+            <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALSEWA
           </span>
           <span className="flex items-center gap-2">
-            <Image src="/home/instagram.svg" alt="" width={16} height={16} />
+            <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALFORUM
           </span>
           <span className="flex items-center gap-2">
-            <Image src="/home/instagram.svg" alt="" width={16} height={16} />
+            <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALJUBEL
           </span>
           <span className="flex items-center gap-2">
-            <Image src="/home/instagram.svg" alt="" width={16} height={16} />
+            <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALJOKI
           </span>
         </div>
