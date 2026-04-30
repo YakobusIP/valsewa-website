@@ -210,7 +210,7 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
         <div
           className="relative flex items-center justify-center shrink-0"
           style={{
-            width: Math.max(36, Math.round(cardWidth * 0.24)),
+            width: Math.max(36, Math.round(cardWidth * 0.28)),
             height: Math.max(18, Math.round(cardWidth * 0.12))
           }}
         >
@@ -229,7 +229,7 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
 
           {/* Text overlay */}
           <span
-            className="relative z-10 text-white font-antonio font-semibold text-right"
+            className="relative z-10 text-white font-antonio font-semibold w-full text-right pr-1 pb-0.5"
             style={{
               fontSize: Math.max(9, Math.round(cardWidth * 0.01)),
               lineHeight: 1

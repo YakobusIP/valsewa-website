@@ -117,6 +117,9 @@ export default function DailyDropModal({
 
   const [discountMin, setDiscountMin] = useState("");
   const [discountMax, setDiscountMax] = useState("");
+  const [slotDiscounts, setSlotDiscounts] = useState<
+    [string, string, string]
+  >(["", "", ""]);
   const [slots, setSlots] = useState<[SlotConfig, SlotConfig, SlotConfig]>([
     { ...EMPTY_SLOT },
     { ...EMPTY_SLOT },
@@ -144,6 +147,11 @@ export default function DailyDropModal({
   ) => {
     setDiscountMin(String(config.discountMin));
     setDiscountMax(String(config.discountMax));
+    setSlotDiscounts([
+      config.slot1Discount === null ? "" : String(config.slot1Discount),
+      config.slot2Discount === null ? "" : String(config.slot2Discount),
+      config.slot3Discount === null ? "" : String(config.slot3Discount)
+    ]);
     setAllowedAccountIds(config.allowedAccountIds.map(String));
     setSlots([
       {
@@ -252,6 +260,7 @@ export default function DailyDropModal({
     setPriceTiersLoaded(false);
     setPendingConfig(null);
     setSlots([{ ...EMPTY_SLOT }, { ...EMPTY_SLOT }, { ...EMPTY_SLOT }]);
+    setSlotDiscounts(["", "", ""]);
     fetchDrops();
     fetchPriceTiers();
     fetchAccounts();
@@ -270,9 +279,31 @@ export default function DailyDropModal({
       return;
     }
 
+    const parsedSlotDiscounts: (number | null)[] = [];
+    for (let i = 0; i < 3; i++) {
+      const raw = slotDiscounts[i].trim();
+      if (raw === "") {
+        parsedSlotDiscounts.push(null);
+        continue;
+      }
+      const v = parseFloat(raw);
+      if (isNaN(v) || v < 0 || v > 100) {
+        toast({
+          variant: "destructive",
+          title: `Invalid Slot ${i + 1} fixed discount`,
+          description: "Must be a number between 0 and 100, or empty."
+        });
+        return;
+      }
+      parsedSlotDiscounts.push(v);
+    }
+
     const payload: UpsertDailyDropConfigPayload = {
       discountMin: min,
       discountMax: max,
+      slot1Discount: parsedSlotDiscounts[0],
+      slot2Discount: parsedSlotDiscounts[1],
+      slot3Discount: parsedSlotDiscounts[2],
       slot1PriceTierIds: slots[0].priceTierIds.map(Number),
       slot2PriceTierIds: slots[1].priceTierIds.map(Number),
       slot3PriceTierIds: slots[2].priceTierIds.map(Number),
@@ -522,6 +553,36 @@ export default function DailyDropModal({
                         Slot {slotNum} Filter
                       </p>
                       <div className="flex flex-col gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <Label htmlFor={`slot${slotNum}Discount`}>
+                            Fixed Discount (%)
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Optional. If set, this slot uses this exact
+                            discount. Leave empty to use the discount range
+                            above.
+                          </p>
+                          <Input
+                            id={`slot${slotNum}Discount`}
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={0.1}
+                            placeholder="e.g. 50"
+                            value={slotDiscounts[idx]}
+                            onChange={(e) =>
+                              setSlotDiscounts((prev) => {
+                                const next = [...prev] as [
+                                  string,
+                                  string,
+                                  string
+                                ];
+                                next[idx] = e.target.value;
+                                return next;
+                              })
+                            }
+                          />
+                        </div>
                         <div className="flex flex-col gap-1.5">
                           <Label>Allowed Price Tiers</Label>
                           <p className="text-xs text-muted-foreground">

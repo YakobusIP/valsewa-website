@@ -309,7 +309,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
 
           {/* ── MOBILE (< md) ───────────────────────────────────────────────── */}
           <div
-            className="md:hidden relative rounded-2xl overflow-y-auto"
+            className="md:hidden relative rounded-2xl overflow-hidden"
             style={{
               width: "95vw",
               minHeight: "80vh",
@@ -371,7 +371,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
                   </div>
                 ) : (
                   <Carousel
-                    opts={{ align: "center", loop: false, startIndex: 1 }}
+                    opts={{ align: "center", loop: true, startIndex: 1 }}
                     className="w-full"
                   >
                     <CarouselContent className="-ml-3">

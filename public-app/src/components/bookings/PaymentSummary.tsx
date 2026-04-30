@@ -166,6 +166,7 @@ function PaymentSummary({
             voucher={voucher}
             handleApplyVoucher={onApplyVoucher}
             isApplyingVoucher={isApplyingVoucher}
+            isDailyDrop={isDailyDropBooking}
           />
         </div>
       </div>

@@ -20,6 +20,9 @@ export class DailyDropService {
     const {
       discountMin,
       discountMax,
+      slot1Discount,
+      slot2Discount,
+      slot3Discount,
       slot1PriceTierIds,
       slot2PriceTierIds,
       slot3PriceTierIds,
@@ -35,6 +38,16 @@ export class DailyDropService {
       );
     }
 
+    for (const [label, value] of [
+      ["slot1Discount", slot1Discount],
+      ["slot2Discount", slot2Discount],
+      ["slot3Discount", slot3Discount]
+    ] as const) {
+      if (value !== null && (isNaN(value) || value < 0 || value > 100)) {
+        throw new BadRequestError(`${label} must be between 0 and 100`);
+      }
+    }
+
     try {
       await prisma.$transaction([
         prisma.dailyDropConfig.deleteMany(),
@@ -42,6 +55,9 @@ export class DailyDropService {
           data: {
             discountMin,
             discountMax,
+            slot1Discount,
+            slot2Discount,
+            slot3Discount,
             slot1PriceTierIds,
             slot2PriceTierIds,
             slot3PriceTierIds,
@@ -135,21 +151,24 @@ export class DailyDropService {
       {
         slot: 1,
         priceTierIds: config.slot1PriceTierIds,
-        priceListIds: config.slot1PriceListIds
+        priceListIds: config.slot1PriceListIds,
+        fixedDiscount: config.slot1Discount
       },
       {
         slot: 2,
         priceTierIds: config.slot2PriceTierIds,
-        priceListIds: config.slot2PriceListIds
+        priceListIds: config.slot2PriceListIds,
+        fixedDiscount: config.slot2Discount
       },
       {
         slot: 3,
         priceTierIds: config.slot3PriceTierIds,
-        priceListIds: config.slot3PriceListIds
+        priceListIds: config.slot3PriceListIds,
+        fixedDiscount: config.slot3Discount
       }
     ];
 
-    for (const { slot, priceTierIds, priceListIds } of slotConfigs) {
+    for (const { slot, priceTierIds, priceListIds, fixedDiscount } of slotConfigs) {
       const accounts = await prisma.account.findMany({
         where: {
           availabilityStatus: "AVAILABLE",
@@ -192,8 +211,9 @@ export class DailyDropService {
         ];
 
       const discount =
+        fixedDiscount ??
         config.discountMin +
-        Math.random() * (config.discountMax - config.discountMin);
+          Math.random() * (config.discountMax - config.discountMin);
 
       drops.push({
         slot,

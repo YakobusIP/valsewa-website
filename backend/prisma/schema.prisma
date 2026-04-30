@@ -299,6 +299,9 @@ model DailyDropConfig {
   id                Int      @id @default(autoincrement())
   discountMin       Float
   discountMax       Float
+  slot1Discount     Float?
+  slot2Discount     Float?
+  slot3Discount     Float?
   slot1PriceTierIds Int[]
   slot2PriceTierIds Int[]
   slot3PriceTierIds Int[]
