@@ -4,15 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
     fetchAccountByCode,
-    fetchAccountById,
     fetchRecommendedAccounts
 } from "@/services/accountService";
 import { bookingService } from "@/services/booking.service";
 
 import LoginPage from "@/components/LoginPage";
-import Navbar from "@/components/Navbar";
 import NavbarMobile from "@/components/NavbarMobile";
-import { SearchModal } from "@/components/SearchModal";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -67,7 +64,6 @@ export default function AccountDetailsPage() {
     const [endTime, setEndTime] = useState<string>("");
     const { isAuthenticated, customerId } = useAuth();
     const [showLogin, setShowLogin] = useState(false);
-    const [navbarLoginOpen, setNavbarLoginOpen] = useState(false); // NEW state for navbar login
     const [isScrolled, setIsScrolled] = useState(false);
     const [activeBrand, setActiveBrand] = useState<
         "valsewa" | "valjubel" | "valjoki"
@@ -307,7 +303,7 @@ export default function AccountDetailsPage() {
                 <NavbarMobile />
             </div>
 
-            {!showLogin && !navbarLoginOpen && (
+            {!showLogin && (
                 <div className="hidden lg:block fixed top-32 left-24 items-center mb-6 z-50">
                     <Link
                         href="/"
@@ -330,27 +326,6 @@ export default function AccountDetailsPage() {
                     </Link>
                 </div>
             )}
-            <div className="hidden lg:block fixed top-32 left-24 items-center mb-6 z-50">
-                <Link
-                    href="/"
-                    className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
-                >
-                    {/* Solid Left Triangle Custom SVG for precise look */}
-                    <svg
-                        width="10"
-                        height="12"
-                        viewBox="0 0 10 12"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        className=""
-                    >
-                        <path d="M0 6L9.75 11.6292L9.75 0.370835L0 6Z" fill="white" />
-                    </svg>
-                    <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
-                        ALL ACCOUNTS
-                    </span>
-                </Link>
-            </div>
             <div className="pt-[110px] px-4 lg:px-10" onScroll={(e) => setIsScrolled(e.currentTarget.scrollTop > 1)}>
                 <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8 max-desktop:hidden">
                     {/* LEFT — GALLERY */}

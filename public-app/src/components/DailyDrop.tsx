@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import React from "react";
 import { FaFire } from "react-icons/fa";
 
@@ -21,7 +22,14 @@ export default function DailyDrop() {
 
 
           <div className="flex flex-row md:flex-row md:items-center items-start justify-between gap-1 sm:gap-8 md:gap-4 relative">
-            <img src="/home/dailydrop2.png" alt="Daily Drop" className="rounded-lg w-full" />
+            <Image
+              src="/home/dailydrop2.png"
+              alt="Daily Drop"
+              width={1200}
+              height={600}
+              className="rounded-lg w-full h-auto"
+              sizes="(max-width: 1920px) 100vw, 1920px"
+            />
           </div>
         </div>
       </div>

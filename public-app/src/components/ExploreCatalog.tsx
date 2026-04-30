@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { FaArrowRight } from "react-icons/fa6";
 import CTAbackground from "./CTAbackground";
-import router from "next/router";
 import Link from "next/link";
 
 export default function ExploreCatalog() {
@@ -54,19 +53,19 @@ export default function ExploreCatalog() {
 
         <div className="flex gap-6 mt-3 text-white text-[9px] tablet:text-xs flex-wrap justify-center">
           <span className="flex items-center gap-2">
-            <img src="/home/instagram.svg" />
+            <Image src="/home/instagram.svg" alt="" width={16} height={16} />
             VALSEWA
           </span>
           <span className="flex items-center gap-2">
-            <img src="/home/instagram.svg" />
+            <Image src="/home/instagram.svg" alt="" width={16} height={16} />
             VALFORUM
           </span>
           <span className="flex items-center gap-2">
-            <img src="/home/instagram.svg" />
+            <Image src="/home/instagram.svg" alt="" width={16} height={16} />
             VALJUBEL
           </span>
           <span className="flex items-center gap-2">
-            <img src="/home/instagram.svg" />
+            <Image src="/home/instagram.svg" alt="" width={16} height={16} />
             VALJOKI
           </span>
         </div>

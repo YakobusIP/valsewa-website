@@ -2,33 +2,25 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 
-import Card from "@/components/Card";
-import DiscoverSection from "@/components/DiscoverSection";
 import Hero from "@/components/Hero";
 import HowToOrder from "@/components/HowToOrder";
 import NavbarHome from "@/components/NavbarHome";
 import NavbarHomeMobile from "@/components/NavbarHomeMobile";
 import RecommendedSection from "@/components/RecommendedSection";
 
-import { AccountEntity, CarouselSlide } from "@/types/account.type";
+import { CarouselSlide } from "@/types/account.type";
 
-import { useAccountController } from "@/controllers/useAccountController";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import DailyDrop from "@/components/DailyDrop";
 import ExploreCatalog from "@/components/ExploreCatalog";
 import { useRouter } from "next/navigation";
 
 interface Props {
-  initialAccount: AccountEntity[];
   initialCarousel: CarouselSlide[];
 }
-export default function Home({ initialAccount, initialCarousel }: Props) {
-  const [shouldScroll, setShouldScroll] = useState(false);
+export default function Home({ initialCarousel }: Props) {
   const [isScrolled, setIsScrolled] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
-  const { accountList, loading, selectTier, selectRank } =
-    useAccountController(initialAccount);
 
   const router = useRouter();
 
@@ -54,38 +46,9 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
     return () => window.removeEventListener("resize", updateScrollbarWidth);
   }, []);
 
-  const handleSelectTier = (tierId: string, isLowTier: string) => {
-    selectTier(tierId, isLowTier);
-    setShouldScroll(true);
-  };
-
-  const handleSelectRank = (rank: string) => {
-    selectRank(rank);
-    setShouldScroll(true);
-  };
-
   const handleSeeMore = () => {
     router.push("/search");
   };
-
-  useEffect(() => {
-    if (!loading && shouldScroll) {
-      setTimeout(() => {
-        if (accountList.length > 0) {
-          document.getElementById("card-section")?.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-          });
-        } else {
-          document.getElementById("results-section")?.scrollIntoView({
-            behavior: "smooth",
-            block: "center"
-          });
-        }
-        setShouldScroll(false);
-      }, 100);
-    }
-  }, [loading, shouldScroll, accountList.length]);
 
   return (
     <Fragment>
