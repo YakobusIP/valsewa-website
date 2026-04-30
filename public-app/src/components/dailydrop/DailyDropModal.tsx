@@ -218,7 +218,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
           <DialogPrimitive.Title className="sr-only">Daily Drop</DialogPrimitive.Title>
 
           {/* ── DESKTOP / TABLET (md+) ──────────────────────────────────────── */}
-          <div className="hidden md:flex flex-col items-center w-3/4 3xl:w-2/3 max-h-[90vh]">
+          <div className="hidden md:flex flex-col items-center md:w-11/12 xl:w-3/4 3xl:w-2/3 max-h-[90vh]">
             {/*
               Header SVG:
               - z-[2] so it renders ABOVE the modal box (z-[1]) in the stacking context
