@@ -74,7 +74,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
     }
 
     return (
-      <Link href={`/accounts/${account.id}`} className="cursor-pointer">
+      <Link href={`/accounts/${account.id}`} target="_blank" className="cursor-pointer">
         <div
           className={cn(
             "group relative rounded-xl overflow-auto lg:overflow-hidden transition-all duration-300 hover:scale-[1.02]",
@@ -165,23 +165,26 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
     <div
       className={cn("aspect-square", forCarousel ? "min-w-[320px]" : "w-full")}
     >
-      <button
-        onClick={onSeeMore}
-        className="group relative w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#770000] to-black border border-white/10 flex flex-col items-start justify-center text-left transition-all duration-300 hover:scale-[1.02]"
-      >
-        <div className="relative z-10 p-6 flex flex-row justify-between items-center w-full">
-          <h3 className="text-4xl font-bold text-white mb-2 leading-tight">
-            Discover
-            <br />
-            More
-          </h3>
-          <div className="mt-4 w-12 h-12 flex items-center justify-center group">
-            <FaArrowRight className="text-white text-5xl tablet:text-5xl desktop:text-5xl transition-transform group-hover:translate-x-2 group-hover:rotate-45" />
+      <Link href="/search" target="_blank">
+        <button
+          className="group relative w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#770000] to-black border border-white/10 flex flex-col items-start justify-center text-left transition-all duration-300 hover:scale-[1.02]"
+        >
+          <div className="relative z-10 p-6 flex flex-row justify-between items-center w-full">
+
+            <h3 className="text-4xl font-bold text-white mb-2 leading-tight">
+              Discover
+              <br />
+              More
+            </h3>
+            <div className="mt-4 w-12 h-12 flex items-center justify-center group">
+              <FaArrowRight className="text-white text-5xl tablet:text-5xl desktop:text-5xl transition-transform group-hover:translate-x-2 group-hover:rotate-45" />
+            </div>
           </div>
-        </div>
-        {/* Red Glow */}
-        {/* <div className="absolute inset-0 bg-red-600/20 blur-3xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" /> */}
-      </button>
+          {/* Red Glow */}
+          {/* <div className="absolute inset-0 bg-red-600/20 blur-3xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" /> */}
+        </button>
+      </Link>
+
     </div>
   );
 

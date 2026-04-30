@@ -1,17 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { FaArrowRight } from "react-icons/fa6";
+import CTAbackground from "./CTAbackground";
+import router from "next/router";
+import Link from "next/link";
 
 export default function ExploreCatalog() {
-  const router = useRouter();
   return (
-    <section className="relative w-full h-[500px] xl:h-[600px] flex items-center justify-center overflow-hidden max-w-[1920px] mx-auto">
+    <section className="relative w-full h-[95vh] xl:h-[95vh] flex items-center justify-center overflow-hidden max-w-[1920px] mx-auto">
 
       {/* Background */}
       <div className="absolute inset-0 bg-black">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_#b30000,_#000_90%)] tablet:bg-[radial-gradient(circle_at_bottom,_#b30000,_#000_80%)] desktop:bg-[radial-gradient(circle_at_bottom,_#b30000,_#000_55%)] opacity-90" />
+        <CTAbackground />
       </div>
 
       {/* CENTER CONTENT */}
@@ -25,22 +27,23 @@ export default function ExploreCatalog() {
           className="mb-6"
         />
 
-        <h1 className="text-white font-bold uppercase leading-tight text-4xl tablet:text-5xl desktop:text-7xl">
+        <h1 className="text-white font-bold uppercase leading-tight text-4xl tablet:text-5xl desktop:text-7xl pb-8">
           Widest Selection <br /> In The Game.
         </h1>
+        <Link href="/search" target="_blank" className="cursor-pointer">
+          <button
+            className="group mt-8 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg transition-all duration-300 hover:scale-105"
+          >
+            <span className="text-sm tablet:text-base block">
+              Explore our evergrowing
+            </span>
+            <span className="flex items-center justify-center gap-2 text-sm tablet:text-base">
+              account catalog
+              <FaArrowRight className="transition-transform duration-300 group-hover:translate-x-2 group-hover:rotate-45" />
+            </span>
+          </button>
+        </Link>
 
-        <button
-          onClick={() => router.push("/search")}
-          className="group mt-8 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg transition-all duration-300 hover:scale-105"
-        >
-          <span className="text-sm tablet:text-base block">
-            Explore our evergrowing
-          </span>
-          <span className="flex items-center justify-center gap-2 text-sm tablet:text-base">
-            account catalog
-            <FaArrowRight className="transition-transform duration-300 group-hover:translate-x-2 group-hover:rotate-45" />
-          </span>
-        </button>
       </div>
 
       {/* BOTTOM CONTENT */}
