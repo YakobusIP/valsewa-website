@@ -105,6 +105,20 @@ export function CatalogueNavbar({
       });
   }, [isAuthenticated]);
 
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setStreak(null);
+      return;
+    }
+
+    customerService
+      .getMyStreak()
+      .then((data) => setStreak(data.currentStreak))
+      .catch(() => setStreak(null));
+  }, [isAuthenticated]);
+
+
   return (
     <>
       {/* ─── DESKTOP / TABLET (md+) ─── */}

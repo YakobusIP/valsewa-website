@@ -155,18 +155,18 @@ export function SearchModal({
       low_tier_only: lowTierOnly,
       tiers: selectedTiers.length
         ? selectedTiers.map((t) => {
-            const processed = t
-              .toUpperCase()
-              .trim()
-              .replace(/\s*-\s*/g, "-")
-              .replace(/\s+/g, "");
+          const processed = t
+            .toUpperCase()
+            .trim()
+            .replace(/\s*-\s*/g, "-")
+            .replace(/\s+/g, "");
 
-            if (processed.includes("NORMAL")) {
-              return processed.split("-")[0];
-            }
+          if (processed.includes("NORMAL")) {
+            return processed.split("-")[0];
+          }
 
-            return processed;
-          })
+          return processed;
+        })
         : undefined,
       skin_counts: selectedSkins.length ? selectedSkins : undefined,
       ranks: selectedRanks.length ? selectedRanks : undefined,
@@ -533,7 +533,7 @@ export function SearchModal({
                         return (
                           <Link
                             key={acc.id}
-                            href={`/details/${acc.id}`}
+                            href={`/accounts/${acc.id}`}
                             onClick={() => {
                               onSelectAccount?.(acc.id.toString());
                             }}

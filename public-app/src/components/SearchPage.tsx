@@ -21,7 +21,7 @@ export default function SearchPage({ onClose }: SearchPageProps) {
   }, []);
 
   const handleCardClick = (id: string) => {
-    router?.push(`/details/${id}`);
+    router?.push(`/accounts/${id}`);
   };
 
   // Close on ESC key

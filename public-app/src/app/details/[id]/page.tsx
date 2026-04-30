@@ -73,7 +73,7 @@ export default function AccountDetailPage() {
   const [nonMfaRecommendedAccounts, setNonMfaRecommendedAccounts] = useState<AccountEntity[]>([]);
 
   const handleCardClick = (id: string) => {
-    router?.push(`/details/${id}`);
+    router?.push(`/accounts/${id}`);
   };
 
   useEffect(() => {

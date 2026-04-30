@@ -1772,41 +1772,41 @@ export class BookingService {
 
         if (customer) {
           const now = new Date();
-          const operationalHours = await this.settingService.getOperationalHours();
 
-          if (!isOutsideOperationalHours(operationalHours, now)) {
-            const tz = operationalHours?.timezone ?? WIB_TZ;
-            const closeTime = operationalHours?.close || "23:59";
-            const [closeH, closeM] = closeTime.split(":").map(Number);
-            console.log('close time: ', closeTime, closeH, closeM);
+          // Always use your default timezone
+          const tz = WIB_TZ;
 
-            const tomorrowEnd = dayjs(now)
+          // Fixed close time
+          const closeH = 23;
+          const closeM = 59;
+
+          const tomorrowEnd = dayjs(now)
+            .tz(tz)
+            .add(1, "day")
+            .hour(closeH)
+            .minute(closeM)
+            .second(59)
+            .millisecond(999)
+            .toDate();
+
+          let newStreak = 1;
+
+          if (!customer.lastEligibleRent) {
+            newStreak = 1;
+          } else {
+            const lastBookingDayEnd = dayjs(customer.lastEligibleRent)
               .tz(tz)
-              .add(1, "day")
-              .hour(closeH)
-              .minute(closeM)
-              .second(59)
-              .millisecond(999)
+              .subtract(1, "day")
               .toDate();
 
-            let newStreak = 1;
-
-            if (!customer.lastEligibleRent) {
-              newStreak = 1;
+            if (now.getTime() <= lastBookingDayEnd.getTime()) {
+              newStreak = customer.currentStreak;
+            } else if (now.getTime() <= customer.lastEligibleRent.getTime()) {
+              newStreak = customer.currentStreak + 1;
             } else {
-              const lastBookingDayEnd = dayjs(customer.lastEligibleRent)
-                .tz(tz)
-                .subtract(1, "day")
-                .toDate();
-
-              if (now.getTime() <= lastBookingDayEnd.getTime()) {
-                newStreak = customer.currentStreak;
-              } else if (now.getTime() <= customer.lastEligibleRent.getTime()) {
-                newStreak = customer.currentStreak + 1;
-              } else {
-                newStreak = 0;
-              }
+              newStreak = 0;
             }
+          }
 
             await tx.customer.update({
               where: { id: customer.id },
@@ -1815,7 +1815,7 @@ export class BookingService {
                 lastEligibleRent: tomorrowEnd
               }
             });
-          }
+          
         }
       }
     }

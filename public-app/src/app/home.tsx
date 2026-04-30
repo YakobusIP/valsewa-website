@@ -15,6 +15,9 @@ import { AccountEntity, CarouselSlide } from "@/types/account.type";
 import { useAccountController } from "@/controllers/useAccountController";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import DailyDrop from "@/components/DailyDrop";
+import ExploreCatalog from "@/components/ExploreCatalog";
+import { useRouter } from "next/navigation";
 
 interface Props {
   initialAccount: AccountEntity[];
@@ -26,6 +29,8 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
   const mainRef = useRef<HTMLElement>(null);
   const { accountList, loading, selectTier, selectRank } =
     useAccountController(initialAccount);
+
+  const router = useRouter();
 
   const [activeBrand, setActiveBrand] = useState<
     "valsewa" | "valjubel" | "valjoki"
@@ -60,7 +65,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
   };
 
   const handleSeeMore = () => {
-    setShouldScroll(true);
+    router.push("/search");
   };
 
   useEffect(() => {
@@ -84,7 +89,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
 
   return (
     <Fragment>
-      <a
+      {/* <a
         href="https://wa.me/6285175343447?text=Halo admin VALSEWA aku butuh bantuan dong"
         target="_blank"
         rel="noopener noreferrer"
@@ -93,7 +98,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
         <figure className="w-[100px] h-[100px] fixed bottom-4 right-4 z-50 rounded-full bg-red-800/50">
           <Image src="/home/kananbawah.png" fill alt="Iconic" />
         </figure>
-      </a>
+      </a>*/}
       <div className="max-tablet:hidden">
         <NavbarHome
           activeBrand={activeBrand}
@@ -132,21 +137,45 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, amount: 0.3 }}
           transition={{ duration: 0.6, ease: "easeIn" }}
-          className="snap-start snap-always px-8 lg:px-16 scroll-mt-24"
+          className="snap-start snap-always px-8 lg:px-16 scroll-mt-12 pt-10"
         >
           <HowToOrder />
         </motion.section>
+
+        <motion.section
+          id="daily-drop"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeIn" }}
+          className="snap-start snap-always px-8 lg:px-16 scroll-mt-12 pt-10"
+        >
+          <DailyDrop />
+        </motion.section>
+
         <motion.section
           id="recommended"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: false, amount: 0.3 }}
           transition={{ duration: 0.6, ease: "easeIn" }}
-          className="snap-start snap-always px-8 lg:px-16 scroll-mt-24"
+          className="snap-start snap-always px-8 lg:px-16 scroll-mt-12 pt-10"
         >
           <RecommendedSection onSeeMore={handleSeeMore} />
         </motion.section>
+
         <motion.section
+          id="explore-catalog"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false, amount: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeIn" }}
+          className="snap-start snap-always scroll-mt-12 pt-10"
+        >
+          <ExploreCatalog />
+        </motion.section>
+
+        {/* <motion.section
           id="discover"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -159,8 +188,10 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
             onSelectRank={handleSelectRank}
             loading={loading}
           />
-        </motion.section>
-        <motion.section
+        </motion.section> */}
+
+
+        {/* <motion.section
           id="cards"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -199,7 +230,7 @@ export default function Home({ initialAccount, initialCarousel }: Props) {
               </p>
             </div>
           )}
-        </motion.section>
+        </motion.section> */}
       </main>
     </Fragment>
   );

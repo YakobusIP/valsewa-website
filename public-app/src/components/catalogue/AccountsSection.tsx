@@ -78,13 +78,13 @@ const AccountsSectionInner = forwardRef<HTMLElement, AccountsSectionProps>(
 
         {/* Grid */}
         {!isLoading && accounts.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 tablet:gap-4 gap-2">
             {accounts.map((account) => (
               <div
                 key={account.id}
                 onClick={() =>
                   window.open(
-                    `/details/${account.id}`,
+                    `/accounts/${account.id}`,
                     "_blank",
                     "noopener,noreferrer"
                   )

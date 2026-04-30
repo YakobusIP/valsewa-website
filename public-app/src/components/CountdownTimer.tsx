@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 type CountdownTimerProps = {
-  targetDate: string; // ISO string ONLY
+  targetDate: string;
 };
 
 const CountdownTimer = ({ targetDate }: CountdownTimerProps) => {
@@ -21,7 +21,7 @@ const CountdownTimer = ({ targetDate }: CountdownTimerProps) => {
       const diff = end - Date.now();
 
       if (diff <= 0) {
-        setTimeLeft("00d:00h:00m");
+        setTimeLeft("0D:0H:0M");
         return;
       }
 
@@ -29,15 +29,14 @@ const CountdownTimer = ({ targetDate }: CountdownTimerProps) => {
       const h = Math.floor((diff % 86400000) / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
 
-      setTimeLeft(
-        `${String(d).padStart(2, "0")}d:` +
-        `${String(h).padStart(2, "0")}h:` +
-        `${String(m).padStart(2, "0")}m`
-      );
+      // ❌ no padStart
+      // ✅ uppercase + dynamic digits
+      setTimeLeft(`${d}D:${h}H:${m}M`);
     };
 
-    tick(); // immediate render
+    tick();
     const id = setInterval(tick, 1000);
+
     return () => clearInterval(id);
   }, [targetDate]);
 
