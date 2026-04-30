@@ -1,43 +1,9 @@
-import dayjs from "dayjs";
-import timezone from "dayjs/plugin/timezone";
-import utc from "dayjs/plugin/utc";
+import { BookingStatus } from "@prisma/client";
+
 import { BadRequestError, InternalServerError, NotFoundError } from "../lib/error";
+import { getOperationalWindow } from "../lib/operational-window";
 import { prisma } from "../lib/prisma";
-import { OPERATIONAL_HOURS_KEY } from "../types/setting.type";
 import { UpsertDailyDropConfigRequest } from "../types/dailydrop.type";
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-type OperationalWindow = { start: Date; end: Date; tz: string };
-
-async function getOperationalWindow(): Promise<OperationalWindow> {
-  const setting = await prisma.globalSettings.findUnique({
-    where: { key: OPERATIONAL_HOURS_KEY }
-  });
-
-  let openH = 9, openM = 0, closeH = 22, closeM = 0;
-  let tz = "Asia/Jakarta";
-
-  if (setting?.value) {
-    try {
-      const hours = JSON.parse(setting.value);
-      [openH, openM] = (hours.open as string).split(":").map(Number);
-      [closeH, closeM] = (hours.close as string).split(":").map(Number);
-      if (hours.timezone) tz = hours.timezone;
-    } catch {
-      // fall back to defaults
-    }
-  }
-
-  const today = dayjs().tz(tz).format("YYYY-MM-DD");
-  const pad = (n: number) => String(n).padStart(2, "0");
-
-  const start = dayjs.tz(`${today} ${pad(openH)}:${pad(openM)}:00`, tz).toDate();
-  const end   = dayjs.tz(`${today} ${pad(closeH)}:${pad(closeM)}:00`, tz).toDate();
-
-  return { start, end, tz };
-}
 
 export class DailyDropService {
   getConfig = async () => {
@@ -94,8 +60,9 @@ export class DailyDropService {
   getTodayDrops = async () => {
     try {
       const { start, end } = await getOperationalWindow();
+      const now = new Date();
 
-      return await prisma.dailyDrop.findMany({
+      const drops = await prisma.dailyDrop.findMany({
         where: {
           date: { gte: start, lte: end }
         },
@@ -111,6 +78,35 @@ export class DailyDropService {
           priceList: true
         }
       });
+
+      const accountIds = drops.map((d) => d.accountId);
+
+      const activeBookings =
+        accountIds.length > 0
+          ? await prisma.booking.findMany({
+              where: {
+                accountId: { in: accountIds },
+                createdAt: { gte: start, lte: end },
+                OR: [
+                  { status: BookingStatus.RESERVED },
+                  {
+                    status: BookingStatus.HOLD,
+                    expiredAt: { gt: now }
+                  }
+                ]
+              },
+              select: { accountId: true, duration: true }
+            })
+          : [];
+
+      const soldKeys = new Set(
+        activeBookings.map((b) => `${b.accountId}:${b.duration}`)
+      );
+
+      return drops.map((drop) => ({
+        ...drop,
+        isSold: soldKeys.has(`${drop.accountId}:${drop.priceList.duration}`)
+      }));
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }

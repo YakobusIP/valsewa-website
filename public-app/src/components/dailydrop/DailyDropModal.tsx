@@ -205,7 +205,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
             */}
             <div
               className="relative z-[2] flex justify-center w-full shrink-0 pointer-events-none"
-              style={{ height: headerSvgH, marginBottom: -headerOverlapH }}
+              style={{ height: headerSvgH, marginBottom: -headerOverlapH-10 }}
             >
               <Image
                 src="/daily-drop/daily-drop-header.svg"
@@ -251,7 +251,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
               {/* Content */}
               <div className="relative z-10 flex flex-col items-center px-6 pb-8">
                 {/* Countdown */}
-                <p className="font-instrumentSans text-white mb-6 flex items-center gap-2">
+                <p className="font-instrumentSans text-white mb-2 flex items-center gap-2">
                   <span style={{ fontWeight: 600, fontSize: 16 }}>OFFER ENDS IN</span>
                   <span style={{ fontWeight: 800, fontSize: 16 }}>{countdown}</span>
                 </p>

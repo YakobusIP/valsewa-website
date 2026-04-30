@@ -1,6 +1,7 @@
 export type PublicDailyDrop = {
   slot: number;
   discount: number;
+  isSold: boolean;
   priceList: {
     id: number;
     duration: string;

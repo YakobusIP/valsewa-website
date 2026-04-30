@@ -26,6 +26,7 @@ import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 import { subDays } from "date-fns";
+import { getOperationalWindow } from "../lib/operational-window";
 import { prisma } from "../lib/prisma";
 import {
   BankCodes,
@@ -444,10 +445,18 @@ export class BookingService {
     duration: string,
     voucher: VoucherResponse | null,
     paymentMethod: PaymentMethodType | null,
-    quantity: number
+    quantity: number,
+    dailyDropDiscount: number = 0
   ) => {
-    const mainValue = unratedPrice * quantity;
-    const othersValue = isCompetitive ? (compPrice - unratedPrice) * quantity : 0;
+    const factor =
+      dailyDropDiscount > 0 ? 1 - dailyDropDiscount / 100 : 1;
+    const effUnrated =
+      dailyDropDiscount > 0 ? Math.round(unratedPrice * factor) : unratedPrice;
+    const effComp =
+      dailyDropDiscount > 0 ? Math.round(compPrice * factor) : compPrice;
+
+    const mainValue = effUnrated * quantity;
+    const othersValue = isCompetitive ? (effComp - effUnrated) * quantity : 0;
 
     let voucherType = null;
     let voucherAmount = null;
@@ -503,7 +512,9 @@ export class BookingService {
       durationInHours,
       discount,
       adminFee,
-      totalValue
+      totalValue,
+      effectiveUnratedPrice: effUnrated,
+      effectiveCompPrice: effComp
     };
   };
 
@@ -520,6 +531,8 @@ export class BookingService {
         startAt
       } = data;
 
+      const { start: opStart, end: opEnd } = await getOperationalWindow();
+
       const [
         customer,
         ongoingHoldBooking,
@@ -527,7 +540,8 @@ export class BookingService {
         account,
         priceList,
         voucher,
-        operationalHours
+        operationalHours,
+        dailyDrop
       ] = await Promise.all([
         // customer
         customerId
@@ -580,7 +594,16 @@ export class BookingService {
         // voucher
         voucherId ? this.getValidVoucherById(voucherId) : Promise.resolve(null),
         // operational hours
-        this.settingService.getOperationalHours()
+        this.settingService.getOperationalHours(),
+        // daily drop for today (server-authoritative discount)
+        prisma.dailyDrop.findFirst({
+          where: {
+            accountId,
+            priceListId,
+            date: { gte: opStart, lte: opEnd }
+          },
+          select: { discount: true }
+        })
       ]);
 
       if (customerId && !customer) {
@@ -605,6 +628,8 @@ export class BookingService {
         throw new NotFoundError("Price list not found.");
       }
 
+      const dailyDropDiscount = dailyDrop?.discount ?? 0;
+
       const {
         voucherType,
         voucherAmount,
@@ -614,7 +639,9 @@ export class BookingService {
         duration,
         durationInHours,
         discount,
-        totalValue
+        totalValue,
+        effectiveUnratedPrice,
+        effectiveCompPrice
       } = this.calculateValues(
         priceList.unratedPrice,
         priceList.compPrice,
@@ -622,7 +649,8 @@ export class BookingService {
         priceList.duration,
         voucher,
         null,
-        quantity
+        quantity,
+        dailyDropDiscount
       );
 
       const immediate = !startAt;
@@ -671,9 +699,9 @@ export class BookingService {
             startAt: bookingStartAt,
             endAt: bookingEndAt,
             expiredAt: bookingExpiredAt,
-            mainValuePerUnit: priceList.unratedPrice,
+            mainValuePerUnit: effectiveUnratedPrice,
             othersValuePerUnit: account.isCompetitive
-              ? priceList.compPrice - priceList.unratedPrice
+              ? effectiveCompPrice - effectiveUnratedPrice
               : 0,
             voucherName: voucher?.voucherName,
             voucherType,

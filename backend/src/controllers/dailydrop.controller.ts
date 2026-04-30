@@ -50,6 +50,7 @@ export class DailyDropController {
       const data = drops.map((drop) => ({
         slot: drop.slot,
         discount: drop.discount,
+        isSold: drop.isSold,
         priceList: {
           id: drop.priceList.id,
           duration: drop.priceList.duration,

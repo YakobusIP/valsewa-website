@@ -101,7 +101,7 @@ interface CardBackProps {
 }
 
 function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
-  const isSold = drop.account.availabilityStatus !== "AVAILABLE";
+  const isSold = drop.isSold;
   const triangleSize = Math.round(cardWidth * 0.42);
   const discountFontSize = Math.max(16, Math.round(cardWidth * 0.1));
   const thumbSize = Math.round(cardWidth * 0.8);
@@ -121,7 +121,7 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
       style={{ background: "linear-gradient(to bottom, #656565, #000000)", position: "relative", zIndex: 0 }}
     >
       {/* Gold triangle + discount */}
-      <div className="absolute top-0 left-0" style={{ zIndex: 999, transform: "translate3d(0,0,1px)" }}>
+      <div className="absolute top-0 left-0" style={{ zIndex: 49, transform: "translate3d(0,0,1px)" }}>
         <GoldTriangle size={triangleSize} />
         <span
           className="absolute font-antonio leading-none select-none"
@@ -254,12 +254,12 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
 
       {/* SOLD overlay */}
       {isSold && (
-        <div className="absolute inset-0 bg-black/70 rounded-[13px] flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-black/70 rounded-[13px] flex items-center justify-center overflow-hidden z-50">
           <span
             className="text-white font-bold tracking-widest select-none"
             style={{
               fontSize: Math.round(cardWidth * 0.22),
-              transform: "rotate(-45deg)",
+              transform: "rotate(-25deg)",
               whiteSpace: "nowrap",
               opacity: 0.9
             }}
