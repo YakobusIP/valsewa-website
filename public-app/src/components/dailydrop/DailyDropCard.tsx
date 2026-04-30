@@ -103,8 +103,13 @@ interface CardBackProps {
 function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
   const isSold = drop.isSold;
   const triangleSize = Math.round(cardWidth * 0.42);
-  const discountFontSize = Math.max(16, Math.round(cardWidth * 0.1));
+  const discountFontSize = triangleSize * 0.22;
   const thumbSize = Math.round(cardWidth * 0.8);
+  const offsetY = triangleSize * 0.4;
+  const offsetX = triangleSize * -0.4;
+  const displayCode = drop.account.priceTier.code.includes("COMP -")
+    ?  drop.account.priceTier.code
+    : `UNRATED - ${drop.account.priceTier.code}`;
 
   const handleRent = (e: ReactMouseEvent) => {
     e.stopPropagation();
@@ -132,7 +137,7 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
             color: "#846800",
             lineHeight: 1,
 
-            transform: "rotate(-45deg) translateY(30px) translateX(-20px)",
+            transform: `rotate(-45deg) translateY(${offsetY}px) translateX(${offsetX}px)`,
             transformOrigin: "left top",
             whiteSpace: "nowrap"
           }}
@@ -228,11 +233,11 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
           <span
             className="relative z-10 text-white font-antonio font-semibold text-right"
             style={{
-              fontSize: Math.max(9, Math.round(cardWidth * 0.05)),
+              fontSize: Math.max(9, Math.round(cardWidth * 0.01)),
               lineHeight: 1
             }}
           >
-            {drop.account.priceTier.code}
+            {displayCode}
           </span>
         </div>
       </div>

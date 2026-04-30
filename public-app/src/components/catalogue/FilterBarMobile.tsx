@@ -188,7 +188,7 @@ export function FilterBarMobile({
           {/* DAILY DROP BUTTON */}
           <button
             onClick={onOpenDailyDrop}
-            className="flex items-center justify-center border border-white/30 rounded-xl px-3 py-4 hover:border-white transition shrink-0"
+            className="flex items-center justify-center border border-white/30 rounded-xl px-3 py-3.5 hover:border-white transition shrink-0"
           >
             <Image
               src="/daily-drop-catalogue.svg"
@@ -202,7 +202,7 @@ export function FilterBarMobile({
           {/* SORT DROPDOWN */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 border border-white/30 rounded-xl px-4 py-2.5 text-white text-sm hover:border-white transition">
+              <button className="flex items-center gap-2 border border-white/30 rounded-xl px-4 py-3 text-nowrap text-white text-xs hover:border-white transition">
                 <ArrowUpDown className="w-4 h-4" />
                 {currentSortLabel}
               </button>
