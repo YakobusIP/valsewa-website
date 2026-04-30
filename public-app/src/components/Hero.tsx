@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { type CSSProperties, useRef } from "react";
 
 import HeroAgentLayer from "@/components/hero/HeroAgentLayer";
+import { heroChromeVars } from "@/components/hero/heroChromeMetrics";
 import HeroNotchShape from "@/components/hero/HeroNotchShape";
 import HeroNotchShapeMobileLeft from "@/components/hero/HeroNotchShapeMobileLeft";
 import HeroNotchShapeMobileMiddle from "@/components/hero/HeroNotchShapeMobileMiddle";
 import HeroNotchShapeMobileRight from "@/components/hero/HeroNotchShapeMobileRight";
-import HeroNotchShapeTablet from "@/components/hero/HeroNotchShapeTablet";
 import HeroTextBlock from "@/components/hero/HeroTextBlock";
 import MobileBrandSwitcher from "@/components/hero/MobileBranchSwitcher";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -55,13 +55,10 @@ export default function Hero({
   ).current;
 
   return (
-    <section className="relative w-full">
+    <section style={heroChromeVars as CSSProperties} className="relative w-full">
       {/* Hero container with notch */}
       <div className="relative w-full min-h-[550px] md:min-h-[300px] lg:min-h-[420px] xl:min-h-[620px] overflow-x-hidden overflow-y-hidden md:overflow-y-visible md:overflow-x-clip">
-        {/* Desktop: SVG Notch Shape with fill and border */}
         <HeroNotchShape />
-
-        <HeroNotchShapeTablet />
 
         {/* Mobile/Tablet: SVG Notch Shape */}
         {activeBrand === "valsewa" ? (
@@ -127,12 +124,8 @@ export default function Hero({
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious
-                  className="left-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent"
-                />
-                <CarouselNext
-                  className="right-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent"
-                />
+                <CarouselPrevious className="left-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent" />
+                <CarouselNext className="right-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent" />
               </Carousel>
             </div>
           </div>
@@ -182,12 +175,8 @@ export default function Hero({
                   ))}
                 </CarouselContent>
 
-                <CarouselPrevious
-                  className="left-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent"
-                />
-                <CarouselNext
-                  className="right-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent"
-                />
+                <CarouselPrevious className="left-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent" />
+                <CarouselNext className="right-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent" />
               </Carousel>
             </div>
           </div>

@@ -2,6 +2,8 @@
 
 import { RefObject } from "react";
 
+import HeroNotchCutoutMask from "@/components/hero/HeroNotchCutoutMask";
+
 import { cn } from "@/lib/utils";
 
 import Image from "next/image";
@@ -13,26 +15,6 @@ interface CatalogueHeroProps {
   setActiveBrand: (brand: BrandType) => void;
   sentinelRef: RefObject<HTMLDivElement | null>;
 }
-
-// ── Desktop (viewBox 1920×690, xl+) ──────────────────────────────────────────
-const DESKTOP_PATH = `
-  M 16 690 Q 0 690 0 674
-  L 0 16 Q 0 0 16 0
-  L 200 0 Q 216 0 216 16
-  L 216 54 Q 216 75 232 75
-  L 1904 75 Q 1920 75 1920 86
-  L 1920 674 Q 1920 690 1904 690 Z
-`;
-
-// ── Tablet (viewBox 768×1280, md→xl) ─────────────────────────────────────────
-const TABLET_PATH = `
-  M 16 1280 Q 0 1280 0 1264
-  L 0 16 Q 0 0 16 0
-  L 110 0 Q 132 0 132 16
-  L 132 143 Q 132 220 154 220
-  L 752 220 Q 768 220 768 224
-  L 768 1264 Q 768 1280 752 1280 Z
-`;
 
 // ── Mobile paths (viewBox 400×600, <md) ──────────────────────────────────────
 // Left tab — valsewa (from HeroNotchShapeMobileLeft)
@@ -73,24 +55,27 @@ const MOBILE_RIGHT_PATH = `
 
 function getMobilePath(brand: BrandType) {
   if (brand === "valjubel") return MOBILE_MIDDLE_PATH;
-  if (brand === "valjoki")  return MOBILE_RIGHT_PATH;
+  if (brand === "valjoki") return MOBILE_RIGHT_PATH;
   return MOBILE_LEFT_PATH;
 }
 
 const OUTER_BG = "#000000";
 
 const BRANDS: { id: BrandType; logo: string }[] = [
-  { id: "valsewa",  logo: "/header/VALSEWA.png" },
+  { id: "valsewa", logo: "/header/VALSEWA.png" },
   { id: "valjubel", logo: "/header/VALJUBEL.png" },
-  { id: "valjoki",  logo: "/header/VALJOKI.png" },
+  { id: "valjoki", logo: "/header/VALJOKI.png" }
 ];
 
-export function CatalogueHero({ activeBrand, setActiveBrand, sentinelRef }: CatalogueHeroProps) {
+export function CatalogueHero({
+  activeBrand,
+  setActiveBrand,
+  sentinelRef
+}: CatalogueHeroProps) {
   const mobilePath = getMobilePath(activeBrand);
 
   return (
     <section className="relative h-[600px] md:h-screen bg-black">
-
       {/* ── Hero image + gradient + notch masks (clipped layer) ─────────── */}
       <div className="absolute top-[64px] md:top-[10px] inset-x-4 md:inset-x-5 lg:inset-x-8 bottom-0 overflow-hidden pointer-events-none">
         <Image
@@ -107,37 +92,10 @@ export function CatalogueHero({ activeBrand, setActiveBrand, sentinelRef }: Cata
         {/* Mobile overlay */}
         <div className="md:hidden absolute inset-0 bg-[#571010]/80 pointer-events-none" />
 
-        {/* Desktop notch mask (xl+) */}
-        <svg
-          className="absolute inset-0 w-full h-full pointer-events-none hidden xl:block"
-          viewBox="0 0 1920 690"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <mask id="catalogueDesktopMask">
-              <rect width="1920" height="690" fill="white" />
-              <path d={DESKTOP_PATH} fill="black" />
-            </mask>
-          </defs>
-          <rect width="1920" height="690" fill={OUTER_BG} mask="url(#catalogueDesktopMask)" />
-          <path d={DESKTOP_PATH} stroke="rgba(255,255,255,0.15)" strokeWidth="2" fill="none" />
-        </svg>
-
-        {/* Tablet notch mask (md → xl) */}
-        <svg
-          className="absolute inset-0 w-full h-1/3 pointer-events-none hidden md:block xl:hidden"
-          viewBox="0 0 768 1280"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <mask id="catalogueTabletMask">
-              <rect width="768" height="1280" fill="white" />
-              <path d={TABLET_PATH} fill="black" />
-            </mask>
-          </defs>
-          <rect width="768" height="1280" fill={OUTER_BG} mask="url(#catalogueTabletMask)" />
-          <path d={TABLET_PATH} stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" fill="none" />
-        </svg>
+        <HeroNotchCutoutMask
+          className="absolute inset-0 w-full h-full pointer-events-none hidden md:block"
+          maskId="catalogueDesktopTabletMask"
+        />
 
         {/* Mobile notch mask (<md) — changes with activeBrand */}
         <svg
@@ -151,8 +109,18 @@ export function CatalogueHero({ activeBrand, setActiveBrand, sentinelRef }: Cata
               <path d={mobilePath} fill="black" />
             </mask>
           </defs>
-          <rect width="400" height="600" fill={OUTER_BG} mask="url(#catalogueMobileMask)" />
-          <path d={mobilePath} stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" fill="none" />
+          <rect
+            width="400"
+            height="600"
+            fill={OUTER_BG}
+            mask="url(#catalogueMobileMask)"
+          />
+          <path
+            d={mobilePath}
+            stroke="rgba(255,255,255,0.15)"
+            strokeWidth="1.5"
+            fill="none"
+          />
         </svg>
 
         {/* Centered foreground content */}
@@ -190,7 +158,11 @@ export function CatalogueHero({ activeBrand, setActiveBrand, sentinelRef }: Cata
                   "flex-1 flex items-center justify-center py-2.5 rounded-md transition",
                   isActive ? "bg-black shadow-lg" : ""
                 )}
-                style={isActive ? undefined : { backgroundColor: "rgba(249,250,251,0.1)" }}
+                style={
+                  isActive
+                    ? undefined
+                    : { backgroundColor: "rgba(249,250,251,0.1)" }
+                }
               >
                 <Image
                   src={brand.logo}
@@ -209,7 +181,10 @@ export function CatalogueHero({ activeBrand, setActiveBrand, sentinelRef }: Cata
       </div>
 
       {/* Sentinel for IntersectionObserver */}
-      <div ref={sentinelRef} className="absolute bottom-0 left-0 right-0 h-px" />
+      <div
+        ref={sentinelRef}
+        className="absolute bottom-0 left-0 right-0 h-px"
+      />
     </section>
   );
 }
