@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { DailyDropController } from "../controllers/dailydrop.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { schedulerMiddleware } from "../middleware/scheduler.middleware";
 import { DailyDropService } from "../services/dailydrop.service";
 
 class DailyDropRouter {
@@ -36,6 +37,11 @@ class DailyDropRouter {
       "/trigger",
       authMiddleware,
       this.dailyDropController.triggerRandomizer
+    );
+    this.router.post(
+      "/run-randomizer",
+      schedulerMiddleware,
+      this.dailyDropController.runRandomizerScheduled
     );
   }
 }

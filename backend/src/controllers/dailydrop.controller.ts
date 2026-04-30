@@ -35,6 +35,29 @@ export class DailyDropController {
     }
   };
 
+  runRandomizerScheduled = async (
+    _req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const result =
+        await this.dailyDropService.runRandomizerIfEmptyForOperationalDay();
+      if (result.skipped) {
+        return res.json({
+          message: "Daily Drop already present for this operational day",
+          skipped: true
+        });
+      }
+      return res.json({
+        message: "Daily Drop randomizer executed successfully!",
+        skipped: false
+      });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getAdminDrops = async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const data = await this.dailyDropService.getTodayDrops();

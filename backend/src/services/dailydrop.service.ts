@@ -1,6 +1,10 @@
 import { BookingStatus } from "@prisma/client";
 
-import { BadRequestError, InternalServerError, NotFoundError } from "../lib/error";
+import {
+  BadRequestError,
+  InternalServerError,
+  NotFoundError
+} from "../lib/error";
 import { getOperationalWindow } from "../lib/operational-window";
 import { prisma } from "../lib/prisma";
 import { addHours, parseDurationToHours } from "../lib/utils";
@@ -129,6 +133,21 @@ export class DailyDropService {
     }
   };
 
+  runRandomizerIfEmptyForOperationalDay = async (): Promise<
+    { skipped: true } | { skipped: false }
+  > => {
+    const { start, end } = await getOperationalWindow();
+    const existing = await prisma.dailyDrop.findFirst({
+      where: { date: { gte: start, lte: end } },
+      select: { id: true }
+    });
+    if (existing) {
+      return { skipped: true };
+    }
+    await this.runRandomizer();
+    return { skipped: false };
+  };
+
   runRandomizer = async () => {
     const config = await this.getConfig();
     if (!config) {
@@ -169,7 +188,12 @@ export class DailyDropService {
       }
     ];
 
-    for (const { slot, priceTierIds, priceListIds, fixedDiscount } of slotConfigs) {
+    for (const {
+      slot,
+      priceTierIds,
+      priceListIds,
+      fixedDiscount
+    } of slotConfigs) {
       const accounts = await prisma.account.findMany({
         where: {
           availabilityStatus: "AVAILABLE",
@@ -196,12 +220,12 @@ export class DailyDropService {
       });
 
       // Keep only accounts that have at least one eligible price list item
-      const eligible = accounts.filter(
-        (a) => a.priceTier.priceList.length > 0
-      );
+      const eligible = accounts.filter((a) => a.priceTier.priceList.length > 0);
 
       if (eligible.length === 0) {
-        console.warn(`[DailyDrop] No eligible accounts for slot ${slot}, skipping`);
+        console.warn(
+          `[DailyDrop] No eligible accounts for slot ${slot}, skipping`
+        );
         continue;
       }
 
