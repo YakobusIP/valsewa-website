@@ -218,8 +218,9 @@ model Booking {
   mainValue          Int
   othersValue        Int?
   discount           Int? // mainValue * voucher_percentage
+  dailyDropDiscount  Int? // mainValue * dailyDrop_percentage
   adminFee           Int?
-  totalValue         Int // mainValue + otherValue + adminFee - discount
+  totalValue         Int // mainValue + otherValue + adminFee - discount - dailyDropDiscount
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -106,7 +106,7 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
   const discountFontSize = triangleSize * 0.22;
   const thumbSize = Math.round(cardWidth * 0.8);
   const offsetY = triangleSize * 0.4;
-  const offsetX = triangleSize * -0.4;
+  const offsetX = triangleSize * -0.2;
   const displayCode = drop.account.priceTier.code.includes("COMP -")
     ?  drop.account.priceTier.code
     : `UNRATED - ${drop.account.priceTier.code}`;
@@ -115,8 +115,6 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
     e.stopPropagation();
     const url = new URL(`/details/${drop.account.id}`, window.location.origin);
     url.searchParams.set("mode", "dailydrop");
-    url.searchParams.set("priceListId", String(drop.priceList.id));
-    url.searchParams.set("discount", String(drop.discount));
     window.open(url.toString(), "_blank");
   };
 
@@ -249,8 +247,8 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
           disabled={isSold}
           className="w-full bg-[#C70515] hover:bg-[#a50411] disabled:bg-[#C70515]/40 text-white border border-white/70 font-antonio font-normal rounded-lg transition"
           style={{
-            fontSize: Math.max(11, Math.round(cardWidth * 0.075)),
-            padding: "16px"
+            fontSize: Math.max(10, cardWidth * 0.055),
+            padding: `${Math.max(10, cardWidth * 0.06)}px`
           }}
         >
           RENT ACCOUNT

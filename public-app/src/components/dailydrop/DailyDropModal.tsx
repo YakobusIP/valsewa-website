@@ -105,8 +105,29 @@ function saveOpenedSlot(slot: number, tz?: string) {
 }
 
 // ── Card dimensions ────────────────────────────────────────────────────────────
-const MOBILE_CARD_W = 260;
-const MOBILE_CARD_H = 400;
+function useMobileCardSize() {
+  const [size, setSize] = useState({ w: 220, h: 340 });
+
+  useEffect(() => {
+    const update = () => {
+      const vw = window.innerWidth;
+
+      // leave padding + carousel spacing
+      const maxW = vw * 0.75;
+
+      const w = Math.min(260, Math.max(160, maxW));
+      const h = Math.round(w * 1.55);
+
+      setSize({ w, h });
+    };
+
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
+  return size;
+}
 
 function useCardRowDimensions(rowRef: RefObject<HTMLDivElement | null>, numCards = 3, gap = 20) {
   const [dims, setDims] = useState({ w: 220, h: 340 });
@@ -138,6 +159,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
   const [openedSlots, setOpenedSlots] = useState<number[]>([]);
   const cardRowRef = useRef<HTMLDivElement>(null);
   const { w: cardW, h: cardH } = useCardRowDimensions(cardRowRef);
+  const { w: mobileW, h: mobileH } = useMobileCardSize();
 
   const width = useWindowSize();
 
@@ -287,10 +309,12 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
 
           {/* ── MOBILE (< md) ───────────────────────────────────────────────── */}
           <div
-            className="md:hidden relative rounded-2xl overflow-hidden"
+            className="md:hidden relative rounded-2xl overflow-y-auto"
             style={{
               width: "95vw",
-              height: "80vh",
+              minHeight: "80vh",
+              height: "auto",
+              maxHeight: "90vh",
               backgroundImage: "url('/daily-drop/daily-drop-background.svg')",
               backgroundSize: "cover",
               backgroundPosition: "center"
@@ -334,14 +358,14 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
               </p>
 
               {/* Cards carousel */}
-              <div className="w-full flex-1 flex items-center overflow-hidden">
+              <div className="w-full flex-1 flex items-center overflow-visible md:overflow-hidden">
                 {loading ? (
                   <div className="flex gap-3 w-full justify-center">
                     {[0, 1, 2].map((i) => (
                       <div
                         key={i}
                         className="rounded-[13px] bg-white/10 animate-pulse shrink-0"
-                        style={{ width: MOBILE_CARD_W, height: MOBILE_CARD_H }}
+                        style={{ width: mobileW, height: mobileH }}
                       />
                     ))}
                   </div>
@@ -355,12 +379,12 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
                         if (!drop) return null;
                         const isOpened = openedSlots.includes(drop.slot);
                         return (
-                          <CarouselItem key={drop.slot} className="pl-3 basis-[78%]">
+                          <CarouselItem key={drop.slot} className="pl-3 basis-[85%] sm:basis-[78%]">
                             <div className="flex justify-center">
                               <DailyDropCard
                                 drop={drop}
-                                width={MOBILE_CARD_W}
-                                height={MOBILE_CARD_H}
+                                width={mobileW}
+                                height={mobileH}
                                 initiallyFlipped={isOpened}
                                 onFlip={() => handleFlip(drop.slot)}
                               />

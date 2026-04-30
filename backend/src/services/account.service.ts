@@ -28,6 +28,7 @@ import {
 import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
 import { parseDurationToHours } from "../lib/utils";
+import { getOperationalWindow } from "../lib/operational-window";
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
@@ -832,6 +833,15 @@ export class AccountService {
         take: 2
       });
 
+      const { start: opStart, end: opEnd } = await getOperationalWindow();
+      const dailyDrop = await prisma.dailyDrop.findFirst({
+        where: {
+          accountId: account.id,
+          date: { gte: opStart, lte: opEnd }
+        },
+        select: { discount: true, priceListId: true }
+      });
+
       return {
         ...account,
         // Priority: booking data > account data > null
@@ -846,7 +856,8 @@ export class AccountService {
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
           : (account.nextBookingDuration ?? null),
-        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null
+        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null,
+        dailyDrop
       };
     } catch (error) {
       if (error instanceof NotFoundError) {

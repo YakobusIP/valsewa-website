@@ -448,15 +448,13 @@ export class BookingService {
     quantity: number,
     dailyDropDiscount: number = 0
   ) => {
-    const factor =
-      dailyDropDiscount > 0 ? 1 - dailyDropDiscount / 100 : 1;
-    const effUnrated =
-      dailyDropDiscount > 0 ? Math.round(unratedPrice * factor) : unratedPrice;
-    const effComp =
-      dailyDropDiscount > 0 ? Math.round(compPrice * factor) : compPrice;
+    const mainValue = unratedPrice * quantity;
+    const othersValue = isCompetitive ? (compPrice - unratedPrice) * quantity : 0;
 
-    const mainValue = effUnrated * quantity;
-    const othersValue = isCompetitive ? (effComp - effUnrated) * quantity : 0;
+    const cappedDailyDropDiscount = Math.min(
+      Math.max(dailyDropDiscount, 0),
+      mainValue + othersValue
+    );
 
     let voucherType = null;
     let voucherAmount = null;
@@ -480,7 +478,8 @@ export class BookingService {
       discount = Math.min(discount, mainValue);
     }
 
-    const subtotalValue = mainValue + othersValue - discount;
+    const subtotalValue =
+      mainValue + othersValue - cappedDailyDropDiscount - discount;
 
     let adminFee = 0;
     if (subtotalValue !== 0) {
@@ -511,10 +510,11 @@ export class BookingService {
       duration,
       durationInHours,
       discount,
+      dailyDropDiscount: cappedDailyDropDiscount,
       adminFee,
       totalValue,
-      effectiveUnratedPrice: effUnrated,
-      effectiveCompPrice: effComp
+      effectiveUnratedPrice: unratedPrice,
+      effectiveCompPrice: compPrice
     };
   };
 
@@ -628,7 +628,13 @@ export class BookingService {
         throw new NotFoundError("Price list not found.");
       }
 
-      const dailyDropDiscount = dailyDrop?.discount ?? 0;
+      const dailyDropPercent = dailyDrop?.discount ?? 0;
+      const dailyDropDiscountAmount =
+        dailyDropPercent > 0
+          ? Math.round(
+              priceList.unratedPrice * quantity * dailyDropPercent * 0.01
+            )
+          : 0;
 
       const {
         voucherType,
@@ -639,6 +645,7 @@ export class BookingService {
         duration,
         durationInHours,
         discount,
+        dailyDropDiscount,
         totalValue,
         effectiveUnratedPrice,
         effectiveCompPrice
@@ -650,7 +657,7 @@ export class BookingService {
         voucher,
         null,
         quantity,
-        dailyDropDiscount
+        dailyDropDiscountAmount
       );
 
       const immediate = !startAt;
@@ -710,6 +717,7 @@ export class BookingService {
             mainValue,
             othersValue,
             discount,
+            dailyDropDiscount,
             totalValue,
             version: 1
           }
@@ -1053,16 +1061,18 @@ export class BookingService {
         mainValue,
         othersValue,
         discount,
+        dailyDropDiscount,
         adminFee,
         totalValue
       } = this.calculateValues(
         booking.mainValuePerUnit,
-        booking.othersValuePerUnit ?? 0,
+        (booking.mainValuePerUnit ?? 0) + (booking.othersValuePerUnit ?? 0),
         booking.account.isCompetitive,
         booking.duration,
         voucher,
         paymentMethodType,
-        booking.quantity
+        booking.quantity,
+        booking.dailyDropDiscount ?? 0
       );
 
       const isBookingFree = totalValue === 0;
@@ -1083,6 +1093,7 @@ export class BookingService {
               mainValue,
               othersValue,
               discount,
+              dailyDropDiscount,
               adminFee,
               totalValue,
               version: { increment: 1 },
@@ -1864,6 +1875,7 @@ export class BookingService {
       mainValue: booking.mainValue,
       othersValue: booking.othersValue,
       discount: booking.discount,
+      dailyDropDiscount: booking.dailyDropDiscount,
       totalValue: booking.totalValue,
       active: null,
       payments: booking.payments,
@@ -1926,6 +1938,7 @@ export class BookingService {
       mainValue: booking.mainValue,
       othersValue: booking.othersValue,
       discount: booking.discount,
+      dailyDropDiscount: booking.dailyDropDiscount,
       totalValue: booking.totalValue,
       active: active ?? false,
       account: {

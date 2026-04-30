@@ -44,9 +44,7 @@ export default function AccountDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const searchParams = useSearchParams();
-  const isDailyDrop = searchParams.get("mode") === "dailydrop";
-  const ddPriceListId = isDailyDrop ? Number(searchParams.get("priceListId")) : null;
-  const ddDiscount = isDailyDrop ? Number(searchParams.get("discount")) : 0;
+  const wantsDailyDrop = searchParams.get("mode") === "dailydrop";
 
   const [account, setAccount] = useState<AccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,14 +80,21 @@ export default function AccountDetailPage() {
     fetchAccountById(id)
       .then((res) => {
         setAccount(res);
-        if (isDailyDrop && ddPriceListId && res?.priceTier?.priceList) {
-          const match = res.priceTier.priceList.find((p) => p.id === ddPriceListId);
+        const dropPriceListId = res?.dailyDrop?.priceListId;
+        if (
+          wantsDailyDrop &&
+          dropPriceListId &&
+          res?.priceTier?.priceList
+        ) {
+          const match = res.priceTier.priceList.find(
+            (p) => p.id === dropPriceListId
+          );
           if (match) setSelectedDuration({ label: match.duration, value: match });
         }
       })
       .catch(() => setAccount(null))
       .finally(() => setLoading(false));
-  }, [id, isDailyDrop, ddPriceListId]);
+  }, [id, wantsDailyDrop]);
 
   useEffect(() => {
     fetchOperationalHours()
@@ -206,6 +211,9 @@ export default function AccountDetailPage() {
 
     setEndTime(`${hh}:${mm}`);
   }, [selectedDuration, startTime, qty]);
+
+  const ddDiscount = account?.dailyDrop?.discount ?? 0;
+  const isDailyDrop = wantsDailyDrop && !!account?.dailyDrop;
 
   const calculateBasePrice = useCallback(
     (priceList: PriceList) => {

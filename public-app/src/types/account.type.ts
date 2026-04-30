@@ -51,6 +51,7 @@ type AccountEntity = {
   isCompetitive: boolean;
   isRecommended: boolean;
   isMfa: boolean;
+  dailyDrop?: { discount: number; priceListId: number } | null;
 };
 
 export type CarouselSlide = {
