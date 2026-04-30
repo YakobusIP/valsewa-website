@@ -60,7 +60,7 @@ export default function Hero({
       className="relative w-full"
     >
       {/* Hero container with notch */}
-      <div className="relative w-full min-h-[550px] md:min-h-[300px] lg:min-h-[420px] xl:min-h-[620px] overflow-x-hidden overflow-y-hidden md:overflow-y-visible md:overflow-x-clip">
+      <div className="relative w-full md:min-h-[300px] lg:min-h-[420px] xl:min-h-[620px] overflow-x-hidden overflow-y-hidden md:overflow-y-visible md:overflow-x-clip">
         <HeroNotchShape />
 
         {/* Mobile/Tablet: SVG Notch Shape */}
@@ -83,7 +83,7 @@ export default function Hero({
         {/* MOBILE: Hero carousel (includes hardcoded design as slide 1) */}
         <div className="relative z-10 md:hidden pt-16">
           <div className="w-full pt-12">
-            <div className="w-full rounded-lg overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
+            <div className="w-full rounded-xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
               <Carousel
                 className="w-full"
                 plugins={[mobileAutoplay]}
@@ -107,7 +107,7 @@ export default function Hero({
                         {slide.image.type === "VIDEO" ? (
                           <video
                             src={slide.image.imageUrl}
-                            className="object-cover rounded-2xl w-full h-full"
+                            className="object-cover rounded-xl w-full h-full"
                             autoPlay
                             muted
                             loop
@@ -119,7 +119,7 @@ export default function Hero({
                             src={slide.image.imageUrl}
                             alt="Carousel Image"
                             fill
-                            className="object-cover rounded-2xl"
+                            className="object-cover rounded-xl"
                             unoptimized
                           />
                         )}
