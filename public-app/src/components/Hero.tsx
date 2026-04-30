@@ -3,13 +3,13 @@
 import { type CSSProperties, useRef } from "react";
 
 import HeroAgentLayer from "@/components/hero/HeroAgentLayer";
-import { heroChromeVars } from "@/components/hero/heroChromeMetrics";
 import HeroNotchShape from "@/components/hero/HeroNotchShape";
 import HeroNotchShapeMobileLeft from "@/components/hero/HeroNotchShapeMobileLeft";
 import HeroNotchShapeMobileMiddle from "@/components/hero/HeroNotchShapeMobileMiddle";
 import HeroNotchShapeMobileRight from "@/components/hero/HeroNotchShapeMobileRight";
 import HeroTextBlock from "@/components/hero/HeroTextBlock";
 import MobileBrandSwitcher from "@/components/hero/MobileBranchSwitcher";
+import { heroChromeVars } from "@/components/hero/heroChromeMetrics";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import {
   Carousel,
@@ -55,7 +55,10 @@ export default function Hero({
   ).current;
 
   return (
-    <section style={heroChromeVars as CSSProperties} className="relative w-full">
+    <section
+      style={heroChromeVars as CSSProperties}
+      className="relative w-full"
+    >
       {/* Hero container with notch */}
       <div className="relative w-full min-h-[550px] md:min-h-[300px] lg:min-h-[420px] xl:min-h-[620px] overflow-x-hidden overflow-y-hidden md:overflow-y-visible md:overflow-x-clip">
         <HeroNotchShape />
@@ -140,17 +143,17 @@ export default function Hero({
           />
 
           {/* RIGHT – CAROUSEL (Desktop only) */}
-          <div className="relative w-full md:w-[30%] hidden md:flex justify-end aspect-[4/5] h-full">
-            <div className="w-full rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
+          <div className="absolute hidden md:flex top-[var(--hero-notch-height)] bottom-0 right-0">
+            <div className="h-full aspect-[4/5] ml-auto rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
               <Carousel
-                className="w-full"
+                className="w-full h-full [&>div]:h-full"
                 plugins={[desktopAutoplay]}
                 opts={{ loop: true }}
               >
-                <CarouselContent>
+                <CarouselContent className="h-full">
                   {initialCarousel?.map((item, index) => (
-                    <CarouselItem key={index}>
-                      <AspectRatio ratio={4 / 5}>
+                    <CarouselItem key={index} className="h-full">
+                      <div className="relative w-full h-full">
                         {item.image.type === "VIDEO" ? (
                           <video
                             src={item.image.imageUrl}
@@ -170,7 +173,7 @@ export default function Hero({
                             unoptimized
                           />
                         )}
-                      </AspectRatio>
+                      </div>
                     </CarouselItem>
                   ))}
                 </CarouselContent>
