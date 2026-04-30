@@ -165,7 +165,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
     <div
       className={cn("aspect-square", forCarousel ? "min-w-[320px]" : "w-full")}
     >
-      <Link href="/search" target="_blank">
+      <Link href="/search" onClick={onSeeMore} target="_blank">
         <button
           className="group relative w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#770000] to-black border border-white/10 flex flex-col items-start justify-center text-left transition-all duration-300 hover:scale-[1.02]"
         >

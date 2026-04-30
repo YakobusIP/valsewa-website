@@ -96,7 +96,23 @@ export default function InventoryAccountCard({
                 compact ? "text-[0.5rem]" : "text-[0.4rem] tablet:text-xs"
               )}
             >
-              {item.isCompetitive ? <img src="/cardneed/compe.svg"></img> : <img src="/cardneed/unrated.svg"></img>}
+              {item.isCompetitive ? (
+                <Image
+                  src="/cardneed/compe.svg"
+                  alt="Competitive"
+                  width={48}
+                  height={16}
+                  className="h-3 w-auto tablet:h-4"
+                />
+              ) : (
+                <Image
+                  src="/cardneed/unrated.svg"
+                  alt="Unrated"
+                  width={48}
+                  height={16}
+                  className="h-3 w-auto tablet:h-4"
+                />
+              )}
             </div>
           </div>
 

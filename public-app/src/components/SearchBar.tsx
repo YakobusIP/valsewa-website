@@ -6,24 +6,17 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
-import { AccountEntity } from "@/types/account.type";
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import Image from "next/image";
 
 interface Props {
-  accountList: AccountEntity[];
   setSearchAccount: (value: string) => void;
   changeDirection: (value: string) => void;
-  getSortLabel: () => string;
-  sortAccount: string;
-  sortDirection: string;
 }
 
 const SearchBar = ({
   setSearchAccount,
-  changeDirection,
-  sortAccount,
-  sortDirection
+  changeDirection
 }: Props) => {
   const Menu = ({
     label,
@@ -70,7 +63,12 @@ const SearchBar = ({
 
             {/* DAILY DROP BUTTON */}
             <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-600 bg-black hover:bg-red-600/20 transition text-white whitespace-nowrap">
-              <img src="/header/streak icon.svg"></img>
+              <Image
+                src="/header/streak icon.svg"
+                alt=""
+                width={20}
+                height={20}
+              />
               <span className="font-bold text-red-500">DAILY DROP</span>
             </button>
 

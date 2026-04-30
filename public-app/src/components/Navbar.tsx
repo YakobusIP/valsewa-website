@@ -86,16 +86,18 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
         {/* NAV RIGHT SIDE */}
         <div className="pr-7 flex items-center gap-4">
           {/* SEARCH */}
-          <button onClick={handleSearchClick}>
-            <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
-              <Image
-                src="/header/Search Icon.svg"
-                alt="Search"
-                width={16}
-                height={16}
-              />
-            </div>
-          </button>
+          <Link
+            href="/search"
+            aria-label="Search"
+            className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition"
+          >
+            <Image
+              src="/header/Search Icon.svg"
+              alt=""
+              width={16}
+              height={16}
+            />
+          </Link>
 
           {/* TOP UP */}
           <Link href="https://valforum.com/top-up">
