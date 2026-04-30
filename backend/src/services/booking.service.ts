@@ -446,15 +446,10 @@ export class BookingService {
     voucher: VoucherResponse | null,
     paymentMethod: PaymentMethodType | null,
     quantity: number,
-    dailyDropDiscount: number = 0
+    dailyDropDiscountAmount: number = 0
   ) => {
     const mainValue = unratedPrice * quantity;
     const othersValue = isCompetitive ? (compPrice - unratedPrice) * quantity : 0;
-
-    const cappedDailyDropDiscount = Math.min(
-      Math.max(dailyDropDiscount, 0),
-      mainValue + othersValue
-    );
 
     let voucherType = null;
     let voucherAmount = null;
@@ -476,10 +471,11 @@ export class BookingService {
       }
 
       discount = Math.min(discount, mainValue);
+    } else if (dailyDropDiscountAmount > 0) {
+      discount = Math.min(dailyDropDiscountAmount, mainValue + othersValue);
     }
 
-    const subtotalValue =
-      mainValue + othersValue - cappedDailyDropDiscount - discount;
+    const subtotalValue = mainValue + othersValue - discount;
 
     let adminFee = 0;
     if (subtotalValue !== 0) {
@@ -510,7 +506,6 @@ export class BookingService {
       duration,
       durationInHours,
       discount,
-      dailyDropDiscount: cappedDailyDropDiscount,
       adminFee,
       totalValue,
       effectiveUnratedPrice: unratedPrice,
@@ -645,7 +640,6 @@ export class BookingService {
         duration,
         durationInHours,
         discount,
-        dailyDropDiscount,
         totalValue,
         effectiveUnratedPrice,
         effectiveCompPrice
@@ -660,11 +654,11 @@ export class BookingService {
         dailyDropDiscountAmount
       );
 
-      const immediate = !startAt;
+      const immediate = dailyDrop ? true : !startAt;
 
       const now = new Date();
       const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
-      const bookingStartAt = immediate ? bookingExpiredAt : startAt;
+      const bookingStartAt = immediate ? bookingExpiredAt : startAt!;
       const bookingEndAt = addHours(bookingStartAt, durationInHours * quantity);
 
       if (account.isMfa && isOutsideOperationalHours(operationalHours, now)) {
@@ -717,7 +711,6 @@ export class BookingService {
             mainValue,
             othersValue,
             discount,
-            dailyDropDiscount,
             totalValue,
             version: 1
           }
@@ -1054,6 +1047,10 @@ export class BookingService {
       const { paymentMethodType, bankCode } =
         PAYMENT_METHODS_MAP[paymentMethod];
 
+      const existingDailyDropDiscount = booking.voucherName
+        ? 0
+        : booking.discount ?? 0;
+
       const {
         voucherType,
         voucherAmount,
@@ -1061,7 +1058,6 @@ export class BookingService {
         mainValue,
         othersValue,
         discount,
-        dailyDropDiscount,
         adminFee,
         totalValue
       } = this.calculateValues(
@@ -1072,7 +1068,7 @@ export class BookingService {
         voucher,
         paymentMethodType,
         booking.quantity,
-        booking.dailyDropDiscount ?? 0
+        existingDailyDropDiscount
       );
 
       const isBookingFree = totalValue === 0;
@@ -1093,7 +1089,6 @@ export class BookingService {
               mainValue,
               othersValue,
               discount,
-              dailyDropDiscount,
               adminFee,
               totalValue,
               version: { increment: 1 },
@@ -1875,7 +1870,6 @@ export class BookingService {
       mainValue: booking.mainValue,
       othersValue: booking.othersValue,
       discount: booking.discount,
-      dailyDropDiscount: booking.dailyDropDiscount,
       totalValue: booking.totalValue,
       active: null,
       payments: booking.payments,
@@ -1938,7 +1932,6 @@ export class BookingService {
       mainValue: booking.mainValue,
       othersValue: booking.othersValue,
       discount: booking.discount,
-      dailyDropDiscount: booking.dailyDropDiscount,
       totalValue: booking.totalValue,
       active: active ?? false,
       account: {

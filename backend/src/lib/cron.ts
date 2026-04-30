@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import { DailyDropService } from "../services/dailydrop.service";
+import { getOperationalWindow } from "./operational-window";
 import { prisma } from "./prisma";
 import { OPERATIONAL_HOURS_KEY } from "../types/setting.type";
 
@@ -8,12 +9,11 @@ export async function initCronJobs() {
     where: { key: OPERATIONAL_HOURS_KEY }
   });
 
-  let hour = 9, minute = 0, tz = "Asia/Jakarta";
+  let tz = "Asia/Jakarta";
 
   if (setting?.value) {
     try {
       const hours = JSON.parse(setting.value);
-      [hour, minute] = (hours.open as string).split(":").map(Number);
       if (hours.timezone) tz = hours.timezone;
     } catch {
       // fall back to defaults
@@ -21,10 +21,19 @@ export async function initCronJobs() {
   }
 
   cron.schedule(
-    `${minute} ${hour} * * *`,
+    "*/5 * * * *",
     async () => {
-      console.log("[DailyDrop] Running daily randomizer...");
       try {
+        const { start, end } = await getOperationalWindow();
+        const existing = await prisma.dailyDrop.findFirst({
+          where: { date: { gte: start, lte: end } },
+          select: { id: true }
+        });
+        if (existing) {
+          return;
+        }
+
+        console.log("[DailyDrop] Running daily randomizer...");
         const service = new DailyDropService();
         await service.runRandomizer();
         console.log("[DailyDrop] Randomizer completed successfully");
@@ -35,5 +44,5 @@ export async function initCronJobs() {
     { timezone: tz }
   );
 
-  console.log(`[DailyDrop] Cron scheduled at ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${tz} daily`);
+  console.log(`[DailyDrop] Cron scheduled every 5 minutes (${tz}); randomizer runs only when no drops exist for today`);
 }

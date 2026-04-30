@@ -39,8 +39,9 @@ function PaymentSummary({
 
   const isDisabled = !booking || !paymentMethod;
 
-  const dailyDropDiscount = booking.dailyDropDiscount ?? 0;
-  const isDailyDropBooking = dailyDropDiscount > 0;
+  const isDailyDropBooking =
+    !booking.voucherName && (booking.discount ?? 0) > 0;
+  const dailyDropDiscount = isDailyDropBooking ? booking.discount ?? 0 : 0;
 
   const voucherDiscount = useMemo(
     () => calculateVoucherDiscount(voucher, booking.mainValue),
@@ -51,9 +52,14 @@ function PaymentSummary({
     () =>
       booking.mainValue +
       (booking.othersValue ?? 0) -
-      dailyDropDiscount -
-      voucherDiscount,
-    [booking.mainValue, booking.othersValue, dailyDropDiscount, voucherDiscount]
+      (isDailyDropBooking ? dailyDropDiscount : voucherDiscount),
+    [
+      booking.mainValue,
+      booking.othersValue,
+      isDailyDropBooking,
+      dailyDropDiscount,
+      voucherDiscount
+    ]
   );
 
   const isBookingFree = booking && subtotalPayment === 0;

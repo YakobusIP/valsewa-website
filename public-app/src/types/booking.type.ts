@@ -58,7 +58,6 @@ export type BookingEntity = {
   othersValue: number | null;
   adminFee: number | null;
   discount: number | null;
-  dailyDropDiscount: number | null;
   totalValue: number;
   active: boolean | null;
 };

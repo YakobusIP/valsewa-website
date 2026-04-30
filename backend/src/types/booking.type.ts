@@ -84,7 +84,6 @@ export type BookingResponse = {
   mainValue: number;
   othersValue: number | null;
   discount: number | null;
-  dailyDropDiscount: number | null;
   totalValue: number;
   active: boolean | null;
   account?: {

@@ -3,6 +3,7 @@ import { BookingStatus } from "@prisma/client";
 import { BadRequestError, InternalServerError, NotFoundError } from "../lib/error";
 import { getOperationalWindow } from "../lib/operational-window";
 import { prisma } from "../lib/prisma";
+import { addHours, parseDurationToHours } from "../lib/utils";
 import { UpsertDailyDropConfigRequest } from "../types/dailydrop.type";
 
 export class DailyDropService {
@@ -204,11 +205,60 @@ export class DailyDropService {
         continue;
       }
 
-      const account = eligible[Math.floor(Math.random() * eligible.length)];
-      const priceList =
-        account.priceTier.priceList[
-          Math.floor(Math.random() * account.priceTier.priceList.length)
-        ];
+      // Build (account, priceList) candidate pairs and filter out any with
+      // an overlapping HOLD/RESERVED booking in the slot's duration window
+      type Candidate = {
+        account: (typeof eligible)[number];
+        priceList: (typeof eligible)[number]["priceTier"]["priceList"][number];
+      };
+      const candidates: Candidate[] = [];
+      for (const a of eligible) {
+        for (const pl of a.priceTier.priceList) {
+          candidates.push({ account: a, priceList: pl });
+        }
+      }
+
+      const now = new Date();
+      const candidateAccountIds = Array.from(
+        new Set(candidates.map((c) => c.account.id))
+      );
+      const maxDurationHours = Math.max(
+        ...candidates.map((c) => parseDurationToHours(c.priceList.duration))
+      );
+      const windowEndMax = addHours(now, maxDurationHours);
+
+      const activeBookings = await prisma.booking.findMany({
+        where: {
+          accountId: { in: candidateAccountIds },
+          status: { in: [BookingStatus.HOLD, BookingStatus.RESERVED] },
+          startAt: { lt: windowEndMax },
+          endAt: { gt: now }
+        },
+        select: { accountId: true, startAt: true, endAt: true }
+      });
+
+      const filtered = candidates.filter(({ account, priceList }) => {
+        const slotEnd = addHours(now, parseDurationToHours(priceList.duration));
+        return !activeBookings.some(
+          (b) =>
+            b.accountId === account.id &&
+            b.startAt &&
+            b.endAt &&
+            b.startAt < slotEnd &&
+            b.endAt > now
+        );
+      });
+
+      if (filtered.length === 0) {
+        console.warn(
+          `[DailyDrop] No candidates with free duration window for slot ${slot}, skipping`
+        );
+        continue;
+      }
+
+      const pick = filtered[Math.floor(Math.random() * filtered.length)];
+      const account = pick.account;
+      const priceList = pick.priceList;
 
       const discount =
         fixedDiscount ??
