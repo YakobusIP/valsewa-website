@@ -136,8 +136,8 @@ export class PriceTierController {
       const itemId = parseInt(req.params.itemId, 10);
       const data = req.body as Partial<{
         duration: string;
-        normalPrice: number;
-        lowPrice: number;
+        unratedPrice: number;
+        compPrice: number;
       }>;
 
       const updated = await this.priceTierService.updatePriceListItem(

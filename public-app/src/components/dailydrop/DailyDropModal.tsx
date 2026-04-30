@@ -1,30 +1,45 @@
 "use client";
 
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from "react";
+
 import { fetchPublicDailyDrops } from "@/services/dailydrop.service";
 import { fetchOperationalHours } from "@/services/setting.service";
-import { PublicDailyDrop } from "@/types/dailydrop.type";
-import { OperationalHoursEntity } from "@/types/setting.type";
+
 import {
   Carousel,
   CarouselContent,
   CarouselItem
 } from "@/components/ui/carousel";
 import { Dialog, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
+
+import { PublicDailyDrop } from "@/types/dailydrop.type";
+import { OperationalHoursEntity } from "@/types/setting.type";
+
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+
 import { DailyDropCard } from "./DailyDropCard";
 
 // ── Countdown hook ─────────────────────────────────────────────────────────────
-function useDailyDropCountdown(operationalHours: OperationalHoursEntity | null): string {
+function useDailyDropCountdown(
+  operationalHours: OperationalHoursEntity | null
+): string {
   const [display, setDisplay] = useState("--:--:--");
 
   useEffect(() => {
-    if (!operationalHours) return;
+    const hours = operationalHours;
+    if (!hours) return;
 
-    const tz = operationalHours.timezone || "Asia/Jakarta";
-    const buffer = operationalHours.lastOrderBufferInMinutes ?? 30;
+    const tz = hours.timezone || "Asia/Jakarta";
+    const buffer = hours.lastOrderBufferInMinutes ?? 30;
+    const closeTime = hours.close;
 
     function getTargetMs(): number {
       const now = new Date();
@@ -37,7 +52,7 @@ function useDailyDropCountdown(operationalHours: OperationalHoursEntity | null):
       const year = parts.find((p) => p.type === "year")?.value ?? "";
       const month = parts.find((p) => p.type === "month")?.value ?? "";
       const day = parts.find((p) => p.type === "day")?.value ?? "";
-      const [closeH, closeM] = operationalHours.close.split(":").map(Number);
+      const [closeH, closeM] = closeTime.split(":").map(Number);
       const closeMinutes = closeH * 60 + closeM - buffer;
       const targetH = Math.floor(closeMinutes / 60);
       const targetM = closeMinutes % 60;
@@ -129,7 +144,11 @@ function useMobileCardSize() {
   return size;
 }
 
-function useCardRowDimensions(rowRef: RefObject<HTMLDivElement | null>, numCards = 3, gap = 20) {
+function useCardRowDimensions(
+  rowRef: RefObject<HTMLDivElement | null>,
+  numCards = 3,
+  gap = 20
+) {
   const [dims, setDims] = useState({ w: 220, h: 340 });
   useEffect(() => {
     if (!rowRef.current) return;
@@ -154,14 +173,15 @@ interface DailyDropModalProps {
 
 export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
   const [drops, setDrops] = useState<PublicDailyDrop[]>([]);
-  const [operationalHours, setOperationalHours] = useState<OperationalHoursEntity | null>(null);
+  const [operationalHours, setOperationalHours] =
+    useState<OperationalHoursEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [openedSlots, setOpenedSlots] = useState<number[]>([]);
   const cardRowRef = useRef<HTMLDivElement>(null);
   const { w: cardW, h: cardH } = useCardRowDimensions(cardRowRef);
   const { w: mobileW, h: mobileH } = useMobileCardSize();
 
-  const width = useWindowSize();
+  const width = useWindowSize() ?? 1024;
 
   const countdown = useDailyDropCountdown(operationalHours);
   const tz = operationalHours?.timezone ?? "Asia/Jakarta";
@@ -184,7 +204,9 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [open]);
 
   const handleFlip = useCallback(
@@ -196,14 +218,22 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
   );
 
   const sortedDrops = [...drops].sort((a, b) => a.slot - b.slot);
-  const displayDrops: (PublicDailyDrop | null)[] =
-    loading ? [null, null, null] : sortedDrops.length >= 3 ? sortedDrops : [null, null, null];
+  const displayDrops: (PublicDailyDrop | null)[] = loading
+    ? [null, null, null]
+    : sortedDrops.length >= 3
+      ? sortedDrops
+      : [null, null, null];
 
-  const headerSvgH = width/7.5;
+  const headerSvgH = width / 7.5;
   const headerOverlapH = headerSvgH / 2;
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
       <DialogPortal>
         {/* Dark overlay — Radix handles Escape + outside-click via the Content */}
         <DialogOverlay className="backdrop-blur-sm" />
@@ -215,7 +245,9 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
         */}
         <DialogPrimitive.Content className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Hidden accessible title required by Radix */}
-          <DialogPrimitive.Title className="sr-only">Daily Drop</DialogPrimitive.Title>
+          <DialogPrimitive.Title className="sr-only">
+            Daily Drop
+          </DialogPrimitive.Title>
 
           {/* ── DESKTOP / TABLET (md+) ──────────────────────────────────────── */}
           <div className="hidden md:flex flex-col items-center md:w-11/12 xl:w-3/4 3xl:w-2/3 max-h-[90vh]">
@@ -227,7 +259,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
             */}
             <div
               className="relative z-[2] flex justify-center w-full shrink-0 pointer-events-none"
-              style={{ height: headerSvgH, marginBottom: -headerOverlapH-10 }}
+              style={{ height: headerSvgH, marginBottom: -headerOverlapH - 10 }}
             >
               <Image
                 src="/daily-drop/daily-drop-header.svg"
@@ -248,7 +280,8 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
               <div
                 className="absolute inset-0"
                 style={{
-                  backgroundImage: "url('/daily-drop/daily-drop-background.svg')",
+                  backgroundImage:
+                    "url('/daily-drop/daily-drop-background.svg')",
                   backgroundSize: "cover",
                   backgroundPosition: "center"
                 }}
@@ -274,12 +307,19 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
               <div className="relative z-10 flex flex-col items-center px-6 pb-8">
                 {/* Countdown */}
                 <p className="font-instrumentSans text-white mb-2 flex items-center gap-2">
-                  <span style={{ fontWeight: 600, fontSize: 16 }}>OFFER ENDS IN</span>
-                  <span style={{ fontWeight: 800, fontSize: 16 }}>{countdown}</span>
+                  <span style={{ fontWeight: 600, fontSize: 16 }}>
+                    OFFER ENDS IN
+                  </span>
+                  <span style={{ fontWeight: 800, fontSize: 16 }}>
+                    {countdown}
+                  </span>
                 </p>
 
                 {/* Cards — each ~1/4 modal width */}
-                <div ref={cardRowRef} className="flex items-center justify-center gap-5 w-full">
+                <div
+                  ref={cardRowRef}
+                  className="flex items-center justify-center gap-5 w-full"
+                >
                   {displayDrops.map((drop, i) => {
                     if (!drop) {
                       return (
@@ -325,7 +365,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
               className="absolute inset-0"
               style={{
                 background:
-                 "radial-gradient(circle at top center, rgba(199,5,21,0.8) 0%, rgba(199,5,21,0.6) 30%, rgba(0,0,0,1) 100%)"
+                  "radial-gradient(circle at top center, rgba(199,5,21,0.8) 0%, rgba(199,5,21,0.6) 30%, rgba(0,0,0,1) 100%)"
               }}
             />
 
@@ -353,8 +393,12 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
 
               {/* Countdown */}
               <p className="font-instrumentSans text-white mb-5 flex items-center gap-2 shrink-0">
-                <span style={{ fontWeight: 400, fontSize: 14 }}>OFFER ENDS IN</span>
-                <span style={{ fontWeight: 700, fontSize: 14 }}>{countdown}</span>
+                <span style={{ fontWeight: 400, fontSize: 14 }}>
+                  OFFER ENDS IN
+                </span>
+                <span style={{ fontWeight: 700, fontSize: 14 }}>
+                  {countdown}
+                </span>
               </p>
 
               {/* Cards carousel */}
@@ -379,7 +423,10 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
                         if (!drop) return null;
                         const isOpened = openedSlots.includes(drop.slot);
                         return (
-                          <CarouselItem key={drop.slot} className="pl-3 basis-[85%] sm:basis-[78%]">
+                          <CarouselItem
+                            key={drop.slot}
+                            className="pl-3 basis-[85%] sm:basis-[78%]"
+                          >
                             <div className="flex justify-center">
                               <DailyDropCard
                                 drop={drop}

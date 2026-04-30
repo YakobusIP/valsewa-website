@@ -424,6 +424,9 @@ export class AccountService {
         orderBy: {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
+        omit: {
+          legacySkinList: true
+        },
         include: {
           priceTier: true,
           thumbnail: true,
@@ -673,7 +676,12 @@ export class AccountService {
 
   getAllDatabaseAccounts = async (filter?: Prisma.AccountWhereInput) => {
     try {
-      return await prisma.account.findMany({ where: filter });
+      return await prisma.account.findMany({
+        where: filter,
+        omit: {
+          legacySkinList: true
+        }
+      });
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -731,6 +739,9 @@ export class AccountService {
     try {
       const account = await prisma.account.findUnique({
         where: { id },
+        omit: {
+          legacySkinList: true
+        },
         include: {
           priceTier: {
             include: {
@@ -796,7 +807,8 @@ export class AccountService {
         omit: {
           password: true,
           passwordResetRequired: true,
-          rentHourUpdated: true
+          rentHourUpdated: true,
+          legacySkinList: true
         },
         where: { id },
         include: {
@@ -910,6 +922,9 @@ export class AccountService {
         where: {
           availabilityStatus: { not: Status.NOT_AVAILABLE },
           id: { notIn: unavailableAccounts.map((v) => v.accountId) }
+        },
+        omit: {
+          legacySkinList: true
         }
       });
 
@@ -939,6 +954,9 @@ export class AccountService {
           availabilityStatus: scalars.availabilityStatus as Status,
           otherImages: { connect: otherImages?.map((id) => ({ id })) },
           priceTier: { connect: { id: priceTier } }
+        },
+        omit: {
+          legacySkinList: true
         }
       });
     } catch (error) {
@@ -1070,7 +1088,10 @@ export class AccountService {
 
       return await prisma.account.update({
         where: { id },
-        data: updateData
+        data: updateData,
+        omit: {
+          legacySkinList: true
+        }
       });
     } catch (error) {
       if (error instanceof NotFoundError) throw error;

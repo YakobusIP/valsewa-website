@@ -1,4 +1,4 @@
-components:
+﻿components:
   schemas:
     Account:
       type: object
@@ -184,9 +184,9 @@ components:
         type: string
         pattern: '^(\d+d)?\s?(\d+h)?$'
         example: "1d 2h"
-      normalPrice:
+      unratedPrice:
         type: number
-      lowPrice:
+      compPrice:
         type: number
       tierId:
         type: number
@@ -226,16 +226,16 @@ components:
           type: string
           pattern: "^(\\d+d)?\\s?(\\d+h)?$"
           example: "1d 0h"
-        normalPrice:
+        unratedPrice:
           type: number
           example: 99900
-        lowPrice:
+        compPrice:
           type: number
           example: 79900
       required:
         - duration
-        - normalPrice
-        - lowPrice
+        - unratedPrice
+        - compPrice
 
     PriceListBulkCreateRequest:
       type: object
@@ -249,8 +249,8 @@ components:
         - items
       example:
         items:
-          - { duration: "1d 2h", normalPrice: 99000, lowPrice: 79000 }
-          - { duration: "0d 12h", normalPrice: 54900, lowPrice: 44900 }
+          - { duration: "1d 2h", unratedPrice: 99000, compPrice: 79000 }
+          - { duration: "0d 12h", unratedPrice: 54900, compPrice: 44900 }
 
     PriceListUpdate:
       type: object
@@ -260,10 +260,10 @@ components:
           type: string
           pattern: "^(\\d+d)?\\s?(\\d+h)?$"
           example: "2d 0h"
-        normalPrice:
+        unratedPrice:
           type: number
           example: 102000
-        lowPrice:
+        compPrice:
           type: number
           example: 82000
       additionalProperties: false
@@ -1692,7 +1692,7 @@ paths:
       tags:
         - Skins
       summary: Update an existing skin.
-      description: Updates a skin’s fields. Your controller responds with a message.
+      description: Updates a skinâ€™s fields. Your controller responds with a message.
       security:
         - bearerAuth: []
       parameters:

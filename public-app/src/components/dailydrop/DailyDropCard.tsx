@@ -49,7 +49,9 @@ function useSpringValue(stiffness = 300, damping = 40) {
 
   const subscribe = useCallback((fn: (v: number) => void) => {
     listeners.current.add(fn);
-    return () => listeners.current.delete(fn);
+    return () => {
+      listeners.current.delete(fn);
+    };
   }, []);
 
   useEffect(
@@ -88,7 +90,10 @@ function GoldTriangle({ size }: { size: number }) {
           <stop offset="100%" stopColor="#FFE481" />
         </linearGradient>
       </defs>
-      <polygon points={`0,0 ${size},0 0,${size}`} fill={`url(#${gradientId})`} />
+      <polygon
+        points={`0,0 ${size},0 0,${size}`}
+        fill={`url(#${gradientId})`}
+      />
     </svg>
   );
 }
@@ -97,10 +102,9 @@ function GoldTriangle({ size }: { size: number }) {
 interface CardBackProps {
   drop: PublicDailyDrop;
   cardWidth: number;
-  cardHeight: number;
 }
 
-function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
+function CardBack({ drop, cardWidth }: CardBackProps) {
   const isSold = drop.isSold;
   const triangleSize = Math.round(cardWidth * 0.42);
   const discountFontSize = triangleSize * 0.22;
@@ -108,7 +112,7 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
   const offsetY = triangleSize * 0.4;
   const offsetX = triangleSize * -0.2;
   const displayCode = drop.account.priceTier.code.includes("COMP -")
-    ?  drop.account.priceTier.code
+    ? drop.account.priceTier.code
     : `UNRATED - ${drop.account.priceTier.code}`;
 
   const handleRent = (e: ReactMouseEvent) => {
@@ -121,10 +125,17 @@ function CardBack({ drop, cardWidth, cardHeight }: CardBackProps) {
   return (
     <div
       className="relative w-full h-full rounded-[13px] overflow-hidden flex flex-col"
-      style={{ background: "linear-gradient(to bottom, #656565, #000000)", position: "relative", zIndex: 0 }}
+      style={{
+        background: "linear-gradient(to bottom, #656565, #000000)",
+        position: "relative",
+        zIndex: 0
+      }}
     >
       {/* Gold triangle + discount */}
-      <div className="absolute top-0 left-0" style={{ zIndex: 49, transform: "translate3d(0,0,1px)" }}>
+      <div
+        className="absolute top-0 left-0"
+        style={{ zIndex: 49, transform: "translate3d(0,0,1px)" }}
+      >
         <GoldTriangle size={triangleSize} />
         <span
           className="absolute font-antonio leading-none select-none"
@@ -442,7 +453,7 @@ export function DailyDropCard({
           </div>
           {/* Back */}
           <div style={faceStyle(true)}>
-            <CardBack drop={drop} cardWidth={width} cardHeight={height} />
+            <CardBack drop={drop} cardWidth={width} />
           </div>
         </div>
       </div>
