@@ -39,14 +39,21 @@ function PaymentSummary({
 
   const isDisabled = !booking || !paymentMethod;
 
-  const discount = useMemo(
+  const dailyDropDiscount = booking.dailyDropDiscount ?? 0;
+  const isDailyDropBooking = dailyDropDiscount > 0;
+
+  const voucherDiscount = useMemo(
     () => calculateVoucherDiscount(voucher, booking.mainValue),
     [voucher, booking.mainValue]
   );
 
   const subtotalPayment = useMemo(
-    () => booking.totalValue - discount,
-    [booking.totalValue, discount]
+    () =>
+      booking.mainValue +
+      (booking.othersValue ?? 0) -
+      dailyDropDiscount -
+      voucherDiscount,
+    [booking.mainValue, booking.othersValue, dailyDropDiscount, voucherDiscount]
   );
 
   const isBookingFree = booking && subtotalPayment === 0;
@@ -139,7 +146,7 @@ function PaymentSummary({
               placeholder="Enter Promo Code"
               className="flex-1 px-3 py-2 text-sm bg-[#1C1C1C] rounded outline-none"
               aria-label="Promo code input"
-              disabled={isApplyingVoucher}
+              disabled={isApplyingVoucher || isDailyDropBooking}
             />
 
             <button
@@ -159,6 +166,7 @@ function PaymentSummary({
             voucher={voucher}
             handleApplyVoucher={onApplyVoucher}
             isApplyingVoucher={isApplyingVoucher}
+            isDailyDrop={isDailyDropBooking}
           />
         </div>
       </div>
@@ -174,12 +182,17 @@ function PaymentSummary({
           <span>Subtotal</span>
           <span>IDR {booking.mainValue.toLocaleString()}</span>
         </div>
-        {voucher && (
+        {isDailyDropBooking ? (
+          <div className="flex justify-between text-yellow-400">
+            <span>Daily Drop Discount</span>
+            <span>-IDR {dailyDropDiscount.toLocaleString()}</span>
+          </div>
+        ) : voucher ? (
           <div className="flex justify-between text-yellow-400">
             <span>Promo ({voucher.voucherName})</span>
-            <span>-IDR {discount.toLocaleString()}</span>
+            <span>-IDR {voucherDiscount.toLocaleString()}</span>
           </div>
-        )}
+        ) : null}
         <div className="flex justify-between">
           <span>Other Fee</span>
           <span>IDR {booking.othersValue?.toLocaleString() ?? "0"}</span>

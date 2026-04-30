@@ -19,6 +19,7 @@ import { Skin } from "@/types/skin.type";
 import { ArrowUpDown, Search, SlidersHorizontal, X } from "lucide-react";
 import Image from "next/image";
 
+
 import { SORT_OPTIONS, SortOption } from "./SortDropdown";
 
 interface FilterBarMobileProps {
@@ -29,6 +30,7 @@ interface FilterBarMobileProps {
   currentSort: SortOption;
   fallbackSkins?: Skin[];
   onAnyFilterChange: () => void;
+  onOpenDailyDrop?: () => void;
 }
 
 export function FilterBarMobile({
@@ -38,7 +40,8 @@ export function FilterBarMobile({
   onSortChange,
   currentSort,
   fallbackSkins = [],
-  onAnyFilterChange
+  onAnyFilterChange,
+  onOpenDailyDrop
 }: FilterBarMobileProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [skinQuery, setSkinQuery] = useState("");
@@ -172,6 +175,7 @@ export function FilterBarMobile({
       {/* Filter + Sort row (hidden during skin search) */}
       {!isSearchOpen && (
         <div className="flex items-center justify-between gap-2">
+
           {/* FILTER BUTTON */}
           <button
             onClick={onOpenFilterSheet}
@@ -181,10 +185,24 @@ export function FilterBarMobile({
             Filter
           </button>
 
+          {/* DAILY DROP BUTTON */}
+          <button
+            onClick={onOpenDailyDrop}
+            className="flex items-center justify-center border border-white/30 rounded-xl px-3 py-3.5 hover:border-white transition shrink-0"
+          >
+            <Image
+              src="/daily-drop-catalogue.svg"
+              alt="Daily Drop"
+              width={80}
+              height={24}
+              className="object-contain"
+            />
+          </button>
+
           {/* SORT DROPDOWN */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 border border-white/30 rounded-xl px-4 py-2.5 text-white text-sm hover:border-white transition">
+              <button className="flex items-center gap-2 border border-white/30 rounded-xl px-4 py-3 text-nowrap text-white text-xs hover:border-white transition">
                 <ArrowUpDown className="w-4 h-4" />
                 {currentSortLabel}
               </button>

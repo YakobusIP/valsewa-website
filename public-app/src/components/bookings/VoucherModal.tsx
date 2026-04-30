@@ -75,12 +75,14 @@ type VoucherModalProps = {
   voucher: VoucherEntity | null;
   handleApplyVoucher: (voucherName: string | null) => void;
   isApplyingVoucher: boolean;
+  isDailyDrop: boolean;
 };
 
 export default function VoucherModal({
   voucher,
   handleApplyVoucher,
-  isApplyingVoucher
+  isApplyingVoucher,
+  isDailyDrop
 }: VoucherModalProps) {
   const [open, setOpen] = useState(false);
 
@@ -119,11 +121,11 @@ export default function VoucherModal({
   return (
     <Fragment>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
+        {!isDailyDrop && (<DialogTrigger asChild>
           <button className="text-[#E8C545] underline hover:text-yellow-400">
             Explore Promo Codes
           </button>
-        </DialogTrigger>
+        </DialogTrigger>)}
 
         <DialogContent className="bg-black border border-zinc-700 max-h-[90vh] overflow-y-auto">
           <DialogHeader>

@@ -18,7 +18,7 @@ export type SortOption = "dateAdded" | "mostRented" | "cheapest" | "availableNow
 export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "dateAdded",    label: "Date Added" },
   { value: "mostRented",   label: "Most Rented" },
-  { value: "cheapest",     label: "Cheapest to Highest" },
+  { value: "cheapest",     label: "Cheapest" },
   { value: "availableNow", label: "Available Now" },
 ];
 

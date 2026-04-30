@@ -26,6 +26,7 @@ import utc from "dayjs/plugin/utc";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 import { subDays } from "date-fns";
+import { getOperationalWindow } from "../lib/operational-window";
 import { prisma } from "../lib/prisma";
 import {
   BankCodes,
@@ -444,10 +445,16 @@ export class BookingService {
     duration: string,
     voucher: VoucherResponse | null,
     paymentMethod: PaymentMethodType | null,
-    quantity: number
+    quantity: number,
+    dailyDropDiscount: number = 0
   ) => {
     const mainValue = unratedPrice * quantity;
     const othersValue = isCompetitive ? (compPrice - unratedPrice) * quantity : 0;
+
+    const cappedDailyDropDiscount = Math.min(
+      Math.max(dailyDropDiscount, 0),
+      mainValue + othersValue
+    );
 
     let voucherType = null;
     let voucherAmount = null;
@@ -471,7 +478,8 @@ export class BookingService {
       discount = Math.min(discount, mainValue);
     }
 
-    const subtotalValue = mainValue + othersValue - discount;
+    const subtotalValue =
+      mainValue + othersValue - cappedDailyDropDiscount - discount;
 
     let adminFee = 0;
     if (subtotalValue !== 0) {
@@ -502,8 +510,11 @@ export class BookingService {
       duration,
       durationInHours,
       discount,
+      dailyDropDiscount: cappedDailyDropDiscount,
       adminFee,
-      totalValue
+      totalValue,
+      effectiveUnratedPrice: unratedPrice,
+      effectiveCompPrice: compPrice
     };
   };
 
@@ -520,6 +531,8 @@ export class BookingService {
         startAt
       } = data;
 
+      const { start: opStart, end: opEnd } = await getOperationalWindow();
+
       const [
         customer,
         ongoingHoldBooking,
@@ -527,7 +540,8 @@ export class BookingService {
         account,
         priceList,
         voucher,
-        operationalHours
+        operationalHours,
+        dailyDrop
       ] = await Promise.all([
         // customer
         customerId
@@ -580,7 +594,16 @@ export class BookingService {
         // voucher
         voucherId ? this.getValidVoucherById(voucherId) : Promise.resolve(null),
         // operational hours
-        this.settingService.getOperationalHours()
+        this.settingService.getOperationalHours(),
+        // daily drop for today (server-authoritative discount)
+        prisma.dailyDrop.findFirst({
+          where: {
+            accountId,
+            priceListId,
+            date: { gte: opStart, lte: opEnd }
+          },
+          select: { discount: true }
+        })
       ]);
 
       if (customerId && !customer) {
@@ -605,6 +628,14 @@ export class BookingService {
         throw new NotFoundError("Price list not found.");
       }
 
+      const dailyDropPercent = dailyDrop?.discount ?? 0;
+      const dailyDropDiscountAmount =
+        dailyDropPercent > 0
+          ? Math.round(
+              priceList.unratedPrice * quantity * dailyDropPercent * 0.01
+            )
+          : 0;
+
       const {
         voucherType,
         voucherAmount,
@@ -614,7 +645,10 @@ export class BookingService {
         duration,
         durationInHours,
         discount,
-        totalValue
+        dailyDropDiscount,
+        totalValue,
+        effectiveUnratedPrice,
+        effectiveCompPrice
       } = this.calculateValues(
         priceList.unratedPrice,
         priceList.compPrice,
@@ -622,7 +656,8 @@ export class BookingService {
         priceList.duration,
         voucher,
         null,
-        quantity
+        quantity,
+        dailyDropDiscountAmount
       );
 
       const immediate = !startAt;
@@ -671,9 +706,9 @@ export class BookingService {
             startAt: bookingStartAt,
             endAt: bookingEndAt,
             expiredAt: bookingExpiredAt,
-            mainValuePerUnit: priceList.unratedPrice,
+            mainValuePerUnit: effectiveUnratedPrice,
             othersValuePerUnit: account.isCompetitive
-              ? priceList.compPrice - priceList.unratedPrice
+              ? effectiveCompPrice - effectiveUnratedPrice
               : 0,
             voucherName: voucher?.voucherName,
             voucherType,
@@ -682,6 +717,7 @@ export class BookingService {
             mainValue,
             othersValue,
             discount,
+            dailyDropDiscount,
             totalValue,
             version: 1
           }
@@ -1025,16 +1061,18 @@ export class BookingService {
         mainValue,
         othersValue,
         discount,
+        dailyDropDiscount,
         adminFee,
         totalValue
       } = this.calculateValues(
         booking.mainValuePerUnit,
-        booking.othersValuePerUnit ?? 0,
+        (booking.mainValuePerUnit ?? 0) + (booking.othersValuePerUnit ?? 0),
         booking.account.isCompetitive,
         booking.duration,
         voucher,
         paymentMethodType,
-        booking.quantity
+        booking.quantity,
+        booking.dailyDropDiscount ?? 0
       );
 
       const isBookingFree = totalValue === 0;
@@ -1055,6 +1093,7 @@ export class BookingService {
               mainValue,
               othersValue,
               discount,
+              dailyDropDiscount,
               adminFee,
               totalValue,
               version: { increment: 1 },
@@ -1836,6 +1875,7 @@ export class BookingService {
       mainValue: booking.mainValue,
       othersValue: booking.othersValue,
       discount: booking.discount,
+      dailyDropDiscount: booking.dailyDropDiscount,
       totalValue: booking.totalValue,
       active: null,
       payments: booking.payments,
@@ -1898,6 +1938,7 @@ export class BookingService {
       mainValue: booking.mainValue,
       othersValue: booking.othersValue,
       discount: booking.discount,
+      dailyDropDiscount: booking.dailyDropDiscount,
       totalValue: booking.totalValue,
       active: active ?? false,
       account: {

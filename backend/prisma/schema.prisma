@@ -52,8 +52,9 @@ model Account {
 
   otherImages ImageUpload[] @relation("OtherImages")
 
-  resetLogs AccountResetLog[]
-  Booking   Booking[]
+  resetLogs  AccountResetLog[]
+  Booking    Booking[]
+  dailyDrops DailyDrop[]
 
   @@index([skinCount])
 }
@@ -88,8 +89,9 @@ model PriceList {
   tierId Int
   tier   PriceTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  dailyDrops DailyDrop[]
 
   @@index([tierId])
 }
@@ -216,8 +218,9 @@ model Booking {
   mainValue          Int
   othersValue        Int?
   discount           Int? // mainValue * voucher_percentage
+  dailyDropDiscount  Int? // mainValue * dailyDrop_percentage
   adminFee           Int?
-  totalValue         Int // mainValue + otherValue + adminFee - discount
+  totalValue         Int // mainValue + otherValue + adminFee - discount - dailyDropDiscount
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -290,4 +293,37 @@ model Voucher {
 model GlobalSettings {
   key   String @id
   value String
+}
+
+model DailyDropConfig {
+  id                Int      @id @default(autoincrement())
+  discountMin       Float
+  discountMax       Float
+  slot1Discount     Float?
+  slot2Discount     Float?
+  slot3Discount     Float?
+  slot1PriceTierIds Int[]
+  slot2PriceTierIds Int[]
+  slot3PriceTierIds Int[]
+  slot1PriceListIds Int[]
+  slot2PriceListIds Int[]
+  slot3PriceListIds Int[]
+  allowedAccountIds Int[]
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model DailyDrop {
+  id          Int       @id @default(autoincrement())
+  slot        Int
+  date        DateTime
+  discount    Float
+  accountId   Int
+  account     Account   @relation(fields: [accountId], references: [id])
+  priceListId Int
+  priceList   PriceList @relation(fields: [priceListId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([date])
 }
