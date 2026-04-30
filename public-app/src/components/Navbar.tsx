@@ -12,10 +12,8 @@ import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
-import { SearchModal } from "./SearchModal";
 import StreakCountdown from "./StreakCountdown";
 import { Button } from "./ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
@@ -25,9 +23,7 @@ interface NavbarProps {
 }
 
 const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
-  const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [streak, setStreak] = useState<number | null>(null);
   const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
   const [isCountdownVisible, setIsCountdownVisible] = useState(false);
@@ -37,13 +33,6 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
     onLoginModalOpenChange?.(true);
   };
 
-  const handleSearchClick = () => {
-    setIsSearchOpen(true);
-  };
-
-  const handleCardClick = (id: string) => {
-    router?.push(`/accounts/${id}`);
-  };
   const { isAuthenticated, username, customerId } = useAuth();
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
@@ -269,14 +258,6 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
             setIsComponentOpen(false);
             onLoginModalOpenChange?.(false);
           }}
-        />
-      )}
-
-      {isSearchOpen && (
-        <SearchModal
-          onSelectAccount={handleCardClick}
-          onOpenChange={setIsSearchOpen}
-          open
         />
       )}
     </div>
