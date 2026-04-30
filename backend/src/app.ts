@@ -23,6 +23,7 @@ import SkinRouter from "./routes/skin.route";
 import CustomerRouter from "./routes/customer.route";
 import SnapBiConfig from "./lib/snapbi/snapbi.config";
 import SettingRouter from "./routes/setting.route";
+import DailyDropRouter from "./routes/dailydrop.route";
 
 const app: Express = express();
 
@@ -61,6 +62,7 @@ app.use("/api/vouchers", VoucherRouter);
 app.use("/api/bookings", BookingRouter);
 app.use("/api/faspay", FaspayRouter);
 app.use("/api/settings", SettingRouter);
+app.use("/api/daily-drop", DailyDropRouter);
 
 const swaggerDefinition: OAS3Definition = {
   openapi: "3.0.0",

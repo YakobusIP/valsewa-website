@@ -18,14 +18,22 @@ import {
   NotFoundError,
   PrismaUniqueError
 } from "../lib/error";
-import { addHours, addMinutes, parseDurationToHours } from "../lib/utils";
+import { addHours, addMinutes, isOutsideOperationalHours, parseDurationToHours, WIB_TZ } from "../lib/utils";
+import dayjs from "dayjs";
+import timezone from "dayjs/plugin/timezone";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 import { subDays } from "date-fns";
+import { getOperationalWindow } from "../lib/operational-window";
 import { prisma } from "../lib/prisma";
 import {
   BankCodes,
   BookingResponse,
   CallbackNotificationRequest,
   CreateAdminBookingRequest,
+  EditCurrentBookingRequest,
   CreateBookingRequest,
   CreateManualBookingRequest,
   OverrideBookingRequest,
@@ -37,6 +45,7 @@ import {
 import { FaspayClient } from "../faspay/faspay.client";
 import { Metadata } from "../types/metadata.type";
 import { env } from "../lib/env";
+import { SettingService } from "./setting.service";
 
 export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<
   PaymentStatus,
@@ -75,8 +84,19 @@ export const PAYMENT_METHODS_MAP: Record<
   [PaymentMethodRequest.MANUAL]: { paymentMethodType: PaymentMethodType.MANUAL }
 };
 
+const sanitizeVirtualAccountDisplayName = (
+  raw: string | null | undefined
+): string | undefined => {
+  if (raw == null) return undefined;
+  const letters = raw.replace(/[^A-Za-z]/g, "").toUpperCase();
+  return letters.length > 0 ? letters : undefined;
+};
+
 export class BookingService {
-  constructor(private readonly faspayClient: FaspayClient) {}
+  constructor(
+    private readonly faspayClient: FaspayClient,
+    private readonly settingService: SettingService
+  ) {}
 
   private parseBookingNumber = (input: string): bigint | undefined => {
     const re = new RegExp(`^VS-(\\d{7})$`);
@@ -419,16 +439,17 @@ export class BookingService {
   };
 
   private calculateValues = (
-    normalPrice: number,
-    lowPrice: number,
-    isLowRank: boolean,
+    unratedPrice: number,
+    compPrice: number,
+    isCompetitive: boolean,
     duration: string,
     voucher: VoucherResponse | null,
     paymentMethod: PaymentMethodType | null,
-    quantity: number
+    quantity: number,
+    dailyDropDiscountAmount: number = 0
   ) => {
-    const mainValue = normalPrice * quantity;
-    const othersValue = isLowRank ? (lowPrice - normalPrice) * quantity : 0;
+    const mainValue = unratedPrice * quantity;
+    const othersValue = isCompetitive ? (compPrice - unratedPrice) * quantity : 0;
 
     let voucherType = null;
     let voucherAmount = null;
@@ -450,6 +471,8 @@ export class BookingService {
       }
 
       discount = Math.min(discount, mainValue);
+    } else if (dailyDropDiscountAmount > 0) {
+      discount = Math.min(dailyDropDiscountAmount, mainValue + othersValue);
     }
 
     const subtotalValue = mainValue + othersValue - discount;
@@ -484,7 +507,9 @@ export class BookingService {
       durationInHours,
       discount,
       adminFee,
-      totalValue
+      totalValue,
+      effectiveUnratedPrice: unratedPrice,
+      effectiveCompPrice: compPrice
     };
   };
 
@@ -501,13 +526,17 @@ export class BookingService {
         startAt
       } = data;
 
+      const { start: opStart, end: opEnd } = await getOperationalWindow();
+
       const [
         customer,
         ongoingHoldBooking,
         reservedBookingCount,
         account,
         priceList,
-        voucher
+        voucher,
+        operationalHours,
+        dailyDrop
       ] = await Promise.all([
         // customer
         customerId
@@ -543,7 +572,8 @@ export class BookingService {
           },
           select: {
             id: true,
-            isLowRank: true
+            isCompetitive: true,
+            isMfa: true
           }
         }),
         // price list
@@ -551,13 +581,24 @@ export class BookingService {
           where: { id: priceListId },
           select: {
             id: true,
-            normalPrice: true,
-            lowPrice: true,
+            unratedPrice: true,
+            compPrice: true,
             duration: true
           }
         }),
         // voucher
-        voucherId ? this.getValidVoucherById(voucherId) : Promise.resolve(null)
+        voucherId ? this.getValidVoucherById(voucherId) : Promise.resolve(null),
+        // operational hours
+        this.settingService.getOperationalHours(),
+        // daily drop for today (server-authoritative discount)
+        prisma.dailyDrop.findFirst({
+          where: {
+            accountId,
+            priceListId,
+            date: { gte: opStart, lte: opEnd }
+          },
+          select: { discount: true }
+        })
       ]);
 
       if (customerId && !customer) {
@@ -582,6 +623,14 @@ export class BookingService {
         throw new NotFoundError("Price list not found.");
       }
 
+      const dailyDropPercent = dailyDrop?.discount ?? 0;
+      const dailyDropDiscountAmount =
+        dailyDropPercent > 0
+          ? Math.round(
+              priceList.unratedPrice * quantity * dailyDropPercent * 0.01
+            )
+          : 0;
+
       const {
         voucherType,
         voucherAmount,
@@ -591,23 +640,32 @@ export class BookingService {
         duration,
         durationInHours,
         discount,
-        totalValue
+        totalValue,
+        effectiveUnratedPrice,
+        effectiveCompPrice
       } = this.calculateValues(
-        priceList.normalPrice,
-        priceList.lowPrice,
-        account.isLowRank,
+        priceList.unratedPrice,
+        priceList.compPrice,
+        account.isCompetitive,
         priceList.duration,
         voucher,
         null,
-        quantity
+        quantity,
+        dailyDropDiscountAmount
       );
 
-      const immediate = !startAt;
+      const immediate = dailyDrop ? true : !startAt;
 
       const now = new Date();
       const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
-      const bookingStartAt = immediate ? bookingExpiredAt : startAt;
+      const bookingStartAt = immediate ? bookingExpiredAt : startAt!;
       const bookingEndAt = addHours(bookingStartAt, durationInHours * quantity);
+
+      if (account.isMfa && isOutsideOperationalHours(operationalHours, now)) {
+        throw new BadRequestError(
+          `Booking is MFA enabled and outside operational hours (WIB window), open: ${operationalHours?.open}.`
+        );
+      }
 
       const booking = await prisma.$transaction(async (tx) => {
         // Prevent race condition
@@ -642,9 +700,9 @@ export class BookingService {
             startAt: bookingStartAt,
             endAt: bookingEndAt,
             expiredAt: bookingExpiredAt,
-            mainValuePerUnit: priceList.normalPrice,
-            othersValuePerUnit: account.isLowRank
-              ? priceList.lowPrice - priceList.normalPrice
+            mainValuePerUnit: effectiveUnratedPrice,
+            othersValuePerUnit: account.isCompetitive
+              ? effectiveCompPrice - effectiveUnratedPrice
               : 0,
             voucherName: voucher?.voucherName,
             voucherType,
@@ -663,6 +721,7 @@ export class BookingService {
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
       throw new InternalServerError((error as Error).message);
     }
   };
@@ -707,6 +766,120 @@ export class BookingService {
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  getActiveBookingForAdminByAccountId = async (
+    accountId: number
+  ): Promise<BookingResponse> => {
+    try {
+      const now = new Date();
+      const booking = await prisma.booking.findFirst({
+        where: {
+          accountId,
+          status: BookingStatus.RESERVED,
+          startAt: { lte: now },
+          endAt: { gt: now }
+        }
+      });
+
+      if (!booking) {
+        throw new NotFoundError("No active booking found for this account.");
+      }
+
+      return this.mapBookingDataToBookingResponse(booking);
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  editCurrentBookingByAccountId = async (
+    accountId: number,
+    data: EditCurrentBookingRequest
+  ): Promise<BookingResponse> => {
+    try {
+      const { duration, totalValue } = data;
+
+      if (totalValue < 0) {
+        throw new BadRequestError("Total price must be 0 or greater.");
+      }
+
+      const durationInHours = parseDurationToHours(duration);
+      if (!Number.isFinite(durationInHours) || durationInHours <= 0) {
+        throw new BadRequestError(
+          "Duration must be a positive length (e.g. 2h or 1d)."
+        );
+      }
+
+      return await prisma.$transaction(async (tx) => {
+        await tx.$executeRaw`SELECT id FROM "Account" WHERE id = ${accountId} FOR UPDATE`;
+
+        const now = new Date();
+        const booking = await tx.booking.findFirst({
+          where: {
+            accountId,
+            status: BookingStatus.RESERVED,
+            startAt: { lte: now },
+            endAt: { gt: now }
+          }
+        });
+
+        if (!booking?.startAt) {
+          throw new NotFoundError("No active booking found for this account.");
+        }
+
+        const newEndAt = addHours(
+          booking.startAt,
+          durationInHours * booking.quantity
+        );
+
+        if (newEndAt <= booking.startAt) {
+          throw new BadRequestError("Invalid booking window.");
+        }
+
+        if (newEndAt <= now) {
+          throw new BadRequestError(
+            "The new end time must be after now so the booking remains active."
+          );
+        }
+
+        const overlapping = await tx.booking.findFirst({
+          where: {
+            accountId,
+            id: { not: booking.id },
+            AND: [
+              { status: { in: [BookingStatus.HOLD, BookingStatus.RESERVED] } },
+              { startAt: { lt: newEndAt } },
+              { endAt: { gt: booking.startAt } }
+            ]
+          },
+          select: { id: true }
+        });
+
+        if (overlapping) {
+          throw new PrismaUniqueError(
+            "Account not available for the requested time range."
+          );
+        }
+
+        const updated = await tx.booking.update({
+          where: { id: booking.id },
+          data: {
+            duration,
+            endAt: newEndAt,
+            totalValue,
+            version: { increment: 1 }
+          }
+        });
+
+        return this.mapBookingDataToBookingResponse(updated);
+      });
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      if (error instanceof BadRequestError) throw error;
+      if (error instanceof PrismaUniqueError) throw error;
       throw new InternalServerError((error as Error).message);
     }
   };
@@ -817,11 +990,13 @@ export class BookingService {
           }
         });
 
-        await tx.accountResetLog.create({
-          data: {
-            accountId: originalAccount.id
-          }
-        });
+        if (originalAccount.requirePasswordReset) {
+          await tx.accountResetLog.create({
+            data: {
+              accountId: originalAccount.id
+            }
+          });
+        }
 
         return this.mapBookingDataToBookingResponse(updatedBooking);
       });
@@ -872,6 +1047,10 @@ export class BookingService {
       const { paymentMethodType, bankCode } =
         PAYMENT_METHODS_MAP[paymentMethod];
 
+      const existingDailyDropDiscount = booking.voucherName
+        ? 0
+        : booking.discount ?? 0;
+
       const {
         voucherType,
         voucherAmount,
@@ -883,12 +1062,13 @@ export class BookingService {
         totalValue
       } = this.calculateValues(
         booking.mainValuePerUnit,
-        booking.othersValuePerUnit ?? 0,
-        booking.account.isLowRank,
+        (booking.mainValuePerUnit ?? 0) + (booking.othersValuePerUnit ?? 0),
+        booking.account.isCompetitive,
         booking.duration,
         voucher,
         paymentMethodType,
-        booking.quantity
+        booking.quantity,
+        existingDailyDropDiscount
       );
 
       const isBookingFree = totalValue === 0;
@@ -975,7 +1155,7 @@ export class BookingService {
 
       const bankAccountName =
         paymentMethodType === PaymentMethodType.VIRTUAL_ACCOUNT
-          ? (booking.customer?.username ?? undefined)
+          ? sanitizeVirtualAccountDisplayName(booking.customer?.username)
           : undefined;
 
       const updatedPayment = await this.processPaymentProvider(
@@ -1176,21 +1356,42 @@ export class BookingService {
           }
         });
 
-        await tx.account.updateMany({
+        const accountsForReset = await tx.account.findMany({
           where: {
-            id: { in: accountIds }
+            id: { in: accountIds },
+            requirePasswordReset: true
           },
-          data: {
-            passwordResetRequired: true
-          }
+          select: { id: true }
         });
+        const resetAccountIds = accountsForReset.map((a) => a.id);
+        const resetAccountIdSet = new Set(resetAccountIds);
 
-        await tx.accountResetLog.createMany({
-          data: completedBookings.map((booking) => ({
-            accountId: booking.accountId,
-            previousExpireAt: booking.endAt ?? null
-          }))
-        });
+        if (resetAccountIdSet.size > 0) {
+          await tx.account.updateMany({
+            where: {
+              id: { in: resetAccountIds }
+            },
+            data: {
+              passwordResetRequired: true
+            }
+          });
+
+          const logByAccountId = new Map<
+            number,
+            { accountId: number; previousExpireAt: Date | null }
+          >();
+          for (const booking of completedBookings) {
+            if (!resetAccountIdSet.has(booking.accountId)) continue;
+            logByAccountId.set(booking.accountId, {
+              accountId: booking.accountId,
+              previousExpireAt: booking.endAt ?? null
+            });
+          }
+
+          await tx.accountResetLog.createMany({
+            data: [...logByAccountId.values()]
+          });
+        }
 
         const rentHourByAccount = new Map<number, number>();
         for (const booking of completedBookings) {
@@ -1348,23 +1549,24 @@ export class BookingService {
     }
   };
 
-  private finishLegacyBooking = async(accountId: number) => {
+  private finishLegacyBooking = async (accountId: number) => {
     const activeBooking = await prisma.account.findFirst({
       where: {
         id: accountId,
-        currentBookingDate: { not: null },
+        currentBookingDate: { not: null }
       }
     });
-    
-    if (!activeBooking) throw new NotFoundError("No active booking found for this account.");
+
+    if (!activeBooking)
+      throw new NotFoundError("No active booking found for this account.");
 
     await prisma.account.update({
       where: { id: accountId },
       data: {
-        currentExpireAt: new Date(),
+        currentExpireAt: new Date()
       }
     });
-  }
+  };
 
   callbackFaspayPayment = async (data: CallbackNotificationRequest) => {
     try {
@@ -1562,6 +1764,60 @@ export class BookingService {
           rentHourUpdated: true
         }
       });
+
+      if (booking.customerId) {
+        const customer = await tx.customer.findUnique({
+          where: { id: booking.customerId }
+        });
+
+        if (customer) {
+          const now = new Date();
+
+          // Always use your default timezone
+          const tz = WIB_TZ;
+
+          // Fixed close time
+          const closeH = 23;
+          const closeM = 59;
+
+          const tomorrowEnd = dayjs(now)
+            .tz(tz)
+            .add(1, "day")
+            .hour(closeH)
+            .minute(closeM)
+            .second(59)
+            .millisecond(999)
+            .toDate();
+
+          let newStreak = 1;
+
+          if (!customer.lastEligibleRent) {
+            newStreak = 1;
+          } else {
+            const lastBookingDayEnd = dayjs(customer.lastEligibleRent)
+              .tz(tz)
+              .subtract(1, "day")
+              .toDate();
+
+            if (now.getTime() <= lastBookingDayEnd.getTime()) {
+              newStreak = customer.currentStreak;
+            } else if (now.getTime() <= customer.lastEligibleRent.getTime()) {
+              newStreak = customer.currentStreak + 1;
+            } else {
+              newStreak = 0;
+            }
+          }
+
+            await tx.customer.update({
+              where: { id: customer.id },
+              data: {
+                currentStreak: newStreak,
+                lastEligibleRent: tomorrowEnd
+              }
+            });
+          
+        }
+      }
     }
 
     return this.mapPaymentDataToPaymentResponse(updatedPayment);
@@ -1579,6 +1835,7 @@ export class BookingService {
         nickname?: string;
         username?: string;
         password?: string;
+        isMfa?: boolean;
       };
     }
   ): BookingResponse => {
@@ -1625,7 +1882,8 @@ export class BookingService {
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
             nickname: booking.account.nickname ?? "",
             username: booking.account.username,
-            password: booking.account.password
+            password: booking.account.password,
+            isMfa: booking.account.isMfa
           }
         : undefined
     };
@@ -1649,6 +1907,8 @@ export class BookingService {
     ) {
       status = BookingStatus.EXPIRED;
     }
+
+    const isMfa = booking.account.isMfa ?? false;
 
     return {
       id: booking.id,
@@ -1681,7 +1941,8 @@ export class BookingService {
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
         nickname: booking.account.nickname ?? "",
         username: active ? booking.account.username : undefined,
-        password: active ? booking.account.password : undefined
+        password: active && !isMfa ? booking.account.password : undefined,
+        isMfa
       },
       payments: booking.payments
     };

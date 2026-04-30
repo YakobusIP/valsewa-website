@@ -30,4 +30,33 @@ export class SettingController {
       return next(error);
     }
   };
+  
+  getOperationalHours = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const value = await this.settingService.getOperationalHours();
+      return res.status(200).json(value);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  updateOperationalHours = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { open, close, lastOrderBufferInMinutes, timezone } = req.body;
+
+      if (!open || !close) {
+        throw new BadRequestError("Missing required fields.");
+      }
+
+      const updated = await this.settingService.updateOperationalHours({
+        open,
+        close,
+        lastOrderBufferInMinutes,
+        timezone
+      });
+      return res.json(updated);
+    } catch (error) {
+      return next(error);
+    }
+  };
 }

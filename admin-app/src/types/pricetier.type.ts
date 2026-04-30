@@ -7,9 +7,10 @@ type PriceTier = {
 type PriceTierRequest = Omit<PriceTier, "id">;
 
 type PriceList = {
+  id?: number;
   duration: string;
-  normalPrice: number;
-  lowPrice: number;
+  unratedPrice: number;
+  compPrice: number;
 };
 
 export type { PriceTier, PriceTierRequest, PriceList };

@@ -82,18 +82,16 @@ const RANKS = [
 
 const SKIN_COUNTS = ["0-5", "6-10", "11-15", "16-20"] as const;
 const TIER_CODES = [
-  "c",
+  "C",
   "B",
-  "V",
+  "A",
   "S",
   "SSS",
-  "SSS⁺",
-  "C - LR TIER",
-  "B - LR TIER",
-  "V - LR TIER",
-  "S - LR TIER",
-  "SSS - LR TIER",
-  "SSS⁺ - LR TIER"
+  "C - COMP",
+  "B - COMP",
+  "A - COMP",
+  "S - COMP",
+  "SSS - COMP",
 ] as const;
 const clamp = (n: number, min: number, max: number) =>
   Math.min(Math.max(n, min), max);
@@ -689,14 +687,14 @@ export function SearchModalMobile({
   }, [open]);
 
   const requestParams = useMemo(() => {
-    const lowTierOnly =
+    const competitiveOnly =
       tierTab === "all" ? undefined : tierTab === "low" ? true : false;
 
     return {
       page,
       limit,
       q: debouncedQ?.trim() || undefined,
-      low_tier_only: lowTierOnly,
+      competitive_only: competitiveOnly,
       tiers: selectedTiers.length
         ? selectedTiers.map((t) =>
             t

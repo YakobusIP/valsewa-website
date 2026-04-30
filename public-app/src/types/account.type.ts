@@ -5,8 +5,8 @@ export type { AccountEntity, AccountEntityRequest, RankResponse };
 type PriceList = {
   id: number;
   duration: string;
-  normalPrice: number;
-  lowPrice: number;
+  unratedPrice: number;
+  compPrice: number;
   tierId: number;
 };
 
@@ -48,8 +48,10 @@ type AccountEntity = {
   otherImages: UploadResponse[] | null;
   priceTier: PriceTier;
   nickname: string;
-  isLowRank: boolean;
+  isCompetitive: boolean;
   isRecommended: boolean;
+  isMfa: boolean;
+  dailyDrop?: { discount: number; priceListId: number } | null;
 };
 
 export type CarouselSlide = {
@@ -98,17 +100,18 @@ type MetadataResponse = {
   total: number;
 };
 
-type TierFilter = { id: string; isLowTier: string } | null;
+type TierFilter = { id: string; isCompetitive: string } | null;
 
 type AccountsPublicParams = {
   page?: number;
   limit?: number;
   q?: string;
 
-  low_tier_only?: boolean;
+  compe_only?: boolean;
   tiers?: string[];
   skin_counts?: string[];
   ranks?: string[];
+  skin_ids?: number[];
 
   min_price?: number;
   max_price?: number;

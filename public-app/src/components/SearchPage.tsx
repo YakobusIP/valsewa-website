@@ -20,8 +20,8 @@ export default function SearchPage({ onClose }: SearchPageProps) {
     setMounted(true);
   }, []);
 
-  const handleCardClick = (id: string) => {
-    router?.push(`/details/${id}`);
+  const handleCardClick = (accountCode: string) => {
+    router?.push(`/accounts/${accountCode}`);
   };
 
   // Close on ESC key

@@ -1,6 +1,11 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { type CSSProperties, Fragment, useEffect, useState } from "react";
+
+import { customerService } from "@/services/customer.service";
+
+import DesktopBrandSwitcher from "@/components/hero/DesktopBrandSwitcher";
+import { heroChromeVars } from "@/components/hero/heroChromeMetrics";
 
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,7 +18,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
-import { SearchModal } from "./SearchModal";
+import StreakCountdown from "./StreakCountdown";
 import { Button } from "./ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 
@@ -24,55 +29,78 @@ interface NavbarProps {
 }
 
 function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
+  const { isAuthenticated, username, customerId } = useAuth();
+  const { booking } = useActiveBooking(customerId?.toString() ?? "");
+
+  const [, setTick] = useState(0);
+  const [streak, setStreak] = useState<number | null>(null);
+  const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
+  const [isCountdownVisible, setIsCountdownVisible] = useState(false);
+
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
   };
   const handleSearchClick = () => {
-    setIsSearchOpen(true);
+    router.push("/search");
   };
-  const { isAuthenticated, username, customerId } = useAuth();
-  const { booking } = useActiveBooking(customerId?.toString() ?? "");
 
   const bookingReserved = booking?.find(
     (i) =>
       i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now()
   );
   const accountCode = bookingReserved?.account.accountCode;
+
   const rentedDays = calculateDaysRented(
     bookingReserved?.startAt ?? null,
     bookingReserved?.endAt ?? null
   );
   const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
 
-  const [, setTick] = useState(0);
   useEffect(() => {
     const interval = setInterval(() => {
       setTick((prev) => prev + 1);
-    }, 60000);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const handleCardClick = (id: string) => {
-    router?.push(`/details/${id}`);
-  };
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setStreak(null);
+      setLastEligibleRent(null);
+      return;
+    }
+
+    customerService
+      .getMyStreak()
+      .then((data) => {
+        setStreak(data.currentStreak);
+        setLastEligibleRent(
+          data.lastEligibleRent ? new Date(data.lastEligibleRent) : null
+        );
+      })
+      .catch(() => {
+        setStreak(null);
+        setLastEligibleRent(null);
+      });
+  }, [isAuthenticated]);
 
   return (
     <div
-      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-16 ${
+      style={heroChromeVars as CSSProperties}
+      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 px-8 lg:px-16 ${
         isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
       }`}
     >
-      <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between">
-        <div className="flex items-center gap-4 md:gap-8 md-lg:gap-11 lg:gap-12 xl:gap-8 2xl:gap-12 2xl-large:gap-12 large:gap-14 pl-7 md:pl-6 lg:pl-9 xl:pl-7">
+      <div className="mx-auto max-w-[1920px] h-[84px] tablet:h-[80px] flex items-center justify-between">
+        <div className="flex items-center gap-[var(--hero-logo-switcher-gap)] pl-[var(--hero-nav-left-offset)]">
           {/* Logo wrapper - positioned to align with hero notch on desktop, scales down on lg */}
-          <div className="relative">
+          <div className="relative -translate-y-1">
             {!isScrolled && (
-              <figure className="relative w-[70px] md:w-[80px] lg:w-[100px] 2xl:w-[130px]">
+              <figure className="relative w-[var(--hero-valforum-logo-width)]">
                 <Image
                   src="/header/Logo Header Valforum.png"
                   alt="logo"
@@ -84,7 +112,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
             )}
             {isScrolled && (
               <Link href="/">
-                <figure className="relative md:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
+                <figure className="relative tablet:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
                   <Image
                     src="/header/VALSEWA.png"
                     alt="logo"
@@ -96,7 +124,6 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               </Link>
             )}
           </div>
-          {/* BRAND SWITCHER - scales down on lg, full size on xl+ */}
           <div
             className={`relative transition-all duration-300 ${
               isScrolled
@@ -104,65 +131,14 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                 : "opacity-100 translate-y-0"
             }`}
           >
-            <div className="flex items-center gap-1 lg:gap-2 px-2 lg:px-3 py-2 rounded-2xl bg-gradient-to-r from-[#5a5a5a] to-[#2f2f2f] border border-white/20 shadow-inner">
-              {/* VALSEWA */}
-              <div
-                onClick={() => setActiveBrand("valsewa")}
-                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valsewa"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
-              >
-                <Image
-                  src="/header/VALSEWA.png"
-                  alt="VALSEWA"
-                  width={130}
-                  height={28}
-                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
-                />
-              </div>
-
-              {/* VALJUBEL */}
-              <div
-                onClick={() => setActiveBrand("valjubel")}
-                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valjubel"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
-              >
-                <Image
-                  src="/header/VALJUBEL.png"
-                  alt="VALJUBEL"
-                  width={130}
-                  height={28}
-                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
-                />
-              </div>
-
-              {/* VALJOKI */}
-              <div
-                onClick={() => setActiveBrand("valjoki")}
-                className={`flex items-center justify-center px-3 lg:px-4 md:px-6 py-2 rounded-xl cursor-pointer transition ${
-                  activeBrand === "valjoki"
-                    ? "bg-black shadow-md"
-                    : "hover:bg-white/10"
-                }`}
-              >
-                <Image
-                  src="/header/VALJOKI.png"
-                  alt="VALJOKI"
-                  width={130}
-                  height={28}
-                  className="object-contain w-[80px] md:w-[80px] 2xl:w-[130px] h-auto"
-                />
-              </div>
-            </div>
+            <DesktopBrandSwitcher
+              activeBrand={activeBrand}
+              setActiveBrand={setActiveBrand}
+            />
           </div>
         </div>
         {/* NAV RIGHT SIDE */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center desktop:gap-4 gap-2">
           {/* SEARCH */}
           <button onClick={handleSearchClick}>
             <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
@@ -184,7 +160,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                 width={18}
                 height={18}
               />
-              <span className="text-white text-xs md:text-sm font-bold font-instrumentSans">
+              <span className="text-white text-xs tablet:text-sm font-bold font-instrumentSans">
                 Top Up
               </span>
             </Button>
@@ -201,6 +177,38 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
             </Button>
           </Link>
 
+          {/* Streak */}
+          {isAuthenticated && streak !== null && (
+            <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
+              <StreakCountdown
+                lastEligibleRent={lastEligibleRent}
+                onVisibilityChange={setIsCountdownVisible}
+                className="text-white text-xs font-bold mr-1"
+              />
+
+              {/* ICON SWITCH */}
+              {isCountdownVisible ? (
+                <Image
+                  src="/header/time run out icon.svg"
+                  alt="timer"
+                  width={20}
+                  height={20}
+                />
+              ) : (
+                <Image
+                  src="/header/streak icon.svg"
+                  alt="streak"
+                  width={40}
+                  height={40}
+                />
+              )}
+
+              <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                {streak}
+              </span>
+            </div>
+          )}
+
           {/* SIGN IN */}
           {!isAuthenticated && (
             <Fragment>
@@ -215,7 +223,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                   height={18}
                   className="filter invert"
                 />
-                <span className="text-black text-xs md:text-sm font-semibold hidden lg:block">
+                <span className="text-black text-xs tablet:text-sm font-semibold hidden lg:block">
                   Login/Sign Up
                 </span>
               </Button>
@@ -234,18 +242,18 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               </Button>
             </Fragment>
           )}
-
           {isAuthenticated && (
             <HoverCard openDelay={200}>
               <HoverCardTrigger asChild>
-                <div className="flex items-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer">
+                <div className="flex items-center justify-center gap-1 desktop:px-4 px-3 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer w-auto">
                   <Image
                     src="/header/SignUp Icon.svg"
                     alt="User"
                     width={18}
                     height={18}
+                    className="max-desktop:w-[12px] max-desktop:h-[12px]"
                   />
-                  <span className="text-white text-xs md:text-sm font-semibold">
+                  <span className="text-white text-xs desktop:text-sm font-semibold">
                     {username}
                   </span>
                 </div>
@@ -258,7 +266,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               >
                 <div className="space-y-4">
                   {/* User Info */}
-                  <div className="flex items-center gap-3 cursor-default">
+                  <div className="flex items-center justify-center gap-3 cursor-default">
                     <User className="w-8 h-8" />
                     <span className="font-semibold text-xl">{username}</span>
                   </div>
@@ -300,14 +308,6 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
         {/* LOGIN POPUP */}
         {isComponentOpen && (
           <LoginPage onClose={() => setIsComponentOpen(false)} />
-        )}
-
-        {isSearchOpen && (
-          <SearchModal
-            onSelectAccount={handleCardClick}
-            onOpenChange={setIsSearchOpen}
-            open
-          />
         )}
       </div>
     </div>

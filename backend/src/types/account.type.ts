@@ -21,11 +21,14 @@ type AccountEntityRequest = {
   priceTier: number;
   skinCount: number;
   skinList: number[];
-  isLowRank: boolean;
+  isCompetitive: boolean;
   isRecommended: boolean;
+  isMfa?: boolean;
+  requirePasswordReset?: boolean;
 };
 
 type AccountWithSkins = Prisma.AccountGetPayload<{
+  omit: { legacySkinList: true };
   include: { skinList: true };
 }>;
 
@@ -43,8 +46,9 @@ type PublicAccount = Prisma.AccountGetPayload<{
     priceTier: true;
     thumbnail: true;
     otherImages: true;
-    isLowRank: true;
+    isCompetitive: true;
     isRecommended: true;
+    isMfa: true;
   };
 }>;
 
@@ -65,14 +69,19 @@ type GetAvailableAccountsRequest = {
 
 type AccountSearchFilters = {
   query?: string;
-  lowTierOnly?: boolean;
+  compeOnly?: boolean;
   tiers?: string[];
   skinCounts?: string[];
   ranks?: string[];
+  skinIds?: number[];
   minPrice?: number;
   maxPrice?: number;
   sortBy?: string;
   direction?: Prisma.SortOrder;
+};
+
+type UpdateAccountMFARequest = {
+  isMfa: boolean;
 };
 
 export type {
@@ -82,5 +91,6 @@ export type {
   UpdateResetLogRequest,
   DeleteResetLogRequest,
   GetAvailableAccountsRequest,
-  AccountSearchFilters
+  AccountSearchFilters,
+  UpdateAccountMFARequest
 };

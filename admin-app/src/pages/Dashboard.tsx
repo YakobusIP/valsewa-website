@@ -21,6 +21,7 @@ import UserListModal from "@/components/dashboard/UserListModal";
 import VoucherModal from "@/components/dashboard/VoucherModal";
 import DataTable from "@/components/data-table/DataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
+import DailyDropModal from "@/components/daily-drop/DailyDropModal";
 import PriceTierModal from "@/components/pricetier-management/PriceTierModal";
 import SkinManagementModal from "@/components/skin-management/SkinManagementModal";
 
@@ -48,6 +49,7 @@ export default function Dashboard() {
   const [openPriceTier, setOpenPriceTier] = useState(false);
   const [openCarouselManagement, setOpenCarouselManagement] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
+  const [openDailyDrop, setOpenDailyDrop] = useState(false);
 
   const [isLoadingStatistics, setIsLoadingStatistics] = useState(false);
   const [statistics, setStatistics] = useState<StatisticResponse>();
@@ -259,6 +261,7 @@ export default function Dashboard() {
           onOpenPriceTiers={() => setOpenPriceTier(true)}
           onOpenCarouselManagement={() => setOpenCarouselManagement(true)}
           onOpenVouchers={() => setOpenVoucherModal(true)}
+          onOpenDailyDrop={() => setOpenDailyDrop(true)}
           onOpenUserList={() => setOpenUserList(true)}
           onOpenTransactionList={() => setOpenTransactionModal(true)}
           onOpenSettings={() => setOpenSettings(true)}
@@ -330,6 +333,7 @@ export default function Dashboard() {
         onOpenChange={setOpenCarouselManagement}
       />
       <SettingsModal open={openSettings} onOpenChange={setOpenSettings} />
+      <DailyDropModal open={openDailyDrop} onOpenChange={setOpenDailyDrop} />
     </Fragment>
   );
 }

@@ -30,6 +30,7 @@ class AccountRouter {
       "/public/recommended",
       this.accountController.getRecommendedAccounts
     );
+    this.router.get("/public/code/:code", this.accountController.getAccountByCodePublic);
     this.router.get("/public/:id", this.accountController.getAccountByIdPublic);
     this.router.get(
       "/failed-jobs",
@@ -93,6 +94,11 @@ class AccountRouter {
       authMiddleware,
       this.accountController.deleteManyAccounts
     );
+    this.router.put(
+      "/update-mfa/:id",
+      authMiddleware,
+      this.accountController.updateAccountMFA
+    )
   }
 }
 

@@ -98,8 +98,10 @@ const formSchema = z.object({
     )
     .optional(),
   totalRentHour: z.string().nonempty("Total rent duration is required"),
-  isLowRank: z.boolean().optional().default(false),
-  isRecommended: z.boolean().optional().default(false)
+  isCompetitive: z.boolean().optional().default(false),
+  isRecommended: z.boolean().optional().default(false),
+  requirePasswordReset: z.boolean().optional().default(false),
+  isMfa: z.boolean().optional().default(false)
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -180,37 +182,41 @@ export default function AccountDetailModal({
     defaultValues:
       mode === "edit" && data
         ? {
-            username: data.username,
-            nickname: data.nickname,
-            accountCode: data.accountCode,
-            description: data.description ?? undefined,
-            priceTier: data.priceTier.id,
-            accountRank: data.accountRank,
-            password: data.password,
-            passwordResetRequired: data.passwordResetRequired,
-            skinList: data.skinList.map((skin) => skin.id),
-            thumbnail: data.thumbnail,
-            otherImages: data.otherImages ? data.otherImages : [],
-            totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
-            isLowRank: data.isLowRank,
-            isRecommended: data.isRecommended
-          }
+          username: data.username,
+          nickname: data.nickname,
+          accountCode: data.accountCode,
+          description: data.description ?? undefined,
+          priceTier: data.priceTier.id,
+          accountRank: data.accountRank,
+          password: data.password,
+          passwordResetRequired: data.passwordResetRequired,
+          skinList: data.skinList.map((skin) => skin.id),
+          thumbnail: data.thumbnail,
+          otherImages: data.otherImages ? data.otherImages : [],
+          totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
+          isCompetitive: data.isCompetitive,
+          isRecommended: data.isRecommended,
+          requirePasswordReset: data.requirePasswordReset,
+          isMfa: data.isMfa
+        }
         : {
-            username: "",
-            nickname: "",
-            accountCode: "",
-            description: "",
-            priceTier: undefined,
-            accountRank: "",
-            password: "",
-            passwordResetRequired: false,
-            skinList: [],
-            thumbnail: undefined,
-            otherImages: [],
-            totalRentHour: "0d 0h",
-            isLowRank: false,
-            isRecommended: false
-          },
+          username: "",
+          nickname: "",
+          accountCode: "",
+          description: "",
+          priceTier: undefined,
+          accountRank: "",
+          password: "",
+          passwordResetRequired: false,
+          skinList: [],
+          thumbnail: undefined,
+          otherImages: [],
+          totalRentHour: "0d 0h",
+          isCompetitive: false,
+          isRecommended: false,
+          requirePasswordReset: false,
+          isMfa: false
+        },
     mode: "onSubmit",
     reValidateMode: "onChange"
   });
@@ -563,8 +569,10 @@ export default function AccountDetailModal({
         thumbnail: data.thumbnail,
         otherImages: data.otherImages || [],
         totalRentHour: getDefaultTotalRentHour(data.totalRentHour),
-        isLowRank: data.isLowRank,
-        isRecommended: data.isRecommended
+        isCompetitive: data.isCompetitive,
+        isRecommended: data.isRecommended,
+        requirePasswordReset: data.requirePasswordReset,
+        isMfa: data.isMfa
       });
     } else if (mode === "add") {
       form.reset({
@@ -579,8 +587,10 @@ export default function AccountDetailModal({
         thumbnail: undefined,
         otherImages: [],
         totalRentHour: "0d 0h",
-        isLowRank: undefined,
-        isRecommended: undefined
+        isCompetitive: undefined,
+        isRecommended: undefined,
+        requirePasswordReset: false,
+        isMfa: false
       });
     }
   }, [mode, data, form]);
@@ -734,7 +744,7 @@ export default function AccountDetailModal({
                 <div className="ml-auto">
                   <FormField
                     control={form.control}
-                    name="isLowRank"
+                    name="isCompetitive"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
                         <FormControl>
@@ -747,7 +757,7 @@ export default function AccountDetailModal({
                         </FormControl>
 
                         <FormLabel className="font-normal cursor-pointer">
-                          Low Rank Price
+                          Competitive Price
                         </FormLabel>
                       </FormItem>
                     )}
@@ -865,7 +875,7 @@ export default function AccountDetailModal({
                   />
                 </div>
 
-                <div className="order-1 xl:order-2 xl:ml-auto">
+                <div className="order-1 xl:order-2 xl:ml-auto flex flex-col sm:flex-row sm:flex-wrap gap-4 xl:gap-6 items-start sm:items-end">
                   <FormField
                     control={form.control}
                     name="isRecommended"
@@ -882,6 +892,46 @@ export default function AccountDetailModal({
 
                         <FormLabel className="font-normal cursor-pointer">
                           Recommended
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="requirePasswordReset"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                        <FormControl>
+                          <Checkbox
+                            checked={!!field.value}
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked === true)
+                            }
+                          />
+                        </FormControl>
+
+                        <FormLabel className="font-normal cursor-pointer">
+                          Require password reset
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="isMfa"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center gap-2 space-y-0 pb-3">
+                        <FormControl>
+                          <Checkbox
+                            checked={!!field.value}
+                            onCheckedChange={(checked) =>
+                              field.onChange(checked === true)
+                            }
+                          />
+                        </FormControl>
+
+                        <FormLabel className="font-normal cursor-pointer">
+                          MFA Enabled
                         </FormLabel>
                       </FormItem>
                     )}

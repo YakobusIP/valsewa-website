@@ -6,15 +6,14 @@ export async function fetchAccounts(
   search: string,
   direction: string,
   sortBy: string
-) {
+): Promise<AccountEntity[]> {
   try {
-    const url = `${
-      process.env.NEXT_PUBLIC_AXIOS_BASE_URL
-    }/api/accounts/public?page=1&limit=1000&q=${encodeURIComponent(
-      search
-    )}&sortBy=${encodeURIComponent(sortBy)}&direction=${encodeURIComponent(
-      direction
-    )}`;
+    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL
+      }/api/accounts/public?page=1&limit=1000&q=${encodeURIComponent(
+        search
+      )}&sortBy=${encodeURIComponent(sortBy)}&direction=${encodeURIComponent(
+        direction
+      )}`;
     const response = await axios.get(url);
     return response.data.data;
   } catch (error) {
@@ -39,6 +38,18 @@ export async function fetchAccountById(
 ): Promise<AccountEntity | null> {
   try {
     const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/${id}`;
+    const response = await axios.get(url);
+    return response.data;
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchAccountByCode(
+  code: string
+): Promise<AccountEntity | null> {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/code/${code}`;
     const response = await axios.get(url);
     return response.data;
   } catch {
@@ -101,14 +112,15 @@ function buildAccountsPublicQuery(params: AccountsPublicParams) {
   if (params.direction) sp.set("direction", params.direction);
 
   // boolean: if you want "all" to omit this param, just pass undefined from UI
-  if (typeof params.low_tier_only === "boolean") {
-    sp.set("low_tier_only", String(params.low_tier_only));
+  if (typeof params.compe_only === "boolean") {
+    sp.set("compe_only", String(params.compe_only));
   }
 
   // arrays as repeated keys: tiers=B&tiers=C ...
   params.tiers?.forEach((t) => sp.append("tiers", t));
   params.skin_counts?.forEach((s) => sp.append("skin_counts", s));
   params.ranks?.forEach((r) => sp.append("ranks", r));
+  params.skin_ids?.forEach((id) => sp.append("skin_ids", String(id)));
 
   return sp;
 }
@@ -129,5 +141,16 @@ export async function fetchAccountsPublic(
   } catch (err) {
     console.error("fetchAccountsPublic error:", err);
     return null;
+  }
+}
+
+export async function fetchNonMfaRecommendedAccounts(): Promise<AccountEntity[]> {
+  try {
+    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/recommended`;
+    const response = await axios.get(url);
+    return response.data.data;
+  } catch (error) {
+    console.error("Error fetching recommended accounts:", error);
+    return [];
   }
 }

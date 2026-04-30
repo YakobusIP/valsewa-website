@@ -7,6 +7,7 @@ import {
   BookingEntity,
   BookingStatistics,
   CreateAdminBookingRequest,
+  EditCurrentBookingRequest,
   UpdateBookingRequest
 } from "@/types/booking.type";
 
@@ -106,13 +107,41 @@ const createBookingService = () => {
     }
   };
 
+  const getActiveBookingForAccount = async (accountId: number) => {
+    try {
+      const response = await interceptedAxios.get<{ data: BookingEntity }>(
+        `${BASE_BOOKING_URL}/active-for-account/${accountId}`
+      );
+      return response.data.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
+  const editCurrentBooking = async (
+    accountId: number,
+    body: EditCurrentBookingRequest
+  ) => {
+    try {
+      const response = await interceptedAxios.put<BookingEntity>(
+        `${BASE_BOOKING_URL}/edit-current/${accountId}`,
+        body
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
   return {
     fetchAll,
     update,
     getAccountRented,
     overrideBooking,
     createAdminBooking,
-    forceFinishBooking
+    forceFinishBooking,
+    getActiveBookingForAccount,
+    editCurrentBooking
   };
 };
 

@@ -1,4 +1,4 @@
-components:
+﻿components:
   schemas:
     Account:
       type: object
@@ -115,6 +115,14 @@ components:
           type: string
           format: date-time
 
+    UpdateAccountMFARequest:
+      type: object
+      required:
+        - isMfa
+      properties:
+        isMfa:
+          type: boolean
+
     TokenPayload:
       type: object
       properties:
@@ -176,9 +184,9 @@ components:
         type: string
         pattern: '^(\d+d)?\s?(\d+h)?$'
         example: "1d 2h"
-      normalPrice:
+      unratedPrice:
         type: number
-      lowPrice:
+      compPrice:
         type: number
       tierId:
         type: number
@@ -218,16 +226,16 @@ components:
           type: string
           pattern: "^(\\d+d)?\\s?(\\d+h)?$"
           example: "1d 0h"
-        normalPrice:
+        unratedPrice:
           type: number
           example: 99900
-        lowPrice:
+        compPrice:
           type: number
           example: 79900
       required:
         - duration
-        - normalPrice
-        - lowPrice
+        - unratedPrice
+        - compPrice
 
     PriceListBulkCreateRequest:
       type: object
@@ -241,8 +249,8 @@ components:
         - items
       example:
         items:
-          - { duration: "1d 2h", normalPrice: 99000, lowPrice: 79000 }
-          - { duration: "0d 12h", normalPrice: 54900, lowPrice: 44900 }
+          - { duration: "1d 2h", unratedPrice: 99000, compPrice: 79000 }
+          - { duration: "0d 12h", unratedPrice: 54900, compPrice: 44900 }
 
     PriceListUpdate:
       type: object
@@ -252,10 +260,10 @@ components:
           type: string
           pattern: "^(\\d+d)?\\s?(\\d+h)?$"
           example: "2d 0h"
-        normalPrice:
+        unratedPrice:
           type: number
           example: 102000
-        lowPrice:
+        compPrice:
           type: number
           example: 82000
       additionalProperties: false
@@ -497,6 +505,21 @@ components:
         qrUrl: { type: string, format: uri, nullable: true }
         paidAt: { type: string, format: date-time, nullable: true }
         refundedAt: { type: string, format: date-time, nullable: true }
+
+    OperationalHours:
+      type: object
+      properties:
+        open: { type: string, example: "00:00" }
+        close: { type: string, example: "23:59" }
+        lastOrderBufferInMinutes: { type: integer }
+        timezone: { type: string }
+
+    UpdateOperationalHoursRequest:
+      type: object
+      properties:
+        open: { type: string, example: "00:00" }
+        close: { type: string, example: "23:59" }
+        lastOrderBufferInMinutes: { type: integer }
 
     ErrorResponse:
       type: object
@@ -995,6 +1018,37 @@ paths:
       responses:
         "201":
           description: "Account reset logs updated successfully."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/accounts/update-mfa/{id}:
+    put:
+      tags:
+        - Accounts
+      summary: "Update account MFA."
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "The ID of the account MFA to update."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAccountMFARequest"
+      responses:
+        "201":
+          description: "Account updated successfully."
           content:
             application/json:
               schema:
@@ -1638,7 +1692,7 @@ paths:
       tags:
         - Skins
       summary: Update an existing skin.
-      description: Updates a skin’s fields. Your controller responds with a message.
+      description: Updates a skinâ€™s fields. Your controller responds with a message.
       security:
         - bearerAuth: []
       parameters:
@@ -2121,3 +2175,37 @@ paths:
                 properties:
                   response: { type: string }
                   response_code: { type: string }
+
+  /api/settings/operational-hours:
+    get:
+      tags:
+        - Settings
+      summary: "Get operational hours."
+      responses:
+        "200":
+          description: "Account reset logs updated successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OperationalHours"
+    put:
+      tags:
+        - Settings
+      summary: "Update operational hours."
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOperationalHoursRequest"
+      responses:
+        "200":
+          description: "Account reset logs updated successfully."
+          content:
+            application/json:
+              schema:
+                properties:
+                  key: { type: string }
+                  value: { type: string }

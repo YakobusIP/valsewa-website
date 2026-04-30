@@ -106,7 +106,7 @@ export class PriceTierController {
     try {
       const tierId = parseInt(req.params.tierId, 10);
       const { items } = req.body as {
-        items: { duration: string; normalPrice: number; lowPrice: number }[];
+        items: { duration: string; unratedPrice: number; compPrice: number }[];
       };
 
       if (!Array.isArray(items) || items.length === 0) {
@@ -136,8 +136,8 @@ export class PriceTierController {
       const itemId = parseInt(req.params.itemId, 10);
       const data = req.body as Partial<{
         duration: string;
-        normalPrice: number;
-        lowPrice: number;
+        unratedPrice: number;
+        compPrice: number;
       }>;
 
       const updated = await this.priceTierService.updatePriceListItem(

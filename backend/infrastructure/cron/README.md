@@ -1,43 +1,44 @@
-# Cron Timers (systemd) – How to Add & Maintain
+# Backend scheduled tasks
 
-This repo uses **systemd templated timers** to run backend “cron” HTTP calls.
-Each cron is a **timer instance** (`backend-cron@<job>.timer`) that triggers a **service instance** (`backend-cron@<job>.service`), which calls a **single shared script** on the machine to send an HTTP request.
+**Staging** runs schedules inside the Node process with **node-cron** (`backend/src/lib/cron.ts` when `NODE_ENV=staging`). CI does not deploy systemd timer units for staging.
 
-## Overview
+**Production** uses **systemd templated timers** under `infrastructure/cron/production/`: each cron is a timer instance (`backend-production-cron@<job>.timer`) that triggers a service instance (`backend-production-cron@<job>.service`), which calls a shared script on the host to send an HTTP request.
+
+---
+
+## Production: systemd timers – How to Add & Maintain
 
 ### What’s committed vs not committed
 
 **Committed (in git)**
 
-- `backend-cron@.service` (template)
-- `backend-cron@.timer` (template)
+- `backend-production-cron@.service` (template)
+- `backend-production-cron@.timer` (template)
 - Per-job overrides:
 
-  - `backend-cron@<job>.service.d/override.conf` (endpoint / request target)
-  - `backend-cron@<job>.timer.d/override.conf` (schedule)
+  - `backend-production-cron@<job>.service.d/override.conf` (endpoint / request target)
+  - `backend-production-cron@<job>.timer.d/override.conf` (schedule)
 
 ## File Layout
 
 ### In this repo
 
 ```
-infrastructure/cron/
-  backend-cron@.service
-  backend-cron@.timer
-  backend-cron@check-password-expiration.service.d/override.conf
-  backend-cron@check-password-expiration.timer.d/override.conf
-  backend-cron@sync-completed.service.d/override.conf
-  backend-cron@sync-completed.timer.d/override.conf
+infrastructure/cron/production/
+  backend-production-cron@.service
+  backend-production-cron@.timer
+  backend-production-cron@<job>.service.d/override.conf
+  backend-production-cron@<job>.timer.d/override.conf
   ...
 ```
 
 ## Template Units
 
-### `backend-cron@.service` (template)
+### `backend-production-cron@.service` (template)
 
 Runs the shared HTTP script and uses a per-job lock to prevent overlap.
 
-### `backend-cron@.timer` (template)
+### `backend-production-cron@.timer` (template)
 
 Defines a default schedule (which each job override should clear and replace).
 
@@ -54,7 +55,7 @@ Pick a stable name used in unit instances and folder names, e.g.:
 You will enable it as:
 
 ```
-backend-cron@<job>.timer
+backend-production-cron@<job>.timer
 ```
 
 ---
@@ -64,7 +65,7 @@ backend-cron@<job>.timer
 Create folder:
 
 ```
-infrastructure/cron/backend-cron@<job>.service.d/
+infrastructure/cron/production/backend-production-cron@<job>.service.d/
 ```
 
 Create file:
@@ -85,7 +86,7 @@ ExecStart=/usr/bin/flock -n /run/lock/backend-cron-<job>.lock \
 
 Notes:
 
-- The folder name **must** be exactly: `backend-cron@<job>.service.d`
+- The folder name **must** be exactly: `backend-production-cron@<job>.service.d`
 - The URL is passed as an argument to the script.
 - The lock file name should be unique per job.
 
@@ -96,7 +97,7 @@ Notes:
 Create folder:
 
 ```
-infrastructure/cron/backend-cron@<job>.timer.d/
+infrastructure/cron/production/backend-production-cron@<job>.timer.d/
 ```
 
 Create file:
@@ -140,14 +141,14 @@ Notes:
 Check effective units (template + override merged):
 
 ```bash
-systemctl cat backend-cron@<job>.service
-systemctl cat backend-cron@<job>.timer
+systemctl cat backend-production-cron@<job>.service
+systemctl cat backend-production-cron@<job>.timer
 ```
 
 Check next run times:
 
 ```bash
-systemctl list-timers --all | grep backend-cron
+systemctl list-timers --all | grep backend-production-cron
 ```
 
 Validate calendar syntax:
@@ -159,23 +160,19 @@ systemd-analyze calendar "*-*-* *:0/5:00"
 Check logs of a run:
 
 ```bash
-journalctl -u backend-cron@<job>.service -n 50 --no-pager
+journalctl -u backend-production-cron@<job>.service -n 50 --no-pager
 ```
 
 ## Listing Existing Timers
 
 Keep this section up to date when adding/removing crons.
 
-> Tip: verify reality with `systemctl cat backend-cron@<job>.service` and `systemctl cat backend-cron@<job>.timer`, not memory.
+> Tip: verify reality with `systemctl cat backend-production-cron@<job>.service` and `systemctl cat backend-production-cron@<job>.timer`, not memory.
 
-| Job (instance)                                 | Endpoint hit                                   | Schedule (OnCalendar) | Notes            |
-| ---------------------------------------------- | ---------------------------------------------- | --------------------- | ---------------- |
-| `backend-cron@check-password-expiration.timer` | `POST /api/customer/check-password-expiration` | `*-*-* *:0/15:00`     | every 15 minutes |
-| `backend-cron@check-voucher-expiration.timer`  | `POST /api/vouchers/check-expiration`          | `*-*-* *:0/5:00`      | every 5 minutes  |
-| `backend-cron@sync-expired.timer`              | `POST /api/bookings/sync-expired`              | `*-*-* *:0/5:00`      | every 5 minutes  |
-| `backend-cron@sync-completed.timer`            | `POST /api/bookings/sync-completed`            | `*-*-* *:0/5:00`      | every 5 minutes  |
-| `backend-cron@sync-account-availability.timer` | `POST /api/bookings/sync-account-availability` | `*-*-* *:0/5:00`      | every 5 minutes  |
-| `backend-cron@update-rank.timer`               | `POST /api/accounts/update-rank`               | `*-*-* 00:00:00`      | daily            |
+| Job (instance)                                      | Endpoint hit                         | Schedule (OnCalendar) | Notes             |
+| --------------------------------------------------- | ------------------------------------ | --------------------- | ----------------- |
+| `backend-production-cron@update-expire-at.timer`      | `POST /api/accounts/update-expire-at` | `*-*-* *:0/15:00`     | every 15 minutes  |
+| `backend-production-cron@update-rank.timer`         | `POST /api/accounts/update-rank`      | `*-*-* 00:00:00`      | daily at midnight |
 
 ## Quick Troubleshooting
 
@@ -183,14 +180,14 @@ Keep this section up to date when adding/removing crons.
 
 - Folder name must match exactly:
 
-  - `backend-cron@<job>.service.d/override.conf`
-  - `backend-cron@<job>.timer.d/override.conf`
+  - `backend-production-cron@<job>.service.d/override.conf`
+  - `backend-production-cron@<job>.timer.d/override.conf`
 
 - Confirm with:
 
   ```bash
-  systemctl cat backend-cron@<job>.service
-  systemctl cat backend-cron@<job>.timer
+  systemctl cat backend-production-cron@<job>.service
+  systemctl cat backend-production-cron@<job>.timer
   ```
 
 ### Timer runs too often

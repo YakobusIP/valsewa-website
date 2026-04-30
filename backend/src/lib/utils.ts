@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { format, isValid, parse } from "date-fns";
+import { OperationalHours } from "../types/setting.type";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -93,3 +94,33 @@ export const parseStringArray = (value: unknown) => {
 
   return cleaned.length ? cleaned : undefined;
 };
+
+export const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
+
+export const validateTime = (time: string) => {
+  if (!TIME_REGEX.test(time)) {
+    throw new Error(`Invalid time format: ${time}. Use HH:mm`);
+  }
+};
+
+export function isOutsideOperationalHours(
+  operationalHours: OperationalHours | null,
+  at: Date = new Date()
+): boolean {
+  if (!operationalHours || !at) return false;
+
+  const tz = operationalHours.timezone ?? WIB_TZ;
+  const buffer = operationalHours.lastOrderBufferInMinutes ?? 30;
+
+  const z = dayjs(at).tz(tz);
+  const nowMinutes = z.hour() * 60 + z.minute() + z.second() / 60;
+
+  const [openH, openM] = operationalHours.open.split(":").map(Number);
+  const [closeH, closeM] = operationalHours.close.split(":").map(Number);
+  const openMinutes = openH * 60 + openM;
+  const closeMinutes = closeH * 60 + closeM;
+  let lastOrderMinutes = closeMinutes - buffer;
+  if (lastOrderMinutes < 0) lastOrderMinutes += 24 * 60;
+
+  return nowMinutes < openMinutes || nowMinutes > lastOrderMinutes;
+}

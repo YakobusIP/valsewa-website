@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { fetchAccountById } from "@/services/accountService";
+import {
+  fetchAccountById,
+  fetchRecommendedAccounts
+} from "@/services/accountService";
 import { bookingService } from "@/services/booking.service";
 
 import LoginPage from "@/components/LoginPage";
@@ -24,19 +27,24 @@ import { toast } from "@/hooks/useToast";
 
 import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
 
-import { getRankImageUrl } from "@/lib/utils";
+import { getRankImageUrl, isOutsideOperationalHours } from "@/lib/utils";
 
 import { isAxiosError } from "axios";
 import { ChevronDown, Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound, useParams, useRouter } from "next/navigation";
+import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
+import { OperationalHoursEntity } from "@/types/setting.type";
+import { fetchOperationalHours } from "@/services/setting.service";
+import OutsideOperationalHoursModal from "@/components/OutsideOperationalHoursModal";
 
 export default function AccountDetailPage() {
   const router = useRouter();
 
   const params = useParams<{ id: string }>();
   const id = params?.id;
+  const searchParams = useSearchParams();
+  const wantsDailyDrop = searchParams.get("mode") === "dailydrop";
 
   const [account, setAccount] = useState<AccountEntity | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,16 +67,40 @@ export default function AccountDetailPage() {
   const [navbarLoginOpen, setNavbarLoginOpen] = useState(false); // NEW state for navbar login
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  // Operational Hours
+  const [showOutsideHoursModal, setShowOutsideHoursModal] = useState(false);
+  const [operationalHours, setOperationalHours] = useState<OperationalHoursEntity | null>(null);
+  const [nonMfaRecommendedAccounts, setNonMfaRecommendedAccounts] = useState<AccountEntity[]>([]);
+
   const handleCardClick = (id: string) => {
-    router?.push(`/details/${id}`);
+    router?.push(`/accounts/${id}`);
   };
 
   useEffect(() => {
     fetchAccountById(id)
-      .then((res) => setAccount(res))
+      .then((res) => {
+        setAccount(res);
+        const dropPriceListId = res?.dailyDrop?.priceListId;
+        if (
+          wantsDailyDrop &&
+          dropPriceListId &&
+          res?.priceTier?.priceList
+        ) {
+          const match = res.priceTier.priceList.find(
+            (p) => p.id === dropPriceListId
+          );
+          if (match) setSelectedDuration({ label: match.duration, value: match });
+        }
+      })
       .catch(() => setAccount(null))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, wantsDailyDrop]);
+
+  useEffect(() => {
+    fetchOperationalHours()
+      .then((data) => setOperationalHours(data))
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     setSelectedDuration(null);
@@ -92,9 +124,16 @@ export default function AccountDetailPage() {
     }
 
     if (!selectedDuration) return;
+
+    const startAt = getStartDateTime();
+    if (account?.isMfa && isOutsideOperationalHours(operationalHours)) {
+      await loadRecommendedAccounts();
+      setShowOutsideHoursModal(true);
+      return;
+    }
+
     try {
       setSubmitting(true);
-      const startAt = getStartDateTime();
       const booking = await bookingService.createBooking({
         customerId: customerId ?? undefined,
         accountId: parseInt(id),
@@ -173,21 +212,34 @@ export default function AccountDetailPage() {
     setEndTime(`${hh}:${mm}`);
   }, [selectedDuration, startTime, qty]);
 
+  const ddDiscount = account?.dailyDrop?.discount ?? 0;
+  const isDailyDrop = wantsDailyDrop && !!account?.dailyDrop;
+
   const calculateBasePrice = useCallback(
     (priceList: PriceList) => {
       if (!priceList) return 0;
-      return (
-        account?.isLowRank
-          ? Number(priceList.lowPrice)
-          : Number(priceList.normalPrice)
-      );
+      const raw = account?.isCompetitive
+        ? Number(priceList.compPrice)
+        : Number(priceList.unratedPrice);
+      return isDailyDrop && ddDiscount > 0
+        ? Math.round(raw * (1 - ddDiscount / 100))
+        : raw;
     },
-    [account?.isLowRank]
+    [account?.isCompetitive, isDailyDrop, ddDiscount]
+  );
+
+  const calculateOriginalPrice = useCallback(
+    (priceList: PriceList) => {
+      if (!priceList) return 0;
+      return account?.isCompetitive
+        ? Number(priceList.compPrice)
+        : Number(priceList.unratedPrice);
+    },
+    [account?.isCompetitive]
   );
 
   const calculateTotalPrice = useMemo(() => {
     if (!selectedDuration || qty === 0) return 0;
-
     return calculateBasePrice(selectedDuration.value) * qty;
   }, [selectedDuration, qty, calculateBasePrice]);
 
@@ -209,6 +261,15 @@ export default function AccountDetailPage() {
     return `${hours}h`;
   }
 
+  const loadRecommendedAccounts = async () => {
+    try {
+      const data = await fetchRecommendedAccounts();
+      setNonMfaRecommendedAccounts(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -226,10 +287,10 @@ export default function AccountDetailPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <div className="relative max-lg:hidden">
+      <div className="relative max-tablet:hidden">
         <Navbar onLoginModalOpenChange={setNavbarLoginOpen} />
       </div>
-      <div className="lg:hidden">
+      <div className="tablet:hidden">
         <NavbarMobile />
       </div>
 
@@ -350,9 +411,9 @@ export default function AccountDetailPage() {
               {/* COL 2 ROW 2 — PRICE TIER + STATUS */}
               <div className="flex items-center gap-3">
                 <div className="bg-purple-600 text-white px-2 py-0.5 text-xs rounded-sm">
-                  {account.isLowRank
-                    ? `LR-${account.priceTier.code}`
-                    : account.priceTier.code}
+                  {account.isCompetitive
+                    ? account.priceTier.code
+                    : `UR-${account.priceTier.code}`}
                 </div>
               </div>
             </div>
@@ -383,9 +444,8 @@ export default function AccountDetailPage() {
                     <p className="font-semibold">Skin List</p>
 
                     <div
-                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${
-                        showSkins ? "rotate-180" : "rotate-0"
-                      }`}
+                      className={`ml-2 p-1 rounded-md bg-neutral-600 border border-neutral-700 ${showSkins ? "rotate-180" : "rotate-0"
+                        }`}
                     >
                       <ChevronDown className="w-3 h-3 text-white" />
                     </div>
@@ -438,20 +498,22 @@ export default function AccountDetailPage() {
                 <button
                   onClick={() => setMode("RENT")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
-                    ${
-                      mode === "RENT"
-                        ? "bg-red-600 text-white"
-                        : "bg-neutral-800 text-white hover:bg-neutral-700"
+                    ${mode === "RENT"
+                      ? "bg-red-600 text-white"
+                      : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
                 >
                   RENT NOW
                 </button>
 
                 <button
-                  onClick={() => setMode("BOOK")}
+                  disabled={isDailyDrop}
+                  onClick={() => !isDailyDrop && setMode("BOOK")}
                   className={`sm:text-sm text-xs font-semibold py-2 rounded-md transition
                     ${
-                      mode === "BOOK"
+                      isDailyDrop
+                        ? "bg-neutral-800 text-neutral-600 cursor-not-allowed"
+                        : mode === "BOOK"
                         ? "bg-red-600 text-white"
                         : "bg-neutral-800 text-white hover:bg-neutral-700"
                     }`}
@@ -465,29 +527,41 @@ export default function AccountDetailPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                   {priceList.map((item) => {
                     const isActive = selectedDuration?.label === item.duration;
+                    const isLocked = isDailyDrop && !isActive;
 
                     return (
                       <div
                         key={item.id}
                         onClick={() =>
+                          !isLocked &&
                           setSelectedDuration({
                             label: item.duration,
                             value: item
                           })
                         }
-                        className={`border rounded-md py-2 cursor-pointer transition
-                          ${
-                            isActive
-                              ? "border-red-600 bg-red-600/10"
-                              : "border-neutral-700 hover:border-red-600"
+                        className={`border rounded-md py-2 transition
+                          ${isLocked ? "border-neutral-800 opacity-40 cursor-not-allowed" :isActive
+                            ? "border-red-600 bg-red-600/10 cursor-pointer"
+                            : "border-neutral-700 hover:border-red-600 cursor-pointer"
                           }`}
                       >
                         <p className="text-xs font-semibold uppercase">
                           {item.duration}
                         </p>
-                        <p className="sm:text-[11px] text-xs text-neutral-400">
-                          IDR {calculateBasePrice(item).toLocaleString("id-ID")}
-                        </p>
+                        {isDailyDrop && isActive ? (
+                          <>
+                            <p className="text-[10px] text-neutral-500 line-through">
+                              IDR {calculateOriginalPrice(item).toLocaleString("id-ID")}
+                            </p>
+                            <p className="sm:text-[11px] text-xs text-red-400 font-semibold">
+                              IDR {calculateBasePrice(item).toLocaleString("id-ID")}
+                            </p>
+                          </>
+                        ) : (
+                          <p className="sm:text-[11px] text-xs text-neutral-400">
+                            IDR {calculateBasePrice(item).toLocaleString("id-ID")}
+                          </p>
+                        )}
                       </div>
                     );
                   })}
@@ -512,10 +586,9 @@ export default function AccountDetailPage() {
                             })
                           }
                           className={`border rounded-md py-2 cursor-pointer transition
-                            ${
-                              isActive
-                                ? "border-red-600 bg-red-600/10"
-                                : "border-neutral-700 hover:border-red-600"
+                            ${isActive
+                              ? "border-red-600 bg-red-600/10"
+                              : "border-neutral-700 hover:border-red-600"
                             }`}
                         >
                           <p className="text-xs font-semibold uppercase">
@@ -623,10 +696,9 @@ export default function AccountDetailPage() {
                 onClick={onSubmit}
                 disabled={isDisabled || submitting}
                 className={`w-full font-semibold py-3 rounded-md transition
-                  ${
-                    isDisabled || submitting
-                      ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700 text-white"
+                  ${isDisabled || submitting
+                    ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700 text-white"
                   }`}
               >
                 {submitting && <>Loading...</>}
@@ -673,6 +745,12 @@ export default function AccountDetailPage() {
         open={isSearchOpen}
         onOpenChange={setIsSearchOpen}
         onSelectAccount={handleCardClick}
+      />
+      <OutsideOperationalHoursModal
+        open={showOutsideHoursModal}
+        onClose={() => setShowOutsideHoursModal(false)}
+        operationalHours={operationalHours}
+        accounts={nonMfaRecommendedAccounts}
       />
     </main>
   );

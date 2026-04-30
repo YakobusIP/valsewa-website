@@ -92,18 +92,16 @@ const RANKS = [
 
 const SKIN_COUNTS = ["0-5", "6-10", "11-15", "16-20"] as const;
 const TIER_CODES = [
-  "C - NORMAL TIER",
-  "B - NORMAL TIER",
-  "V - NORMAL TIER",
-  "S - NORMAL TIER",
-  "SSS - NORMAL TIER",
-  "SSS⁺ - NORMAL TIER",
-  "C - LR TIER",
-  "B - LR TIER",
-  "V - LR TIER",
-  "S - LR TIER",
-  "SSS - LR TIER",
-  "SSS⁺ - LR TIER"
+  "C",
+  "B",
+  "A",
+  "S",
+  "SSS",
+  "C - COMP",
+  "B - COMP",
+  "A - COMP",
+  "S - COMP",
+  "SSS - COMP",
 ] as const;
 const clamp = (n: number, min: number, max: number) =>
   Math.min(Math.max(n, min), max);
@@ -157,18 +155,18 @@ export function SearchModal({
       low_tier_only: lowTierOnly,
       tiers: selectedTiers.length
         ? selectedTiers.map((t) => {
-            const processed = t
-              .toUpperCase()
-              .trim()
-              .replace(/\s*-\s*/g, "-")
-              .replace(/\s+/g, "");
+          const processed = t
+            .toUpperCase()
+            .trim()
+            .replace(/\s*-\s*/g, "-")
+            .replace(/\s+/g, "");
 
-            if (processed.includes("NORMAL")) {
-              return processed.split("-")[0];
-            }
+          if (processed.includes("NORMAL")) {
+            return processed.split("-")[0];
+          }
 
-            return processed;
-          })
+          return processed;
+        })
         : undefined,
       skin_counts: selectedSkins.length ? selectedSkins : undefined,
       ranks: selectedRanks.length ? selectedRanks : undefined,
@@ -535,9 +533,9 @@ export function SearchModal({
                         return (
                           <Link
                             key={acc.id}
-                            href={`/details/${acc.id}`}
+                            href={`/accounts/${acc.accountCode}`}
                             onClick={() => {
-                              onSelectAccount?.(acc.id.toString());
+                              onSelectAccount?.(acc.accountCode.toString());
                             }}
                             className="block w-full text-left rounded-xl bg-neutral-900/40 hover:bg-red-600 transition px-4 py-3"
                           >

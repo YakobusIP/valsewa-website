@@ -39,14 +39,27 @@ function PaymentSummary({
 
   const isDisabled = !booking || !paymentMethod;
 
-  const discount = useMemo(
+  const isDailyDropBooking =
+    !booking.voucherName && (booking.discount ?? 0) > 0;
+  const dailyDropDiscount = isDailyDropBooking ? booking.discount ?? 0 : 0;
+
+  const voucherDiscount = useMemo(
     () => calculateVoucherDiscount(voucher, booking.mainValue),
     [voucher, booking.mainValue]
   );
 
   const subtotalPayment = useMemo(
-    () => booking.totalValue - discount,
-    [booking.totalValue, discount]
+    () =>
+      booking.mainValue +
+      (booking.othersValue ?? 0) -
+      (isDailyDropBooking ? dailyDropDiscount : voucherDiscount),
+    [
+      booking.mainValue,
+      booking.othersValue,
+      isDailyDropBooking,
+      dailyDropDiscount,
+      voucherDiscount
+    ]
   );
 
   const isBookingFree = booking && subtotalPayment === 0;
@@ -118,52 +131,55 @@ function PaymentSummary({
   return (
     <div
       className={cn(
-        "w-full lg:w-3/4 space-y-4 sm:space-y-6 rounded-lg",
+        "w-full lg:w-full space-y-4 sm:space-y-4 rounded-lg p-[20px] flex flex-col",
         instrumentSans.className
       )}
     >
       <div>
         <h1
-          className={`text-xl sm:text-2xl font-semibold leading-[1.2] ${staatliches.className}`}
+          className={`text-xl sm:text-3xl font-semibold mb-4 sm:mb-6 leading-[1.2] ${staatliches.className}`}
         >
-          PROMO CODE
+          ORDER SUMMARY
         </h1>
-        <VoucherModal
-          voucher={voucher}
-          handleApplyVoucher={onApplyVoucher}
-          isApplyingVoucher={isApplyingVoucher}
-        />
-        <div className="flex flex-col sm:flex-row gap-2 mt-2">
-          <input
-            type="text"
-            value={voucherName}
-            onChange={(e) => setVoucherName(e.target.value)}
-            onKeyPress={handleVoucherKeyPress}
-            placeholder="Enter Promo Code"
-            className="flex-1 px-3 py-2 text-sm bg-gray-800 rounded outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black"
-            aria-label="Promo code input"
-            disabled={isApplyingVoucher}
-          />
+        <div className="mt-2">
+          <label className="text-xs sm:text-sm text-[#D9D9D9]">Promo Code</label>
+          <div className="flex flex-row gap-2 max-tablet:gap-0 border border-[#F9FAFB] rounded-lg p-3 mt-2">
+            <input
+              type="text"
+              value={voucherName}
+              onChange={(e) => setVoucherName(e.target.value)}
+              onKeyPress={handleVoucherKeyPress}
+              placeholder="Enter Promo Code"
+              className="flex-1 px-3 py-2 text-sm bg-[#1C1C1C] rounded outline-none"
+              aria-label="Promo code input"
+              disabled={isApplyingVoucher || isDailyDropBooking}
+            />
 
-          <button
-            type="button"
-            onClick={() => onApplyVoucher(voucherName)}
-            disabled={!voucherName.trim() || isApplyingVoucher}
-            className="px-4 py-2 text-sm sm:text-base font-semibold text-black bg-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
-            aria-label="Apply promo code"
-          >
-            {isApplyingVoucher ? "Applying..." : "Apply"}
-          </button>
+            <button
+              type="button"
+              onClick={() => onApplyVoucher(voucherName)}
+              disabled={!voucherName.trim() || isApplyingVoucher}
+              className="px-4 py-2 text-sm sm:text-base bg-[#C70515] text-[#D9D9D9] font-semibold rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#b81a1a] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
+              aria-label="Apply promo code"
+            >
+              {isApplyingVoucher ? "Applying..." : "Apply"}
+            </button>
+          </div>
+        </div>
+
+        <div className="text-end text-xs pt-2">
+          <VoucherModal
+            voucher={voucher}
+            handleApplyVoucher={onApplyVoucher}
+            isApplyingVoucher={isApplyingVoucher}
+            isDailyDrop={isDailyDropBooking}
+          />
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-base sm:text-lg font-semibold leading-[1.2]">
+        <span className="text-xs sm:text-sm font-semibold leading-[1.2]">
           Valorant Account
-        </h2>
-        <span className="text-sm sm:text-base text-gray-300 break-words">
-          {booking.account.priceTierCode} - {booking.account.accountCode} -{" "}
-          {booking.account.accountRank}
         </span>
       </div>
 
@@ -172,12 +188,17 @@ function PaymentSummary({
           <span>Subtotal</span>
           <span>IDR {booking.mainValue.toLocaleString()}</span>
         </div>
-        {voucher && (
-          <div className="flex justify-between text-green-400">
-            <span>Promo ({voucher.voucherName})</span>
-            <span>-IDR {discount.toLocaleString()}</span>
+        {isDailyDropBooking ? (
+          <div className="flex justify-between text-yellow-400">
+            <span>Daily Drop Discount</span>
+            <span>-IDR {dailyDropDiscount.toLocaleString()}</span>
           </div>
-        )}
+        ) : voucher ? (
+          <div className="flex justify-between text-yellow-400">
+            <span>Promo ({voucher.voucherName})</span>
+            <span>-IDR {voucherDiscount.toLocaleString()}</span>
+          </div>
+        ) : null}
         <div className="flex justify-between">
           <span>Other Fee</span>
           <span>IDR {booking.othersValue?.toLocaleString() ?? "0"}</span>
@@ -197,21 +218,21 @@ function PaymentSummary({
       </div>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-700">
-        <span className="text-base sm:text-lg font-semibold text-red-500">
+        <span className="text-base sm:text-base font-semibold">
           Total Payment
         </span>
-        <span className="text-base sm:text-lg font-bold text-red-500 break-words">
+        <span className="text-base sm:text-lg font-bold break-words">
           {isBookingFree ? "Free" : "IDR " + totalPayment.toLocaleString()}
         </span>
       </div>
 
-      <div className="hidden lg:flex flex-col gap-2 space-y-2 text-center text-white">
+      <div className="flex flex-col gap-2 space-y-2 text-center text-white">
         <button
           type="button"
           onClick={handleSubmit}
           disabled={isDisabled || loading}
           className={cn(
-            "w-full text-base sm:text-lg lg:text-xl transition py-2.5 sm:py-3 rounded font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black",
+            "w-full text-base sm:text-lg lg:text-xl transition py-2.5 sm:py-3 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-black",
             isDisabled || loading
               ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
               : "bg-red-600 hover:bg-red-700"
@@ -222,10 +243,16 @@ function PaymentSummary({
             ? "Loading..."
             : `${isBookingFree ? "Free" : "IDR " + totalPayment.toLocaleString()} | Rent Now`}
         </button>
-        <p className="text-xs sm:text-sm">Any Questions?</p>
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-gray-300"></div>
+          <p className="text-xs sm:text-sm whitespace-nowrap">
+            Any Questions?
+          </p>
+          <div className="flex-1 h-px bg-gray-300"></div>
+        </div>
         <button
           type="button"
-          className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
+          className="w-full py-2 text-xs sm:text-sm font-semibold rounded-xl bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
           onClick={() =>
             window.open(
               "https://wa.me/6285175343447?text=Halo%20admin%20VALSEWA%20aku%20butuh%20bantuan%20dong",

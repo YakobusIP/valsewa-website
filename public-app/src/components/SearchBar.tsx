@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { AccountEntity } from "@/types/account.type";
-
 import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
 import Image from "next/image";
 
@@ -21,102 +20,83 @@ interface Props {
 }
 
 const SearchBar = ({
-  accountList,
   setSearchAccount,
   changeDirection,
-  getSortLabel,
   sortAccount,
   sortDirection
 }: Props) => {
-  const SortMenuItem = ({ label, value }: { label: string; value: string }) => (
-    <DropdownMenuItem
-      onClick={() => changeDirection(value)}
-      className="px-4 py-2 hover:bg-[#4e4e75] transition duration-200 cursor-pointer flex justify-between"
-    >
-      {label}
-      {sortAccount === value && (
-        <Image
-          src="/arrow.svg"
-          alt="Sort Arrow"
-          width={16}
-          height={16}
-          className={`ml-2 transition-transform duration-200 ${sortDirection === "asc" ? "rotate-0" : "rotate-180"}`}
-        />
-      )}
-    </DropdownMenuItem>
+  const Menu = ({
+    label,
+    value
+  }: {
+    label: string;
+    value: string;
+  }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="flex items-center justify-between px-4 py-2 rounded-xl bg-[#0f0f0f] border border-gray-600 text-white min-w-[110px] tablet:min-w-[140px]">
+        {label}
+        <svg className="w-4 h-4 ml-2" viewBox="0 0 20 20">
+          <path
+            fill="currentColor"
+            d="M5 7l5 5 5-5H5z"
+          />
+        </svg>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent className="bg-[#1c1c1c] text-white border border-gray-600">
+        <DropdownMenuItem onClick={() => changeDirection(value)}>
+          Sort {label}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
-  const availableAccount = () => {
-    let res = 0;
-    for (let index = 0; index < accountList.length; index++) {
-      if (accountList[index].availabilityStatus === "AVAILABLE") {
-        res += 1;
-      }
-    }
-    return res;
-  };
+
   return (
-    <div className="w-full flex flex-col items-center text-roseWhite">
-      <h1 className=" md:text-4xl text-2xl text-center font-valorant mb-5">
-        FIND THE BEST
-      </h1>
-      <p className="font-extralight md:text-6xl text-5xl text-center font-valorant">
-        VALORANT ACCOUNTS!
-      </p>
-      <div className="w-full px-14 pt-6 ">
-        <div className="relative min-h-24 flex flex-col md:flex-row w-full items-center bg-[#262A43] border border-gray-500 rounded-[16px] py-3 shadow-md shadow-white/30">
-          <div className="flex items-center mb-2 md:mb-0 text-nowrap md:pl-5">
-            <span className="text-yellow-400 font-bold text-lg md:text-xl mr-2">
-              {availableAccount()}
-            </span>
-            <span className="text-roseWhite font-bold">Akun Tersedia</span>
+    <div className="w-full flex justify-center">
+      <div className="w-full max-w-[1920px] px-4 tablet:px-10">
+
+        {/* CONTAINER */}
+        <div className="flex flex-col tablet:flex-row items-center justify-between gap-4 tablet:gap-6 bg-black border border-gray-500 rounded-2xl px-4 tablet:px-6 py-3 shadow-lg">
+
+          {/* LEFT: FILTERS */}
+          <div className="flex flex-wrap items-center gap-3 tablet:gap-4 w-full tablet:w-auto">
+            <Menu label="Rank" value="rank" />
+            <Menu label="Price" value="price_tier" />
+            <Menu label="Tier" value="availability" />
           </div>
 
-          <div className="flex flex-row md:flex-row items-center justify-between w-full gap-2 md:gap-4 md:ml-10 px-3">
-            <div className="relative flex-grow w-full md:w-full">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+          {/* RIGHT SIDE */}
+          <div className="flex items-center gap-3 w-full tablet:w-auto">
+
+            {/* DAILY DROP BUTTON */}
+            <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-600 bg-black hover:bg-red-600/20 transition text-white whitespace-nowrap">
+              <img src="/header/streak icon.svg"></img>
+              <span className="font-bold text-red-500">DAILY DROP</span>
+            </button>
+
+            {/* SEARCH INPUT */}
+            <div className="relative w-full tablet:w-[260px] desktop:w-[320px]">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2">
                 <svg
-                  className="w-4 h-4 text-gray-300"
-                  aria-hidden="true"
+                  className="w-4 h-4 text-gray-400"
                   fill="none"
                   viewBox="0 0 20 20"
                 >
                   <path
                     stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="3"
+                    strokeWidth="2"
                     d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
                   />
                 </svg>
               </div>
+
               <input
                 type="search"
-                className="w-full pl-10 pr-4 py-2 bg-[#8f8fb3] text-gray-200 rounded-[43px] outline-none placeholder-roseWhite md:min-h-[56px]"
-                placeholder="Search items..."
+                placeholder="Search by skin name..."
                 onChange={(e) => setSearchAccount(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-[#0f0f0f] border border-gray-600 rounded-xl text-white placeholder-gray-400 outline-none"
               />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center md:min-h-[56px] justify-between w-[130px] md:w-[150px] px-4 py-2 bg-[#8f8fb3] rounded-[43px] hover:bg-[#4e4e75] text-gray-200">
-                {getSortLabel()}
-                {["rank", "price_tier", "availability"].includes(
-                  sortAccount
-                ) && (
-                  <Image
-                    src="/arrow.svg"
-                    alt="Sort Arrow"
-                    width={16}
-                    height={16}
-                    className={`ml-2 transition-transform duration-200 ${sortDirection === "asc" ? "rotate-0" : "rotate-180"}`}
-                  />
-                )}
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-[#6c6c8f] text-roseWhite rounded-lg">
-                <SortMenuItem label="Rank" value="rank" />
-                <SortMenuItem label="Price Tier" value="price_tier" />
-                <SortMenuItem label="Availability" value="availability" />
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </div>

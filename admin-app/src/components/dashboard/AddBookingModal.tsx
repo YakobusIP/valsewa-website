@@ -82,15 +82,19 @@ type Props = {
   onOpenChange: Dispatch<SetStateAction<boolean>>;
   data: AccountEntity;
   resetParent: () => Promise<void>;
+  variant?: "create" | "edit-current";
 };
 
 export default function AddBookingModal({
   open,
   onOpenChange,
   data,
-  resetParent
+  resetParent,
+  variant = "create"
 }: Props) {
+  const isEditCurrent = variant === "edit-current";
   const [isLoadingSubmit, setIsLoadingSubmit] = useState(false);
+  const [loadingBooking, setLoadingBooking] = useState(false);
   const [reminderText, setReminderText] = useState("");
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -127,6 +131,7 @@ export default function AddBookingModal({
   };
 
   const handleDeleteBookingDate = () => {
+    if (isEditCurrent) return;
     form.setValue("bookingDate", new Date());
     form.setValue("duration", "");
   };
@@ -188,10 +193,44 @@ export default function AddBookingModal({
     }
   };
 
+  const handleEditCurrentBooking = async (
+    accountId: number,
+    values: z.infer<typeof formSchema>
+  ) => {
+    try {
+      await bookingService.editCurrentBooking(accountId, {
+        duration: values.duration,
+        totalValue: values.totalValue
+      });
+      onOpenChange(false);
+      await resetParent();
+
+      toast({
+        title: "All set!",
+        description: "Current booking updated successfully."
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "An unknown error occured";
+
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong!",
+        description: errorMessage
+      });
+    } finally {
+      setIsLoadingSubmit(false);
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoadingSubmit(true);
 
-    await handleCreateBooking(data.id, values);
+    if (isEditCurrent) {
+      await handleEditCurrentBooking(data.id, values);
+    } else {
+      await handleCreateBooking(data.id, values);
+    }
   };
 
   const handleError = (errors: FieldErrors<z.infer<typeof formSchema>>) => {
@@ -236,6 +275,58 @@ export default function AddBookingModal({
   }, [open]);
 
   useEffect(() => {
+    if (!open || !isEditCurrent) return;
+
+    let cancelled = false;
+
+    const loadActive = async () => {
+      setLoadingBooking(true);
+      try {
+        const booking = await bookingService.getActiveBookingForAccount(
+          data.id
+        );
+        if (cancelled) return;
+
+        if (!booking.startAt) {
+          toast({
+            variant: "destructive",
+            title: "No active booking",
+            description: "Could not load start time for this booking."
+          });
+          onOpenChange(false);
+          return;
+        }
+
+        form.reset({
+          bookingDate: new Date(booking.startAt),
+          duration: booking.duration,
+          totalValue: booking.totalValue,
+          expireAt: undefined
+        });
+      } catch (error) {
+        if (cancelled) return;
+        const errorMessage =
+          error instanceof Error ? error.message : "An unknown error occured";
+        toast({
+          variant: "destructive",
+          title: "Could not load active booking",
+          description: errorMessage
+        });
+        onOpenChange(false);
+      } finally {
+        if (!cancelled) {
+          setLoadingBooking(false);
+        }
+      }
+    };
+
+    void loadActive();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, isEditCurrent, data.id, form, onOpenChange]);
+
+  useEffect(() => {
     if (!reminderTemplate) return;
 
     let text = reminderTemplate;
@@ -254,13 +345,22 @@ export default function AddBookingModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex flex-col w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Add New Booking</DialogTitle>
+          <DialogTitle>
+            {isEditCurrent ? "Edit Current Booking" : "Add New Booking"}
+          </DialogTitle>
           <DialogDescription>
-            Create a new booking for this account
+            {isEditCurrent
+              ? "Update duration and total price for the active booking. Start time cannot be changed."
+              : "Create a new booking for this account"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto relative">
+          {loadingBooking && (
+            <div className="absolute inset-0 z-[60] flex items-center justify-center bg-background/80">
+              <Loader2Icon className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          )}
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit, handleError)}
@@ -284,7 +384,9 @@ export default function AddBookingModal({
                         <Popover modal>
                           <PopoverTrigger asChild>
                             <Button
+                              type="button"
                               variant={"outline"}
+                              disabled={isEditCurrent}
                               className={cn(
                                 "justify-start text-left font-normal flex-1",
                                 !field.value && "text-muted-foreground"
@@ -384,6 +486,7 @@ export default function AddBookingModal({
                           type="button"
                           variant="destructive"
                           size="icon"
+                          disabled={isEditCurrent}
                           onClick={handleDeleteBookingDate}
                         >
                           <Trash2Icon />
@@ -480,7 +583,11 @@ export default function AddBookingModal({
                   </b>
                 </p>
 
-                <Button type="submit" className="w-fit">
+                <Button
+                  type="submit"
+                  className="w-fit"
+                  disabled={isEditCurrent && loadingBooking}
+                >
                   {isLoadingSubmit && (
                     <Loader2Icon className="w-4 h-4 animate-spin" />
                   )}

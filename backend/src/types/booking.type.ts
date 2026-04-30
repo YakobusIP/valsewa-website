@@ -44,6 +44,11 @@ export type CreateAdminBookingRequest = {
   totalValue: number;
 };
 
+export type EditCurrentBookingRequest = {
+  duration: string;
+  totalValue: number;
+};
+
 export type OverrideBookingRequest = {
   bookingId: string;
   accountId: number;
@@ -89,6 +94,7 @@ export type BookingResponse = {
     nickname: string;
     username?: string;
     password?: string;
+    isMfa?: boolean;
   };
   payments?: Payment[];
   customer?: {

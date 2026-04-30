@@ -8,6 +8,7 @@ import { voucherService } from "@/services/voucher.service";
 import Navbar from "@/components/Navbar";
 import NavbarMobile from "@/components/NavbarMobile";
 import BookingDetail from "@/components/bookings/BookingDetail";
+import CancelBookingButton from "@/components/bookings/CancelBookingButton";
 import PaymentCountdown from "@/components/bookings/PaymentCountdown";
 import PaymentMethods from "@/components/bookings/PaymentMethods";
 import PaymentSummary from "@/components/bookings/PaymentSummary";
@@ -64,7 +65,7 @@ function BookingStatusView({ booking }: { booking: BookingWithAccountEntity }) {
       </h1>
 
       <button
-        onClick={() => router.push(`/details/${booking.accountId}`)}
+        onClick={() => router.push(`/accounts/${booking.accountId}`)}
         className="mt-4 px-6 py-3 text-base sm:text-lg font-semibold rounded bg-neutral-700 hover:bg-neutral-600 transition"
       >
         Back to Account
@@ -86,7 +87,7 @@ export default function BookingDetailPage() {
   const [voucher, setVoucher] = useState<VoucherEntity | null>(null);
   const [isLoadingCancelBooking, setIsLoadingCancelBooking] = useState(false);
   const [isBookingFree, setBookingFree] = useState(false);
-  const [totalPayment, setTotalPayment] = useState(0);
+  const [, setTotalPayment] = useState(0);
   const auth = useAuth();
 
   const { handleAsyncError } = useErrorHandler();
@@ -202,7 +203,7 @@ export default function BookingDetailPage() {
 
       <div
         className={cn(
-          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10 items-center w-full",
+          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10 items-center w-full lg:px-20",
           instrumentSans.className
         )}
       >
@@ -210,57 +211,75 @@ export default function BookingDetailPage() {
           <BookingStatusView booking={booking} />
         ) : (
           <>
-            <ProgressStepper
-              stepIdx={1}
-              handleCancelBooking={handleCancelBooking}
-              isLoadingCancelBooking={isLoadingCancelBooking}
-            />
+            <div>
+              <div className="hidden lg:flex pr-20 gap-6">
+                <CancelBookingButton
+                  cancelBooking={handleCancelBooking}
+                  isLoadingCancelBooking={isLoadingCancelBooking}
+                />
+                <ProgressStepper stepIdx={1} />
+              </div>
+            </div>
 
-            {booking && booking.expiredAt && (
-              <PaymentCountdown expiredAt={booking.expiredAt} />
-            )}
+            <div className="lg:px-20">
+              {booking && booking.expiredAt && (
+                <PaymentCountdown expiredAt={booking.expiredAt} />
+              )}
+            </div>
 
-            <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-32 mt-6 sm:mt-8 lg:mt-10">
-              <div className="w-full space-y-6 sm:space-y-8 lg:space-y-10">
+            <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-5 mt-6 sm:mt-8 lg:mt-10 lg:px-20">
+              <div className="flex flex-col w-full space-y-3 sm:space-y-4 lg:space-y-5">
+                <div className="bg-[#1C1C1C]">
+                  <BookingDetail booking={booking} />
+                </div>
+                <div className="bg-[#1C1C1C]">
+                  <PaymentMethods
+                    paymentMethod={paymentMethod}
+                    setPaymentMethod={setPaymentMethod}
+                  />
+                </div>
+              </div>
+              <div className="bg-[#1C1C1C] w-full">
+                <PaymentSummary
+                  booking={booking}
+                  paymentMethod={paymentMethod}
+                  voucher={voucher}
+                  setVoucher={setVoucher}
+                  fetchVoucher={fetchVoucher}
+                  setBookingFree={setBookingFree}
+                  setTotalPayment={setTotalPayment}
+                  onSubmit={onSubmit}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
+              <ProgressStepper stepIdx={1} />
+              <div className="bg-[#1C1C1C]">
                 <BookingDetail booking={booking} />
+              </div>
+
+              <div className="bg-[#1C1C1C]">
                 <PaymentMethods
                   paymentMethod={paymentMethod}
                   setPaymentMethod={setPaymentMethod}
                 />
               </div>
 
-              <PaymentSummary
-                booking={booking}
-                paymentMethod={paymentMethod}
-                voucher={voucher}
-                setVoucher={setVoucher}
-                fetchVoucher={fetchVoucher}
-                setBookingFree={setBookingFree}
-                setTotalPayment={setTotalPayment}
-                onSubmit={onSubmit}
-              />
-            </div>
+              <div className="bg-[#1C1C1C]">
+                <PaymentSummary
+                  booking={booking}
+                  paymentMethod={paymentMethod}
+                  voucher={voucher}
+                  setVoucher={setVoucher}
+                  fetchVoucher={fetchVoucher}
+                  setBookingFree={setBookingFree}
+                  setTotalPayment={setTotalPayment}
+                  onSubmit={onSubmit}
+                />
+              </div>
 
-            <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
-              <BookingDetail booking={booking} />
-
-              <PaymentSummary
-                booking={booking}
-                paymentMethod={paymentMethod}
-                voucher={voucher}
-                setVoucher={setVoucher}
-                fetchVoucher={fetchVoucher}
-                setBookingFree={setBookingFree}
-                setTotalPayment={setTotalPayment}
-                onSubmit={onSubmit}
-              />
-
-              <PaymentMethods
-                paymentMethod={paymentMethod}
-                setPaymentMethod={setPaymentMethod}
-              />
-
-              <div className="flex flex-col gap-2 space-y-2 text-center text-white">
+              {/* <div className="flex flex-col gap-2 space-y-2 text-center text-white bg-[#1C1C1C]">
                 <button
                   type="button"
                   onClick={onSubmit}
@@ -277,7 +296,13 @@ export default function BookingDetailPage() {
                     ? "Loading..."
                     : `${isBookingFree ? "Free" : "IDR " + totalPayment.toLocaleString()} | Rent Now`}
                 </button>
-                <p className="text-xs sm:text-sm">Any Questions?</p>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-gray-300"></div>
+                  <p className="text-xs sm:text-sm whitespace-nowrap">
+                    Any Questions?
+                  </p>
+                  <div className="flex-1 h-px bg-gray-300"></div>
+                </div>
                 <button
                   type="button"
                   className="w-full py-2 text-xs sm:text-sm font-semibold rounded-md bg-neutral-700 hover:bg-neutral-600 focus:outline-none focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2 focus:ring-offset-black"
@@ -290,7 +315,7 @@ export default function BookingDetailPage() {
                 >
                   Ask Our Team
                 </button>
-              </div>
+              </div> */}
             </div>
           </>
         )}

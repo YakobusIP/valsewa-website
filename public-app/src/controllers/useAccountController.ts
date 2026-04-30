@@ -35,7 +35,7 @@ export function useAccountController(initialAccount: AccountEntity[]) {
         if (tierFilter) {
           const res = await fetchAccountByTier(
             tierFilter.id,
-            tierFilter.isLowTier
+            tierFilter.isCompetitive
           );
           setAccountList(res ?? []);
           return;
@@ -83,8 +83,8 @@ export function useAccountController(initialAccount: AccountEntity[]) {
     }
   };
 
-  const selectTier = async (id: string, isLowTier: string) => {
-    setTierFilter({ id, isLowTier });
+  const selectTier = async (id: string, isCompetitive: string) => {
+    setTierFilter({ id, isCompetitive });
     setRankFilter("");
   };
 
