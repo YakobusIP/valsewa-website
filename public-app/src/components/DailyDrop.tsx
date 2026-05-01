@@ -1,11 +1,18 @@
-import Link from "next/link";
 import Image from "next/image";
 import React from "react";
 import { FaFire } from "react-icons/fa";
 
-export default function DailyDrop() {
+type DailyDropProps = {
+  onOpen: () => void;
+};
+
+export default function DailyDrop({ onOpen }: DailyDropProps) {
   return (
-    <Link href={`#`} className="w-full relative z-10 my-4 pt-10 pb-10 cursor-pointer">
+    <button
+      type="button"
+      onClick={onOpen}
+      className="w-full relative z-10 my-4 pt-10 pb-10 cursor-pointer text-left"
+    >
       <div className="w-full max-w-[1920px] mx-auto">
         <div className=" rounded-2xl relative overflow-hidden ">
           <div>
@@ -33,6 +40,6 @@ export default function DailyDrop() {
           </div>
         </div>
       </div>
-    </Link>
+    </button>
   );
 }

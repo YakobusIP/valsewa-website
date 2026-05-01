@@ -305,7 +305,7 @@ export default function AccountDetailModal({
 
   const copyPublicLinkToClipboard = async () => {
     await navigator.clipboard.writeText(
-      `${import.meta.env.VITE_PUBLIC_APP_URL}/details/${data?.id}`
+      `${import.meta.env.VITE_PUBLIC_APP_URL}/accounts/${encodeURIComponent(data?.accountCode ?? "")}`
     );
     toast({
       title: "All set!",
