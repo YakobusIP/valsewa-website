@@ -86,22 +86,20 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
         {/* NAV RIGHT SIDE */}
         <div className="pr-7 flex items-center gap-4">
           {/* SEARCH */}
-          <Link
-            href="/search"
-            aria-label="Search"
-            className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition"
-          >
-            <Image
-              src="/header/Search Icon.svg"
-              alt=""
-              width={16}
-              height={16}
-            />
+          <Link href="/search">
+            <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
+              <Image
+                src="/header/Search Icon.svg"
+                alt="Search"
+                width={16}
+                height={16}
+              />
+            </div>
           </Link>
 
           {/* TOP UP */}
           <Link href="https://valforum.com/top-up">
-            <Button className="hidden lg:flex border border-white/30 rounded-xl hover:border-white transition">
+            <Button className="hidden tablet:flex border border-white/30 rounded-xl hover:border-white transition">
               <Image
                 src="/header/Diamond.svg"
                 alt="Top Up"
@@ -114,7 +112,7 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
             </Button>
             <Button
               size="icon"
-              className="lg:hidden border border-white/30 rounded-xl hover:border-white transition"
+              className="tablet:hidden border border-white/30 rounded-xl hover:border-white transition"
             >
               <Image
                 src="/header/Diamond.svg"
