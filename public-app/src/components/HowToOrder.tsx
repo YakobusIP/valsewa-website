@@ -9,52 +9,49 @@ export default function HowToOrder() {
             HOW TO ORDER?
           </h2>
 
-          <div className="flex flex-row md:flex-row md:items-center items-start justify-between gap-1 sm:gap-8 md:gap-4 relative">
+          <div className="relative z-10 flex w-full flex-row flex-nowrap items-start justify-between gap-2 sm:gap-4 md:items-center md:justify-start md:gap-2 lg:gap-4">
             {/* Step 1 */}
-            <div className="flex items-center gap-2 md:gap-4 z-10">
-              <div className="w-5 h-5 sm:w-7 sm:h-7 lg:w-10 lg:h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
-                <span className="text-[#990000] font-black text-[0.5rem] sm:text-xs lg:text-lg">
+            <div className="flex min-w-0 flex-none items-center gap-1 sm:gap-2 lg:gap-4">
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-lg bg-white shadow-lg sm:h-7 sm:w-7 lg:h-10 lg:w-10">
+                <span className="text-[0.5rem] font-black text-[#990000] sm:text-xs lg:text-lg">
                   1
                 </span>
               </div>
-              <p className="text-white font-medium text-[0.5rem] sm:text-xs lg:text-lg leading-tight max-sm:hidden">
+              <p className="min-w-0 text-[0.5rem] font-medium leading-tight text-white xs:text-[0.7rem] sm:text-xs lg:text-lg max-sm:hidden">
                 Explore and Select <br /> Account
               </p>
-              <p className="text-white font-medium text-[0.5rem] sm:text-xs lg:text-lg leading-tight sm:hidden">
-                Explore and Select Account
+              <p className="min-w-0 whitespace-nowrap text-[0.5rem] font-medium leading-tight text-white xs:text-[0.7rem] sm:hidden">
+                Explore and <br /> Select Account
               </p>
             </div>
 
             {/* Connecting Line 1 */}
-            <div className="hidden md:block flex-1 h-[2px] bg-dashed border-t-2 border-dashed border-[#E8c545]/50 mx-4"></div>
+            <div className="mx-1 hidden h-[2px] min-w-[0.5rem] flex-1 self-center border-t-2 border-dashed border-[#E8c545]/50 sm:mx-2 md:block" />
 
             {/* Step 2 */}
-            <div className="flex items-center gap-2 md:gap-4 z-10">
-              <div className="w-5 h-5 sm:w-7 sm:h-7 lg:w-10 lg:h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
-                <span className="text-[#990000] font-black text-[0.5rem] sm:text-xs lg:text-lg">
+            <div className="flex min-w-0 flex-none items-center gap-1 sm:gap-2 lg:gap-4">
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-lg bg-white shadow-lg sm:h-7 sm:w-7 lg:h-10 lg:w-10">
+                <span className="text-[0.5rem] font-black text-[#990000] sm:text-xs lg:text-lg">
                   2
                 </span>
               </div>
-              <p className="text-white font-medium text-[0.5rem] sm:text-xs lg:text-lg leading-tight">
-                Place Your Order
+              <p className="min-w-0 whitespace-nowrap text-[0.5rem] font-medium leading-tight text-white xs:text-[0.7rem] sm:text-xs lg:text-lg">
+                Place Your <br /> Order
               </p>
             </div>
 
             {/* Connecting Line 2 */}
-            <div className="hidden md:block flex-1 h-[2px] bg-dashed border-t-2 border-dashed border-[#E8c545]/50 mx-4"></div>
+            <div className="mx-1 hidden h-[2px] min-w-[0.5rem] flex-1 self-center border-t-2 border-dashed border-[#E8c545]/50 sm:mx-2 md:block" />
 
             {/* Step 3 */}
-            <div className="flex items-center gap-2 md:gap-4 z-10">
-              <div className="w-5 h-5 sm:w-7 sm:h-7 lg:w-10 lg:h-10 bg-white rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
-                <span className="text-[#990000] font-black text-[0.5rem] sm:text-xs lg:text-lg">
+            <div className="flex min-w-0 flex-none items-center gap-1 sm:gap-2 lg:gap-4">
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-lg bg-white shadow-lg sm:h-7 sm:w-7 lg:h-10 lg:w-10">
+                <span className="text-[0.5rem] font-black text-[#990000] sm:text-xs lg:text-lg">
                   3
                 </span>
               </div>
-              <p className="text-white font-medium text-[0.5rem] sm:text-xs lg:text-lg leading-tight max-sm:hidden">
+              <p className="min-w-0 whitespace-nowrap text-[0.5rem] font-medium leading-tight text-white xs:text-[0.7rem] sm:text-xs lg:text-lg">
                 Payment & Receive <br /> Account Credentials
-              </p>
-              <p className="text-white font-medium text-[0.5rem] sm:text-xs lg:text-lg leading-tight sm:hidden">
-                Payment & Receive Account Credentials
               </p>
             </div>
           </div>
