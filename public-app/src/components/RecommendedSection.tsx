@@ -24,6 +24,9 @@ type RecSectionProps = {
   onSeeMore: () => void;
 };
 
+/** Trending card order: grey, red, blue — bottom-heavy gradient like design */
+const CARD_OVERLAY_HEX = ["#787878", "#C70515", "#2F40FF"] as const;
+
 export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
   const [accounts, setAccounts] = useState<AccountEntity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,117 +52,132 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
   if (loading) return null; // Or a skeleton loader
   if (accounts.length === 0) return null;
 
-  const renderAccountCard = (account: AccountEntity, forCarousel = false) => {
+  const renderAccountCard = (
+    account: AccountEntity,
+    cardIndex: number,
+    forCarousel = false
+  ) => {
     const tierCode = account.priceTier?.code || "N/A";
     const letterGrade = tierCode.split("-")[0] || "B";
+    const overlayHex = CARD_OVERLAY_HEX[cardIndex] ?? CARD_OVERLAY_HEX[0];
 
-    let glowColor = "from-gray-500/20";
-    let borderColor = "border-gray-600";
+    const borderColor =
+      cardIndex === 0
+        ? "border-[#787878]"
+        : cardIndex === 1
+          ? "border-[#C70515]"
+          : "border-[#2F40FF]";
 
-    if (letterGrade.includes("SSS")) {
-      glowColor = "from-[#9146FF]/30";
-      borderColor = "border-[#9146FF]";
-    } else if (letterGrade.includes("S")) {
-      glowColor = "from-[#3B5BDB]/30";
-      borderColor = "border-[#3B5BDB]";
-    } else if (letterGrade.includes("A")) {
-      glowColor = "from-[#BD2C2C]/30";
-      borderColor = "border-[#BD2C2C]";
-    } else if (letterGrade.includes("B")) {
-      glowColor = "from-[#C69C6D]/30";
-      borderColor = "border-[#C69C6D]";
-    } else if (letterGrade.includes("V")) {
-      glowColor = "from-[#3CCFCF]/30";
-      borderColor = "border-[#3CCFCF]";
-    }
+    const statPillBg =
+      cardIndex === 0
+        ? "bg-[#787878]/35"
+        : cardIndex === 1
+          ? "bg-[#C70515]/35"
+          : "bg-[#2F40FF]/35";
 
     return (
       <Link
         href={`/accounts/${account.accountCode}`}
         target="_blank"
-        className="cursor-pointer"
+        className="block cursor-pointer"
       >
         <div
           className={cn(
-            "group relative rounded-xl overflow-auto lg:overflow-hidden transition-all duration-300 hover:scale-[1.02]",
-            "aspect-[7/8]",
-            forCarousel && "min-w-[250px]"
+            "relative aspect-[7/8] overflow-visible",
+            forCarousel && "min-w-[270px]"
           )}
         >
-          {/* Background Image */}
-          <div className="absolute inset-0 z-0">
-            <Image
-              src={account.thumbnail?.imageUrl ?? "/defaultPicture/default.jpg"}
-              fill
-              alt="Thumbnail"
-              className="object-cover rounded-xl transition-transform duration-300 ease-in-out hover:scale-[1.1]"
-              unoptimized
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-          </div>
-
-          {/* Badges */}
-          <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
-            <span className="bg-[#4ade80] text-black text-[10px] sm:text-xs font-bold px-3 py-1 rounded shadow-lg">
-              Most Rented
-            </span>
-          </div>
-
-          {/* Content */}
-          <div className="absolute bottom-0 left-0 right-0 p-5 z-20">
-            {/* Rank Name */}
-            <div className="flex items-center gap-2 mb-1">
+          <div
+            className={cn(
+              "group absolute inset-0 z-0 origin-center rounded-xl transition-transform duration-300 will-change-transform hover:z-10 hover:scale-[1.02]"
+            )}
+          >
+            {/* Background Image — clip image only; scale lives on parent so no overflow:auto scrollbars */}
+            <div className="absolute inset-0 z-0 overflow-hidden rounded-xl">
               <Image
-                src={getRankImageUrl(account.accountRank)}
-                alt={account.accountRank}
-                width={24}
-                height={24}
-                className="object-contain"
+                src={
+                  account.thumbnail?.imageUrl ?? "/defaultPicture/default.jpg"
+                }
+                fill
+                alt="Thumbnail"
+                className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-[1.1]"
+                unoptimized
               />
-              <span className="text-white font-bold text-xs sm:text-sm tracking-wide uppercase">
-                {account.accountRank} | {account.accountCode}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: `linear-gradient(to top, ${overlayHex} 0%, color-mix(in srgb, ${overlayHex} 55%, transparent) 42%, transparent 72%)`
+                }}
+              />
+            </div>
+
+            {/* Badges */}
+            <div className="absolute top-4 left-4 z-20 flex flex-col gap-2">
+              <span className="bg-[#4ade80] text-black text-[10px] sm:text-xs font-bold px-3 py-1 rounded shadow-lg">
+                Most Rented
               </span>
             </div>
 
-            {/* Big Letter Grade & Stats */}
-            <div className="flex items-end mt-2 gap-8">
-              <span className="text-7xl font-black italic leading-none tracking-tighter text-white font-antonio">
-                {letterGrade}
-              </span>
-
-              <div className="flex flex-col gap-2 mb-1 font-instrumentSans">
-                <span className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1">
-                  <span className="text-white/70 text-[10px]">
-                    Skins Amount
-                  </span>
-                  <span className="text-white/70 text-[10px]">
-                    | {account.skinList?.length || 0}
-                  </span>
-                </span>
-                <span className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1">
-                  <span className="text-white/70 text-[10px]">Rent Count</span>
-                  <span className="text-white/70 text-[10px]">
-                    | {convertHoursToDays(account.totalRentHour)}
-                  </span>
+            {/* Content */}
+            <div className="absolute bottom-0 left-0 right-0 p-5 z-20">
+              {/* Rank Name */}
+              <div className="flex items-center gap-2 mb-1 min-w-0">
+                <Image
+                  src={getRankImageUrl(account.accountRank)}
+                  alt={account.accountRank}
+                  width={24}
+                  height={24}
+                  className="object-contain shrink-0"
+                />
+                <span className="text-white font-bold text-xs sm:text-sm tracking-wide uppercase truncate">
+                  {account.accountRank} | {account.accountCode}
                 </span>
               </div>
+
+              {/* Big Letter Grade & Stats */}
+              <div className="flex items-end mt-2 gap-8 min-w-0">
+                <span className="text-7xl font-black italic leading-none tracking-tighter text-white font-antonio shrink-0">
+                  {letterGrade}
+                </span>
+
+                <div className="flex flex-col gap-2 mb-1 font-instrumentSans min-w-0">
+                  <span
+                    className={cn(
+                      "backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1 min-w-0",
+                      statPillBg
+                    )}
+                  >
+                    <span className="text-white/70 text-[10px] shrink-0">
+                      Skins Amount
+                    </span>
+                    <span className="text-white/70 text-[10px] truncate">
+                      | {account.skinList?.length || 0}
+                    </span>
+                  </span>
+                  <span
+                    className={cn(
+                      "backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-center gap-1 min-w-0",
+                      statPillBg
+                    )}
+                  >
+                    <span className="text-white/70 text-[10px] shrink-0">
+                      Rent Count
+                    </span>
+                    <span className="text-white/70 text-[10px] truncate">
+                      | {convertHoursToDays(account.totalRentHour)}
+                    </span>
+                  </span>
+                </div>
+              </div>
             </div>
+
+            <div
+              className={cn(
+                "absolute inset-0 border-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
+                borderColor
+              )}
+            />
           </div>
-
-          {/* Glow Effect */}
-          <div
-            className={cn(
-              "absolute inset-0 bg-gradient-to-t opacity-30 pointer-events-none",
-              glowColor
-            )}
-          />
-
-          <div
-            className={cn(
-              "absolute inset-0 border-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none",
-              borderColor
-            )}
-          />
         </div>
       </Link>
     );
@@ -167,23 +185,33 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
 
   const renderDiscoverMore = (forCarousel = false) => (
     <div
-      className={cn("aspect-[7/8]", forCarousel ? "min-w-[250px]" : "w-full")}
+      className={cn(
+        "relative aspect-[7/8] overflow-visible",
+        forCarousel ? "min-w-[270px]" : "w-full"
+      )}
     >
-      <Link href="/search" onClick={onSeeMore} target="_blank">
-        <button className="group relative w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#770000] to-black border border-white/10 flex flex-col items-start justify-center text-left transition-all duration-300 hover:scale-[1.02]">
-          <div className="relative z-10 p-6 flex flex-row justify-between items-center w-full">
-            <h3 className="text-4xl font-bold text-white mb-2 leading-tight">
-              Discover
-              <br />
-              More
-            </h3>
-            <div className="mt-4 w-12 h-12 flex items-center justify-center group">
-              <FaArrowRight className="text-white text-5xl tablet:text-5xl desktop:text-5xl transition-transform group-hover:translate-x-2 group-hover:rotate-45" />
+      <Link
+        href="/search"
+        onClick={onSeeMore}
+        target="_blank"
+        className="block h-full"
+      >
+        <div className="group absolute inset-0 z-0 origin-center transition-transform duration-300 will-change-transform hover:z-10 hover:scale-[1.02]">
+          <div className="relative h-full w-full rounded-2xl overflow-hidden bg-gradient-to-b from-[#C70515] to-[#000000] border border-white/10 flex flex-col items-start justify-center text-left">
+            <div className="relative z-10 p-6 flex flex-row justify-between items-center w-full">
+              <h3 className="text-4xl font-bold text-white mb-2 leading-tight">
+                Discover
+                <br />
+                More
+              </h3>
+              <div className="mt-4 w-12 h-12 flex items-center justify-center">
+                <FaArrowRight className="text-white text-5xl tablet:text-5xl desktop:text-5xl transition-transform group-hover:translate-x-2 group-hover:rotate-45" />
+              </div>
             </div>
+            {/* Red Glow */}
+            {/* <div className="absolute inset-0 bg-red-600/20 blur-3xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" /> */}
           </div>
-          {/* Red Glow */}
-          {/* <div className="absolute inset-0 bg-red-600/20 blur-3xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" /> */}
-        </button>
+        </div>
       </Link>
     </div>
   );
@@ -192,7 +220,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
     <section className="w-full relative z-10 my-8 xl:my-16">
       <div className="w-full max-w-[1920px] mx-auto">
         {/* Header */}
-        <div className="flex flex-col mb-8">
+        <div className="flex flex-col mb-4">
           <div className="flex items-center gap-2 mb-2">
             <h2 className="text-3xl md:text-5xl font-antonio font-black text-white tracking-tighter uppercase relative">
               Trending Now
@@ -208,14 +236,14 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
 
         {/* Mobile: Auto-sliding Carousel */}
         <Carousel
-          className="xl:hidden"
+          className="xl:hidden py-2"
           opts={{ loop: true, align: "start" }}
           plugins={[recAutoplay]}
         >
           <CarouselContent className="-ml-4">
-            {accounts.map((account) => (
+            {accounts.map((account, index) => (
               <CarouselItem key={account.id} className="basis-auto pl-4">
-                {renderAccountCard(account, true)}
+                {renderAccountCard(account, index, true)}
               </CarouselItem>
             ))}
             <CarouselItem className="basis-auto pl-4">
@@ -225,10 +253,10 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
         </Carousel>
 
         {/* Desktop: Grid */}
-        <div className="hidden xl:grid xl:grid-cols-4 gap-4">
-          {accounts.map((account) => (
+        <div className="hidden xl:grid xl:grid-cols-4 gap-4 py-2">
+          {accounts.map((account, index) => (
             <Fragment key={account.id}>
-              {renderAccountCard(account, false)}
+              {renderAccountCard(account, index, false)}
             </Fragment>
           ))}
           {renderDiscoverMore(false)}
