@@ -128,11 +128,15 @@ const NavbarHomeMobile = ({
           {isAuthenticated && streak !== null && (
             <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
               <Image
-                src="/header/streak-mobile.svg"
+                src="/header/streak icon.svg"
                 alt="Streak"
                 width={18}
                 height={18}
               />
+
+              <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                {streak}
+              </span>
             </div>
           )}
 

@@ -13,7 +13,6 @@ import { DailyDropModal } from "@/components/dailydrop/DailyDropModal";
 
 import { CarouselSlide } from "@/types/account.type";
 
-import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
 interface Props {
@@ -76,17 +75,10 @@ export default function Home({ initialCarousel }: Props) {
       </div>
       <main
         ref={mainRef}
-        className="h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth bg-[#0F0F0F]"
+        className="h-screen overflow-y-auto scroll-smooth bg-[#0F0F0F]"
         onScroll={(e) => setIsScrolled(e.currentTarget.scrollTop > 1)}
       >
-        <motion.section
-          id="hero"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.6, ease: "easeIn" }}
-          className="snap-start snap-always px-8 lg:px-16"
-        >
+        <section id="hero" className="px-8 lg:px-16">
           {/* Hero wrapper - overflow-visible to allow notch to show, pt for navbar space */}
           <div className="relative w-full max-w-[1920px] mx-auto overflow-visible pt-4">
             <Hero
@@ -95,50 +87,31 @@ export default function Home({ initialCarousel }: Props) {
               setActiveBrand={setActiveBrand}
             />
           </div>
-        </motion.section>
-        <motion.section
+        </section>
+        <section
           id="howto"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.6, ease: "easeIn" }}
-          className="snap-start snap-always px-8 lg:px-16 scroll-mt-12 pt-10"
+          className="px-8 lg:px-16 scroll-mt-12 pt-10"
         >
           <HowToOrder />
-        </motion.section>
+        </section>
 
-        <motion.section
+        <section
           id="daily-drop"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.6, ease: "easeIn" }}
-          className="snap-start snap-always px-8 lg:px-16 scroll-mt-12 pt-10"
+          className="px-8 lg:px-16 scroll-mt-12 pt-10"
         >
           <DailyDrop onOpen={() => setIsDailyDropOpen(true)} />
-        </motion.section>
+        </section>
 
-        <motion.section
+        <section
           id="recommended"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.6, ease: "easeIn" }}
-          className="snap-start snap-always px-8 lg:px-16 scroll-mt-12 pt-10"
+          className="px-8 lg:px-16 scroll-mt-12 pt-10"
         >
           <RecommendedSection onSeeMore={handleSeeMore} />
-        </motion.section>
+        </section>
 
-        <motion.section
-          id="explore-catalog"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: false, amount: 0.3 }}
-          transition={{ duration: 0.6, ease: "easeIn" }}
-          className="snap-start snap-always scroll-mt-12 pt-10"
-        >
+        <section id="explore-catalog" className="scroll-mt-12 pt-10">
           <ExploreCatalog />
-        </motion.section>
+        </section>
       </main>
       <DailyDropModal
         open={isDailyDropOpen}
