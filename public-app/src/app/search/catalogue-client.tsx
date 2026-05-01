@@ -16,6 +16,7 @@ import { SORT_MAP, SortOption } from "@/components/catalogue/SortDropdown";
 import { AccountEntity } from "@/types/account.type";
 import { Skin } from "@/types/skin.type";
 
+import { useRouter } from "next/navigation";
 import { useDebounce } from "use-debounce";
 
 type BrandType = "valsewa" | "valjubel" | "valjoki";
@@ -37,8 +38,21 @@ function processTiers(tiers: string[]): string[] {
 export default function CatalogueClient({
   initialAccounts
 }: CatalogueClientProps) {
+  const router = useRouter();
+
   // Brand
   const [activeBrand, setActiveBrand] = useState<BrandType>("valsewa");
+
+  const handleSetActiveBrand = useCallback(
+    (brand: BrandType) => {
+      if (brand === "valsewa") {
+        router.push("/");
+        return;
+      }
+      setActiveBrand(brand);
+    },
+    [router]
+  );
 
   // Filters
   const [selectedRanks, setSelectedRanks] = useState<string[]>([]);
@@ -203,13 +217,13 @@ export default function CatalogueClient({
     <div className="min-h-screen bg-black">
       <CatalogueNavbar
         activeBrand={activeBrand}
-        setActiveBrand={setActiveBrand}
+        setActiveBrand={handleSetActiveBrand}
         isScrolled={isScrolled}
       />
 
       <CatalogueHero
         activeBrand={activeBrand}
-        setActiveBrand={setActiveBrand}
+        setActiveBrand={handleSetActiveBrand}
         sentinelRef={heroSentinelRef}
       />
 

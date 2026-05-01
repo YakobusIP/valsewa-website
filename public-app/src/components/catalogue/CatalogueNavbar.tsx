@@ -130,7 +130,7 @@ export function CatalogueNavbar({
       >
         <div className="mx-auto max-w-full h-[84px] md:h-[80px] flex items-center justify-between">
           <div className="flex items-center gap-[var(--hero-logo-switcher-gap)] pl-[var(--hero-nav-left-offset)]">
-            <figure className="relative w-[var(--hero-valforum-logo-width)]">
+            <figure className="relative w-[var(--hero-valforum-logo-width)] pr-3">
               <Image
                 src="/header/Logo Header Valforum.png"
                 alt="logo"
@@ -301,7 +301,7 @@ export function CatalogueNavbar({
           isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
         }`}
       >
-        <div className="mx-auto max-w-[1920px] h-[64px] flex items-center justify-between px-4">
+        <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-8 gap-1">
           {/* CENTER: brand logo */}
           <div className="flex items-center justify-center flex-1">
             <figure className="sm:w-[210px] w-[150px]">
@@ -317,7 +317,7 @@ export function CatalogueNavbar({
           </div>
 
           {/* RIGHT: Top Up + auth */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-1">
             <Link href="https://valforum.com/top-up">
               <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
                 <Image
@@ -333,11 +333,15 @@ export function CatalogueNavbar({
             {isAuthenticated && streak !== null && (
               <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
                 <Image
-                  src="/header/streak-mobile.svg"
+                  src="/header/streak icon.svg"
                   alt="Streak"
                   width={18}
                   height={18}
                 />
+
+                <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                  {streak}
+                </span>
               </div>
             )}
 
