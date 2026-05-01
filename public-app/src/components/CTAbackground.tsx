@@ -179,6 +179,7 @@ export default function LiquidEther({
         this.width = Math.max(1, Math.floor(rect.width));
         this.height = Math.max(1, Math.floor(rect.height));
         this.aspect = this.width / this.height;
+        this.isMobile = this.width < this.breakpoint;
         if (this.renderer)
           this.renderer.setSize(this.width, this.height, false);
       }
@@ -310,6 +311,7 @@ export default function LiquidEther({
         this.hasUserControl = true;
       }
       onDocumentTouchStart(event: TouchEvent) {
+        if (Common.isMobile) return;
         if (event.touches.length !== 1) return;
         const t = event.touches[0];
         if (!this.updateHoverState(t.clientX, t.clientY)) return;
@@ -318,6 +320,7 @@ export default function LiquidEther({
         this.hasUserControl = true;
       }
       onDocumentTouchMove(event: TouchEvent) {
+        if (Common.isMobile) return;
         if (event.touches.length !== 1) return;
         const t = event.touches[0];
         if (!this.updateHoverState(t.clientX, t.clientY)) return;
@@ -325,6 +328,7 @@ export default function LiquidEther({
         this.setCoords(t.clientX, t.clientY);
       }
       onTouchEnd() {
+        if (Common.isMobile) return;
         this.isHoverInside = false;
       }
       onDocumentLeave() {
@@ -1416,6 +1420,11 @@ export default function LiquidEther({
                     width: 100%;
                     height: 100%;
                     touch-action: none;
+                }
+                @media (max-width: 767px) {
+                    .liquid-ether-container {
+                        touch-action: auto;
+                    }
                 }
             `}</style>
     </div>
