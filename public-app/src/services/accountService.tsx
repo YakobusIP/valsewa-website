@@ -33,18 +33,6 @@ export async function fetchCarousel() {
   }
 }
 
-export async function fetchAccountById(
-  id: string
-): Promise<AccountEntity | null> {
-  try {
-    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/${id}`;
-    const response = await axios.get(url);
-    return response.data;
-  } catch {
-    return null;
-  }
-}
-
 export async function fetchAccountByCode(
   code: string
 ): Promise<AccountEntity | null> {

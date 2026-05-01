@@ -12,6 +12,7 @@ import { CarouselSlide } from "@/types/account.type";
 
 import { motion } from "framer-motion";
 import DailyDrop from "@/components/DailyDrop";
+import { DailyDropModal } from "@/components/dailydrop/DailyDropModal";
 import ExploreCatalog from "@/components/ExploreCatalog";
 import { useRouter } from "next/navigation";
 
@@ -27,6 +28,7 @@ export default function Home({ initialCarousel }: Props) {
   const [activeBrand, setActiveBrand] = useState<
     "valsewa" | "valjubel" | "valjoki"
   >("valsewa");
+  const [isDailyDropOpen, setIsDailyDropOpen] = useState(false);
 
   // Calculate and set scrollbar width as CSS variable
   useEffect(() => {
@@ -113,7 +115,7 @@ export default function Home({ initialCarousel }: Props) {
           transition={{ duration: 0.6, ease: "easeIn" }}
           className="snap-start snap-always px-8 lg:px-16 scroll-mt-12 pt-10"
         >
-          <DailyDrop />
+          <DailyDrop onOpen={() => setIsDailyDropOpen(true)} />
         </motion.section>
 
         <motion.section
@@ -195,6 +197,10 @@ export default function Home({ initialCarousel }: Props) {
           )}
         </motion.section> */}
       </main>
+      <DailyDropModal
+        open={isDailyDropOpen}
+        onClose={() => setIsDailyDropOpen(false)}
+      />
     </Fragment>
   );
 }

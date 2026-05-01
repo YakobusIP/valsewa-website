@@ -15,6 +15,7 @@ import { PublicDailyDrop } from "@/types/dailydrop.type";
 import { getRankImageUrl } from "@/lib/utils";
 
 import Image from "next/image";
+import Link from "next/link";
 
 // ── Lightweight spring interpolator ──────────────────────────────────────────
 function useSpringValue(stiffness = 300, damping = 40) {
@@ -115,11 +116,9 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
     ? drop.account.priceTier.code
     : `UNRATED - ${drop.account.priceTier.code}`;
 
-  const handleRent = (e: ReactMouseEvent) => {
-    e.stopPropagation();
-    const url = new URL(`/details/${drop.account.id}`, window.location.origin);
-    url.searchParams.set("mode", "dailydrop");
-    window.open(url.toString(), "_blank");
+  const rentStyle: CSSProperties = {
+    fontSize: Math.max(10, cardWidth * 0.055),
+    padding: `${Math.max(10, cardWidth * 0.06)}px`
   };
 
   return (
@@ -251,19 +250,27 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
         </div>
       </div>
 
-      {/* Rent button */}
+      {/* Rent link */}
       <div className="px-4 pb-4 pt-6 shrink-0">
-        <button
-          onClick={handleRent}
-          disabled={isSold}
-          className="w-full bg-[#C70515] hover:bg-[#a50411] disabled:bg-[#C70515]/40 text-white border border-white/70 font-antonio font-normal rounded-lg transition"
-          style={{
-            fontSize: Math.max(10, cardWidth * 0.055),
-            padding: `${Math.max(10, cardWidth * 0.06)}px`
-          }}
-        >
-          RENT ACCOUNT
-        </button>
+        {isSold ? (
+          <span
+            className="flex w-full items-center justify-center bg-[#C70515]/40 text-white border border-white/70 font-antonio font-normal rounded-lg cursor-not-allowed"
+            style={rentStyle}
+          >
+            RENT ACCOUNT
+          </span>
+        ) : (
+          <Link
+            href={`/accounts/${encodeURIComponent(drop.account.accountCode)}?mode=dailydrop`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="flex w-full items-center justify-center bg-[#C70515] hover:bg-[#a50411] text-white border border-white/70 font-antonio font-normal rounded-lg transition"
+            style={rentStyle}
+          >
+            RENT ACCOUNT
+          </Link>
+        )}
       </div>
 
       {/* SOLD overlay */}
