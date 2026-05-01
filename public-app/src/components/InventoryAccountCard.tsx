@@ -102,7 +102,7 @@ export default function InventoryAccountCard({
                   alt="Competitive"
                   width={48}
                   height={16}
-                  className="h-3 w-auto tablet:h-4"
+                  className="h-3 w-auto tablet:h-4 desktop:h-10"
                 />
               ) : (
                 <Image
@@ -110,7 +110,7 @@ export default function InventoryAccountCard({
                   alt="Unrated"
                   width={48}
                   height={16}
-                  className="h-3 w-auto tablet:h-4"
+                  className="h-3 w-auto tablet:h-4 desktop:h-10"
                 />
               )}
             </div>
