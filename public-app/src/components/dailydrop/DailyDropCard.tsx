@@ -109,12 +109,19 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
   const isSold = drop.isSold;
   const triangleSize = Math.round(cardWidth * 0.42);
   const discountFontSize = triangleSize * 0.22;
-  const thumbSize = Math.round(cardWidth * 0.8);
+  const thumbSize = Math.round(cardWidth * 0.85);
   const offsetY = triangleSize * 0.4;
   const offsetX = triangleSize * -0.2;
   const displayCode = drop.account.priceTier.code.includes("COMP -")
     ? drop.account.priceTier.code
     : `UNRATED - ${drop.account.priceTier.code}`;
+
+  const isCompTier = drop.account.priceTier.code.includes("COMP");
+  const tierBadgeSize = Math.max(18, Math.round(cardWidth * 0.08));
+  const tierStripHeight = Math.max(14, Math.round(tierBadgeSize * 0.85));
+  const tierPillOverlap = Math.round(tierBadgeSize * 0.42);
+  const tierPillPadLeft = Math.round(tierBadgeSize * 0.5) + 2;
+  const tierLabelSize = Math.max(10, Math.round(cardWidth * 0.045));
 
   const rentStyle: CSSProperties = {
     fontSize: Math.max(10, cardWidth * 0.055),
@@ -123,7 +130,7 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
 
   return (
     <div
-      className="relative w-full h-full rounded-[13px] overflow-hidden flex flex-col"
+      className="relative w-full rounded-[13px] overflow-hidden flex flex-col border border-white"
       style={{
         background: "linear-gradient(to bottom, #656565, #000000)",
         position: "relative",
@@ -193,65 +200,70 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
       </div>
 
       {/* Info row below thumbnail */}
-      <div className="flex items-center justify-between px-5 pb-1 gap-1 shrink-0">
+      <div className="flex items-center justify-between px-6 pb-1 gap-1 shrink-0">
         {/* Left: rank image + name + account code */}
         <div className="flex items-center gap-1 min-w-0 shrink">
           <Image
             src={getRankImageUrl(drop.account.accountRank)}
             alt={drop.account.accountRank}
-            width={20}
-            height={20}
+            width={24}
+            height={24}
             className="shrink-0"
             unoptimized
           />
           <span
             className="text-white font-antonio font-normal truncate"
             style={{
-              letterSpacing: "-0.005rem",
               fontWeight: "bold",
-              fontSize: Math.max(10, Math.round(cardWidth * 0.06))
+              fontSize: Math.max(10, Math.round(cardWidth * 0.045))
             }}
           >
             {drop.account.accountRank.toUpperCase()} |{" "}
             {drop.account.accountCode}
           </span>
         </div>
-        {/* Right: price tier */}
-        <div
-          className="relative flex items-center justify-center shrink-0"
-          style={{
-            width: Math.max(36, Math.round(cardWidth * 0.28)),
-            height: Math.max(18, Math.round(cardWidth * 0.12))
-          }}
-        >
-          {/* Background image */}
-          <Image
-            src={
-              drop.account.priceTier.code.includes("COMP")
-                ? "/tier-badge-comp.svg"
-                : "/tier-badge-unrated.svg"
-            }
-            alt="tier badge"
-            fill
-            className="object-contain"
-            unoptimized
-          />
-
-          {/* Text overlay */}
-          <span
-            className="relative z-10 text-white font-antonio font-semibold w-full text-right pr-1 pb-0.5"
+        {/* Right: price tier — short pill sits behind circle (ref: circle taller than text bar) */}
+        <div className="flex min-w-0 max-w-[62%] shrink items-center py-6">
+          <div
+            className="relative z-10 shrink-0 overflow-hidden rounded-full ring-1 ring-white/40"
+            style={{ width: tierBadgeSize, height: tierBadgeSize }}
+          >
+            <Image
+              src={
+                isCompTier ? "/tier-badge-comp.svg" : "/tier-badge-unrated.svg"
+              }
+              alt=""
+              fill
+              className="object-cover object-left"
+              sizes={`${tierBadgeSize}px`}
+              unoptimized
+            />
+          </div>
+          <div
+            className={`relative z-0 flex min-w-0 shrink items-center border border-white/25 rounded-r-sm rounded-l-sm ${
+              isCompTier
+                ? "bg-gradient-to-r from-[#2F40FF] to-[#61020A]"
+                : "bg-gradient-to-r from-[#909090] to-[#3C3C3C]"
+            }`}
             style={{
-              fontSize: Math.max(9, Math.round(cardWidth * 0.01)),
-              lineHeight: 1
+              height: tierStripHeight,
+              marginLeft: -tierPillOverlap,
+              paddingLeft: tierPillPadLeft,
+              paddingRight: Math.max(8, Math.round(cardWidth * 0.02))
             }}
           >
-            {displayCode}
-          </span>
+            <span
+              className="min-w-0 truncate text-white font-antonio font-semibold leading-none tracking-tight"
+              style={{ fontSize: tierLabelSize }}
+            >
+              {displayCode}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Rent link */}
-      <div className="px-4 pb-4 pt-6 shrink-0">
+      <div className="px-4 pb-4 shrink-0">
         {isSold ? (
           <span
             className="flex w-full items-center justify-center bg-[#C70515]/40 text-white border border-white/70 font-antonio font-normal rounded-lg cursor-not-allowed"
@@ -304,6 +316,10 @@ function CardFront() {
         className="object-cover"
         priority
       />
+      <div
+        className="pointer-events-none absolute inset-0 bg-[#0a0a0a]/50"
+        aria-hidden
+      />
     </div>
   );
 }
@@ -318,7 +334,6 @@ interface TiltElement extends HTMLDivElement {
 interface DailyDropCardProps {
   drop: PublicDailyDrop;
   width: number;
-  height: number;
   /** If true, card starts already flipped (previously opened) */
   initiallyFlipped?: boolean;
   onFlip?: () => void;
@@ -327,7 +342,6 @@ interface DailyDropCardProps {
 export function DailyDropCard({
   drop,
   width,
-  height,
   initiallyFlipped = false,
   onFlip
 }: DailyDropCardProps) {
@@ -402,21 +416,24 @@ export function DailyDropCard({
     setIsFlipped(initiallyFlipped);
   }, [initiallyFlipped]);
 
-  const faceStyle = (flipped: boolean): CSSProperties => ({
+  const backFaceStyle: CSSProperties = {
+    position: "relative",
+    backfaceVisibility: "hidden",
+    WebkitBackfaceVisibility: "hidden",
+    zIndex: isFlipped ? 1 : 0,
+    transition: `transform ${FLIP_DURATION_MS}ms cubic-bezier(0.23,1,0.32,1)`,
+    transform: isFlipped ? "rotateY(0deg)" : "rotateY(180deg)"
+  };
+
+  const frontFaceStyle: CSSProperties = {
     position: "absolute",
     inset: 0,
     backfaceVisibility: "hidden",
     WebkitBackfaceVisibility: "hidden",
-    zIndex: flipped === isFlipped ? 1 : 0,
+    zIndex: isFlipped ? 0 : 1,
     transition: `transform ${FLIP_DURATION_MS}ms cubic-bezier(0.23,1,0.32,1)`,
-    transform: flipped
-      ? isFlipped
-        ? "rotateY(0deg)"
-        : "rotateY(180deg)"
-      : isFlipped
-        ? "rotateY(-180deg)"
-        : "rotateY(0deg)"
-  });
+    transform: isFlipped ? "rotateY(-180deg)" : "rotateY(0deg)"
+  };
 
   return (
     <div
@@ -424,7 +441,6 @@ export function DailyDropCard({
       style={{
         perspective: "1200px",
         width,
-        height,
         cursor: isFlipped ? "default" : "pointer",
         flexShrink: 0
       }}
@@ -435,7 +451,6 @@ export function DailyDropCard({
         onMouseLeave={handleMouseLeave}
         style={{
           width: "100%",
-          height: "100%",
           transformStyle: "preserve-3d",
           borderRadius: 13,
           transition: glowing
@@ -450,17 +465,16 @@ export function DailyDropCard({
           style={{
             transformStyle: "preserve-3d",
             width: "100%",
-            height: "100%",
             position: "relative"
           }}
         >
-          {/* Front */}
-          <div style={faceStyle(false)}>
-            <CardFront />
-          </div>
-          {/* Back */}
-          <div style={faceStyle(true)}>
+          {/* Back — in normal flow so it sets the container height */}
+          <div style={backFaceStyle}>
             <CardBack drop={drop} cardWidth={width} />
+          </div>
+          {/* Front — absolute overlay */}
+          <div style={frontFaceStyle}>
+            <CardFront />
           </div>
         </div>
       </div>

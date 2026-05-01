@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  type RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { fetchPublicDailyDrops } from "@/services/dailydrop.service";
 import { fetchOperationalHours } from "@/services/setting.service";
@@ -144,24 +138,39 @@ function useMobileCardSize() {
   return size;
 }
 
-function useCardRowDimensions(
-  rowRef: RefObject<HTMLDivElement | null>,
-  numCards = 3,
-  gap = 20
-) {
-  const [dims, setDims] = useState({ w: 220, h: 340 });
+const MAX_CARD_WIDTH = 350;
+const CARD_GAP = 16;
+const CARD_COUNT = 3;
+const CONTENT_PADDING = 50;
+
+function useCardRowDimensions() {
+  const compute = (vw: number) => {
+    let containerW: number;
+    if (vw >= 1920) containerW = vw * (2 / 3);
+    else if (vw >= 1280) containerW = vw * (3 / 4);
+    else containerW = vw * (11 / 12);
+
+    const rowW = containerW - CONTENT_PADDING;
+    const w = Math.min(
+      MAX_CARD_WIDTH,
+      Math.floor((rowW - CARD_GAP * (CARD_COUNT - 1)) / CARD_COUNT)
+    );
+    return { w, h: Math.round(w * 1.55) };
+  };
+
+  const [dims, setDims] = useState(() =>
+    typeof window !== "undefined"
+      ? compute(window.innerWidth)
+      : { w: 200, h: 310 }
+  );
+
   useEffect(() => {
-    if (!rowRef.current) return;
-    const update = () => {
-      const rowW = rowRef.current?.offsetWidth ?? 660;
-      const w = Math.floor((rowW - gap * (numCards - 1)) / numCards);
-      setDims({ w, h: Math.round(w * 1.55) });
-    };
+    const update = () => setDims(compute(window.innerWidth));
     update();
-    const ro = new ResizeObserver(update);
-    ro.observe(rowRef.current);
-    return () => ro.disconnect();
-  }, [rowRef, numCards, gap]);
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   return dims;
 }
 
@@ -177,8 +186,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
     useState<OperationalHoursEntity | null>(null);
   const [loading, setLoading] = useState(true);
   const [openedSlots, setOpenedSlots] = useState<number[]>([]);
-  const cardRowRef = useRef<HTMLDivElement>(null);
-  const { w: cardW, h: cardH } = useCardRowDimensions(cardRowRef);
+  const { w: cardW, h: cardH } = useCardRowDimensions();
   const { w: mobileW, h: mobileH } = useMobileCardSize();
 
   const width = useWindowSize() ?? 1024;
@@ -306,7 +314,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
               {/* Content */}
               <div className="relative z-10 flex flex-col items-center px-6 pb-8">
                 {/* Countdown */}
-                <p className="font-instrumentSans text-white mb-2 flex items-center gap-2">
+                <p className="font-instrumentSans text-white mb-16 flex items-center gap-2">
                   <span style={{ fontWeight: 600, fontSize: 16 }}>
                     OFFER ENDS IN
                   </span>
@@ -316,10 +324,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
                 </p>
 
                 {/* Cards — each ~1/4 modal width */}
-                <div
-                  ref={cardRowRef}
-                  className="flex items-center justify-center gap-5 w-full"
-                >
+                <div className="flex items-center justify-center gap-4 w-full">
                   {displayDrops.map((drop, i) => {
                     if (!drop) {
                       return (
@@ -336,7 +341,6 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
                         key={drop.slot}
                         drop={drop}
                         width={cardW}
-                        height={cardH}
                         initiallyFlipped={isOpened}
                         onFlip={() => handleFlip(drop.slot)}
                       />
@@ -347,13 +351,11 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
             </div>
           </div>
 
-          {/* ── MOBILE (< md) ───────────────────────────────────────────────── */}
+          {/* ── MOBILE (< md) — carousel ───────────────────────────────────── */}
           <div
             className="md:hidden relative rounded-2xl overflow-hidden"
             style={{
               width: "95vw",
-              minHeight: "80vh",
-              height: "auto",
               maxHeight: "90vh",
               backgroundImage: "url('/daily-drop/daily-drop-background.svg')",
               backgroundSize: "cover",
@@ -378,7 +380,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
             </DialogPrimitive.Close>
 
             {/* Content */}
-            <div className="relative z-10 flex flex-col items-center h-full pt-4">
+            <div className="relative z-10 flex flex-col items-center pt-4 pb-8">
               {/* Header SVG — contained inside the mobile modal */}
               <div className="flex justify-center w-full shrink-0 mb-3">
                 <Image
@@ -402,7 +404,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
               </p>
 
               {/* Cards carousel */}
-              <div className="w-full flex-1 flex items-center overflow-visible md:overflow-hidden">
+              <div className="w-full flex items-center overflow-hidden">
                 {loading ? (
                   <div className="flex gap-3 w-full justify-center">
                     {[0, 1, 2].map((i) => (
@@ -425,17 +427,14 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
                         return (
                           <CarouselItem
                             key={drop.slot}
-                            className="pl-3 basis-[85%] sm:basis-[78%]"
+                            className="min-w-min shrink-0 grow-0 basis-auto pl-3 w-max py-4"
                           >
-                            <div className="flex justify-center">
-                              <DailyDropCard
-                                drop={drop}
-                                width={mobileW}
-                                height={mobileH}
-                                initiallyFlipped={isOpened}
-                                onFlip={() => handleFlip(drop.slot)}
-                              />
-                            </div>
+                            <DailyDropCard
+                              drop={drop}
+                              width={mobileW}
+                              initiallyFlipped={isOpened}
+                              onFlip={() => handleFlip(drop.slot)}
+                            />
                           </CarouselItem>
                         );
                       })}
