@@ -94,7 +94,7 @@ export type PaymentEntity = {
 };
 
 export type PaymentWithBookingEntity = PaymentEntity & {
-  booking: BookingEntity;
+  booking: BookingWithAccountEntity;
 };
 
 export type CreateBookingRequest = {

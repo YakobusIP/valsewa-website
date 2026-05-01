@@ -18,7 +18,13 @@ import {
   NotFoundError,
   PrismaUniqueError
 } from "../lib/error";
-import { addHours, addMinutes, isOutsideOperationalHours, parseDurationToHours, WIB_TZ } from "../lib/utils";
+import {
+  addHours,
+  addMinutes,
+  isOutsideOperationalHours,
+  parseDurationToHours,
+  WIB_TZ
+} from "../lib/utils";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import utc from "dayjs/plugin/utc";
@@ -404,7 +410,15 @@ export class BookingService {
       const payment = await prisma.payment.findUnique({
         where: { id: paymentId },
         include: {
-          booking: true
+          booking: {
+            include: {
+              account: {
+                select: {
+                  accountCode: true
+                }
+              }
+            }
+          }
         }
       });
 
@@ -449,7 +463,9 @@ export class BookingService {
     dailyDropDiscountAmount: number = 0
   ) => {
     const mainValue = unratedPrice * quantity;
-    const othersValue = isCompetitive ? (compPrice - unratedPrice) * quantity : 0;
+    const othersValue = isCompetitive
+      ? (compPrice - unratedPrice) * quantity
+      : 0;
 
     let voucherType = null;
     let voucherAmount = null;
@@ -1049,7 +1065,7 @@ export class BookingService {
 
       const existingDailyDropDiscount = booking.voucherName
         ? 0
-        : booking.discount ?? 0;
+        : (booking.discount ?? 0);
 
       const {
         voucherType,
@@ -1211,7 +1227,9 @@ export class BookingService {
     try {
       let payment = await prisma.payment.findUnique({
         where: { id: paymentId },
-        include: { booking: true }
+        include: {
+          booking: { include: { account: { select: { accountCode: true } } } }
+        }
       });
 
       if (
@@ -1808,14 +1826,13 @@ export class BookingService {
             }
           }
 
-            await tx.customer.update({
-              where: { id: customer.id },
-              data: {
-                currentStreak: newStreak,
-                lastEligibleRent: tomorrowEnd
-              }
-            });
-          
+          await tx.customer.update({
+            where: { id: customer.id },
+            data: {
+              currentStreak: newStreak,
+              lastEligibleRent: tomorrowEnd
+            }
+          });
         }
       }
     }
@@ -1970,7 +1987,9 @@ export class BookingService {
   };
 
   private mapPaymentWithBookingDataToPaymentResponse = (
-    payment: Payment & { booking: Booking | null }
+    payment: Payment & {
+      booking: (Booking & { account: Pick<Account, "accountCode"> }) | null;
+    }
   ): PaymentResponse => {
     let status = payment.status;
     if (
@@ -1998,7 +2017,8 @@ export class BookingService {
       refundedAt: payment.refundedAt,
       booking: {
         ...payment.booking,
-        readableNumber: payment.booking?.readableNumber.toString()
+        readableNumber: payment.booking?.readableNumber.toString(),
+        accountCode: payment.booking?.account?.accountCode
       }
     };
   };
