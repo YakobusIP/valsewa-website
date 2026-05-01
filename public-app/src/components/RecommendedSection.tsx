@@ -74,12 +74,16 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
     }
 
     return (
-      <Link href={`/accounts/${account.accountCode}`} target="_blank" className="cursor-pointer">
+      <Link
+        href={`/accounts/${account.accountCode}`}
+        target="_blank"
+        className="cursor-pointer"
+      >
         <div
           className={cn(
             "group relative rounded-xl overflow-auto lg:overflow-hidden transition-all duration-300 hover:scale-[1.02]",
-            "aspect-square",
-            forCarousel && "min-w-[320px]"
+            "aspect-[7/8]",
+            forCarousel && "min-w-[250px]"
           )}
         >
           {/* Background Image */}
@@ -119,7 +123,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
 
             {/* Big Letter Grade & Stats */}
             <div className="flex items-end mt-2 gap-8">
-              <span className="text-5xl md:text-7xl font-black italic leading-none tracking-tighter text-white font-antonio">
+              <span className="text-7xl font-black italic leading-none tracking-tighter text-white font-antonio">
                 {letterGrade}
               </span>
 
@@ -163,14 +167,11 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
 
   const renderDiscoverMore = (forCarousel = false) => (
     <div
-      className={cn("aspect-square", forCarousel ? "min-w-[320px]" : "w-full")}
+      className={cn("aspect-[7/8]", forCarousel ? "min-w-[250px]" : "w-full")}
     >
       <Link href="/search" onClick={onSeeMore} target="_blank">
-        <button
-          className="group relative w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#770000] to-black border border-white/10 flex flex-col items-start justify-center text-left transition-all duration-300 hover:scale-[1.02]"
-        >
+        <button className="group relative w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#770000] to-black border border-white/10 flex flex-col items-start justify-center text-left transition-all duration-300 hover:scale-[1.02]">
           <div className="relative z-10 p-6 flex flex-row justify-between items-center w-full">
-
             <h3 className="text-4xl font-bold text-white mb-2 leading-tight">
               Discover
               <br />
@@ -184,7 +185,6 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
           {/* <div className="absolute inset-0 bg-red-600/20 blur-3xl opacity-0 group-hover:opacity-50 transition-opacity duration-500" /> */}
         </button>
       </Link>
-
     </div>
   );
 
