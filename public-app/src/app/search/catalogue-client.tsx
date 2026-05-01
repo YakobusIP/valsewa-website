@@ -153,6 +153,17 @@ export default function CatalogueClient({
     sortOption
   ]);
 
+  // Available accounts first, unavailable pushed to bottom (stable within groups)
+  const sortedAccounts = useMemo<AccountEntity[]>(() => {
+    const available: AccountEntity[] = [];
+    const unavailable: AccountEntity[] = [];
+    accounts.forEach((acc) => {
+      if (acc.availabilityStatus === "AVAILABLE") available.push(acc);
+      else unavailable.push(acc);
+    });
+    return [...available, ...unavailable];
+  }, [accounts]);
+
   // Unique skins from fetched accounts (fallback for skin search when not authenticated)
   const fallbackSkins = useMemo<Skin[]>(() => {
     const map = new Map<number, Skin>();
@@ -232,7 +243,7 @@ export default function CatalogueClient({
       {/* Accounts section */}
       <AccountsSection
         ref={accountsSectionRef}
-        accounts={accounts}
+        accounts={sortedAccounts}
         isLoading={isLoading}
         sortOption={sortOption}
         onSortChange={setSortOption}

@@ -63,7 +63,7 @@ export function FilterBottomSheet({
     <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
       <SheetContent
         side="bottom"
-        className="h-[calc(100vh-64px)] bg-[#0F0F0F] border-none rounded-t-3xl p-0 md:hidden"
+        className="h-[calc(100vh)] bg-[#0F0F0F] border-none rounded-t-3xl p-0 md:hidden overflow-y-auto"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 shrink-0">
