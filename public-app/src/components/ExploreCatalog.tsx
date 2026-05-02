@@ -54,14 +54,22 @@ export default function ExploreCatalog() {
             <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALFORUM
           </span>
-          <span className="flex items-center gap-2 font-antonio">
+          <Link
+            href="https://www.instagram.com/valjubel.vf?igsh=a2M3d2ludHpsaWFl"
+            target="_blank"
+            className="flex items-center gap-2 font-antonio cursor-pointer"
+          >
             <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALJUBEL
-          </span>
-          <span className="flex items-center gap-2 font-antonio">
+          </Link>
+          <Link
+            href="https://www.instagram.com/valjoki?igsh=MW5jZG5pb24yaGh1dA=="
+            target="_blank"
+            className="flex items-center gap-2 font-antonio cursor-pointer"
+          >
             <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALJOKI
-          </span>
+          </Link>
         </div>
       </div>
     </section>
