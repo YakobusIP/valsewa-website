@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 
 import { customerService } from "@/services/customer.service";
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
+
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -15,7 +21,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import StreakCountdown from "./StreakCountdown";
 
 interface NavbarHomeMobileProps {
   activeBrand: "valsewa" | "valjubel" | "valjoki";
@@ -52,6 +58,9 @@ const NavbarHomeMobile = ({
   const [isOpen, setIsOpen] = useState(false);
   const { booking } = useActiveBooking(customerId?.toString() ?? "");
   const [streak, setStreak] = useState<number | null>(null);
+  const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
+  const [isCountdownVisible, setIsCountdownVisible] = useState(false);
+  const [streakHintOpen, setStreakHintOpen] = useState(false);
 
   const bookingReserved = booking?.find(
     (i) =>
@@ -67,14 +76,29 @@ const NavbarHomeMobile = ({
   useEffect(() => {
     if (!isAuthenticated) {
       setStreak(null);
+      setLastEligibleRent(null);
+      setIsCountdownVisible(false);
+      setStreakHintOpen(false);
       return;
     }
 
     customerService
       .getMyStreak()
-      .then((data) => setStreak(data.currentStreak))
-      .catch(() => setStreak(null));
+      .then((data) => {
+        setStreak(data.currentStreak);
+        setLastEligibleRent(
+          data.lastEligibleRent ? new Date(data.lastEligibleRent) : null
+        );
+      })
+      .catch(() => {
+        setStreak(null);
+        setLastEligibleRent(null);
+      });
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!isCountdownVisible) setStreakHintOpen(false);
+  }, [isCountdownVisible]);
 
   return (
     <div
@@ -124,16 +148,64 @@ const NavbarHomeMobile = ({
               />
             </div>
           </Link>
-          {/* Streak */}
+          {/* Streak — Popover hint only while countdown is visible (tap-friendly vs tooltip) */}
           {isAuthenticated && streak !== null && (
-            <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
-              <Image
-                src="/header/streak-mobile.svg"
-                alt="Streak"
-                width={18}
-                height={18}
-              />
-            </div>
+            <>
+              {isCountdownVisible ? (
+                <Popover open={streakHintOpen} onOpenChange={setStreakHintOpen}>
+                  <StreakCountdown
+                    lastEligibleRent={lastEligibleRent}
+                    onVisibilityChange={setIsCountdownVisible}
+                    className="hidden"
+                  />
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Streak timer — tap for details"
+                      className="flex items-center justify-center gap-0.5 w-10 h-10 px-1 border border-white/30 rounded-lg hover:border-white transition"
+                    >
+                      <Image
+                        src="/header/time run out icon.svg"
+                        alt=""
+                        width={16}
+                        height={16}
+                        className="shrink-0"
+                      />
+                      <span className="text-white text-xs font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                        {streak}
+                      </span>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-2 bg-neutral-900 border border-white/30 text-white"
+                    align="center"
+                    sideOffset={8}
+                  >
+                    <StreakCountdown
+                      lastEligibleRent={lastEligibleRent}
+                      className="text-white text-sm font-bold tabular-nums text-center block"
+                    />
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
+                  <StreakCountdown
+                    lastEligibleRent={lastEligibleRent}
+                    onVisibilityChange={setIsCountdownVisible}
+                    className="hidden"
+                  />
+                  <Image
+                    src="/header/streak icon.svg"
+                    alt="Streak"
+                    width={18}
+                    height={18}
+                  />
+                  <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                    {streak}
+                  </span>
+                </div>
+              )}
+            </>
           )}
 
           {/* SIGN IN */}

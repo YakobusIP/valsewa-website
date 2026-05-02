@@ -9,9 +9,7 @@ type ProgressStepperProps = {
   stepIdx: number;
 };
 
-function ProgressStepper({
-  stepIdx,
-}: ProgressStepperProps) {
+function ProgressStepper({ stepIdx }: ProgressStepperProps) {
   const isActive = useCallback((idx: number) => idx <= stepIdx, [stepIdx]);
 
   return (
@@ -27,7 +25,7 @@ function ProgressStepper({
           <div
             className={`flex items-center justify-center ${isActive(0) ? "" : "opacity-50"}`}
           >
-            <CheckIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-black bg-white rounded-full" />
+            <CheckIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-white bg-[#C70515] rounded-full" />
           </div>
 
           <div className="flex-1 h-px bg-gray-600" />
@@ -35,7 +33,7 @@ function ProgressStepper({
           <div
             className={`flex items-center justify-center ${isActive(1) ? "" : "opacity-50"}`}
           >
-            <MoreHorizontal className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-black bg-white rounded-full" />
+            <MoreHorizontal className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-white bg-[#C70515] rounded-full" />
           </div>
 
           <div className="flex-1 h-px bg-gray-700" />
@@ -43,7 +41,7 @@ function ProgressStepper({
           <div
             className={`flex items-center justify-center ${isActive(2) ? "" : "opacity-50"}`}
           >
-            <DollarSign className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-black bg-white rounded-full" />
+            <DollarSign className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 p-0.5 sm:p-1 text-white bg-[#C70515] rounded-full" />
           </div>
         </div>
         <div className="grid items-center grid-cols-3 font-semibold text-white text-[10px] sm:text-xs lg:text-sm">

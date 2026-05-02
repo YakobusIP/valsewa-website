@@ -38,7 +38,7 @@ export default function CancelBookingButton({
           </svg>
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent className="bg-black border border-red-500">
+      <AlertDialogContent className="bg-black border border-[#C70515]">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-2xl text-white uppercase mb-4">
             Confirm Cancellation
@@ -53,7 +53,7 @@ export default function CancelBookingButton({
             Keep Reservation
           </AlertDialogCancel>
           <AlertDialogAction
-            className="bg-red-500 text-white"
+            className="bg-[#C70515] text-white"
             onClick={cancelBooking}
           >
             {isLoadingCancelBooking && (

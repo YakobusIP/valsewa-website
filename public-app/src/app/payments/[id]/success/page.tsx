@@ -126,10 +126,10 @@ export default function PaymentSuccessPage() {
 
   return (
     <main className="min-h-screen text-white bg-black">
-      <div className="relative max-lg:hidden">
+      <div className="relative max-tablet:hidden">
         <Navbar />
       </div>
-      <div className="lg:hidden">
+      <div className="tablet:hidden">
         <NavbarMobile />
       </div>
 

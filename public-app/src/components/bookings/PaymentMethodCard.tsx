@@ -28,15 +28,17 @@ function PaymentMethodCard({
       className={cn(
         "group w-full h-full aspect-square rounded-md cursor-pointer border-2 transition-all",
         className,
-        active
-          ? "border-red-500"
-          : "border-white hover:border-red-500"
+        active ? "border-[#C70515]" : "border-white hover:border-[#C70515]"
       )}
     >
       <div
         className={cn(
           "w-full h-full flex items-center justify-center rounded-md transition-all",
-          active ? "grayscale-0" : "grayscale group-hover:grayscale-0"
+          active
+            ? label === "QRIS"
+              ? "text-white"
+              : "grayscale-0"
+            : "grayscale group-hover:grayscale-0"
         )}
       >
         {children}

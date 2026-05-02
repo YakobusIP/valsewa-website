@@ -191,10 +191,10 @@ export default function BookingDetailPage() {
 
   return (
     <main className="min-h-screen flex text-white bg-black">
-      <div className="relative max-lg:hidden">
+      <div className="relative max-tablet:hidden">
         <Navbar />
       </div>
-      <div className="lg:hidden">
+      <div className="tablet:hidden">
         <NavbarMobile
           onBack={handleCancelBooking}
           isLoading={isLoadingCancelBooking}
@@ -227,8 +227,8 @@ export default function BookingDetailPage() {
               )}
             </div>
 
-            <div className="hidden lg:flex lg:flex-row gap-8 lg:gap-5 mt-6 sm:mt-8 lg:mt-10 lg:px-20">
-              <div className="flex flex-col w-full space-y-3 sm:space-y-4 lg:space-y-5">
+            <div className="hidden desktop:flex desktop:flex-row gap-8 desktop:gap-5 mt-6 sm:mt-8 desktop:mt-10 desktop:px-20">
+              <div className="flex flex-col w-full space-y-3 sm:space-y-4 desktop:space-y-5">
                 <div className="bg-[#1C1C1C]">
                   <BookingDetail booking={booking} />
                 </div>
@@ -253,7 +253,7 @@ export default function BookingDetailPage() {
               </div>
             </div>
 
-            <div className="flex flex-col lg:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
+            <div className="flex flex-col desktop:hidden gap-6 sm:gap-8 mt-6 sm:mt-8">
               <ProgressStepper stepIdx={1} />
               <div className="bg-[#1C1C1C]">
                 <BookingDetail booking={booking} />

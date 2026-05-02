@@ -64,6 +64,7 @@ export function CatalogueNavbar({
   const [streak, setStreak] = useState<number | null>(null);
   const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
   const [isCountdownVisible, setIsCountdownVisible] = useState(false);
+  const [streakHintOpen, setStreakHintOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -88,6 +89,8 @@ export function CatalogueNavbar({
     if (!isAuthenticated) {
       setStreak(null);
       setLastEligibleRent(null);
+      setIsCountdownVisible(false);
+      setStreakHintOpen(false);
       return;
     }
 
@@ -105,18 +108,9 @@ export function CatalogueNavbar({
       });
   }, [isAuthenticated]);
 
-
   useEffect(() => {
-    if (!isAuthenticated) {
-      setStreak(null);
-      return;
-    }
-
-    customerService
-      .getMyStreak()
-      .then((data) => setStreak(data.currentStreak))
-      .catch(() => setStreak(null));
-  }, [isAuthenticated]);
+    if (!isCountdownVisible) setStreakHintOpen(false);
+  }, [isCountdownVisible]);
 
 
   return (
@@ -130,7 +124,7 @@ export function CatalogueNavbar({
       >
         <div className="mx-auto max-w-full h-[84px] md:h-[80px] flex items-center justify-between">
           <div className="flex items-center gap-[var(--hero-logo-switcher-gap)] pl-[var(--hero-nav-left-offset)]">
-            <figure className="relative w-[var(--hero-valforum-logo-width)]">
+            <figure className="relative w-[var(--hero-valforum-logo-width)] pr-3">
               <Image
                 src="/header/Logo Header Valforum.png"
                 alt="logo"
@@ -301,7 +295,7 @@ export function CatalogueNavbar({
           isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
         }`}
       >
-        <div className="mx-auto max-w-[1920px] h-[64px] flex items-center justify-between px-4">
+        <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-8 gap-1">
           {/* CENTER: brand logo */}
           <div className="flex items-center justify-center flex-1">
             <figure className="sm:w-[210px] w-[150px]">
@@ -317,7 +311,7 @@ export function CatalogueNavbar({
           </div>
 
           {/* RIGHT: Top Up + auth */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-1">
             <Link href="https://valforum.com/top-up">
               <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
                 <Image
@@ -329,16 +323,64 @@ export function CatalogueNavbar({
               </div>
             </Link>
 
-            {/* Streak */}
+            {/* Streak — popover with timer only while countdown active (mobile) */}
             {isAuthenticated && streak !== null && (
-              <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
-                <Image
-                  src="/header/streak-mobile.svg"
-                  alt="Streak"
-                  width={18}
-                  height={18}
-                />
-              </div>
+              <>
+                {isCountdownVisible ? (
+                  <Popover open={streakHintOpen} onOpenChange={setStreakHintOpen}>
+                    <StreakCountdown
+                      lastEligibleRent={lastEligibleRent}
+                      onVisibilityChange={setIsCountdownVisible}
+                      className="hidden"
+                    />
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Streak timer — tap for details"
+                        className="flex items-center justify-center gap-0.5 w-10 h-10 px-1 border border-white/30 rounded-lg hover:border-white transition"
+                      >
+                        <Image
+                          src="/header/time run out icon.svg"
+                          alt=""
+                          width={16}
+                          height={16}
+                          className="shrink-0"
+                        />
+                        <span className="text-white text-xs font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                          {streak}
+                        </span>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-auto p-2 bg-neutral-900 border border-white/30 text-white"
+                      align="center"
+                      sideOffset={8}
+                    >
+                      <StreakCountdown
+                        lastEligibleRent={lastEligibleRent}
+                        className="text-white text-sm font-bold tabular-nums text-center block"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                ) : (
+                  <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
+                    <StreakCountdown
+                      lastEligibleRent={lastEligibleRent}
+                      onVisibilityChange={setIsCountdownVisible}
+                      className="hidden"
+                    />
+                    <Image
+                      src="/header/streak icon.svg"
+                      alt="Streak"
+                      width={18}
+                      height={18}
+                    />
+                    <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                      {streak}
+                    </span>
+                  </div>
+                )}
+              </>
             )}
 
             {!isAuthenticated && (

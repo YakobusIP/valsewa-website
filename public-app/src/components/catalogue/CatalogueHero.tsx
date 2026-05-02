@@ -3,8 +3,7 @@
 import { RefObject } from "react";
 
 import HeroNotchCutoutMask from "@/components/hero/HeroNotchCutoutMask";
-
-import { cn } from "@/lib/utils";
+import MobileBrandSwitcher from "@/components/hero/MobileBranchSwitcher";
 
 import Image from "next/image";
 
@@ -17,7 +16,9 @@ interface CatalogueHeroProps {
 }
 
 // ── Mobile paths (viewBox 400×600, <md) ──────────────────────────────────────
-// Left tab — valsewa (from HeroNotchShapeMobileLeft)
+// Geometry mirrors HeroNotchShapeMobileLeft/Middle/Right so the cutout matches
+// the home page chrome, but rendered as a mask so the bg image shows through.
+
 const MOBILE_LEFT_PATH = `
   M 12 600 Q 0 600 0 588
   L 0 12 Q 0 0 12 0
@@ -27,9 +28,6 @@ const MOBILE_LEFT_PATH = `
   L 400 588 Q 400 600 388 600 Z
 `;
 
-// Middle tab — valjubel (from HeroNotchShapeMobileMiddle)
-// W=400,H=600,r=16,topY=65,tabW=130,tabH=65,tabR=16
-// tabStartX=135, tabEndX=265, safeTabR=16, safeTopY=65
 const MOBILE_MIDDLE_PATH = `
   M 16 600 Q 0 600 0 584
   L 0 81 Q 0 65 16 65
@@ -41,9 +39,6 @@ const MOBILE_MIDDLE_PATH = `
   L 400 584 Q 400 600 384 600 Z
 `;
 
-// Right tab — valjoki (from HeroNotchShapeMobileRight)
-// W=400,H=600,r=12,topY=65,tabW=120,tabH=65,tabR=12
-// tabEndX=388, tabStartX=268, tabTopY=0, safeTabR=12
 const MOBILE_RIGHT_PATH = `
   M 12 600 Q 0 600 0 588
   L 0 77 Q 0 65 12 65
@@ -61,12 +56,6 @@ function getMobilePath(brand: BrandType) {
 
 const OUTER_BG = "#000000";
 
-const BRANDS: { id: BrandType; logo: string }[] = [
-  { id: "valsewa", logo: "/header/VALSEWA.png" },
-  { id: "valjubel", logo: "/header/VALJUBEL.png" },
-  { id: "valjoki", logo: "/header/VALJOKI.png" }
-];
-
 export function CatalogueHero({
   activeBrand,
   setActiveBrand,
@@ -77,7 +66,7 @@ export function CatalogueHero({
   return (
     <section className="relative h-[600px] md:h-screen bg-black">
       {/* ── Hero image + gradient + notch masks (clipped layer) ─────────── */}
-      <div className="absolute top-[64px] md:top-[10px] inset-x-4 md:inset-x-5 lg:inset-x-8 bottom-0 overflow-hidden pointer-events-none">
+      <div className="absolute top-[68px] md:top-[18px] inset-x-4 md:inset-x-5 lg:inset-x-8 bottom-0 overflow-hidden pointer-events-none">
         <Image
           src="/hero-catalogue.svg"
           fill
@@ -89,7 +78,7 @@ export function CatalogueHero({
         {/* Desktop / tablet gradient */}
         <div className="hidden md:block absolute inset-0 bg-gradient-to-br from-black/100 via-black/60 to-[#C70515]/50 pointer-events-none" />
 
-        {/* Mobile overlay */}
+        {/* Mobile red overlay (over bg image, inside notch body) */}
         <div className="md:hidden absolute inset-0 bg-[#571010]/80 pointer-events-none" />
 
         <HeroNotchCutoutMask
@@ -97,7 +86,8 @@ export function CatalogueHero({
           maskId="catalogueDesktopTabletMask"
         />
 
-        {/* Mobile notch mask (<md) — changes with activeBrand */}
+        {/* Mobile notch mask (<md) — paints OUTER_BG outside the notch body
+            so the bg image + red overlay show through inside */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none md:hidden"
           viewBox="0 0 400 600"
@@ -124,7 +114,7 @@ export function CatalogueHero({
         </svg>
 
         {/* Centered foreground content */}
-        <div className="relative z-30 flex flex-col items-center justify-center h-full text-center px-4 pointer-events-auto">
+        <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pointer-events-none">
           <Image
             src="/header/VALSEWA.png"
             alt="VALSEWA"
@@ -146,38 +136,12 @@ export function CatalogueHero({
         </div>
       </div>
 
-      <div className="md:hidden absolute top-[64px] left-0 right-0 z-40 px-5 pt-2">
-        <div className="flex items-stretch w-full gap-2">
-          {BRANDS.map((brand) => {
-            const isActive = activeBrand === brand.id;
-            return (
-              <button
-                key={brand.id}
-                onClick={() => setActiveBrand(brand.id)}
-                className={cn(
-                  "flex-1 flex items-center justify-center py-2.5 rounded-md transition",
-                  isActive ? "bg-black shadow-lg" : ""
-                )}
-                style={
-                  isActive
-                    ? undefined
-                    : { backgroundColor: "rgba(249,250,251,0.1)" }
-                }
-              >
-                <Image
-                  src={brand.logo}
-                  alt={brand.id.toUpperCase()}
-                  width={200}
-                  height={70}
-                  className={cn(
-                    "object-contain w-[70px] sm:w-[90px] h-auto",
-                    !isActive && "grayscale"
-                  )}
-                />
-              </button>
-            );
-          })}
-        </div>
+      {/* MOBILE: Brand Switcher - absolutely positioned at top to align with notch */}
+      <div className="md:hidden absolute top-0 left-0 right-0 z-40 px-4 pt-2">
+        <MobileBrandSwitcher
+          activeBrand={activeBrand}
+          setActiveBrand={setActiveBrand}
+        />
       </div>
 
       {/* Sentinel for IntersectionObserver */}

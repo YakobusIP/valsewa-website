@@ -16,7 +16,10 @@ import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/useToast";
 
-import { BookingWithAccountEntity } from "@/types/booking.type";
+import {
+  BOOKING_STATUS,
+  BookingWithAccountEntity
+} from "@/types/booking.type";
 
 import { calculateDaysRented, calculateTimeRemaining, cn } from "@/lib/utils";
 
@@ -78,6 +81,15 @@ export default function Dashboard() {
       title: "Copied",
       description: "Copied to Clipboard!"
     });
+  };
+
+  const resumeHoldBooking = (booking: BookingWithAccountEntity) => {
+    const payments = booking.payments;
+    if (payments?.length) {
+      router.push(`/payments/${payments[0].id}`);
+    } else {
+      router.push(`/bookings/${booking.id}`);
+    }
   };
 
   return (
@@ -199,17 +211,31 @@ export default function Dashboard() {
                               : "")}
                       </TableCell>
                       <TableCell className="text-center lg:text-lg text-sm whitespace-nowrap px-12 text-nowrap">
-                        <span
-                          className={cn(
-                            "inline-flex items-center self-center justify-center px-3 py-2 rounded-md lg:text-lg text-sm",
-                            getStatusStyle(booking)
-                          )}
-                        >
-                          {isOnGoingOrder(booking)
-                            ? "On Going Order"
-                            : booking.status.charAt(0).toUpperCase() +
+                        {booking.status === BOOKING_STATUS.HOLD ? (
+                          <button
+                            type="button"
+                            onClick={() => resumeHoldBooking(booking)}
+                            className={cn(
+                              "inline-flex items-center self-center justify-center px-3 py-2 rounded-md lg:text-lg text-sm cursor-pointer hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C70515] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F]",
+                              getStatusStyle(booking)
+                            )}
+                          >
+                            {booking.status.charAt(0).toUpperCase() +
                               booking.status.slice(1).toLowerCase()}
-                        </span>
+                          </button>
+                        ) : (
+                          <span
+                            className={cn(
+                              "inline-flex items-center self-center justify-center px-3 py-2 rounded-md lg:text-lg text-sm",
+                              getStatusStyle(booking)
+                            )}
+                          >
+                            {isOnGoingOrder(booking)
+                              ? "On Going Order"
+                              : booking.status.charAt(0).toUpperCase() +
+                                booking.status.slice(1).toLowerCase()}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm px-12 text-nowrap">
                         {booking.status == "RESERVED" &&

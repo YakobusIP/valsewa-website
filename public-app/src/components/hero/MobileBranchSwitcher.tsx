@@ -38,7 +38,7 @@ export default function MobileBrandSwitcher({
         onClick={() => setActiveBrand("valjubel")}
         className={`${baseButtonClass} ${
           activeBrand === "valjubel"
-            ? "bg-[#C70515] shadow-lg shadow-red-900/50"
+            ? "bg-[#770000] shadow-lg shadow-red-900/50"
             : "bg-white/10 hover:bg-white/20"
         }`}
       >
@@ -56,7 +56,7 @@ export default function MobileBrandSwitcher({
         onClick={() => setActiveBrand("valjoki")}
         className={`${baseButtonClass} ${
           activeBrand === "valjoki"
-            ? "bg-[#C70515] shadow-lg shadow-red-900/50"
+            ? "bg-[#770000] shadow-lg shadow-red-900/50"
             : "bg-white/10 hover:bg-white/20"
         }`}
       >
