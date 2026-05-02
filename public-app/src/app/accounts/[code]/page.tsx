@@ -339,7 +339,7 @@ export default function AccountDetailsPage() {
             </div>
 
             {!showLogin && (
-                <div className="hidden lg:block fixed top-32 left-24 items-center mb-6 z-50">
+                <div className="hidden desktop:block fixed top-32 left-24 items-center mb-6 z-50">
                     <Link
                         href="/"
                         className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
@@ -828,6 +828,28 @@ export default function AccountDetailsPage() {
                     </div>
                 </div>
                 <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8 desktop:hidden">
+                    <div className="col-span-12  hidden tablet:flex desktop:hidden">
+                        <Link
+                            href="/"
+                            className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
+                        >
+                            {/* Solid Left Triangle Custom SVG for precise look */}
+                            <svg
+                                width="10"
+                                height="12"
+                                viewBox="0 0 10 12"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                                className=""
+                            >
+                                <path d="M0 6L9.75 11.6292L9.75 0.370835L0 6Z" fill="white" />
+                            </svg>
+                            <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
+                                ALL ACCOUNTS
+                            </span>
+                        </Link>
+                    </div>
+
                     {/* LEFT — GALLERY */}
                     <div className="col-span-12">
                         {/* MOBILE CAROUSEL (< sm) */}
@@ -848,8 +870,9 @@ export default function AccountDetailsPage() {
                                         </CarouselItem>
                                     ))}
                                 </CarouselContent>
-                                <CarouselPrevious className="left-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent" />
-                                <CarouselNext className="right-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent" />
+                                <CarouselPrevious className="left-2 w-12 h-12 [&_svg]:w-8 [&_svg]:h-8 text-white bg-neutral-800 border-none shadow-none hover:bg-black hover:text-white" />
+
+                                <CarouselNext className="right-2 w-12 h-12 [&_svg]:w-8 [&_svg]:h-8 text-white bg-neutral-800 border-none shadow-none hover:bg-black hover:text-white" />
                             </Carousel>
                         </div>
                     </div>
