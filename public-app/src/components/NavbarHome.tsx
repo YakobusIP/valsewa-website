@@ -183,7 +183,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               <StreakCountdown
                 lastEligibleRent={lastEligibleRent}
                 onVisibilityChange={setIsCountdownVisible}
-                className="text-white text-xs font-bold mr-1"
+                className="text-white text-sm font-bold mr-1"
               />
 
               {/* ICON SWITCH */}
@@ -191,8 +191,8 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                 <Image
                   src="/header/time run out icon.svg"
                   alt="timer"
-                  width={20}
-                  height={20}
+                  width={16}
+                  height={18}
                 />
               ) : (
                 <Image
@@ -251,7 +251,6 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                     alt="User"
                     width={18}
                     height={18}
-                    className="max-desktop:w-[12px] max-desktop:h-[12px]"
                   />
                   <span className="text-white text-xs desktop:text-sm font-semibold">
                     {username}
