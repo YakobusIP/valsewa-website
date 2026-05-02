@@ -5,7 +5,7 @@ import {
   InternalServerError,
   NotFoundError
 } from "../lib/error";
-import { getOperationalWindow } from "../lib/operational-window";
+import { getDailyDropWindow } from "../lib/operational-window";
 import { prisma } from "../lib/prisma";
 import { addHours, parseDurationToHours } from "../lib/utils";
 import { UpsertDailyDropConfigRequest } from "../types/dailydrop.type";
@@ -80,12 +80,12 @@ export class DailyDropService {
 
   getTodayDrops = async () => {
     try {
-      const { start, end } = await getOperationalWindow();
+      const { start, end } = await getDailyDropWindow();
       const now = new Date();
 
       const drops = await prisma.dailyDrop.findMany({
         where: {
-          date: { gte: start, lte: end }
+          date: { gte: start, lt: end }
         },
         orderBy: { slot: "asc" },
         include: {
@@ -107,7 +107,7 @@ export class DailyDropService {
           ? await prisma.booking.findMany({
               where: {
                 accountId: { in: accountIds },
-                createdAt: { gte: start, lte: end },
+                createdAt: { gte: start, lt: end },
                 OR: [
                   { status: BookingStatus.RESERVED },
                   {
@@ -133,12 +133,12 @@ export class DailyDropService {
     }
   };
 
-  runRandomizerIfEmptyForOperationalDay = async (): Promise<
+  runRandomizerIfEmptyForDropDay = async (): Promise<
     { skipped: true } | { skipped: false }
   > => {
-    const { start, end } = await getOperationalWindow();
+    const { start, end } = await getDailyDropWindow();
     const existing = await prisma.dailyDrop.findFirst({
-      where: { date: { gte: start, lte: end } },
+      where: { date: { gte: start, lt: end } },
       select: { id: true }
     });
     if (existing) {
@@ -156,7 +156,7 @@ export class DailyDropService {
       );
     }
 
-    const { start: todayStart, end: todayEnd } = await getOperationalWindow();
+    const { start: todayStart, end: todayEnd } = await getDailyDropWindow();
 
     const pickedAccountIds: number[] = [];
     const drops: {

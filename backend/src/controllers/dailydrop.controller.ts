@@ -42,10 +42,10 @@ export class DailyDropController {
   ) => {
     try {
       const result =
-        await this.dailyDropService.runRandomizerIfEmptyForOperationalDay();
+        await this.dailyDropService.runRandomizerIfEmptyForDropDay();
       if (result.skipped) {
         return res.json({
-          message: "Daily Drop already present for this operational day",
+          message: "Daily Drop already present for this drop day",
           skipped: true
         });
       }
