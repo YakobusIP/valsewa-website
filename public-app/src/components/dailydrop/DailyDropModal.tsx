@@ -21,6 +21,55 @@ import Image from "next/image";
 
 import { DailyDropCard } from "./DailyDropCard";
 
+// ── TZ-aware date helpers ──────────────────────────────────────────────────────
+function getDateInTz(tz: string, when: Date): { y: string; mo: string; d: string } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(when);
+  return {
+    y: parts.find((p) => p.type === "year")?.value ?? "",
+    mo: parts.find((p) => p.type === "month")?.value ?? "",
+    d: parts.find((p) => p.type === "day")?.value ?? ""
+  };
+}
+
+function getOpenMsForDate(
+  tz: string,
+  y: string,
+  mo: string,
+  d: string,
+  openH: number,
+  openM: number
+): number {
+  const naiveUtcMs = Date.UTC(
+    Number(y),
+    Number(mo) - 1,
+    Number(d),
+    openH,
+    openM,
+    0
+  );
+  const offsetParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    timeZoneName: "shortOffset",
+    hour: "2-digit"
+  }).formatToParts(new Date(naiveUtcMs));
+  const offsetStr =
+    offsetParts.find((p) => p.type === "timeZoneName")?.value ?? "GMT+0";
+  const match = offsetStr.match(/GMT([+-]?)(\d{1,2})(?::?(\d{2}))?/);
+  let offsetMin = 0;
+  if (match) {
+    const sign = match[1] === "-" ? -1 : 1;
+    const hh = Number(match[2] ?? 0);
+    const mm = Number(match[3] ?? 0);
+    offsetMin = sign * (hh * 60 + mm);
+  }
+  return naiveUtcMs - offsetMin * 60_000;
+}
+
 // ── Countdown hook ─────────────────────────────────────────────────────────────
 function useDailyDropCountdown(
   operationalHours: OperationalHoursEntity | null
@@ -32,26 +81,14 @@ function useDailyDropCountdown(
     if (!hours) return;
 
     const tz = hours.timezone || "Asia/Jakarta";
-    const buffer = hours.lastOrderBufferInMinutes ?? 30;
-    const closeTime = hours.close;
+    const [openH, openM] = hours.open.split(":").map(Number);
 
     function getTargetMs(): number {
       const now = new Date();
-      const parts = new Intl.DateTimeFormat("en-US", {
-        timeZone: tz,
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit"
-      }).formatToParts(now);
-      const year = parts.find((p) => p.type === "year")?.value ?? "";
-      const month = parts.find((p) => p.type === "month")?.value ?? "";
-      const day = parts.find((p) => p.type === "day")?.value ?? "";
-      const [closeH, closeM] = closeTime.split(":").map(Number);
-      const closeMinutes = closeH * 60 + closeM - buffer;
-      const targetH = Math.floor(closeMinutes / 60);
-      const targetM = closeMinutes % 60;
-      const targetStr = `${year}-${month}-${day}T${String(targetH).padStart(2, "0")}:${String(targetM).padStart(2, "0")}:00`;
-      return new Date(targetStr).getTime();
+      const { y, mo, d } = getDateInTz(tz, now);
+      const todayOpenMs = getOpenMsForDate(tz, y, mo, d, openH, openM);
+      if (Date.now() < todayOpenMs) return todayOpenMs;
+      return todayOpenMs + 24 * 3_600_000;
     }
 
     const tick = () => {
@@ -77,33 +114,37 @@ function useDailyDropCountdown(
 }
 
 // ── LocalStorage helpers ───────────────────────────────────────────────────────
-function getTodayKey(tz = "Asia/Jakarta"): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: tz,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).formatToParts(new Date());
-  const y = parts.find((p) => p.type === "year")?.value ?? "";
-  const mo = parts.find((p) => p.type === "month")?.value ?? "";
-  const d = parts.find((p) => p.type === "day")?.value ?? "";
-  return `dailydrop_opened_${y}-${mo}-${d}`;
+function getDropDayKey(hours: OperationalHoursEntity | null): string {
+  const tz = hours?.timezone || "Asia/Jakarta";
+  const openStr = hours?.open ?? "09:00";
+  const [openH, openM] = openStr.split(":").map(Number);
+
+  const now = new Date();
+  const today = getDateInTz(tz, now);
+  const todayOpenMs = getOpenMsForDate(tz, today.y, today.mo, today.d, openH, openM);
+
+  const anchor =
+    Date.now() < todayOpenMs
+      ? getDateInTz(tz, new Date(Date.now() - 24 * 3_600_000))
+      : today;
+
+  return `dailydrop_opened_${anchor.y}-${anchor.mo}-${anchor.d}`;
 }
 
-function loadOpenedSlots(tz?: string): number[] {
+function loadOpenedSlots(hours: OperationalHoursEntity | null): number[] {
   if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(getTodayKey(tz));
+    const raw = localStorage.getItem(getDropDayKey(hours));
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 }
 
-function saveOpenedSlot(slot: number, tz?: string) {
+function saveOpenedSlot(slot: number, hours: OperationalHoursEntity | null) {
   if (typeof window === "undefined") return;
   try {
-    const key = getTodayKey(tz);
+    const key = getDropDayKey(hours);
     const existing: number[] = JSON.parse(localStorage.getItem(key) ?? "[]");
     if (!existing.includes(slot)) {
       localStorage.setItem(key, JSON.stringify([...existing, slot]));
@@ -192,7 +233,6 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
   const width = useWindowSize() ?? 1024;
 
   const countdown = useDailyDropCountdown(operationalHours);
-  const tz = operationalHours?.timezone ?? "Asia/Jakarta";
 
   // Load data each time the modal opens
   useEffect(() => {
@@ -207,7 +247,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
       if (!cancelled) {
         setDrops(dropsData);
         setOperationalHours(hours);
-        setOpenedSlots(loadOpenedSlots(hours?.timezone));
+        setOpenedSlots(loadOpenedSlots(hours));
         setLoading(false);
       }
     }
@@ -219,10 +259,10 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
 
   const handleFlip = useCallback(
     (slot: number) => {
-      saveOpenedSlot(slot, tz);
+      saveOpenedSlot(slot, operationalHours);
       setOpenedSlots((prev) => (prev.includes(slot) ? prev : [...prev, slot]));
     },
-    [tz]
+    [operationalHours]
   );
 
   const sortedDrops = [...drops].sort((a, b) => a.slot - b.slot);

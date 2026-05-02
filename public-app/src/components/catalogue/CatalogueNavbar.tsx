@@ -295,7 +295,7 @@ export function CatalogueNavbar({
           isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
         }`}
       >
-        <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-8 gap-1">
+        <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-4 gap-1">
           {/* CENTER: brand logo */}
           <div className="flex items-center justify-center flex-1">
             <figure className="sm:w-[210px] w-[150px]">
