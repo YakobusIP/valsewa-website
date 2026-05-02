@@ -4,13 +4,13 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 import { AccountEntity } from "@/types/account.type";
 
+import { staatliches } from "@/lib/fonts";
 import { cn, getRankImageUrl } from "@/lib/utils";
 
 import Image from "next/image";
 import Link from "next/link";
 
 import CountdownTimer from "./CountdownTimer";
-import { staatliches } from "@/lib/fonts";
 
 export type InventoryAccountCardProps = {
   item: AccountEntity;
@@ -69,20 +69,19 @@ export default function InventoryAccountCard({
                 height={0}
                 sizes="100vw"
                 className={cn(
-                  compact ? "h-5 w-5" : "w-6 h-6 tablet:w-7 tablet:h-7 desktop:w-[50px] desktop:h-[50px]"
+                  compact
+                    ? "h-5 w-5"
+                    : "w-6 h-6 tablet:w-7 tablet:h-7 xl:w-10 xl:h-10 desktop:w-[50px] desktop:h-[50px]"
                 )}
                 alt="Rank"
               />
-              <div className={cn(
-                "flex flex-col gap-0",
-                staatliches.className
-              )}>
+              <div className={cn("flex flex-col gap-0", staatliches.className)}>
                 <p
                   className={cn(
                     "text-white whitespace-nowrap",
                     compact
                       ? "text-sm leading-tight"
-                      : "text-[10px] tablet:text-xs desktop:text-3xl"
+                      : "text-[10px] xs:text-sm tablet:text-sm xl:text-2xl desktop:text-3xl"
                   )}
                 >
                   {item.accountRank} | {item.accountCode}
@@ -92,7 +91,7 @@ export default function InventoryAccountCard({
 
             <div
               className={cn(
-                "flex cursor-pointer items-center justify-center gap-0.5 text-blue-400 hover:text-blue-300 pl-4 max-w-[70px] tablet:max-w-[90px] desktop:max-w-full",
+                "flex cursor-pointer items-center justify-center gap-0.5 text-blue-400 hover:text-blue-300 pl-4 max-w-[70px] xs:max-w-[80px] tablet:max-w-[90px] xl:max-w-[120px] desktop:max-w-full",
                 compact ? "text-[0.5rem]" : "text-[0.4rem] tablet:text-xs"
               )}
             >
@@ -102,7 +101,7 @@ export default function InventoryAccountCard({
                   alt="Competitive"
                   width={48}
                   height={16}
-                  className="h-3 w-auto tablet:h-4 desktop:h-10"
+                  className="h-3 w-auto xs:h-5 tablet:h-6 xl:h-10 desktop:h-10"
                 />
               ) : (
                 <Image
@@ -110,7 +109,7 @@ export default function InventoryAccountCard({
                   alt="Unrated"
                   width={48}
                   height={16}
-                  className="h-3 w-auto tablet:h-4 desktop:h-10"
+                  className="h-3 w-auto xs:h-5 tablet:h-6 xl:h-10 desktop:h-10"
                 />
               )}
             </div>
@@ -139,12 +138,13 @@ export default function InventoryAccountCard({
               {inUse && (
                 <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-sm">
                   <div className="w-[85%] max-w-[320px] rounded-2xl border border-white/20 bg-[#0B0B0B] px-6 py-5 text-white shadow-xl">
-
                     {/* TOP: ON RENT */}
-                    <div className={cn(
-                      "flex items-center gap-3",
-                      staatliches.className
-                    )}>
+                    <div
+                      className={cn(
+                        "flex items-center gap-3",
+                        staatliches.className
+                      )}
+                    >
                       <div className="relative flex items-center justify-center">
                         <div className="w-5 h-5 rounded-full bg-red-600 animate-pulse" />
                         <div className="absolute w-8 h-8 rounded-full bg-red-600/30 blur-md" />
@@ -177,7 +177,9 @@ export default function InventoryAccountCard({
                       </svg>
 
                       {item.currentExpireAt && (
-                        <CountdownTimer targetDate={String(item.currentExpireAt)} />
+                        <CountdownTimer
+                          targetDate={String(item.currentExpireAt)}
+                        />
                       )}
                     </div>
                   </div>
@@ -218,12 +220,13 @@ export default function InventoryAccountCard({
                 {inUse && (
                   <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-sm">
                     <div className="w-[85%] max-w-[320px] rounded-2xl border border-white/20 bg-[#0B0B0B] tablet:px-6 px-3 py-5 text-white shadow-xl">
-
                       {/* TOP: ON RENT */}
-                      <div className={cn(
-                        "flex items-center justify-center gap-2 desktop:gap-3 desktop:text-5xl tablet:text-2xl text-xl",
-                        staatliches.className
-                      )}>
+                      <div
+                        className={cn(
+                          "flex items-center justify-center gap-2 desktop:gap-3 desktop:text-5xl tablet:text-2xl text-xl",
+                          staatliches.className
+                        )}
+                      >
                         <div className="relative flex items-center justify-center">
                           <div className="desktop:w-5 desktop:h-5 tablet:w-4 tablet:h-4 w-3 h-3 rounded-full bg-red-600 animate-pulse" />
                           <div className="absolute desktop:w-8 desktop:h-8 tablet:w-6 tablet:h-6 w-4 h-4 rounded-full bg-red-600/30 blur-md" />
@@ -241,10 +244,18 @@ export default function InventoryAccountCard({
 
                       {/* Countdown */}
                       <div className="flex items-center justify-center gap-1 desktop:gap-1 text-xs tablet:text-sm desktop:text-lg font-semibold">
-                        <Image src="/cardneed/time.svg" alt="time" width={20} height={20} className="pt-1" />
+                        <Image
+                          src="/cardneed/time.svg"
+                          alt="time"
+                          width={20}
+                          height={20}
+                          className="pt-1"
+                        />
 
                         {item.currentExpireAt && (
-                          <CountdownTimer targetDate={String(item.currentExpireAt)} />
+                          <CountdownTimer
+                            targetDate={String(item.currentExpireAt)}
+                          />
                         )}
                       </div>
                     </div>
@@ -258,7 +269,9 @@ export default function InventoryAccountCard({
           <div
             className={cn(
               "shrink-0",
-              compact ? "px-2 py-1" : "px-2 py-1 desktop:px-4 tablet:py-4 flex justify-end"
+              compact
+                ? "px-2 py-1"
+                : "px-2 py-1 desktop:px-4 tablet:py-4 flex justify-end"
             )}
           >
             <div
