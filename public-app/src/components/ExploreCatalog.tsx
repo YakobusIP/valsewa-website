@@ -50,10 +50,14 @@ export default function ExploreCatalog() {
             <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALSEWA
           </span>
-          <span className="flex items-center gap-2 font-antonio">
+          <Link
+            href="https://www.instagram.com/valforum?igsh=bTQ3OHQyenBmZ2Yw&utm_source=qr"
+            target="_blank"
+            className="flex items-center gap-2 font-antonio cursor-pointer"
+          >
             <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALFORUM
-          </span>
+          </Link>
           <Link
             href="https://www.instagram.com/valjubel.vf?igsh=a2M3d2ludHpsaWFl"
             target="_blank"
