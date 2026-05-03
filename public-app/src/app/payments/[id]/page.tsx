@@ -246,15 +246,28 @@ export default function PaymentDetailPage() {
         ) : (
           <>
             <div>
-              <div className="hidden lg:flex pr-20 gap-6">
+              <div className="hidden desktop:flex pr-20 gap-6">
                 <CancelBookingButton
                   cancelBooking={handleCancelBooking}
                   isLoadingCancelBooking={isLoadingCancelBooking}
                 />
                 <ProgressStepper stepIdx={2} />
               </div>
+              <div className="hidden tablet:flex flex-col justify-between desktop:hidden gap-6">
+                <div className="flex">
+                  <CancelBookingButton
+                    cancelBooking={handleCancelBooking}
+                    isLoadingCancelBooking={isLoadingCancelBooking}
+                  />
+                </div>
+
+                <ProgressStepper stepIdx={2} />
+              </div>
+              <div className="flex tablet:hidden flex-col justify-between gap-6">
+                <ProgressStepper stepIdx={2} />
+              </div>
             </div>
-            <div className="lg:px-20">
+            <div className="desktop:px-20">
               {payment.booking && payment.booking.expiredAt && (
                 <PaymentCountdown expiredAt={payment.booking.expiredAt} />
               )}

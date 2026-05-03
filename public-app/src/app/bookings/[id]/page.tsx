@@ -212,16 +212,22 @@ export default function BookingDetailPage() {
         ) : (
           <>
             <div>
-              <div className="hidden lg:flex pr-20 gap-6">
+              <div className="hidden desktop:flex pr-20 gap-6">
                 <CancelBookingButton
                   cancelBooking={handleCancelBooking}
                   isLoadingCancelBooking={isLoadingCancelBooking}
                 />
                 <ProgressStepper stepIdx={1} />
               </div>
+              <div className="hidden tablet:flex desktop:hidden pr-20 gap-6">
+                <CancelBookingButton
+                  cancelBooking={handleCancelBooking}
+                  isLoadingCancelBooking={isLoadingCancelBooking}
+                />
+              </div>
             </div>
 
-            <div className="lg:px-20">
+            <div className="desktop:px-20">
               {booking && booking.expiredAt && (
                 <PaymentCountdown expiredAt={booking.expiredAt} />
               )}
