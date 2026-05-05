@@ -183,30 +183,44 @@ const MAX_CARD_WIDTH = 350;
 const CARD_GAP = 16;
 const CARD_COUNT = 3;
 const CONTENT_PADDING = 50;
+const CARD_ASPECT_RATIO = 1.25;
 
 function useCardRowDimensions() {
-  const compute = (vw: number) => {
+  const compute = (vw: number, vh: number) => {
     let containerW: number;
     if (vw >= 1920) containerW = vw * (2 / 3);
     else if (vw >= 1280) containerW = vw * (3 / 4);
     else containerW = vw * (11 / 12);
 
     const rowW = containerW - CONTENT_PADDING;
-    const w = Math.min(
+    const wFromWidth = Math.min(
       MAX_CARD_WIDTH,
       Math.floor((rowW - CARD_GAP * (CARD_COUNT - 1)) / CARD_COUNT)
     );
-    return { w, h: Math.round(w * 1.55) };
+
+    const maxModalH = vh * 0.9;
+    const headerSvgH = vw / 7.5;
+    const headerOverlapH = headerSvgH / 2;
+    const verticalOverhead =
+      (headerSvgH - headerOverlapH - 10) +
+      (headerOverlapH + 32) +
+      40 +
+      32;
+    const maxCardH = maxModalH - verticalOverhead;
+    const wFromHeight = Math.floor(maxCardH / CARD_ASPECT_RATIO);
+
+    const w = Math.max(160, Math.min(wFromWidth, wFromHeight));
+    return { w, h: Math.round(w * CARD_ASPECT_RATIO) };
   };
 
   const [dims, setDims] = useState(() =>
     typeof window !== "undefined"
-      ? compute(window.innerWidth)
+      ? compute(window.innerWidth, window.innerHeight)
       : { w: 200, h: 310 }
   );
 
   useEffect(() => {
-    const update = () => setDims(compute(window.innerWidth));
+    const update = () => setDims(compute(window.innerWidth, window.innerHeight));
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
@@ -354,7 +368,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
               {/* Content */}
               <div className="relative z-10 flex flex-col items-center px-6 pb-8">
                 {/* Countdown */}
-                <p className="font-instrumentSans text-white mb-16 flex items-center gap-2">
+                <p className="font-instrumentSans text-white mb-6 flex items-center gap-2">
                   <span style={{ fontWeight: 600, fontSize: 16 }}>
                     OFFER ENDS IN
                   </span>

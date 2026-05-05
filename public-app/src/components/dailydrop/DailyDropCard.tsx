@@ -110,8 +110,8 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
   const triangleSize = Math.round(cardWidth * 0.42);
   const discountFontSize = triangleSize * 0.22;
   const thumbSize = Math.round(cardWidth * 0.85);
-  const offsetY = triangleSize * 0.4;
-  const offsetX = triangleSize * -0.2;
+  const offsetY = triangleSize * 0.3;
+  const offsetX = triangleSize * -0.25;
   const displayCode = drop.account.priceTier.code.includes("COMP -")
     ? drop.account.priceTier.code
     : `UNRATED - ${drop.account.priceTier.code}`;
@@ -163,14 +163,25 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
 
       {/* Skins amount — top right */}
       <div
-        className="absolute top-16 right-6 text-white text-[10px] font-instrumentSans font-normal leading-tight text-right"
-        style={{ zIndex: 2 }}
+        className="absolute text-white font-instrumentSans font-normal leading-tight text-right"
+        style={{
+          zIndex: 2,
+          top: Math.round(cardWidth * 0.14),
+          right: Math.round(cardWidth * 0.04),
+          fontSize: Math.max(8, Math.round(cardWidth * 0.035))
+        }}
       >
         Skins Amount | {drop.account.skinCount}
       </div>
 
       {/* Thumbnail — centered */}
-      <div className="flex items-center justify-center pt-20 pb-1">
+      <div
+        className="flex items-center justify-center"
+        style={{
+          paddingTop: Math.round(cardWidth * 0.22),
+          paddingBottom: 4
+        }}
+      >
         <div
           className="rounded-lg shrink-0"
           style={{
@@ -200,7 +211,13 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
       </div>
 
       {/* Info row below thumbnail */}
-      <div className="flex items-center justify-between px-6 pb-1 gap-1 shrink-0">
+      <div
+        className="flex items-center justify-between gap-1 shrink-0"
+        style={{
+          paddingInline: Math.round(cardWidth * 0.05),
+          paddingBottom: 4
+        }}
+      >
         {/* Left: rank image + name + account code */}
         <div className="flex items-center gap-1 min-w-0 shrink">
           <Image
@@ -223,7 +240,10 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
           </span>
         </div>
         {/* Right: price tier — short pill sits behind circle (ref: circle taller than text bar) */}
-        <div className="flex min-w-0 max-w-[62%] shrink items-center py-6">
+        <div
+          className="flex min-w-0 max-w-[62%] shrink items-center"
+          style={{ paddingBlock: Math.round(cardWidth * 0.055) }}
+        >
           <div
             className="relative z-10 shrink-0 overflow-hidden rounded-full ring-1 ring-white/40"
             style={{ width: tierBadgeSize, height: tierBadgeSize }}
@@ -263,7 +283,13 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
       </div>
 
       {/* Rent link */}
-      <div className="px-4 pb-4 shrink-0">
+      <div
+        className="shrink-0"
+        style={{
+          paddingInline: Math.round(cardWidth * 0.04),
+          paddingBottom: Math.round(cardWidth * 0.04)
+        }}
+      >
         {isSold ? (
           <span
             className="flex w-full items-center justify-center bg-[#C70515]/40 text-white border border-white/70 font-antonio font-normal rounded-lg cursor-not-allowed"
