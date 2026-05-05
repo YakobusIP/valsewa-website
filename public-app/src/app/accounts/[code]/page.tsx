@@ -351,7 +351,7 @@ export default function AccountDetailsPage() {
       </div>
 
       {!showLogin && (
-        <div className="hidden desktop:block fixed top-32 left-24 items-center mb-6 z-50">
+        <div className="hidden xl:block fixed top-32 left-24 items-center mb-6 z-50">
           <Link
             href="/"
             className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
@@ -373,12 +373,12 @@ export default function AccountDetailsPage() {
           </Link>
         </div>
       )}
-      <div className="pt-[110px] px-4 lg:px-10">
-        <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8 max-desktop:hidden">
+      <div className="pt-[110px] px-4 xl:px-10">
+        <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8 max-xl:hidden">
           {/* LEFT — GALLERY */}
-          <div className="col-span-12 lg:col-span-7">
-            {/* MOBILE CAROUSEL (< sm) */}
-            <div className="desktop:hidden">
+          <div className="col-span-12 xl:col-span-6">
+            {/* MOBILE CAROUSEL (< xl) */}
+            <div className="xl:hidden">
               <Carousel className="w-full">
                 <CarouselContent>
                   {images.map((img: UploadResponse, i: number) => (
@@ -400,8 +400,8 @@ export default function AccountDetailsPage() {
               </Carousel>
             </div>
 
-            {/* DESKTOP GRID (>= sm) */}
-            <div className="hidden desktop:block lg:sticky lg:top-[110px]">
+            {/* DESKTOP GRID (>= xl) */}
+            <div className="hidden xl:block xl:sticky xl:top-[110px]">
               <div className="grid grid-cols-2 gap-1 max-h-[calc(100vh-110px)] overflow-y-scroll [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {images.map((img: UploadResponse, i: number) => (
                   <div key={i} className="relative aspect-video">
@@ -419,7 +419,7 @@ export default function AccountDetailsPage() {
           </div>
 
           {/* RIGHT — DETAILS */}
-          <div className="col-span-12 lg:col-span-5 space-y-6 mb-4">
+          <div className="col-span-12 xl:col-span-6 space-y-6 mb-4">
             {/* TITLE */}
             <div className="grid grid-cols-[auto_1fr_auto] grid-rows-2 gap-x-4 gap-y-1 items-center">
               {/* COL 1 — IMAGE (row-span 2) */}
@@ -852,8 +852,8 @@ export default function AccountDetailsPage() {
             </div>
           </div>
         </div>
-        <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8 desktop:hidden">
-          <div className="col-span-12  hidden tablet:flex desktop:hidden">
+        <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8 xl:hidden">
+          <div className="col-span-12  hidden tablet:flex xl:hidden">
             <Link
               href="/"
               className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
@@ -877,8 +877,8 @@ export default function AccountDetailsPage() {
 
           {/* LEFT — GALLERY */}
           <div className="col-span-12">
-            {/* MOBILE CAROUSEL (< sm) */}
-            <div className="desktop:hidden">
+            {/* MOBILE CAROUSEL (< xl) */}
+            <div className="xl:hidden">
               <Carousel className="w-full">
                 <CarouselContent>
                   {images.map((img: UploadResponse, i: number) => (
