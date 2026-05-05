@@ -212,7 +212,7 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
             unoptimized
           />
           <span
-            className="text-white font-antonio font-normal truncate"
+            className="text-white font-antonio font-normal truncate tracking-wide"
             style={{
               fontWeight: "bold",
               fontSize: Math.max(10, Math.round(cardWidth * 0.045))
@@ -253,7 +253,7 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
             }}
           >
             <span
-              className="min-w-0 truncate text-white font-antonio font-semibold leading-none tracking-tight"
+              className="min-w-0 truncate text-white font-antonio font-semibold leading-none tracking-wide"
               style={{ fontSize: tierLabelSize }}
             >
               {displayCode}
