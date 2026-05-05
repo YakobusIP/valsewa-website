@@ -165,7 +165,7 @@ export class FaspayClient {
       responseMessage: response.responseMessage,
       paymentId: response.partnerReferenceNo,
       providerPaymentId: response.referenceNo,
-      qrUrl: response.qrUrl,
+      qrUrl: response.additionalInfo.qrImageUrl,
       additionalInfo: response.additionalInfo,
       metadata: response
     };
