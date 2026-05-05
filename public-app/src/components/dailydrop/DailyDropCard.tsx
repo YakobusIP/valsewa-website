@@ -110,8 +110,8 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
   const triangleSize = Math.round(cardWidth * 0.42);
   const discountFontSize = triangleSize * 0.22;
   const thumbSize = Math.round(cardWidth * 0.85);
-  const offsetY = triangleSize * 0.4;
-  const offsetX = triangleSize * -0.2;
+  const offsetY = triangleSize * 0.3;
+  const offsetX = triangleSize * -0.25;
   const displayCode = drop.account.priceTier.code.includes("COMP -")
     ? drop.account.priceTier.code
     : `UNRATED - ${drop.account.priceTier.code}`;
