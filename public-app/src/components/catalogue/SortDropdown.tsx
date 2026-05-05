@@ -12,22 +12,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { cn } from "@/lib/utils";
+import {
+  SortOption,
+  SORT_OPTIONS,
+  SORT_MAP
+} from "@/lib/catalogue-filters";
 
-export type SortOption = "dateAdded" | "mostRented" | "cheapest" | "availableNow";
-
-export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "dateAdded",    label: "Date Added" },
-  { value: "mostRented",   label: "Most Rented" },
-  { value: "cheapest",     label: "Cheapest" },
-  { value: "availableNow", label: "Available Now" },
-];
-
-export const SORT_MAP: Record<SortOption, { sortBy: string; direction: "asc" | "desc" }> = {
-  dateAdded:    { sortBy: "id",            direction: "desc" },
-  mostRented:   { sortBy: "totalRentHour", direction: "desc" },
-  cheapest:     { sortBy: "price_tier",    direction: "desc" },
-  availableNow: { sortBy: "availability",  direction: "asc" },
-};
+export type { SortOption };
+export { SORT_OPTIONS, SORT_MAP };
 
 interface SortDropdownProps {
   currentSort: SortOption;

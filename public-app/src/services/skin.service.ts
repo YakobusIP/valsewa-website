@@ -20,3 +20,10 @@ export async function fetchSkins(
     return [];
   }
 }
+
+export async function fetchSkinsByIds(ids: number[]): Promise<Skin[]> {
+  if (!ids.length) return [];
+  const all = await fetchSkins(undefined, 500);
+  const idSet = new Set(ids);
+  return all.filter((s) => idSet.has(s.id));
+}

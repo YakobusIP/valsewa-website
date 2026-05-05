@@ -122,7 +122,7 @@ export function CatalogueNavbar({
           isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
         }`}
       >
-        <div className="mx-auto max-w-full h-[84px] md:h-[80px] flex items-center justify-between">
+        <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between">
           <div className="flex items-center gap-[var(--hero-logo-switcher-gap)] pl-[var(--hero-nav-left-offset)]">
             <figure className="relative w-[var(--hero-valforum-logo-width)] pr-3">
               <Image

@@ -9,6 +9,7 @@ import {
 import { bookingService } from "@/services/booking.service";
 import { fetchOperationalHours } from "@/services/setting.service";
 
+import BackToSearchLink from "@/components/BackToSearchLink";
 import CountdownTimer from "@/components/CountdownTimer";
 import LoginPage from "@/components/LoginPage";
 import NavbarHome from "@/components/NavbarHome";
@@ -36,7 +37,6 @@ import { cn, getRankImageUrl, isOutsideOperationalHours } from "@/lib/utils";
 import { isAxiosError } from "axios";
 import { Search } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import {
   notFound,
   useParams,
@@ -352,10 +352,7 @@ export default function AccountDetailsPage() {
 
       {!showLogin && (
         <div className="hidden xl:block fixed top-32 left-24 items-center mb-6 z-50">
-          <Link
-            href="/"
-            className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
-          >
+          <BackToSearchLink className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg ">
             {/* Solid Left Triangle Custom SVG for precise look */}
             <svg
               width="10"
@@ -370,7 +367,7 @@ export default function AccountDetailsPage() {
             <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
               ALL ACCOUNTS
             </span>
-          </Link>
+          </BackToSearchLink>
         </div>
       )}
       <div className="pt-[110px] px-4 xl:px-10">
@@ -854,10 +851,7 @@ export default function AccountDetailsPage() {
         </div>
         <div className="max-w-[1920px] mx-auto grid grid-cols-12 gap-8 xl:hidden">
           <div className="col-span-12  hidden tablet:flex xl:hidden">
-            <Link
-              href="/"
-              className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
-            >
+            <BackToSearchLink className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg ">
               {/* Solid Left Triangle Custom SVG for precise look */}
               <svg
                 width="10"
@@ -872,7 +866,7 @@ export default function AccountDetailsPage() {
               <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
                 ALL ACCOUNTS
               </span>
-            </Link>
+            </BackToSearchLink>
           </div>
 
           {/* LEFT — GALLERY */}

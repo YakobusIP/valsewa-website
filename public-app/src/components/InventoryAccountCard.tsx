@@ -16,18 +16,22 @@ export type InventoryAccountCardProps = {
   item: AccountEntity;
   linkClassName?: string;
   compact?: boolean;
+  openInNewTab?: boolean;
 };
 
 export default function InventoryAccountCard({
   item,
   linkClassName,
-  compact = false
+  compact = false,
+  openInNewTab = false
 }: InventoryAccountCardProps) {
   const inUse = item.availabilityStatus === "IN_USE";
 
   return (
     <Link
       href={`/accounts/${item.accountCode}`}
+      target={openInNewTab ? "_blank" : undefined}
+      rel={openInNewTab ? "noopener noreferrer" : undefined}
       className={cn(
         "block w-full min-w-0 max-w-[600px] cursor-pointer font-instrumentSans transition-all duration-300",
         "mx-auto",

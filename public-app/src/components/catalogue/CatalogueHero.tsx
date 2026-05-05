@@ -64,7 +64,7 @@ export function CatalogueHero({
   const mobilePath = getMobilePath(activeBrand);
 
   return (
-    <section className="relative h-[600px] md:h-screen bg-black">
+    <section className="relative h-[600px] md:h-screen bg-black w-full max-w-[1920px] mx-auto">
       {/* ── Hero image + gradient + notch masks (clipped layer) ─────────── */}
       <div className="absolute top-[68px] md:top-[18px] inset-x-4 md:inset-x-5 lg:inset-x-8 bottom-0 overflow-hidden pointer-events-none">
         <Image
