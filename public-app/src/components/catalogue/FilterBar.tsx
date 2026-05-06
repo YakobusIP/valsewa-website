@@ -159,7 +159,7 @@ export function FilterBar({
           isStuck ? "" : "px-4 md:px-8 lg:px-16"
         )}
       >
-        <div className="flex justify-center">
+        <div className="flex justify-center mx-auto w-full max-w-[1920px]">
           <div
             className={
               "w-full mx-8 bg-black border border-white/30 rounded-2xl px-6 py-4 shadow-2xl"

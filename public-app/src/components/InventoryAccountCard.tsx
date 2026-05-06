@@ -16,18 +16,22 @@ export type InventoryAccountCardProps = {
   item: AccountEntity;
   linkClassName?: string;
   compact?: boolean;
+  openInNewTab?: boolean;
 };
 
 export default function InventoryAccountCard({
   item,
   linkClassName,
-  compact = false
+  compact = false,
+  openInNewTab = false
 }: InventoryAccountCardProps) {
   const inUse = item.availabilityStatus === "IN_USE";
 
   return (
     <Link
       href={`/accounts/${item.accountCode}`}
+      target={openInNewTab ? "_blank" : undefined}
+      rel={openInNewTab ? "noopener noreferrer" : undefined}
       className={cn(
         "block w-full min-w-0 max-w-[600px] cursor-pointer font-instrumentSans transition-all duration-300",
         "mx-auto",
@@ -101,7 +105,7 @@ export default function InventoryAccountCard({
                   alt="Competitive"
                   width={48}
                   height={16}
-                  className="h-3 w-auto xs:h-5 tablet:h-6 xl:h-10 desktop:h-10"
+                  className="h-4 w-auto xs:h-5 sm:h-6 tablet:h-6 xl:h-10 desktop:h-10"
                 />
               ) : (
                 <Image
@@ -109,7 +113,7 @@ export default function InventoryAccountCard({
                   alt="Unrated"
                   width={48}
                   height={16}
-                  className="h-3 w-auto xs:h-5 tablet:h-6 xl:h-10 desktop:h-10"
+                  className="h-4 w-auto xs:h-5 sm:h-6 tablet:h-6 xl:h-10 desktop:h-10"
                 />
               )}
             </div>

@@ -42,7 +42,7 @@ export default function ExploreCatalog() {
       </div>
 
       {/* BOTTOM CONTENT */}
-      <div className="absolute bottom-6 w-full flex flex-col items-center text-center z-10 px-4">
+      <div className="absolute bottom-12 w-full flex flex-col items-center text-center z-10 px-4">
         <p className="text-white text-xs">Don’t miss out our updates:</p>
 
         <div className="flex gap-6 mt-3 text-white text-[9px] tablet:text-xs flex-wrap justify-center">

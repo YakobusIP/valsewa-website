@@ -11,7 +11,16 @@ import { DailyDropModal } from "@/components/dailydrop/DailyDropModal";
 import { FilterBar } from "@/components/catalogue/FilterBar";
 import { FilterBarMobile } from "@/components/catalogue/FilterBarMobile";
 import { FilterBottomSheet } from "@/components/catalogue/FilterBottomSheet";
-import { SORT_MAP, SortOption } from "@/components/catalogue/SortDropdown";
+import { SORT_MAP, SortOption } from "@/lib/catalogue-filters";
+
+import {
+  CatalogueFilters,
+  DEFAULT_FILTERS,
+  PRICE_MAX,
+  PRICE_MIN,
+  processTiers,
+  serializeFilters
+} from "@/lib/catalogue-filters";
 
 import { AccountEntity } from "@/types/account.type";
 import { Skin } from "@/types/skin.type";
@@ -23,20 +32,14 @@ type BrandType = "valsewa" | "valjubel" | "valjoki";
 
 interface CatalogueClientProps {
   initialAccounts: AccountEntity[];
-}
-
-function processTiers(tiers: string[]): string[] {
-  return tiers.map((t) =>
-    t
-      .toUpperCase()
-      .trim()
-      .replace(/\s*-\s*/g, "-")
-      .replace(/\s+/g, "")
-  );
+  initialFilters: CatalogueFilters;
+  initialSelectedSkins: Skin[];
 }
 
 export default function CatalogueClient({
-  initialAccounts
+  initialAccounts,
+  initialFilters,
+  initialSelectedSkins
 }: CatalogueClientProps) {
   const router = useRouter();
 
@@ -54,16 +57,22 @@ export default function CatalogueClient({
     [router]
   );
 
-  // Filters
-  const [selectedRanks, setSelectedRanks] = useState<string[]>([]);
-  const [selectedTiers, setSelectedTiers] = useState<string[]>([]);
+  // Filters (seeded from URL via SSR)
+  const [selectedRanks, setSelectedRanks] = useState<string[]>(
+    initialFilters.ranks
+  );
+  const [selectedTiers, setSelectedTiers] = useState<string[]>(
+    initialFilters.tiers
+  );
   const [priceRange, setPriceRange] = useState<[number, number]>([
-    0, 1_000_000
+    initialFilters.minPrice,
+    initialFilters.maxPrice
   ]);
-  const [selectedSkins, setSelectedSkins] = useState<Skin[]>([]);
+  const [selectedSkins, setSelectedSkins] =
+    useState<Skin[]>(initialSelectedSkins);
 
   // Sort
-  const [sortOption, setSortOption] = useState<SortOption>("dateAdded");
+  const [sortOption, setSortOption] = useState<SortOption>(initialFilters.sort);
 
   // Data
   const [accounts, setAccounts] = useState<AccountEntity[]>(initialAccounts);
@@ -85,6 +94,10 @@ export default function CatalogueClient({
   const [debouncedTiers] = useDebounce(selectedTiers, 400);
   const [debouncedPrice] = useDebounce(priceRange, 600);
   const [debouncedSkins] = useDebounce(selectedSkins, 400);
+
+  // Skip the initial fetch + URL push — server already delivered both
+  const isInitialFetch = useRef(true);
+  const isInitialUrlSync = useRef(true);
 
   // Scrollbar width CSS variable (same as home.tsx)
   useEffect(() => {
@@ -133,6 +146,10 @@ export default function CatalogueClient({
 
   // Fetch accounts when debounced filters or sort change
   useEffect(() => {
+    if (isInitialFetch.current) {
+      isInitialFetch.current = false;
+      return;
+    }
     let cancelled = false;
     async function run() {
       setIsLoading(true);
@@ -141,9 +158,9 @@ export default function CatalogueClient({
         limit: 50,
         ranks: debouncedRanks.length ? debouncedRanks : undefined,
         tiers: debouncedTiers.length ? processTiers(debouncedTiers) : undefined,
-        min_price: debouncedPrice[0] > 0 ? debouncedPrice[0] : undefined,
+        min_price: debouncedPrice[0] > PRICE_MIN ? debouncedPrice[0] : undefined,
         max_price:
-          debouncedPrice[1] < 1_000_000 ? debouncedPrice[1] : undefined,
+          debouncedPrice[1] < PRICE_MAX ? debouncedPrice[1] : undefined,
         skin_ids: debouncedSkins.length
           ? debouncedSkins.map((s) => s.id)
           : undefined,
@@ -165,6 +182,43 @@ export default function CatalogueClient({
     debouncedPrice,
     debouncedSkins,
     sortOption
+  ]);
+
+  // Sync state → URL (canonical, sorted keys, defaults omitted)
+  // Also persists to localStorage so account detail back-arrow (in a
+  // target=_blank tab with no /search history) can restore last filters.
+  useEffect(() => {
+    if (isInitialUrlSync.current) {
+      isInitialUrlSync.current = false;
+      return;
+    }
+    const f: CatalogueFilters = {
+      ranks: debouncedRanks,
+      tiers: debouncedTiers,
+      skinIds: debouncedSkins.map((s) => s.id),
+      minPrice: debouncedPrice[0],
+      maxPrice: debouncedPrice[1],
+      sort: sortOption
+    };
+    const qs = serializeFilters(f, { sortKeys: true });
+    const url = `/search${qs}`;
+    router.replace(url, { scroll: false });
+
+    try {
+      localStorage.setItem(
+        "valsewa.lastSearchUrl",
+        JSON.stringify({ url, savedAt: Date.now() })
+      );
+    } catch {
+      // Safari private mode / disabled storage — silently ignore
+    }
+  }, [
+    debouncedRanks,
+    debouncedTiers,
+    debouncedSkins,
+    debouncedPrice,
+    sortOption,
+    router
   ]);
 
   // Available accounts first, unavailable pushed to bottom (stable within groups)
@@ -190,9 +244,9 @@ export default function CatalogueClient({
   }, [accounts]);
 
   const resetAllFilters = useCallback(() => {
-    setSelectedRanks([]);
-    setSelectedTiers([]);
-    setPriceRange([0, 1_000_000]);
+    setSelectedRanks(DEFAULT_FILTERS.ranks);
+    setSelectedTiers(DEFAULT_FILTERS.tiers);
+    setPriceRange([DEFAULT_FILTERS.minPrice, DEFAULT_FILTERS.maxPrice]);
     setSelectedSkins([]);
     setSortOption("mostRented");
   }, []);

@@ -23,10 +23,11 @@ const AccountsSectionInner = forwardRef<HTMLElement, AccountsSectionProps>(
   ) {
     return (
       <section ref={ref} className="bg-black px-4 md:px-8 lg:px-8 pt-10 pb-16">
+        <div className="mx-auto w-full max-w-[1920px]">
         {/* Desktop / tablet header */}
         <div className="hidden md:flex items-end justify-between mb-8">
           <div>
-            <h2 className="font-antonio text-white tracking-wide uppercase text-5xl lg:text-6xl font-normal">
+            <h2 className="font-antonio font-bold text-white tracking-wide uppercase text-5xl lg:text-6xl pb-5">
               Full Inventory
             </h2>
             <p className="font-instrumentSans text-white/60 text-base mt-1">
@@ -38,7 +39,7 @@ const AccountsSectionInner = forwardRef<HTMLElement, AccountsSectionProps>(
 
         {/* Mobile header */}
         <div className="md:hidden text-center mb-6">
-          <h2 className="font-antonio text-white tracking-wide uppercase text-4xl font-normal">
+          <h2 className="font-antonio font-bold text-white tracking-wide uppercase text-4xl pb-5">
             Full Inventory
           </h2>
           <p className="font-instrumentSans text-white/60 text-sm mt-1">
@@ -80,25 +81,15 @@ const AccountsSectionInner = forwardRef<HTMLElement, AccountsSectionProps>(
         {!isLoading && accounts.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 tablet:gap-4 gap-2">
             {accounts.map((account) => (
-              <div
+              <InventoryAccountCard
                 key={account.id}
-                onClick={() =>
-                  window.open(
-                    `/accounts/${account.accountCode}`,
-                    "_blank",
-                    "noopener,noreferrer"
-                  )
-                }
-                className="cursor-pointer"
-              >
-                <InventoryAccountCard
-                  item={account}
-                  linkClassName="pointer-events-none"
-                />
-              </div>
+                item={account}
+                openInNewTab
+              />
             ))}
           </div>
         )}
+        </div>
       </section>
     );
   }
