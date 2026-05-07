@@ -126,9 +126,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
           </div>
           <div
             className={`absolute left-[calc(var(--hero-valforum-tab-width)+var(--hero-logo-switcher-gap))] top-[calc(var(--hero-notch-height)-var(--hero-logo-switcher-gap)+var(--hero-switcher-y-offset))] -translate-y-full transition-all duration-300 ${
-              isScrolled
-                ? "opacity-0 pointer-events-none"
-                : "opacity-100"
+              isScrolled ? "opacity-0 pointer-events-none" : "opacity-100"
             }`}
           >
             <DesktopBrandSwitcher
@@ -245,7 +243,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
           {isAuthenticated && (
             <HoverCard openDelay={200}>
               <HoverCardTrigger asChild>
-                <div className="flex items-center justify-center gap-1 desktop:px-4 px-3 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer w-auto">
+                <div className="flex items-center justify-center gap-1 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer w-auto">
                   <Image
                     src="/header/SignUp Icon.svg"
                     alt="User"
