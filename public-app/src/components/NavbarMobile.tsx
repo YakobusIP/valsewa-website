@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import BackToSearchLink from "@/components/BackToSearchLink";
+
 import CancelBookingButton from "./bookings/CancelBookingButton";
 
 type Props = {
@@ -20,10 +22,7 @@ const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center justify-between px-4 sm:px-6">
         {/* LEFT - Back Button*/}
         {!onBack ? (
-          <Link
-            href="/"
-            className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg "
-          >
+          <BackToSearchLink className="group flex items-center justify-center gap-3 px-5 py-2 bg-neutral-300/60  backdrop-blur-sm border border-white/20 rounded-lg ">
             {/* Solid Left Triangle Custom SVG for precise look */}
             <svg
               width="10"
@@ -39,7 +38,7 @@ const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
             <span className="font-semibold text-[0.7rem] sm:text-sm text-white uppercase tracking-wider">
               ALL ACCOUNTS
             </span>
-          </Link>
+          </BackToSearchLink>
         ) : (
           <CancelBookingButton
             cancelBooking={onBack}
