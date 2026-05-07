@@ -22,7 +22,10 @@ import Image from "next/image";
 import { DailyDropCard } from "./DailyDropCard";
 
 // ── TZ-aware date helpers ──────────────────────────────────────────────────────
-function getDateInTz(tz: string, when: Date): { y: string; mo: string; d: string } {
+function getDateInTz(
+  tz: string,
+  when: Date
+): { y: string; mo: string; d: string } {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: tz,
     year: "numeric",
@@ -121,7 +124,14 @@ function getDropDayKey(hours: OperationalHoursEntity | null): string {
 
   const now = new Date();
   const today = getDateInTz(tz, now);
-  const todayOpenMs = getOpenMsForDate(tz, today.y, today.mo, today.d, openH, openM);
+  const todayOpenMs = getOpenMsForDate(
+    tz,
+    today.y,
+    today.mo,
+    today.d,
+    openH,
+    openM
+  );
 
   const anchor =
     Date.now() < todayOpenMs
@@ -199,13 +209,10 @@ function useCardRowDimensions() {
     );
 
     const maxModalH = vh * 0.9;
-    const headerSvgH = vw / 7.5;
+    const headerSvgH = vw / 5;
     const headerOverlapH = headerSvgH / 2;
     const verticalOverhead =
-      (headerSvgH - headerOverlapH - 10) +
-      (headerOverlapH + 32) +
-      40 +
-      32;
+      headerSvgH - headerOverlapH - 10 + (headerOverlapH + 32) + 40 + 32;
     const maxCardH = maxModalH - verticalOverhead;
     const wFromHeight = Math.floor(maxCardH / CARD_ASPECT_RATIO);
 
@@ -220,7 +227,8 @@ function useCardRowDimensions() {
   );
 
   useEffect(() => {
-    const update = () => setDims(compute(window.innerWidth, window.innerHeight));
+    const update = () =>
+      setDims(compute(window.innerWidth, window.innerHeight));
     update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
@@ -286,7 +294,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
       ? sortedDrops
       : [null, null, null];
 
-  const headerSvgH = width / 7.5;
+  const headerSvgH = width / 5;
   const headerOverlapH = headerSvgH / 2;
 
   return (
@@ -328,7 +336,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
                 alt="Daily Drop"
                 width={850}
                 height={400}
-                className="object-contain"
+                className="object-contain h-full w-auto max-w-full"
                 priority
               />
             </div>

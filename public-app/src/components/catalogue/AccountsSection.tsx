@@ -22,8 +22,7 @@ const AccountsSectionInner = forwardRef<HTMLElement, AccountsSectionProps>(
     ref
   ) {
     return (
-      <section ref={ref} className="bg-black px-4 md:px-8 lg:px-8 pt-10 pb-16">
-        <div className="mx-auto w-full max-w-[1920px]">
+      <section ref={ref} className="bg-black px-4 md:px-8 lg:px-8 pt-10 pb-16 mx-auto w-full max-w-[1920px]">
         {/* Desktop / tablet header */}
         <div className="hidden md:flex items-end justify-between mb-8">
           <div>
@@ -89,7 +88,6 @@ const AccountsSectionInner = forwardRef<HTMLElement, AccountsSectionProps>(
             ))}
           </div>
         )}
-        </div>
       </section>
     );
   }

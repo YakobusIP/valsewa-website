@@ -75,7 +75,7 @@ export default function InventoryAccountCard({
                 className={cn(
                   compact
                     ? "h-5 w-5"
-                    : "w-6 h-6 tablet:w-7 tablet:h-7 xl:w-10 xl:h-10 desktop:w-[50px] desktop:h-[50px]"
+                    : "w-5 h-5 tablet:w-7 tablet:h-7 xl:w-10 xl:h-10 desktop:w-[50px] desktop:h-[50px]"
                 )}
                 alt="Rank"
               />
@@ -95,7 +95,7 @@ export default function InventoryAccountCard({
 
             <div
               className={cn(
-                "flex cursor-pointer items-center justify-center gap-0.5 text-blue-400 hover:text-blue-300 pl-4 max-w-[70px] xs:max-w-[80px] tablet:max-w-[90px] xl:max-w-[120px] desktop:max-w-full",
+                "flex cursor-pointer items-center justify-center gap-0.5 text-blue-400 hover:text-blue-300 pl-4 max-w-[80px] tablet:max-w-[90px] xl:max-w-[120px] desktop:max-w-full",
                 compact ? "text-[0.5rem]" : "text-[0.4rem] tablet:text-xs"
               )}
             >
@@ -103,17 +103,17 @@ export default function InventoryAccountCard({
                 <Image
                   src="/cardneed/compe.svg"
                   alt="Competitive"
-                  width={48}
-                  height={16}
-                  className="h-4 w-auto xs:h-5 sm:h-6 tablet:h-6 xl:h-10 desktop:h-10"
+                  width={60}
+                  height={30}
+                  className="w-auto h-6 tablet:h-6 xl:h-10 desktop:h-10"
                 />
               ) : (
                 <Image
                   src="/cardneed/unrated.svg"
                   alt="Unrated"
-                  width={48}
-                  height={16}
-                  className="h-4 w-auto xs:h-5 sm:h-6 tablet:h-6 xl:h-10 desktop:h-10"
+                  width={60}
+                  height={30}
+                  className="w-auto h-6 tablet:h-6 xl:h-10 desktop:h-10"
                 />
               )}
             </div>
@@ -191,7 +191,7 @@ export default function InventoryAccountCard({
               )}
             </div>
           ) : (
-            <div className="flex w-full justify-center px-2 pt-4 desktop:px-4">
+            <div className="flex w-full justify-center px-2 pt-2 tablet:pt-4 desktop:px-4">
               <div className="relative w-full">
                 <div className="tablet:hidden">
                   <AspectRatio ratio={1 / 1}>
