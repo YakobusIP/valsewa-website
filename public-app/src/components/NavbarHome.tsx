@@ -96,9 +96,9 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
       }`}
     >
       <div className="mx-auto max-w-[1920px] h-[84px] tablet:h-[80px] flex items-center justify-between">
-        <div className="flex items-center gap-[var(--hero-logo-switcher-gap)] pl-[var(--hero-nav-left-offset)]">
+        <div className="flex items-center gap-[var(--hero-logo-switcher-gap)]">
           {/* Logo wrapper - positioned to align with hero notch on desktop, scales down on lg */}
-          <div className="relative -translate-y-1">
+          <div className="relative -translate-y-1 w-[var(--hero-valforum-tab-width)] flex justify-center">
             {!isScrolled && (
               <figure className="relative w-[var(--hero-valforum-logo-width)]">
                 <Image
