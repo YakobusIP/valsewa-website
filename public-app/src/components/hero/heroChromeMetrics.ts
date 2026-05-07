@@ -1,7 +1,8 @@
 export const heroChromeVars = {
   "--hero-nav-left-offset": "clamp(24px, 1.5vw, 28px)",
   "--hero-valforum-logo-width": "clamp(80px, 7vw, 130px)",
-  "--hero-logo-switcher-gap": "clamp(16px, 1.8vw, 28px)",
+  "--hero-logo-switcher-gap": "clamp(8px, 0.8vw, 16px)",
+  "--hero-switcher-y-offset": "6px",
   "--hero-switcher-logo-width": "clamp(76px, 6.8vw, 118px)",
   "--hero-switcher-shell-padding-x": "clamp(8px, 0.9vw, 14px)",
   "--hero-switcher-item-padding-x": "clamp(8px, 1vw, 18px)",

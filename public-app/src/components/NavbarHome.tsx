@@ -95,7 +95,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
         isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
       }`}
     >
-      <div className="mx-auto max-w-[1920px] h-[84px] tablet:h-[80px] flex items-center justify-between">
+      <div className="relative mx-auto max-w-[1920px] h-[84px] tablet:h-[80px] flex items-center justify-between">
         <div className="flex items-center gap-[var(--hero-logo-switcher-gap)]">
           {/* Logo wrapper - positioned to align with hero notch on desktop, scales down on lg */}
           <div className="relative -translate-y-1 w-[var(--hero-valforum-tab-width)] flex justify-center">
@@ -125,10 +125,10 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
             )}
           </div>
           <div
-            className={`relative transition-all duration-300 ${
+            className={`absolute left-[calc(var(--hero-valforum-tab-width)+var(--hero-logo-switcher-gap))] top-[calc(var(--hero-notch-height)-var(--hero-logo-switcher-gap)+var(--hero-switcher-y-offset))] -translate-y-full transition-all duration-300 ${
               isScrolled
-                ? "opacity-0 translate-y-[-10px] pointer-events-none"
-                : "opacity-100 translate-y-0"
+                ? "opacity-0 pointer-events-none"
+                : "opacity-100"
             }`}
           >
             <DesktopBrandSwitcher
