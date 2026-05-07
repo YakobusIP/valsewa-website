@@ -79,13 +79,13 @@ export default function InventoryAccountCard({
                 )}
                 alt="Rank"
               />
-              <div className={cn("flex flex-col gap-0", staatliches.className)}>
+              <div className="flex flex-col gap-0">
                 <p
                   className={cn(
-                    "text-white whitespace-nowrap",
+                    "font-antonio font-bold tracking-normal text-white whitespace-nowrap pb-1",
                     compact
-                      ? "text-sm leading-tight"
-                      : "text-[10px] xs:text-sm tablet:text-sm xl:text-2xl desktop:text-3xl"
+                      ? "text-sm"
+                      : "text-[10px] xs:text-sm tablet:text-sm xl:text-2xl desktop:text-[31.1px]"
                   )}
                 >
                   {item.accountRank} | {item.accountCode}
