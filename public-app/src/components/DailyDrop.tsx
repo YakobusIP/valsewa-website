@@ -8,11 +8,7 @@ type DailyDropProps = {
 
 export default function DailyDrop({ onOpen }: DailyDropProps) {
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="w-full relative z-10 my-4 pt-10 pb-10 cursor-pointer text-left"
-    >
+    <div className="w-full relative z-10 my-4 pt-10 pb-10 text-left">
       <div className="w-full max-w-[1920px] mx-auto">
         <div className=" rounded-2xl relative overflow-hidden ">
           <div>
@@ -27,19 +23,24 @@ export default function DailyDrop({ onOpen }: DailyDropProps) {
             </p>
           </div>
 
-
           <div className="flex flex-row md:flex-row md:items-center items-start justify-between gap-1 sm:gap-8 md:gap-4 relative">
-            <Image
-              src="/home/dailydrop2.png"
-              alt="Daily Drop"
-              width={1200}
-              height={600}
-              className="rounded-lg w-full h-auto"
-              sizes="(max-width: 1920px) 100vw, 1920px"
-            />
+            <button
+              type="button"
+              onClick={onOpen}
+              className="block w-full p-0 border-0 bg-transparent cursor-pointer rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              <Image
+                src="/home/dailydrop2.png"
+                alt="Daily Drop"
+                width={1200}
+                height={600}
+                className="rounded-lg w-full h-auto pointer-events-none"
+                sizes="(max-width: 1920px) 100vw, 1920px"
+              />
+            </button>
           </div>
         </div>
       </div>
-    </button>
+    </div>
   );
 }
