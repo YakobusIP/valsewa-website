@@ -121,22 +121,22 @@ function FlipClockUnit({ value }: { value: string }) {
   return (
     <span
       className="relative inline-flex h-[36px] w-[42px] overflow-hidden rounded-[6px] bg-[#3C31C1] text-white md:h-[42px] md:w-[48px]"
-      style={{ perspective: "120px" }}
+      style={{ perspective: "200px" }}
     >
       <span className="absolute inset-x-0 top-0 h-1/2 bg-white/8" />
       <span className="absolute inset-x-0 bottom-0 h-1/2 bg-black/12" />
       <AnimatePresence initial={false} mode="popLayout">
         <motion.span
           key={value}
-          initial={{ y: "-100%", rotateX: 90, filter: "brightness(0.6)" }}
-          animate={{ y: "0%", rotateX: 0, filter: "brightness(1)" }}
-          exit={{ y: "100%", rotateX: -90, filter: "brightness(0.6)" }}
+          initial={{ rotateX: 90, opacity: 0, filter: "brightness(0.5)" }}
+          animate={{ rotateX: 0, opacity: 1, filter: "brightness(1)" }}
+          exit={{ rotateX: -90, opacity: 0, filter: "brightness(0.5)" }}
           transition={{
-            duration: 0.38,
-            ease: [0.4, 0.0, 0.15, 1]
+            duration: 0.5,
+            ease: [0.4, 0.0, 0.2, 1]
           }}
           className="absolute inset-0 z-20 flex items-center justify-center font-antonio text-[26px] font-black leading-none md:text-[32px]"
-          style={{ transformStyle: "preserve-3d" }}
+          style={{ transformStyle: "preserve-3d", transformOrigin: "center center" }}
         >
           {value}
         </motion.span>
