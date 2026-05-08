@@ -151,7 +151,7 @@ function FlipCountdown({ countdown }: { countdown: string }) {
   const [hours = "--", minutes = "--", seconds = "--"] = countdown.split(":");
 
   return (
-    <div className="mb-10 flex items-center justify-center gap-3 text-white md:mb-12">
+    <div className="mb-[30px] flex items-center justify-center gap-3 text-white md:mb-9">
       <span className="font-antonio text-[28px] font-black uppercase leading-none tracking-normal md:text-[34px]">
         Ends In
       </span>
@@ -242,9 +242,9 @@ const CARD_GAP = 16;
 const CARD_COUNT = 3;
 const CONTENT_PADDING = 50;
 const CARD_ASPECT_RATIO = 1.25;
-const DESKTOP_HEADER_CONTENT_GAP = 20;
-const DESKTOP_TIMER_CARD_GAP = 48;
-const DESKTOP_MODAL_BOTTOM_PADDING = 56;
+const DESKTOP_HEADER_CONTENT_GAP = 15;
+const DESKTOP_TIMER_CARD_GAP = 36;
+const DESKTOP_MODAL_BOTTOM_PADDING = 44;
 
 function useCardRowDimensions() {
   const compute = (vw: number, vh: number) => {
@@ -259,7 +259,7 @@ function useCardRowDimensions() {
       Math.floor((rowW - CARD_GAP * (CARD_COUNT - 1)) / CARD_COUNT)
     );
 
-    const maxModalH = vh * 0.9;
+    const maxModalH = vh * 0.95;
     const headerSvgH = vw / 5;
     const headerOverlapH = headerSvgH / 2;
     const verticalOverhead =
@@ -376,7 +376,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
           </DialogPrimitive.Title>
 
           {/* ── DESKTOP / TABLET (md+) ──────────────────────────────────────── */}
-          <div className="hidden md:flex flex-col items-center md:w-11/12 xl:w-3/4 3xl:w-2/3 max-h-[90vh]">
+          <div className="hidden md:flex flex-col items-center md:w-11/12 xl:w-3/4 3xl:w-2/3 max-h-[95vh]">
             {/*
               Header SVG:
               - z-[2] so it renders ABOVE the modal box (z-[1]) in the stacking context
