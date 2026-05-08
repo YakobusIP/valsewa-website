@@ -120,7 +120,7 @@ function useDailyDropCountdown(
 function FlipClockUnit({ value }: { value: string }) {
   return (
     <span
-      className="relative inline-flex h-[36px] w-[42px] overflow-hidden rounded-[6px] bg-[#3C31C1] text-white md:h-[42px] md:w-[48px]"
+      className="relative inline-flex h-[36px] w-[40px] overflow-hidden rounded-[6px] bg-[#3C31C1] text-white md:h-[40px]"
       style={{ perspective: "200px" }}
     >
       <span className="absolute inset-x-0 top-0 h-1/2 bg-white/8" />
@@ -136,9 +136,12 @@ function FlipClockUnit({ value }: { value: string }) {
             ease: [0.4, 0.0, 0.2, 1]
           }}
           className="absolute inset-0 z-20 flex items-center justify-center font-antonio text-[26px] font-black leading-none md:text-[32px]"
-          style={{ transformStyle: "preserve-3d", transformOrigin: "center center" }}
+          style={{
+            transformStyle: "preserve-3d",
+            transformOrigin: "center center"
+          }}
         >
-          {value}
+          <span className="-translate-y-[2px]">{value}</span>
         </motion.span>
       </AnimatePresence>
       <span className="absolute inset-x-0 top-1/2 z-30 h-px bg-black/40" />
@@ -151,11 +154,11 @@ function FlipCountdown({ countdown }: { countdown: string }) {
   const [hours = "--", minutes = "--", seconds = "--"] = countdown.split(":");
 
   return (
-    <div className="mb-[30px] flex items-center justify-center gap-3 text-white md:mb-9">
-      <span className="font-antonio text-[28px] font-black uppercase leading-none tracking-normal md:text-[34px]">
+    <div className="mb-[30px] flex h-[36px] items-center justify-center gap-3 text-white md:mb-9 md:h-[40px]">
+      <span className="flex h-full items-center font-antonio text-[28px] font-black uppercase leading-none tracking-normal md:text-[34px]">
         Ends In
       </span>
-      <div className="flex items-center gap-[5px] [perspective:900px]">
+      <div className="flex h-full translate-y-[2px] items-center gap-[5px] [perspective:900px]">
         <FlipClockUnit value={hours} />
         <FlipClockUnit value={minutes} />
         <FlipClockUnit value={seconds} />
