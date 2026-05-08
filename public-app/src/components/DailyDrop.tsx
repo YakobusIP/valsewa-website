@@ -30,11 +30,19 @@ export default function DailyDrop({ onOpen }: DailyDropProps) {
               className="block w-full p-0 border-0 bg-transparent cursor-pointer rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <Image
-                src="/home/dailydrop2.png"
+                src="/home/daily-drop-desktop.svg"
                 alt="Daily Drop"
                 width={1200}
                 height={600}
-                className="rounded-lg w-full h-auto pointer-events-none"
+                className="hidden tablet:block rounded-lg w-full h-auto pointer-events-none"
+                sizes="(max-width: 1920px) 100vw, 1920px"
+              />
+              <Image
+                src="/home/daily-drop-mobile.svg"
+                alt="Daily Drop"
+                width={600}
+                height={600}
+                className="block tablet:hidden rounded-lg w-full h-auto pointer-events-none"
                 sizes="(max-width: 1920px) 100vw, 1920px"
               />
             </button>
