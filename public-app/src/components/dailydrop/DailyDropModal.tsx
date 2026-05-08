@@ -119,26 +119,30 @@ function useDailyDropCountdown(
 
 function FlipClockUnit({ value }: { value: string }) {
   return (
-    <span className="relative inline-flex h-[30px] w-[40px] overflow-hidden rounded-[4px] bg-[#3b54d6] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.28),inset_0_-1px_0_rgba(0,0,0,0.28)] md:h-[34px] md:w-[46px]">
-      <span className="absolute inset-x-0 top-1/2 z-10 h-px bg-black/35" />
+    <span
+      className="relative inline-flex h-[28px] w-[34px] overflow-hidden rounded-[4px] bg-[#324bd0] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.28),inset_0_-1px_0_rgba(0,0,0,0.34)] md:h-[30px] md:w-[36px]"
+      style={{ perspective: "120px" }}
+    >
       <span className="absolute inset-x-0 top-0 h-1/2 bg-white/10" />
-      <AnimatePresence mode="popLayout" initial={false}>
+      <span className="absolute inset-x-0 bottom-0 h-1/2 bg-black/10" />
+      <AnimatePresence initial={false} mode="popLayout">
         <motion.span
           key={value}
-          initial={{ rotateX: -115, y: -3, opacity: 0 }}
-          animate={{ rotateX: 0, opacity: 1 }}
-          exit={{ rotateX: 115, y: 3, opacity: 0 }}
-          transition={{ duration: 0.46, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute inset-0 flex items-center justify-center font-antonio text-[24px] font-black leading-none md:text-[28px]"
-          style={{
-            transformOrigin: "50% 0%",
-            transformStyle: "preserve-3d",
-            backfaceVisibility: "hidden"
+          initial={{ y: "-100%", rotateX: 90, filter: "brightness(0.6)" }}
+          animate={{ y: "0%", rotateX: 0, filter: "brightness(1)" }}
+          exit={{ y: "100%", rotateX: -90, filter: "brightness(0.6)" }}
+          transition={{
+            duration: 0.38,
+            ease: [0.4, 0.0, 0.15, 1],
           }}
+          className="absolute inset-0 z-20 flex items-center justify-center font-antonio text-[24px] font-black leading-none md:text-[28px]"
+          style={{ transformStyle: "preserve-3d" }}
         >
           {value}
         </motion.span>
       </AnimatePresence>
+      <span className="absolute inset-x-0 top-1/2 z-30 h-px bg-black/45" />
+      <span className="absolute left-0 top-1/2 z-30 h-px w-full shadow-[0_1px_2px_rgba(0,0,0,0.35)]" />
     </span>
   );
 }
@@ -151,7 +155,7 @@ function FlipCountdown({ countdown }: { countdown: string }) {
       <span className="inline-flex h-[30px] items-center font-antonio text-[26px] font-black uppercase leading-none tracking-normal md:h-[34px] md:text-[30px]">
         Ends In
       </span>
-      <div className="flex translate-y-[3px] items-center gap-[3px] [perspective:900px]">
+      <div className="flex translate-y-[1px] items-center gap-[3px] [perspective:900px]">
         <FlipClockUnit value={hours} />
         <FlipClockUnit value={minutes} />
         <FlipClockUnit value={seconds} />
@@ -238,6 +242,7 @@ const CARD_GAP = 16;
 const CARD_COUNT = 3;
 const CONTENT_PADDING = 50;
 const CARD_ASPECT_RATIO = 1.25;
+const DESKTOP_HEADER_CONTENT_GAP = 20;
 const DESKTOP_TIMER_CARD_GAP = 48;
 const DESKTOP_MODAL_BOTTOM_PADDING = 56;
 
@@ -261,7 +266,7 @@ function useCardRowDimensions() {
       headerSvgH -
       headerOverlapH -
       10 +
-      (headerOverlapH + 32) +
+      (headerOverlapH + DESKTOP_HEADER_CONTENT_GAP) +
       DESKTOP_TIMER_CARD_GAP +
       DESKTOP_MODAL_BOTTOM_PADDING;
     const maxCardH = maxModalH - verticalOverhead;
@@ -395,7 +400,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
             {/* Modal rectangle — z-[1] so the header SVG overlaps it on top */}
             <div
               className="relative z-[1] w-full rounded-2xl overflow-hidden border border-white/30"
-              style={{ paddingTop: headerOverlapH + 32 }}
+              style={{ paddingTop: headerOverlapH + DESKTOP_HEADER_CONTENT_GAP }}
             >
               {/* Background SVG */}
               <div
