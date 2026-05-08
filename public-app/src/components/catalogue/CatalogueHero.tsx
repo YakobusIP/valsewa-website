@@ -116,7 +116,7 @@ export function CatalogueHero({
         {/* Centered foreground content */}
         <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-4 pointer-events-none">
           <Image
-            src="/header/VALSEWA.png"
+            src="/header/VALSEWA.svg"
             alt="VALSEWA"
             width={200}
             height={60}

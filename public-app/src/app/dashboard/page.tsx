@@ -16,10 +16,7 @@ import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/useToast";
 
-import {
-  BOOKING_STATUS,
-  BookingWithAccountEntity
-} from "@/types/booking.type";
+import { BOOKING_STATUS, BookingWithAccountEntity } from "@/types/booking.type";
 
 import { calculateDaysRented, calculateTimeRemaining, cn } from "@/lib/utils";
 
@@ -125,7 +122,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-center flex-1 lg:hidden">
                 <figure className="sm:w-[210px] w-[150px]">
                   <Image
-                    src="/header/VALSEWA.png"
+                    src="/header/VALSEWA.svg"
                     alt="logo"
                     height={80}
                     width={210}
@@ -240,21 +237,23 @@ export default function Dashboard() {
                       <TableCell className="text-white text-center lg:text-lg text-sm px-12 text-nowrap">
                         {booking.status == "RESERVED" &&
                           booking.account.username && (
-                          <div className="relative inline-flex items-center gap-2">
-                            <span>{booking.account.username}</span>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="px-2"
-                              onClick={() =>
-                                copyToClipboard(booking.account.username ?? "")
-                              }
-                            >
-                              <CopyIcon className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        )}
+                            <div className="relative inline-flex items-center gap-2">
+                              <span>{booking.account.username}</span>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="px-2"
+                                onClick={() =>
+                                  copyToClipboard(
+                                    booking.account.username ?? ""
+                                  )
+                                }
+                              >
+                                <CopyIcon className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm text-nowrap px-10">
                         {booking.status == "RESERVED" &&

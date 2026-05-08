@@ -25,7 +25,7 @@ export default function MobileBrandSwitcher({
         }`}
       >
         <Image
-          src="/header/VALSEWA.png"
+          src="/header/VALSEWA.svg"
           alt="VALSEWA"
           width={200}
           height={70}
@@ -43,7 +43,7 @@ export default function MobileBrandSwitcher({
         }`}
       >
         <Image
-          src="/header/VALJUBEL.png"
+          src="/header/VALJUBEL.svg"
           alt="VALJUBEL"
           width={200}
           height={70}
@@ -61,7 +61,7 @@ export default function MobileBrandSwitcher({
         }`}
       >
         <Image
-          src="/header/VALJOKI.png"
+          src="/header/VALJOKI.svg"
           alt="VALJOKI"
           width={200}
           height={70}

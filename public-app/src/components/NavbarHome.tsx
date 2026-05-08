@@ -102,7 +102,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
             {!isScrolled && (
               <figure className="relative w-[var(--hero-valforum-logo-width)]">
                 <Image
-                  src="/header/Logo Header Valforum.png"
+                  src="/header/Valforum.svg"
                   alt="logo"
                   height={50}
                   width={130}
@@ -114,7 +114,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               <Link href="/">
                 <figure className="relative tablet:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
                   <Image
-                    src="/header/VALSEWA.png"
+                    src="/header/VALSEWA.svg"
                     alt="logo"
                     height={80}
                     width={170}

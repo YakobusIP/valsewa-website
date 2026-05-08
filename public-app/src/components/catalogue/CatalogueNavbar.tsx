@@ -41,11 +41,11 @@ interface CatalogueNavbarProps {
 function getMobileLogo(activeBrand: BrandType) {
   switch (activeBrand) {
     case "valjubel":
-      return "/header/VALJUBEL.png";
+      return "/header/VALJUBEL.svg";
     case "valjoki":
-      return "/header/VALJOKI.png";
+      return "/header/VALJOKI.svg";
     default:
-      return "/header/VALSEWA.png";
+      return "/header/VALSEWA.svg";
   }
 }
 
@@ -112,7 +112,6 @@ export function CatalogueNavbar({
     if (!isCountdownVisible) setStreakHintOpen(false);
   }, [isCountdownVisible]);
 
-
   return (
     <>
       {/* ─── DESKTOP / TABLET (md+) ─── */}
@@ -127,7 +126,7 @@ export function CatalogueNavbar({
             <div className="relative -translate-y-1 w-[var(--hero-valforum-tab-width)] flex justify-center">
               <figure className="relative w-[var(--hero-valforum-logo-width)]">
                 <Image
-                  src="/header/Logo Header Valforum.png"
+                  src="/header/Valforum.svg"
                   alt="logo"
                   height={50}
                   width={130}
@@ -329,7 +328,10 @@ export function CatalogueNavbar({
             {isAuthenticated && streak !== null && (
               <>
                 {isCountdownVisible ? (
-                  <Popover open={streakHintOpen} onOpenChange={setStreakHintOpen}>
+                  <Popover
+                    open={streakHintOpen}
+                    onOpenChange={setStreakHintOpen}
+                  >
                     <StreakCountdown
                       lastEligibleRent={lastEligibleRent}
                       onVisibilityChange={setIsCountdownVisible}

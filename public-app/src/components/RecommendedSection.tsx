@@ -20,14 +20,9 @@ import Link from "next/link";
 import { FaFire } from "react-icons/fa";
 import { FaArrowRight } from "react-icons/fa6";
 
-type RecSectionProps = {
-  onSeeMore: () => void;
-};
-
-/** Trending card order: grey, red, blue — bottom-heavy gradient like design */
 const CARD_OVERLAY_HEX = ["#787878", "#C70515", "#2F40FF"] as const;
 
-export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
+export default function RecommendedSection() {
   const [accounts, setAccounts] = useState<AccountEntity[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -190,12 +185,7 @@ export default function RecommendedSection({ onSeeMore }: RecSectionProps) {
         forCarousel ? "min-w-[270px]" : "w-full"
       )}
     >
-      <Link
-        href="/search"
-        onClick={onSeeMore}
-        target="_blank"
-        className="block h-full"
-      >
+      <Link href="/search" target="_blank" className="block h-full">
         <div className="group absolute inset-0 z-0 origin-center transition-transform duration-300 will-change-transform hover:z-10 hover:scale-[1.02]">
           <div className="relative h-full w-full rounded-2xl overflow-hidden bg-gradient-to-b from-[#C70515] to-[#000000] border border-white/10 flex flex-col items-start justify-center text-left">
             <div className="relative z-10 p-6 flex flex-row justify-between items-center w-full">
