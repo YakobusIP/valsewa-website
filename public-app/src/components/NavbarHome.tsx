@@ -212,7 +212,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
             <Fragment>
               <Button
                 onClick={handleLoginClick}
-                className="hidden lg:flex border border-black rounded-xl bg-white hover:bg-gray-100 transition"
+                className="hidden lg:flex border border-black rounded-xl bg-white hover:bg-gray-100 transition-shadow duration-300 hover:shadow-[0_0_24px_rgba(255,255,255,0.95),0_0_56px_rgba(255,255,255,0.55),0_0_96px_rgba(255,255,255,0.25)]"
               >
                 <Image
                   src="/header/SignUp Icon.svg"
@@ -228,7 +228,7 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               <Button
                 onClick={handleLoginClick}
                 size="icon"
-                className="lg:hidden border border-black rounded-xl bg-white hover:bg-gray-100 transition"
+                className="lg:hidden border border-black rounded-xl bg-white hover:bg-gray-100 transition-shadow duration-300 hover:shadow-[0_0_24px_rgba(255,255,255,0.95),0_0_56px_rgba(255,255,255,0.55),0_0_96px_rgba(255,255,255,0.25)]"
               >
                 <Image
                   src="/header/SignUp Icon.svg"
@@ -257,15 +257,15 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
               </HoverCardTrigger>
 
               <HoverCardContent
-                className="w-72 p-4 bg-[#C70515] border border-white/30 text-white"
+                className="w-72 p-4 bg-[#C70515] border border-white/30 text-white text-left"
                 align="end"
                 sideOffset={8}
               >
                 <div className="space-y-4">
                   {/* User Info */}
-                  <div className="flex items-center justify-center gap-3 cursor-default">
-                    <User className="w-8 h-8" />
-                    <span className="font-semibold text-xl">{username}</span>
+                  <div className="flex items-center justify-start gap-3 cursor-default">
+                    <User className="w-8 h-8 shrink-0" />
+                    <span className="font-semibold text-xl text-left">{username}</span>
                   </div>
 
                   {/* Ongoing Order */}
