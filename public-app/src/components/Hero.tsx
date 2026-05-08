@@ -83,7 +83,7 @@ export default function Hero({
         {/* MOBILE: Hero carousel (includes hardcoded design as slide 1) */}
         <div className="relative z-10 md:hidden pt-16">
           <div className="w-full pt-12">
-            <div className="w-full rounded-xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
+            <div className="w-full rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border-2 border-white shadow-xl">
               <Carousel
                 className="w-full"
                 plugins={[mobileAutoplay]}
@@ -107,7 +107,7 @@ export default function Hero({
                         {slide.image.type === "VIDEO" ? (
                           <video
                             src={slide.image.imageUrl}
-                            className="object-cover rounded-xl w-full h-full"
+                            className="object-cover w-full h-full"
                             autoPlay
                             muted
                             loop
@@ -119,7 +119,7 @@ export default function Hero({
                             src={slide.image.imageUrl}
                             alt="Carousel Image"
                             fill
-                            className="object-cover rounded-xl"
+                            className="object-cover w-full h-full"
                             unoptimized
                           />
                         )}
@@ -144,7 +144,7 @@ export default function Hero({
 
           {/* RIGHT – CAROUSEL (Desktop only) */}
           <div className="absolute hidden md:flex top-[var(--hero-notch-height)] bottom-0 right-0">
-            <div className="h-full aspect-[4/5] ml-auto rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border border-white/10 shadow-xl">
+            <div className="h-full aspect-[4/5] ml-auto rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border-2 border-white shadow-xl">
               <Carousel
                 className="w-full h-full [&>div]:h-full"
                 plugins={[desktopAutoplay]}
@@ -157,7 +157,7 @@ export default function Hero({
                         {item.image.type === "VIDEO" ? (
                           <video
                             src={item.image.imageUrl}
-                            className="object-cover rounded-2xl w-full h-full"
+                            className="object-cover w-full h-full"
                             autoPlay
                             muted
                             loop
@@ -169,7 +169,7 @@ export default function Hero({
                             src={item.image.imageUrl}
                             alt="Carousel Image"
                             fill
-                            className="object-cover rounded-2xl"
+                            className="object-cover w-full h-full"
                             unoptimized
                           />
                         )}
