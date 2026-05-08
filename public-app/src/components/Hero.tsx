@@ -127,8 +127,8 @@ export default function Hero({
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious className="left-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent" />
-                <CarouselNext className="right-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent" />
+                <CarouselPrevious className="left-2 z-10 h-8 w-8 bg-[#0F0F0F] border border-white/10 shadow-none text-white hover:bg-neutral-950 hover:text-white" />
+                <CarouselNext className="right-2 z-10 h-8 w-8 bg-[#0F0F0F] border border-white/10 shadow-none text-white hover:bg-neutral-950 hover:text-white" />
               </Carousel>
             </div>
           </div>
@@ -178,8 +178,8 @@ export default function Hero({
                   ))}
                 </CarouselContent>
 
-                <CarouselPrevious className="left-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent" />
-                <CarouselNext className="right-2 bg-transparent border-none shadow-none p-0 text-white hover:text-white transition hover:bg-transparent" />
+                <CarouselPrevious className="left-2 z-10 h-8 w-8 bg-[#0F0F0F] border border-white/10 shadow-none text-white hover:bg-neutral-950 hover:text-white" />
+                <CarouselNext className="right-2 z-10 h-8 w-8 bg-[#0F0F0F] border border-white/10 shadow-none text-white hover:bg-neutral-950 hover:text-white" />
               </Carousel>
             </div>
           </div>
