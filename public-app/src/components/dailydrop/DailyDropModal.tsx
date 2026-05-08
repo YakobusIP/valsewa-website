@@ -120,11 +120,11 @@ function useDailyDropCountdown(
 function FlipClockUnit({ value }: { value: string }) {
   return (
     <span
-      className="relative inline-flex h-[28px] w-[34px] overflow-hidden rounded-[4px] bg-[#324bd0] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.28),inset_0_-1px_0_rgba(0,0,0,0.34)] md:h-[30px] md:w-[36px]"
+      className="relative inline-flex h-[36px] w-[42px] overflow-hidden rounded-[6px] bg-[#3C31C1] text-white md:h-[42px] md:w-[48px]"
       style={{ perspective: "120px" }}
     >
-      <span className="absolute inset-x-0 top-0 h-1/2 bg-white/10" />
-      <span className="absolute inset-x-0 bottom-0 h-1/2 bg-black/10" />
+      <span className="absolute inset-x-0 top-0 h-1/2 bg-white/8" />
+      <span className="absolute inset-x-0 bottom-0 h-1/2 bg-black/12" />
       <AnimatePresence initial={false} mode="popLayout">
         <motion.span
           key={value}
@@ -133,16 +133,16 @@ function FlipClockUnit({ value }: { value: string }) {
           exit={{ y: "100%", rotateX: -90, filter: "brightness(0.6)" }}
           transition={{
             duration: 0.38,
-            ease: [0.4, 0.0, 0.15, 1],
+            ease: [0.4, 0.0, 0.15, 1]
           }}
-          className="absolute inset-0 z-20 flex items-center justify-center font-antonio text-[24px] font-black leading-none md:text-[28px]"
+          className="absolute inset-0 z-20 flex items-center justify-center font-antonio text-[26px] font-black leading-none md:text-[32px]"
           style={{ transformStyle: "preserve-3d" }}
         >
           {value}
         </motion.span>
       </AnimatePresence>
-      <span className="absolute inset-x-0 top-1/2 z-30 h-px bg-black/45" />
-      <span className="absolute left-0 top-1/2 z-30 h-px w-full shadow-[0_1px_2px_rgba(0,0,0,0.35)]" />
+      <span className="absolute inset-x-0 top-1/2 z-30 h-px bg-black/40" />
+      <span className="absolute inset-x-0 top-1/2 z-30 mt-px h-px bg-white/10" />
     </span>
   );
 }
@@ -151,11 +151,11 @@ function FlipCountdown({ countdown }: { countdown: string }) {
   const [hours = "--", minutes = "--", seconds = "--"] = countdown.split(":");
 
   return (
-    <div className="font-instrumentSans text-white mb-10 flex items-center justify-center gap-2 md:mb-12">
-      <span className="inline-flex h-[30px] items-center font-antonio text-[26px] font-black uppercase leading-none tracking-normal md:h-[34px] md:text-[30px]">
+    <div className="mb-10 flex items-center justify-center gap-3 text-white md:mb-12">
+      <span className="font-antonio text-[28px] font-black uppercase leading-none tracking-normal md:text-[34px]">
         Ends In
       </span>
-      <div className="flex translate-y-[1px] items-center gap-[3px] [perspective:900px]">
+      <div className="flex items-center gap-[5px] [perspective:900px]">
         <FlipClockUnit value={hours} />
         <FlipClockUnit value={minutes} />
         <FlipClockUnit value={seconds} />
@@ -400,7 +400,9 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
             {/* Modal rectangle — z-[1] so the header SVG overlaps it on top */}
             <div
               className="relative z-[1] w-full rounded-2xl overflow-hidden border border-white/30"
-              style={{ paddingTop: headerOverlapH + DESKTOP_HEADER_CONTENT_GAP }}
+              style={{
+                paddingTop: headerOverlapH + DESKTOP_HEADER_CONTENT_GAP
+              }}
             >
               {/* Background SVG */}
               <div
