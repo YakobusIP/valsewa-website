@@ -83,7 +83,7 @@ export default function Hero({
         {/* MOBILE: Hero carousel (includes hardcoded design as slide 1) */}
         <div className="relative z-10 md:hidden pt-16">
           <div className="w-full pt-12">
-            <div className="w-full rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border-2 border-white shadow-xl">
+            <div className="w-full rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md tablet:border-2 tablet:border-white shadow-xl">
               <Carousel
                 className="w-full"
                 plugins={[mobileAutoplay]}
