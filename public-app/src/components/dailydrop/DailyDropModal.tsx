@@ -16,6 +16,7 @@ import { PublicDailyDrop } from "@/types/dailydrop.type";
 import { OperationalHoursEntity } from "@/types/setting.type";
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import Image from "next/image";
 
@@ -116,6 +117,56 @@ function useDailyDropCountdown(
   return display;
 }
 
+function FlipClockUnit({ value }: { value: string }) {
+  return (
+    <span
+      className="relative inline-flex h-[36px] w-[40px] overflow-hidden rounded-[6px] bg-[#3C31C1] text-white md:h-[40px]"
+      style={{ perspective: "200px" }}
+    >
+      <span className="absolute inset-x-0 top-0 h-1/2 bg-white/8" />
+      <span className="absolute inset-x-0 bottom-0 h-1/2 bg-black/12" />
+      <AnimatePresence initial={false} mode="popLayout">
+        <motion.span
+          key={value}
+          initial={{ rotateX: 90, opacity: 0, filter: "brightness(0.5)" }}
+          animate={{ rotateX: 0, opacity: 1, filter: "brightness(1)" }}
+          exit={{ rotateX: -90, opacity: 0, filter: "brightness(0.5)" }}
+          transition={{
+            duration: 0.5,
+            ease: [0.4, 0.0, 0.2, 1]
+          }}
+          className="absolute inset-0 z-20 flex items-center justify-center font-antonio text-[26px] font-black leading-none md:text-[32px]"
+          style={{
+            transformStyle: "preserve-3d",
+            transformOrigin: "center center"
+          }}
+        >
+          <span className="-translate-y-[2px]">{value}</span>
+        </motion.span>
+      </AnimatePresence>
+      <span className="absolute inset-x-0 top-1/2 z-30 h-px bg-black/40" />
+      <span className="absolute inset-x-0 top-1/2 z-30 mt-px h-px bg-white/10" />
+    </span>
+  );
+}
+
+function FlipCountdown({ countdown }: { countdown: string }) {
+  const [hours = "--", minutes = "--", seconds = "--"] = countdown.split(":");
+
+  return (
+    <div className="mb-[30px] flex h-[36px] items-center justify-center gap-3 text-white md:mb-9 md:h-[40px]">
+      <span className="flex h-full items-center font-antonio text-[28px] font-black uppercase leading-none tracking-normal md:text-[34px]">
+        Ends In
+      </span>
+      <div className="flex h-full translate-y-[2px] items-center gap-[5px] [perspective:900px]">
+        <FlipClockUnit value={hours} />
+        <FlipClockUnit value={minutes} />
+        <FlipClockUnit value={seconds} />
+      </div>
+    </div>
+  );
+}
+
 // ── LocalStorage helpers ───────────────────────────────────────────────────────
 function getDropDayKey(hours: OperationalHoursEntity | null): string {
   const tz = hours?.timezone || "Asia/Jakarta";
@@ -194,6 +245,9 @@ const CARD_GAP = 16;
 const CARD_COUNT = 3;
 const CONTENT_PADDING = 50;
 const CARD_ASPECT_RATIO = 1.25;
+const DESKTOP_HEADER_CONTENT_GAP = 15;
+const DESKTOP_TIMER_CARD_GAP = 36;
+const DESKTOP_MODAL_BOTTOM_PADDING = 44;
 
 function useCardRowDimensions() {
   const compute = (vw: number, vh: number) => {
@@ -208,11 +262,16 @@ function useCardRowDimensions() {
       Math.floor((rowW - CARD_GAP * (CARD_COUNT - 1)) / CARD_COUNT)
     );
 
-    const maxModalH = vh * 0.9;
+    const maxModalH = vh * 0.95;
     const headerSvgH = vw / 5;
     const headerOverlapH = headerSvgH / 2;
     const verticalOverhead =
-      headerSvgH - headerOverlapH - 10 + (headerOverlapH + 32) + 40 + 32;
+      headerSvgH -
+      headerOverlapH -
+      10 +
+      (headerOverlapH + DESKTOP_HEADER_CONTENT_GAP) +
+      DESKTOP_TIMER_CARD_GAP +
+      DESKTOP_MODAL_BOTTOM_PADDING;
     const maxCardH = maxModalH - verticalOverhead;
     const wFromHeight = Math.floor(maxCardH / CARD_ASPECT_RATIO);
 
@@ -320,7 +379,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
           </DialogPrimitive.Title>
 
           {/* ── DESKTOP / TABLET (md+) ──────────────────────────────────────── */}
-          <div className="hidden md:flex flex-col items-center md:w-11/12 xl:w-3/4 3xl:w-2/3 max-h-[90vh]">
+          <div className="hidden md:flex flex-col items-center md:w-11/12 xl:w-3/4 3xl:w-2/3 max-h-[95vh]">
             {/*
               Header SVG:
               - z-[2] so it renders ABOVE the modal box (z-[1]) in the stacking context
@@ -344,7 +403,9 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
             {/* Modal rectangle — z-[1] so the header SVG overlaps it on top */}
             <div
               className="relative z-[1] w-full rounded-2xl overflow-hidden border border-white/30"
-              style={{ paddingTop: headerOverlapH + 32 }}
+              style={{
+                paddingTop: headerOverlapH + DESKTOP_HEADER_CONTENT_GAP
+              }}
             >
               {/* Background SVG */}
               <div
@@ -374,16 +435,12 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
               </DialogPrimitive.Close>
 
               {/* Content */}
-              <div className="relative z-10 flex flex-col items-center px-6 pb-8">
+              <div
+                className="relative z-10 flex flex-col items-center px-6"
+                style={{ paddingBottom: DESKTOP_MODAL_BOTTOM_PADDING }}
+              >
                 {/* Countdown */}
-                <p className="font-instrumentSans text-white mb-6 flex items-center gap-2">
-                  <span style={{ fontWeight: 600, fontSize: 16 }}>
-                    OFFER ENDS IN
-                  </span>
-                  <span style={{ fontWeight: 800, fontSize: 16 }}>
-                    {countdown}
-                  </span>
-                </p>
+                <FlipCountdown countdown={countdown} />
 
                 {/* Cards — each ~1/4 modal width */}
                 <div className="flex items-center justify-center gap-4 w-full">
@@ -456,14 +513,9 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
               </div>
 
               {/* Countdown */}
-              <p className="font-instrumentSans text-white mb-5 flex items-center gap-2 shrink-0">
-                <span style={{ fontWeight: 400, fontSize: 14 }}>
-                  OFFER ENDS IN
-                </span>
-                <span style={{ fontWeight: 700, fontSize: 14 }}>
-                  {countdown}
-                </span>
-              </p>
+              <div className="shrink-0">
+                <FlipCountdown countdown={countdown} />
+              </div>
 
               {/* Cards carousel */}
               <div className="w-full flex items-center overflow-hidden">

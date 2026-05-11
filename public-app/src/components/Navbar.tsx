@@ -74,7 +74,7 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
         <Link href="/" className="relative md:pl-14">
           <figure className="relative top-0 lg:max-w-[200px] sm:max-w-[150px] max-w-[150px] left-5">
             <Image
-              src="/header/VALSEWA.png"
+              src="/header/VALSEWA.svg"
               alt="logo"
               height={300}
               width={200}

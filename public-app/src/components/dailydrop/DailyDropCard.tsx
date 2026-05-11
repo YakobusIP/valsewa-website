@@ -74,7 +74,7 @@ const GLOW_DELAY_MS = FLIP_DURATION_MS + 200;
 const GLOW_DURATION_MS = 1000;
 
 // ── Triangle SVG with gradient for discount corner ────────────────────────────
-function GoldTriangle({ size }: { size: number }) {
+function RedTriangle({ size }: { size: number }) {
   const gradientId = useId();
   return (
     <svg
@@ -86,9 +86,9 @@ function GoldTriangle({ size }: { size: number }) {
     >
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#FFE481" />
-          <stop offset="50%" stopColor="#9E8D4E" />
-          <stop offset="100%" stopColor="#FFE481" />
+          <stop offset="0%" stopColor="#C70515" />
+          <stop offset="50%" stopColor="#C70515" />
+          <stop offset="100%" stopColor="#C70515" />
         </linearGradient>
       </defs>
       <polygon
@@ -108,9 +108,9 @@ interface CardBackProps {
 function CardBack({ drop, cardWidth }: CardBackProps) {
   const isSold = drop.isSold;
   const triangleSize = Math.round(cardWidth * 0.42);
-  const discountFontSize = triangleSize * 0.22;
+  const discountFontSize = triangleSize * 0.18;
   const thumbSize = Math.round(cardWidth * 0.85);
-  const offsetY = triangleSize * 0.3;
+  const offsetY = triangleSize * 0.4;
   const offsetX = triangleSize * -0.25;
   const displayCode = drop.account.priceTier.code.includes("COMP -")
     ? drop.account.priceTier.code
@@ -125,7 +125,7 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
 
   const rentStyle: CSSProperties = {
     fontSize: Math.max(10, cardWidth * 0.055),
-    padding: `${Math.max(10, cardWidth * 0.06)}px`
+    padding: `${Math.max(10, cardWidth * 0.04)}px`
   };
 
   return (
@@ -142,14 +142,14 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
         className="absolute top-0 left-0"
         style={{ zIndex: 49, transform: "translate3d(0,0,1px)" }}
       >
-        <GoldTriangle size={triangleSize} />
+        <RedTriangle size={triangleSize} />
         <span
           className="absolute font-antonio leading-none select-none"
           style={{
             fontSize: discountFontSize,
             fontWeight: 1000,
             letterSpacing: "-0.05em",
-            color: "#846800",
+            color: "white",
             lineHeight: 1,
 
             transform: `rotate(-45deg) translateY(${offsetY}px) translateX(${offsetX}px)`,
@@ -157,7 +157,7 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
             whiteSpace: "nowrap"
           }}
         >
-          {drop.discount}%
+          {drop.discount}% OFF
         </span>
       </div>
 
@@ -167,7 +167,7 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
         style={{
           zIndex: 2,
           top: Math.round(cardWidth * 0.14),
-          right: Math.round(cardWidth * 0.04),
+          right: Math.round(cardWidth * 0.08),
           fontSize: Math.max(8, Math.round(cardWidth * 0.035))
         }}
       >
@@ -214,7 +214,7 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
       <div
         className="flex items-center justify-between gap-1 shrink-0"
         style={{
-          paddingInline: Math.round(cardWidth * 0.05),
+          paddingInline: Math.round(cardWidth * 0.06),
           paddingBottom: 4
         }}
       >
@@ -286,7 +286,7 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
       <div
         className="shrink-0"
         style={{
-          paddingInline: Math.round(cardWidth * 0.04),
+          paddingInline: Math.round(cardWidth * 0.06),
           paddingBottom: Math.round(cardWidth * 0.04)
         }}
       >

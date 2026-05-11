@@ -38,12 +38,12 @@ const NavbarHomeMobile = ({
   const getLogo = () => {
     switch (activeBrand) {
       case "valjubel":
-        return "/header/VALJUBEL.png";
+        return "/header/VALJUBEL.svg";
       case "valjoki":
-        return "/header/VALJOKI.png";
+        return "/header/VALJOKI.svg";
       case "valsewa":
       default:
-        return "/header/VALSEWA.png";
+        return "/header/VALSEWA.svg";
     }
   };
 

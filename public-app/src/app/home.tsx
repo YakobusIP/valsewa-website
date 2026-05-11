@@ -13,16 +13,12 @@ import { DailyDropModal } from "@/components/dailydrop/DailyDropModal";
 
 import { CarouselSlide } from "@/types/account.type";
 
-import { useRouter } from "next/navigation";
-
 interface Props {
   initialCarousel: CarouselSlide[];
 }
 export default function Home({ initialCarousel }: Props) {
   const [isScrolled, setIsScrolled] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
-
-  const router = useRouter();
 
   const [activeBrand, setActiveBrand] = useState<
     "valsewa" | "valjubel" | "valjoki"
@@ -46,10 +42,6 @@ export default function Home({ initialCarousel }: Props) {
     window.addEventListener("resize", updateScrollbarWidth);
     return () => window.removeEventListener("resize", updateScrollbarWidth);
   }, []);
-
-  const handleSeeMore = () => {
-    router.push("/search");
-  };
 
   return (
     <Fragment>
@@ -88,25 +80,16 @@ export default function Home({ initialCarousel }: Props) {
             />
           </div>
         </section>
-        <section
-          id="howto"
-          className="px-8 lg:px-16 scroll-mt-12 pt-10"
-        >
+        <section id="howto" className="px-8 lg:px-16 scroll-mt-12 pt-10">
           <HowToOrder />
         </section>
 
-        <section
-          id="daily-drop"
-          className="px-8 lg:px-16 scroll-mt-12 pt-10"
-        >
+        <section id="daily-drop" className="px-8 lg:px-16 scroll-mt-12 pt-10">
           <DailyDrop onOpen={() => setIsDailyDropOpen(true)} />
         </section>
 
-        <section
-          id="recommended"
-          className="px-8 lg:px-16 scroll-mt-12 pt-10"
-        >
-          <RecommendedSection onSeeMore={handleSeeMore} />
+        <section id="recommended" className="px-8 lg:px-16 scroll-mt-12 pt-10">
+          <RecommendedSection />
         </section>
 
         <section id="explore-catalog" className="scroll-mt-12 pt-10">

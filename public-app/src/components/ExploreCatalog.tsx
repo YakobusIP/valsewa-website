@@ -18,7 +18,7 @@ export default function ExploreCatalog() {
       {/* CENTER CONTENT */}
       <div className="relative z-10 flex flex-col items-center text-center px-4 max-w-7xl">
         <Image
-          src="/header/VALSEWA.png"
+          src="/header/VALSEWA.svg"
           alt="Valsewa Logo"
           width={220}
           height={80}

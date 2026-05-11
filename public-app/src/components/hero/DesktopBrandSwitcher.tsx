@@ -36,7 +36,7 @@ export default function DesktopBrandSwitcher({
               />
             )}
             <Image
-              src={`/header/${brand.toUpperCase()}.png`}
+              src={`/header/${brand.toUpperCase()}.svg`}
               alt={brand.toUpperCase()}
               width={130}
               height={28}

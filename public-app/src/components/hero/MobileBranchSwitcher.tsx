@@ -11,7 +11,7 @@ export default function MobileBrandSwitcher({
   setActiveBrand
 }: Props) {
   const baseButtonClass =
-    "flex-1 flex items-center justify-center py-3 rounded-md transition";
+    "flex-1 flex items-center justify-center py-2 rounded-md transition";
 
   return (
     <div className="flex items-stretch w-full pt-[4.5rem] gap-6 px-2">
@@ -25,7 +25,7 @@ export default function MobileBrandSwitcher({
         }`}
       >
         <Image
-          src="/header/VALSEWA.png"
+          src="/header/VALSEWA.svg"
           alt="VALSEWA"
           width={200}
           height={70}
@@ -43,7 +43,7 @@ export default function MobileBrandSwitcher({
         }`}
       >
         <Image
-          src="/header/VALJUBEL.png"
+          src="/header/VALJUBEL.svg"
           alt="VALJUBEL"
           width={200}
           height={70}
@@ -61,7 +61,7 @@ export default function MobileBrandSwitcher({
         }`}
       >
         <Image
-          src="/header/VALJOKI.png"
+          src="/header/VALJOKI.svg"
           alt="VALJOKI"
           width={200}
           height={70}

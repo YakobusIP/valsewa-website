@@ -21,12 +21,12 @@ export default function HeroTextBlock({
   const getSubtitle = () => {
     switch (activeBrand) {
       case "valjubel":
-        return "FOR BUYING AND SELLING VALORANT ACCOUNTS";
+        return "FOR BUYING AND SELLING\nVALORANT ACCOUNTS";
       case "valjoki":
-        return "VALORANT ACCOUNT BOOSTING SERVICE";
+        return "VALORANT ACCOUNT\nBOOSTING SERVICE";
       case "valsewa":
       default:
-        return "VALORANT ACCOUNT RENTAL SITE";
+        return "VALORANT ACCOUNT\nRENTAL SITE";
     }
   };
 
@@ -37,7 +37,7 @@ export default function HeroTextBlock({
       {/* Logo - Desktop only */}
       <div className="hidden md:flex items-center gap-3 mb-4">
         <Image
-          src="/header/VALSEWA.png"
+          src="/header/VALSEWA.svg"
           alt="VALSEWA"
           width={200}
           height={70}
@@ -46,9 +46,9 @@ export default function HeroTextBlock({
       </div>
 
       {/* Headline */}
-      <h1 className="text-white text-4xl md:text-2xl xl:text-6xl font-extrabold leading-tight font-antonio">
+      <h1 className="text-white text-4xl md:text-2xl xl:text-4xl font-extrabold leading-tight font-antonio">
         {getTitle()} <br />
-        <span className="text-white text-5xl md:text-[2.5rem] xl:text-8xl font-extrabold leading-tight font-antonio">
+        <span className="text-white text-5xl md:text-[2.5rem] xl:text-7xl font-extrabold leading-tight font-antonio whitespace-pre">
           {getSubtitle()}
         </span>
       </h1>
@@ -59,7 +59,7 @@ export default function HeroTextBlock({
           POWERED BY
         </span>
         <Image
-          src="/header/Logo Header Valforum.png"
+          src="/header/Valforum.svg"
           alt="VALFORUM"
           width={100}
           height={24}

@@ -1,9 +1,9 @@
 "use client";
 
+import BackToSearchLink from "@/components/BackToSearchLink";
+
 import Image from "next/image";
 import Link from "next/link";
-
-import BackToSearchLink from "@/components/BackToSearchLink";
 
 import CancelBookingButton from "./bookings/CancelBookingButton";
 
@@ -49,7 +49,7 @@ const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
         <Link href="/">
           <figure className="w-[160px] sm:w-[200px]">
             <Image
-              src="/header/VALSEWA.png"
+              src="/header/VALSEWA.svg"
               alt="logo"
               height={40}
               width={200}
@@ -58,8 +58,6 @@ const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
             />
           </figure>
         </Link>
-
-
       </div>
     </div>
   );

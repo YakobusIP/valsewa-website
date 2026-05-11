@@ -41,11 +41,11 @@ interface CatalogueNavbarProps {
 function getMobileLogo(activeBrand: BrandType) {
   switch (activeBrand) {
     case "valjubel":
-      return "/header/VALJUBEL.png";
+      return "/header/VALJUBEL.svg";
     case "valjoki":
-      return "/header/VALJOKI.png";
+      return "/header/VALJOKI.svg";
     default:
-      return "/header/VALSEWA.png";
+      return "/header/VALSEWA.svg";
   }
 }
 
@@ -112,29 +112,30 @@ export function CatalogueNavbar({
     if (!isCountdownVisible) setStreakHintOpen(false);
   }, [isCountdownVisible]);
 
-
   return (
     <>
       {/* ─── DESKTOP / TABLET (md+) ─── */}
       <div
         style={heroChromeVars as CSSProperties}
-        className={`hidden tablet:block fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 lg:pt-3 px-8 lg:px-8 ${
+        className={`hidden tablet:block fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 px-5 lg:px-8 ${
           isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
         }`}
       >
-        <div className="mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between">
-          <div className="flex items-center gap-[var(--hero-logo-switcher-gap)] pl-[var(--hero-nav-left-offset)]">
-            <figure className="relative w-[var(--hero-valforum-logo-width)] pr-3">
-              <Image
-                src="/header/Logo Header Valforum.png"
-                alt="logo"
-                height={50}
-                width={130}
-                className="object-contain w-full h-auto"
-              />
-            </figure>
+        <div className="relative mx-auto max-w-[1920px] h-[84px] md:h-[80px] flex items-center justify-between">
+          <div className="flex items-center gap-[var(--hero-logo-switcher-gap)]">
+            <div className="relative -translate-y-1 w-[var(--hero-valforum-tab-width)] flex justify-center">
+              <figure className="relative w-[var(--hero-valforum-logo-width)]">
+                <Image
+                  src="/header/Valforum.svg"
+                  alt="logo"
+                  height={50}
+                  width={130}
+                  className="object-contain w-full h-auto"
+                />
+              </figure>
+            </div>
 
-            <div className="relative transition-all duration-300">
+            <div className="absolute left-[calc(var(--hero-valforum-tab-width)+var(--hero-logo-switcher-gap))] top-[calc(var(--hero-notch-height)-var(--hero-logo-switcher-gap)+var(--hero-switcher-y-offset))] -translate-y-full transition-all duration-300">
               <DesktopBrandSwitcher
                 activeBrand={activeBrand}
                 setActiveBrand={setActiveBrand}
@@ -327,7 +328,10 @@ export function CatalogueNavbar({
             {isAuthenticated && streak !== null && (
               <>
                 {isCountdownVisible ? (
-                  <Popover open={streakHintOpen} onOpenChange={setStreakHintOpen}>
+                  <Popover
+                    open={streakHintOpen}
+                    onOpenChange={setStreakHintOpen}
+                  >
                     <StreakCountdown
                       lastEligibleRent={lastEligibleRent}
                       onVisibilityChange={setIsCountdownVisible}
