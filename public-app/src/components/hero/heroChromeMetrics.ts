@@ -1,12 +1,12 @@
 export const heroChromeVars = {
   "--hero-nav-left-offset": "clamp(24px, 1.5vw, 28px)",
   "--hero-valforum-logo-width": "clamp(80px, 7vw, 130px)",
-  "--hero-logo-switcher-gap": "clamp(8px, 0.8vw, 16px)",
+  "--hero-logo-switcher-gap": "clamp(8px, 0.5vw, 16px)",
   "--hero-switcher-y-offset": "6px",
   "--hero-switcher-logo-width": "clamp(76px, 6.8vw, 118px)",
   "--hero-switcher-shell-padding-x": "clamp(8px, 0.9vw, 14px)",
   "--hero-switcher-item-padding-x": "clamp(8px, 1vw, 18px)",
-  "--hero-notch-height": "clamp(62px, 3.9vw, 75px)",
+  "--hero-notch-height": "clamp(66px, 3.9vw, 75px)",
   "--hero-tab-curve": "clamp(18px, 1.2vw, 22px)",
   "--hero-valforum-tab-width":
     "calc(var(--hero-nav-left-offset) + var(--hero-valforum-logo-width) + clamp(8px, 0.8vw, 12px))"
