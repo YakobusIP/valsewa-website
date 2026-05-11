@@ -11,7 +11,7 @@ export default function MobileBrandSwitcher({
   setActiveBrand
 }: Props) {
   const baseButtonClass =
-    "flex-1 flex items-center justify-center py-3 rounded-md transition";
+    "flex-1 flex items-center justify-center py-2 rounded-md transition";
 
   return (
     <div className="flex items-stretch w-full pt-[4.5rem] gap-6 px-2">
