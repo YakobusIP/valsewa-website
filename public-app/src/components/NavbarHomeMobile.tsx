@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
 import StreakCountdown from "./StreakCountdown";
+import StreakNavbarHoverPanel from "./StreakNavbarHoverPanel";
 
 interface NavbarHomeMobileProps {
   activeBrand: "valsewa" | "valjubel" | "valjoki";
@@ -96,9 +97,6 @@ const NavbarHomeMobile = ({
       });
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    if (!isCountdownVisible) setStreakHintOpen(false);
-  }, [isCountdownVisible]);
 
   return (
     <div
@@ -148,64 +146,52 @@ const NavbarHomeMobile = ({
               />
             </div>
           </Link>
-          {/* Streak — Popover hint only while countdown is visible (tap-friendly vs tooltip) */}
+          {/* Streak */}
           {isAuthenticated && streak !== null && (
-            <>
-              {isCountdownVisible ? (
-                <Popover open={streakHintOpen} onOpenChange={setStreakHintOpen}>
-                  <StreakCountdown
-                    lastEligibleRent={lastEligibleRent}
-                    onVisibilityChange={setIsCountdownVisible}
-                    className="hidden"
-                  />
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Streak timer — tap for details"
-                      className="flex items-center justify-center gap-0.5 w-10 h-10 px-1 border border-white/30 rounded-lg hover:border-white transition"
-                    >
-                      <Image
-                        src="/header/time run out icon.svg"
-                        alt=""
-                        width={16}
-                        height={16}
-                        className="shrink-0"
-                      />
-                      <span className="text-white text-xs font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
-                        {streak}
-                      </span>
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    className="w-auto p-2 bg-neutral-900 border border-white/30 text-white"
-                    align="center"
-                    sideOffset={8}
-                  >
-                    <StreakCountdown
-                      lastEligibleRent={lastEligibleRent}
-                      className="text-white text-sm font-bold tabular-nums text-center block"
+            <Popover open={streakHintOpen} onOpenChange={setStreakHintOpen}>
+              <StreakCountdown
+                lastEligibleRent={lastEligibleRent}
+                onVisibilityChange={setIsCountdownVisible}
+                className="hidden"
+              />
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Streak — tap for details"
+                  className="flex items-center justify-center gap-0.5 w-10 h-10 px-1 border border-white/30 rounded-lg hover:border-white transition"
+                >
+                  {isCountdownVisible ? (
+                    <Image
+                      src="/header/time run out icon.svg"
+                      alt=""
+                      width={16}
+                      height={16}
+                      className="shrink-0"
                     />
-                  </PopoverContent>
-                </Popover>
-              ) : (
-                <div className="flex items-center justify-center w-10 h-10 border border-white/30 rounded-lg hover:border-white transition">
-                  <StreakCountdown
-                    lastEligibleRent={lastEligibleRent}
-                    onVisibilityChange={setIsCountdownVisible}
-                    className="hidden"
-                  />
-                  <Image
-                    src="/header/streak icon.svg"
-                    alt="Streak"
-                    width={18}
-                    height={18}
-                  />
-                  <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                  ) : (
+                    <Image
+                      src="/header/streak icon.svg"
+                      alt="Streak"
+                      width={18}
+                      height={18}
+                    />
+                  )}
+                  <span className="text-white text-xs font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
                     {streak}
                   </span>
-                </div>
-              )}
-            </>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-56 p-4 bg-[#C70515] border border-white/30 text-white"
+                align="end"
+                sideOffset={8}
+              >
+                <StreakNavbarHoverPanel
+                  streak={streak}
+                  lastEligibleRent={lastEligibleRent}
+                />
+              </PopoverContent>
+            </Popover>
           )}
 
           {/* SIGN IN */}

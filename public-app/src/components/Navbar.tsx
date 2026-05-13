@@ -15,6 +15,7 @@ import Link from "next/link";
 
 import LoginPage from "./LoginPage";
 import StreakCountdown from "./StreakCountdown";
+import StreakNavbarHoverPanel from "./StreakNavbarHoverPanel";
 import { Button } from "./ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 
@@ -125,33 +126,47 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
 
           {/* Streak */}
           {isAuthenticated && streak !== null && (
-            <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
-              <StreakCountdown
-                lastEligibleRent={lastEligibleRent}
-                onVisibilityChange={setIsCountdownVisible}
-                className="text-white text-xs font-bold mr-1"
-              />
+            <HoverCard openDelay={200}>
+              <HoverCardTrigger asChild>
+                <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
+                  <StreakCountdown
+                    lastEligibleRent={lastEligibleRent}
+                    onVisibilityChange={setIsCountdownVisible}
+                    className="text-white text-xs font-bold mr-1"
+                  />
 
-              {/* ICON SWITCH */}
-              {isCountdownVisible ? (
-                <Image
-                  src="/header/time run out icon.svg"
-                  alt="timer"
-                  width={20}
-                  height={20}
+                  {/* ICON SWITCH */}
+                  {isCountdownVisible ? (
+                    <Image
+                      src="/header/time run out icon.svg"
+                      alt="timer"
+                      width={20}
+                      height={20}
+                    />
+                  ) : (
+                    <Image
+                      src="/header/streak icon.svg"
+                      alt="streak"
+                      width={40}
+                      height={40}
+                    />
+                  )}
+                  <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                    {streak}
+                  </span>
+                </div>
+              </HoverCardTrigger>
+              <HoverCardContent
+                className="w-56 p-4 bg-[#C70515] border border-white/30 text-white"
+                align="end"
+                sideOffset={8}
+              >
+                <StreakNavbarHoverPanel
+                  streak={streak}
+                  lastEligibleRent={lastEligibleRent}
                 />
-              ) : (
-                <Image
-                  src="/header/streak icon.svg"
-                  alt="streak"
-                  width={40}
-                  height={40}
-                />
-              )}
-              <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
-                {streak}
-              </span>
-            </div>
+              </HoverCardContent>
+            </HoverCard>
           )}
 
           {/* SIGN IN */}

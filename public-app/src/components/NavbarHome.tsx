@@ -19,6 +19,7 @@ import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
 import StreakCountdown from "./StreakCountdown";
+import StreakNavbarHoverPanel from "./StreakNavbarHoverPanel";
 import { Button } from "./ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 
@@ -177,34 +178,48 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
 
           {/* Streak */}
           {isAuthenticated && streak !== null && (
-            <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
-              <StreakCountdown
-                lastEligibleRent={lastEligibleRent}
-                onVisibilityChange={setIsCountdownVisible}
-                className="text-white text-sm font-bold mr-1"
-              />
+            <HoverCard openDelay={200}>
+              <HoverCardTrigger asChild>
+                <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
+                  <StreakCountdown
+                    lastEligibleRent={lastEligibleRent}
+                    onVisibilityChange={setIsCountdownVisible}
+                    className="text-white text-sm font-bold mr-1"
+                  />
 
-              {/* ICON SWITCH */}
-              {isCountdownVisible ? (
-                <Image
-                  src="/header/time run out icon.svg"
-                  alt="timer"
-                  width={16}
-                  height={18}
-                />
-              ) : (
-                <Image
-                  src="/header/streak icon.svg"
-                  alt="streak"
-                  width={40}
-                  height={40}
-                />
-              )}
+                  {/* ICON SWITCH */}
+                  {isCountdownVisible ? (
+                    <Image
+                      src="/header/time run out icon.svg"
+                      alt="timer"
+                      width={16}
+                      height={18}
+                    />
+                  ) : (
+                    <Image
+                      src="/header/streak icon.svg"
+                      alt="streak"
+                      width={40}
+                      height={40}
+                    />
+                  )}
 
-              <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
-                {streak}
-              </span>
-            </div>
+                  <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                    {streak}
+                  </span>
+                </div>
+              </HoverCardTrigger>
+              <HoverCardContent
+                className="w-56 p-4 bg-[#C70515] border border-white/30 text-white"
+                align="end"
+                sideOffset={8}
+              >
+                <StreakNavbarHoverPanel
+                  streak={streak}
+                  lastEligibleRent={lastEligibleRent}
+                />
+              </HoverCardContent>
+            </HoverCard>
           )}
 
           {/* SIGN IN */}
@@ -265,7 +280,9 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
                   {/* User Info */}
                   <div className="flex items-center justify-start gap-3 cursor-default">
                     <User className="w-8 h-8 shrink-0" />
-                    <span className="font-semibold text-xl text-left">{username}</span>
+                    <span className="font-semibold text-xl text-left">
+                      {username}
+                    </span>
                   </div>
 
                   {/* Ongoing Order */}
