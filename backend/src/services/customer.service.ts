@@ -146,6 +146,19 @@ export class CustomerService {
         throw new Error("Customer not found");
       }
 
+      const now = new Date();
+      const expired =
+        customer.lastEligibleRent && now > customer.lastEligibleRent;
+
+      if (expired && customer.currentStreak !== 0) {
+        await prisma.customer.update({
+          where: { id },
+          data: { currentStreak: 0 }
+        });
+
+        return { currentStreak: 0, lastEligibleRent: customer.lastEligibleRent };
+      }
+
       return { currentStreak: customer.currentStreak, lastEligibleRent: customer.lastEligibleRent };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
