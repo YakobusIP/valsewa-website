@@ -74,7 +74,7 @@ const GLOW_DELAY_MS = FLIP_DURATION_MS + 200;
 const GLOW_DURATION_MS = 1000;
 
 // ── Triangle SVG with gradient for discount corner ────────────────────────────
-function RedTriangle({ size }: { size: number }) {
+function GoldTriangle({ size }: { size: number }) {
   const gradientId = useId();
   return (
     <svg
@@ -86,9 +86,9 @@ function RedTriangle({ size }: { size: number }) {
     >
       <defs>
         <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#C70515" />
-          <stop offset="50%" stopColor="#C70515" />
-          <stop offset="100%" stopColor="#C70515" />
+          <stop offset="0%" stopColor="#FFE481" />
+          <stop offset="50%" stopColor="#9E8D4E" />
+          <stop offset="100%" stopColor="#FFE481" />
         </linearGradient>
       </defs>
       <polygon
@@ -142,14 +142,14 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
         className="absolute top-0 left-0"
         style={{ zIndex: 49, transform: "translate3d(0,0,1px)" }}
       >
-        <RedTriangle size={triangleSize} />
+        <GoldTriangle size={triangleSize} />
         <span
           className="absolute font-antonio leading-none select-none"
           style={{
             fontSize: discountFontSize,
             fontWeight: 1000,
             letterSpacing: "-0.05em",
-            color: "white",
+            color: "#846800",
             lineHeight: 1,
 
             transform: `rotate(-45deg) translateY(${offsetY}px) translateX(${offsetX}px)`,
