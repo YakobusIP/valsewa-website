@@ -148,7 +148,7 @@ export class FaspayClient {
       additionalInfo: {
         billDate: dateNow,
         billDescription: `Booking #${request.bookingId}`,
-        channelCode: "715",
+        channelCode: "836",
         phoneNo: "082123456789"
       }
     };
@@ -165,7 +165,7 @@ export class FaspayClient {
       responseMessage: response.responseMessage,
       paymentId: response.partnerReferenceNo,
       providerPaymentId: response.referenceNo,
-      qrUrl: response.additionalInfo.qrImageUrl,
+      qrUrl: response.qrUrl,
       additionalInfo: response.additionalInfo,
       metadata: response
     };
@@ -248,7 +248,7 @@ export class FaspayClient {
         merchantId: SnapBiConfig.snapBiMerchantId,
         serviceCode: "47",
         additionalInfo: {
-          channelCode: "715"
+          channelCode: "836"
         }
       };
       const response = await SnapBi.qris()
