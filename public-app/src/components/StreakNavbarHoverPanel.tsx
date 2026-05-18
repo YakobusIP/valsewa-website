@@ -60,12 +60,6 @@ const StreakNavbarHoverPanel = ({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-3 cursor-default">
-        <Image
-          src="/header/streak icon.svg"
-          alt="streak"
-          width={32}
-          height={32}
-        />
         <p className="text-sm font-medium leading-snug cursor-default">
           You&apos;re currently on a{" "}
           <span className="font-semibold text-xl [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
