@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import Image from "next/image";
-
 interface StreakNavbarHoverPanelProps {
   streak: number;
   lastEligibleRent: Date | null;
