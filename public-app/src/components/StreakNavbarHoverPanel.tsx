@@ -41,11 +41,10 @@ const StreakNavbarHoverPanel = ({
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      const pad = (n: number) => n.toString().padStart(2, "0");
       const text =
         days > 0
-          ? `${days}_${pad(hours)}_${pad(minutes)}`
-          : `${pad(hours)}_${pad(minutes)}_${pad(seconds)}`;
+          ? `${days}d ${hours}h ${minutes.toString().padStart(2, "0")}m ${seconds.toString().padStart(2, "0")}s`
+          : `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 
       setCountdown({ text, urgent });
     };
@@ -59,11 +58,7 @@ const StreakNavbarHoverPanel = ({
     <div className="space-y-3">
       <div className="flex items-center gap-3 cursor-default">
         <p className="text-sm font-medium leading-snug cursor-default">
-          You&apos;re currently on a{" "}
-          <span className="font-semibold text-xl [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
-            {streak}
-          </span>
-          -day streak 🔥
+          You&apos;re currently on a {streak}-day streak 🔥
         </p>
       </div>
 
