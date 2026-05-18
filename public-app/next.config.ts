@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "web.faspay.co.id",
+        pathname: "/__assets/qr/**"
+      },
+      {
+        protocol: "https",
         hostname: "images.valsewa.com"
       }
     ]
