@@ -9,15 +9,20 @@ interface StreakNavbarHoverPanelProps {
   lastEligibleRent: Date | null;
 }
 
+const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+
 const StreakNavbarHoverPanel = ({
   streak,
   lastEligibleRent
 }: StreakNavbarHoverPanelProps) => {
-  const [timeLeft, setTimeLeft] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<{
+    text: string;
+    urgent: boolean;
+  } | null>(null);
 
   useEffect(() => {
     if (!lastEligibleRent || streak === 0) {
-      setTimeLeft(null);
+      setCountdown(null);
       return;
     }
 
@@ -26,10 +31,11 @@ const StreakNavbarHoverPanel = ({
       const diff = lastEligibleRent.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeLeft(null);
+        setCountdown(null);
         return;
       }
 
+      const urgent = diff < SIX_HOURS_MS;
       const days = Math.floor(diff / (1000 * 60 * 60 * 24));
       const hours = Math.floor(
         (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
@@ -37,15 +43,13 @@ const StreakNavbarHoverPanel = ({
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      if (days > 0) {
-        setTimeLeft(
-          `${days}d ${hours}h ${minutes.toString().padStart(2, "0")}m ${seconds.toString().padStart(2, "0")}s`
-        );
-      } else {
-        setTimeLeft(
-          `${hours}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
-        );
-      }
+      const pad = (n: number) => n.toString().padStart(2, "0");
+      const text =
+        days > 0
+          ? `${days}_${pad(hours)}_${pad(minutes)}`
+          : `${pad(hours)}_${pad(minutes)}_${pad(seconds)}`;
+
+      setCountdown({ text, urgent });
     };
 
     tick();
@@ -62,21 +66,26 @@ const StreakNavbarHoverPanel = ({
           width={32}
           height={32}
         />
-        <div>
+        <p className="text-sm font-medium leading-snug cursor-default">
+          You&apos;re currently on a{" "}
           <span className="font-semibold text-xl [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
             {streak}
           </span>
-          <span className="text-sm font-medium ml-1.5">day streak</span>
-        </div>
+          -day streak 🔥
+        </p>
       </div>
 
-      {streak > 0 && timeLeft && (
+      {streak > 0 && countdown && (
         <div className="cursor-default">
           <div className="text-xs font-medium text-white/70">
-            Streak expires in
-          </div>
-          <div className="text-base font-bold tabular-nums mt-0.5">
-            {timeLeft}
+            Your streak will end in:{" "}
+            <span
+              className={`text-base font-bold tabular-nums mt-0.5 inline ${
+                countdown.urgent ? "text-[#C70515]" : "text-white"
+              }`}
+            >
+              {countdown.text}
+            </span>
           </div>
         </div>
       )}

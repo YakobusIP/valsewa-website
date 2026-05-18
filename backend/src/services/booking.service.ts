@@ -1822,7 +1822,7 @@ export class BookingService {
             } else if (now.getTime() <= customer.lastEligibleRent.getTime()) {
               newStreak = customer.currentStreak + 1;
             } else {
-              newStreak = 0;
+              newStreak = 1;
             }
           }
 
