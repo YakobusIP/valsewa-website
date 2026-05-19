@@ -100,7 +100,7 @@ const formSchema = z.object({
   totalRentHour: z.string().nonempty("Total rent duration is required"),
   isCompetitive: z.boolean().optional().default(false),
   isRecommended: z.boolean().optional().default(false),
-  requirePasswordReset: z.boolean().optional().default(false),
+  requirePasswordReset: z.boolean().optional().default(true),
   isMfa: z.boolean().optional().default(false)
 });
 
@@ -214,7 +214,7 @@ export default function AccountDetailModal({
           totalRentHour: "0d 0h",
           isCompetitive: false,
           isRecommended: false,
-          requirePasswordReset: false,
+          requirePasswordReset: true,
           isMfa: false
         },
     mode: "onSubmit",
@@ -589,7 +589,7 @@ export default function AccountDetailModal({
         totalRentHour: "0d 0h",
         isCompetitive: undefined,
         isRecommended: undefined,
-        requirePasswordReset: false,
+        requirePasswordReset: true,
         isMfa: false
       });
     }

@@ -39,7 +39,7 @@ model Account {
   updatedAt              DateTime  @updatedAt
   isCompetitive          Boolean   @default(false)
   isRecommended          Boolean   @default(false)
-  requirePasswordReset   Boolean   @default(false)
+  requirePasswordReset   Boolean   @default(true)
 
   priceTier   PriceTier @relation(fields: [priceTierId], references: [id])
   priceTierId Int
