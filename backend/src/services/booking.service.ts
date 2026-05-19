@@ -1865,6 +1865,8 @@ export class BookingService {
       status = BookingStatus.EXPIRED;
     }
 
+    const accountIsMfa = booking.account?.isMfa ?? false;
+
     return {
       id: booking.id,
       readableNumber: booking.readableNumber.toString(),
@@ -1899,8 +1901,8 @@ export class BookingService {
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
             nickname: booking.account.nickname ?? "",
             username: booking.account.username,
-            password: booking.account.password,
-            isMfa: booking.account.isMfa
+            password: accountIsMfa ? undefined : booking.account.password,
+            isMfa: accountIsMfa
           }
         : undefined
     };
