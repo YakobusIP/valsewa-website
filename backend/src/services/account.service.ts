@@ -691,7 +691,7 @@ export class AccountService {
     try {
       const now = new Date();
 
-      const candidates = await prisma.account.findMany({
+      return await prisma.account.findMany({
         where: {
           isMfa: false,
           availabilityStatus: Status.AVAILABLE,
@@ -720,16 +720,9 @@ export class AccountService {
           isRecommended: true,
           isMfa: true
         },
-        take: 500
+        orderBy: [{ isRecommended: "desc" }, { totalRentHour: "desc" }],
+        take: 3
       });
-
-      const shuffled = [...candidates];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-
-      return shuffled.slice(0, 3);
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
