@@ -33,6 +33,7 @@ import { z } from "zod";
 const DURATION_RE = /^(?:(\d+)d(?:\s+([01]?\d|2[0-3])h)?|([01]?\d|2[0-3])h)$/;
 
 const priceListSchema = z.object({
+  id: z.number().optional(),
   duration: z
     .string()
     .regex(
@@ -97,7 +98,12 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
   useEffect(() => {
     if (!open) return;
     if (mode === "edit" && data) {
-      const mapped = data.priceList;
+      const mapped = data.priceList.map((p) => ({
+        id: p.id,
+        duration: p.duration,
+        unratedPrice: p.unratedPrice,
+        compPrice: p.compPrice
+      }));
 
       form.reset({
         code: data.code,

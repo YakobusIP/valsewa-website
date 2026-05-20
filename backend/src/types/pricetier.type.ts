@@ -4,6 +4,8 @@ type PriceListItem = {
   compPrice: number;
 };
 
+type UpdatePriceListItem = PriceListItem & { id?: number };
+
 type CreatePriceTierRequest = {
   code: string;
   bookingFee?: number;
@@ -12,8 +14,13 @@ type CreatePriceTierRequest = {
 type UpdatePriceTierRequest = {
   code?: string;
   bookingFee?: number;
-  replacePriceList?: PriceListItem[];
-  priceList?: PriceListItem[];
+  replacePriceList?: UpdatePriceListItem[];
+  priceList?: UpdatePriceListItem[];
 };
 
-export type { PriceListItem, CreatePriceTierRequest, UpdatePriceTierRequest };
+export type {
+  PriceListItem,
+  UpdatePriceListItem,
+  CreatePriceTierRequest,
+  UpdatePriceTierRequest
+};
