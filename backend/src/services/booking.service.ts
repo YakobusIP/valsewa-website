@@ -460,7 +460,8 @@ export class BookingService {
     voucher: VoucherResponse | null,
     paymentMethod: PaymentMethodType | null,
     quantity: number,
-    dailyDropDiscountAmount: number = 0
+    dailyDropDiscountAmount: number = 0,
+    bookingFee: number = 0
   ) => {
     const mainValue = unratedPrice * quantity;
     const othersValue = isCompetitive
@@ -509,7 +510,7 @@ export class BookingService {
       }
     }
 
-    const totalValue = subtotalValue + adminFee;
+    const totalValue = subtotalValue + adminFee + bookingFee;
 
     const durationInHours = parseDurationToHours(duration);
 
@@ -599,7 +600,8 @@ export class BookingService {
             id: true,
             unratedPrice: true,
             compPrice: true,
-            duration: true
+            duration: true,
+            tier: { select: { bookingFee: true } }
           }
         }),
         // voucher
@@ -647,6 +649,11 @@ export class BookingService {
             )
           : 0;
 
+      const immediate = dailyDrop ? true : !startAt;
+      const applicableBookingFee = immediate ? 0 : priceList.tier.bookingFee;
+      const snapshotBookingFee =
+        applicableBookingFee > 0 ? applicableBookingFee : null;
+
       const {
         voucherType,
         voucherAmount,
@@ -667,10 +674,9 @@ export class BookingService {
         voucher,
         null,
         quantity,
-        dailyDropDiscountAmount
+        dailyDropDiscountAmount,
+        applicableBookingFee
       );
-
-      const immediate = dailyDrop ? true : !startAt;
 
       const now = new Date();
       const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
@@ -727,6 +733,7 @@ export class BookingService {
             mainValue,
             othersValue,
             discount,
+            bookingFee: snapshotBookingFee,
             totalValue,
             version: 1
           }
@@ -1067,6 +1074,10 @@ export class BookingService {
         ? 0
         : (booking.discount ?? 0);
 
+      const storedBookingFee = booking.immediate
+        ? 0
+        : (booking.bookingFee ?? 0);
+
       const {
         voucherType,
         voucherAmount,
@@ -1084,7 +1095,8 @@ export class BookingService {
         voucher,
         paymentMethodType,
         booking.quantity,
-        existingDailyDropDiscount
+        existingDailyDropDiscount,
+        storedBookingFee
       );
 
       const isBookingFree = totalValue === 0;
@@ -1873,7 +1885,9 @@ export class BookingService {
       customerId: booking.customerId,
       accountId: booking.accountId,
       status,
+      immediate: booking.immediate,
       adminFee: booking.adminFee,
+      bookingFee: booking.bookingFee,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
@@ -1935,7 +1949,9 @@ export class BookingService {
       customerId: booking.customerId,
       accountId: booking.accountId,
       status,
+      immediate: booking.immediate,
       adminFee: booking.adminFee,
+      bookingFee: booking.bookingFee,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,

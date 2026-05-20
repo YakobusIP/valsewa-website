@@ -115,6 +115,7 @@ export class PriceTierService {
       return await prisma.priceTier.create({
         data: {
           code: payload.code,
+          bookingFee: payload.bookingFee ?? 0,
           priceList: payload.priceList
             ? {
                 create: payload.priceList.map((item) => ({
@@ -162,6 +163,7 @@ export class PriceTierService {
             where: { id },
             data: {
               code: payload.code ?? existing.code,
+              bookingFee: payload.bookingFee ?? existing.bookingFee,
               priceList: {
                 create: replaceList.map((item) => ({
                   duration: item.duration,
@@ -182,7 +184,10 @@ export class PriceTierService {
       const updated = await prisma.priceTier.update({
         where: { id },
         data: {
-          code: payload.code
+          ...(payload.code !== undefined && { code: payload.code }),
+          ...(payload.bookingFee !== undefined && {
+            bookingFee: payload.bookingFee
+          })
         },
         include: { priceList: true }
       });

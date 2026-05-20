@@ -45,6 +45,7 @@ const priceListSchema = z.object({
 
 const formSchema = z.object({
   code: z.string().nonempty("Code is required"),
+  bookingFee: z.coerce.number().min(0, "Booking fee must be 0 or more"),
   priceList: z
     .array(priceListSchema)
     .min(1, "At least one price item is required")
@@ -67,10 +68,12 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
       mode === "edit" && data
         ? {
             code: data.code,
+            bookingFee: data.bookingFee ?? 0,
             priceList: data.priceList
           }
         : {
             code: "",
+            bookingFee: 0,
             priceList: []
           },
     mode: "onSubmit",
@@ -86,7 +89,7 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
     onOpenChange(nextOpen);
 
     if (!nextOpen) {
-      form.reset({ code: "", priceList: [] });
+      form.reset({ code: "", bookingFee: 0, priceList: [] });
       replace([]);
     }
   };
@@ -96,10 +99,14 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
     if (mode === "edit" && data) {
       const mapped = data.priceList;
 
-      form.reset({ code: data.code, priceList: mapped });
+      form.reset({
+        code: data.code,
+        bookingFee: data.bookingFee ?? 0,
+        priceList: mapped
+      });
       replace(mapped);
     } else {
-      form.reset({ code: "", priceList: [] });
+      form.reset({ code: "", bookingFee: 0, priceList: [] });
       replace([]);
     }
   }, [open, mode, data, form, replace]);
@@ -166,6 +173,29 @@ export default function PriceTierDetailModal({ mode, data }: Props) {
                   <FormLabel>Code</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter code here" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="bookingFee"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Booking Fee</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={0}
+                      step="1"
+                      placeholder="0"
+                      onFocus={() => {
+                        if (field.value === 0) field.onChange("");
+                      }}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

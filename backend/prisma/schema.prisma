@@ -72,6 +72,7 @@ model PriceTier {
   id          Int      @id @default(autoincrement())
   code        String   @unique
   description String?
+  bookingFee  Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -218,7 +219,8 @@ model Booking {
   othersValue        Int?
   discount           Int? // voucher discount or daily drop discount (mutually exclusive)
   adminFee           Int?
-  totalValue         Int // mainValue + otherValue + adminFee - discount
+  bookingFee         Int?
+  totalValue         Int // mainValue + otherValue + adminFee + bookingFee - discount
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

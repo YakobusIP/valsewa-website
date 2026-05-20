@@ -68,7 +68,9 @@ export type BookingResponse = {
   customerId: number | null;
   accountId: number;
   status: BookingStatus;
+  immediate: boolean;
   adminFee: number | null;
+  bookingFee: number | null;
   duration: string;
   quantity: number;
   startAt: Date | null;

@@ -1,10 +1,13 @@
 type PriceTier = {
   id: number;
   code: string;
+  bookingFee: number;
   priceList: PriceList[];
 };
 
-type PriceTierRequest = Omit<PriceTier, "id">;
+type PriceTierRequest = Omit<PriceTier, "id"> & {
+  bookingFee?: number;
+};
 
 type PriceList = {
   id?: number;

@@ -164,6 +164,9 @@
           type: number
         code:
           type: string
+        bookingFee:
+          type: integer
+          default: 0
         priceList:
           type: array
           items:
@@ -198,6 +201,9 @@
         code:
           type: string
           example: "C"
+        bookingFee:
+          type: integer
+          default: 0
         priceList:
           type: array
           items:
@@ -212,6 +218,8 @@
         code:
           type: string
           example: "C"
+        bookingFee:
+          type: integer
         replacePriceList:
           type: array
           items:
@@ -466,6 +474,7 @@
         customerId: { type: integer, nullable: true }
         accountId: { type: integer }
         status: { $ref: "#/components/schemas/BookingStatus" }
+        immediate: { type: boolean }
         duration: { type: string }
         quantity: { type: integer }
         startAt: { type: string, format: date-time, nullable: true }
@@ -479,6 +488,7 @@
         voucherMaxDiscount: { type: integer }
         mainValue: { type: integer }
         othersValue: { type: integer }
+        bookingFee: { type: integer, nullable: true }
         totalValue: { type: integer }
         account:
           type: pbject
