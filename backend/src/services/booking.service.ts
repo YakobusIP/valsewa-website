@@ -1579,6 +1579,29 @@ export class BookingService {
     }
   };
 
+  customerForceFinishBooking = async (
+    accountId: number,
+    customerId: number
+  ) => {
+    const now = new Date();
+
+    const activeBooking = await prisma.booking.findFirst({
+      where: {
+        accountId,
+        customerId,
+        status: BookingStatus.RESERVED,
+        startAt: { lte: now },
+        endAt: { gt: now }
+      }
+    });
+
+    if (!activeBooking) {
+      throw new NotFoundError("No ongoing booking found for this account.");
+    }
+
+    return this.forceFinishBooking(accountId);
+  };
+
   private finishLegacyBooking = async (accountId: number) => {
     const activeBooking = await prisma.account.findFirst({
       where: {

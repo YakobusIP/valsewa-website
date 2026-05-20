@@ -98,6 +98,18 @@ const createBookingService = () => {
     }
   };
 
+  const forceFinishBooking = async (accountId: number) => {
+    try {
+      const response = await interceptedAxios.post<BookingEntity>(
+        `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/finish-ongoing/${accountId}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error when finishing booking:", error);
+      throw error;
+    }
+  };
+
   const fetchBookingByCustId = async (
     id: string,
     page: number = 1,
@@ -131,7 +143,8 @@ const createBookingService = () => {
     createBooking,
     cancelBooking,
     payBooking,
-    verifyPayment
+    verifyPayment,
+    forceFinishBooking
   };
 };
 

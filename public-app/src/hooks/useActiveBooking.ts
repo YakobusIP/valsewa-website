@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { bookingService } from "@/services/booking.service";
 
@@ -16,55 +16,59 @@ export function useActiveBooking(
   const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => {
-    if (!customerId) {
-      setBooking(null);
-      return;
-    }
+  const fetchBookings = useCallback(
+    async (isCancelled: () => boolean = () => false) => {
+      if (!customerId) {
+        setBooking(null);
+        return;
+      }
 
-    let cancelled = false;
-
-    async function fetchData() {
       setLoading(true);
       setError(null);
 
       try {
         const data = await bookingService.fetchBookingByCustId(
-          customerId ?? "",
+          customerId,
           page,
           limit
         );
-        if (!cancelled) {
-          const bookingsWithDates =
-            data?.bookings.map((booking) => ({
-              ...booking,
-              startAt: booking.startAt ? new Date(booking.startAt) : null,
-              endAt: booking.endAt ? new Date(booking.endAt) : null,
-              expiredAt: booking.expiredAt ? new Date(booking.expiredAt) : null,
-              createdAt: booking.createdAt ? new Date(booking.createdAt) : null
-            })) ?? null;
 
-          setBooking(bookingsWithDates);
-          setTotalPages(data?.totalPages ?? 1);
-        }
+        if (isCancelled()) return;
+
+        const bookingsWithDates =
+          data?.bookings.map((booking) => ({
+            ...booking,
+            startAt: booking.startAt ? new Date(booking.startAt) : null,
+            endAt: booking.endAt ? new Date(booking.endAt) : null,
+            expiredAt: booking.expiredAt ? new Date(booking.expiredAt) : null,
+            createdAt: booking.createdAt ? new Date(booking.createdAt) : null
+          })) ?? null;
+
+        setBooking(bookingsWithDates);
+        setTotalPages(data?.totalPages ?? 1);
       } catch (err) {
-        if (!cancelled) {
+        if (!isCancelled()) {
           setError("Failed to fetch booking");
           console.error("Error fetching booking:", err);
         }
       } finally {
-        if (!cancelled) {
+        if (!isCancelled()) {
           setLoading(false);
         }
       }
-    }
+    },
+    [customerId, page, limit]
+  );
 
-    fetchData();
-
+  useEffect(() => {
+    let cancelled = false;
+    fetchBookings(() => cancelled);
     return () => {
       cancelled = true;
     };
-  }, [customerId, page, limit]);
+  }, [fetchBookings]);
 
-  return { booking, loading, error, totalPages };
+  const refetch = useCallback(() => fetchBookings(), [fetchBookings]);
+
+  return { booking, loading, error, totalPages, refetch };
 }

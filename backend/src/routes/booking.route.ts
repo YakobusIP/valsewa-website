@@ -104,6 +104,11 @@ class BookingRouter {
       this.bookingController.cancelBooking
     );
     this.router.post(
+      "/finish-ongoing/:accountId",
+      customerMiddleware,
+      this.bookingController.customerForceFinishBooking
+    );
+    this.router.post(
       "/verify-payment",
       customerMiddleware,
       this.bookingController.verifyPayment
