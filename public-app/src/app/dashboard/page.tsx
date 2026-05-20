@@ -285,7 +285,7 @@ export default function Dashboard() {
                         )}
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm px-12 text-nowrap">
-                        {booking.status == "RESERVED" &&
+                        {isOnGoingOrder(booking) &&
                           booking.account.username && (
                             <div className="relative inline-flex items-center gap-2">
                               <span>{booking.account.username}</span>
@@ -306,7 +306,7 @@ export default function Dashboard() {
                           )}
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm text-nowrap px-10">
-                        {booking.status == "RESERVED" &&
+                        {isOnGoingOrder(booking) &&
                           booking.account.password && (
                             <div className="relative inline-flex items-center gap-2">
                               <span>{booking.account.password}</span>
