@@ -168,6 +168,8 @@ function FlipCountdown({ countdown }: { countdown: string }) {
 }
 
 // ── LocalStorage helpers ───────────────────────────────────────────────────────
+type OpenedDropEntry = { slot: number; accountId: number };
+
 function getDropDayKey(hours: OperationalHoursEntity | null): string {
   const tz = hours?.timezone || "Asia/Jakarta";
   const openStr = hours?.open ?? "09:00";
@@ -192,24 +194,74 @@ function getDropDayKey(hours: OperationalHoursEntity | null): string {
   return `dailydrop_opened_${anchor.y}-${anchor.mo}-${anchor.d}`;
 }
 
-function loadOpenedSlots(hours: OperationalHoursEntity | null): number[] {
+function loadStoredEntries(
+  hours: OperationalHoursEntity | null
+): OpenedDropEntry[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(getDropDayKey(hours));
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((item): OpenedDropEntry[] => {
+      if (
+        typeof item === "object" &&
+        item !== null &&
+        "slot" in item &&
+        "accountId" in item &&
+        typeof item.slot === "number" &&
+        typeof item.accountId === "number"
+      ) {
+        return [{ slot: item.slot, accountId: item.accountId }];
+      }
+      return [];
+    });
   } catch {
     return [];
   }
 }
 
-function saveOpenedSlot(slot: number, hours: OperationalHoursEntity | null) {
+function persistStoredEntries(
+  entries: OpenedDropEntry[],
+  hours: OperationalHoursEntity | null
+) {
   if (typeof window === "undefined") return;
   try {
-    const key = getDropDayKey(hours);
-    const existing: number[] = JSON.parse(localStorage.getItem(key) ?? "[]");
-    if (!existing.includes(slot)) {
-      localStorage.setItem(key, JSON.stringify([...existing, slot]));
+    localStorage.setItem(getDropDayKey(hours), JSON.stringify(entries));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Slots flipped for the current drop accounts (stale entries are pruned). */
+function getOpenedSlotsForDrops(
+  drops: PublicDailyDrop[],
+  hours: OperationalHoursEntity | null
+): number[] {
+  const stored = loadStoredEntries(hours);
+  const valid = stored.filter((entry) => {
+    const drop = drops.find((d) => d.slot === entry.slot);
+    return drop?.account.id === entry.accountId;
+  });
+  if (valid.length !== stored.length) {
+    persistStoredEntries(valid, hours);
+  }
+  return valid.map((e) => e.slot);
+}
+
+function saveOpenedSlot(
+  slot: number,
+  accountId: number,
+  hours: OperationalHoursEntity | null
+) {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = loadStoredEntries(hours);
+    if (existing.some((e) => e.slot === slot && e.accountId === accountId)) {
+      return;
     }
+    const withoutSlot = existing.filter((e) => e.slot !== slot);
+    persistStoredEntries([...withoutSlot, { slot, accountId }], hours);
   } catch {
     /* ignore */
   }
@@ -328,7 +380,7 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
       if (!cancelled) {
         setDrops(dropsData);
         setOperationalHours(hours);
-        setOpenedSlots(loadOpenedSlots(hours));
+        setOpenedSlots(getOpenedSlotsForDrops(dropsData, hours));
         setLoading(false);
       }
     }
@@ -339,8 +391,8 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
   }, [open]);
 
   const handleFlip = useCallback(
-    (slot: number) => {
-      saveOpenedSlot(slot, operationalHours);
+    (slot: number, accountId: number) => {
+      saveOpenedSlot(slot, accountId, operationalHours);
       setOpenedSlots((prev) => (prev.includes(slot) ? prev : [...prev, slot]));
     },
     [operationalHours]
@@ -457,11 +509,11 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
                     const isOpened = openedSlots.includes(drop.slot);
                     return (
                       <DailyDropCard
-                        key={drop.slot}
+                        key={`${drop.slot}-${drop.account.id}`}
                         drop={drop}
                         width={cardW}
                         initiallyFlipped={isOpened}
-                        onFlip={() => handleFlip(drop.slot)}
+                        onFlip={() => handleFlip(drop.slot, drop.account.id)}
                       />
                     );
                   })}
@@ -540,14 +592,16 @@ export function DailyDropModal({ open, onClose }: DailyDropModalProps) {
                         const isOpened = openedSlots.includes(drop.slot);
                         return (
                           <CarouselItem
-                            key={drop.slot}
+                            key={`${drop.slot}-${drop.account.id}`}
                             className="min-w-min shrink-0 grow-0 basis-auto pl-3 w-max py-4"
                           >
                             <DailyDropCard
                               drop={drop}
                               width={mobileW}
                               initiallyFlipped={isOpened}
-                              onFlip={() => handleFlip(drop.slot)}
+                              onFlip={() =>
+                                handleFlip(drop.slot, drop.account.id)
+                              }
                             />
                           </CarouselItem>
                         );
