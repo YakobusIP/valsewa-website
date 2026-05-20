@@ -28,7 +28,7 @@ import {
 import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
 import { parseDurationToHours } from "../lib/utils";
-import { getOperationalWindow } from "../lib/operational-window";
+import { getDailyDropWindow } from "../lib/operational-window";
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
@@ -838,11 +838,11 @@ export class AccountService {
         take: 2
       });
 
-      const { start: opStart, end: opEnd } = await getOperationalWindow();
+      const { start: dropStart, end: dropEnd } = await getDailyDropWindow();
       const dailyDrop = await prisma.dailyDrop.findFirst({
         where: {
           accountId: account.id,
-          date: { gte: opStart, lte: opEnd }
+          date: { gte: dropStart, lt: dropEnd }
         },
         select: { discount: true, priceListId: true }
       });
@@ -917,11 +917,11 @@ export class AccountService {
         take: 2
       });
 
-      const { start: opStart, end: opEnd } = await getOperationalWindow();
+      const { start: dropStart, end: dropEnd } = await getDailyDropWindow();
       const dailyDrop = await prisma.dailyDrop.findFirst({
         where: {
           accountId: account.id,
-          date: { gte: opStart, lte: opEnd }
+          date: { gte: dropStart, lt: dropEnd }
         },
         select: { discount: true, priceListId: true }
       });

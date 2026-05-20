@@ -122,8 +122,9 @@ export default function AccountDetailsPage() {
   }, []);
 
   useEffect(() => {
+    if (wantsDailyDrop) return;
     setSelectedDuration(null);
-  }, [mode]);
+  }, [mode, wantsDailyDrop]);
 
   useEffect(() => {
     if (account?.availabilityStatus === "IN_USE") {
