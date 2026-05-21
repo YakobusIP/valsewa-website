@@ -90,6 +90,7 @@ export default function UserListModal({
                 <TableHead className="w-[60px]">ID</TableHead>
                 <TableHead>Username</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Streak</TableHead>
                 <TableHead>Created At</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -152,6 +153,10 @@ export default function UserListModal({
                       >
                         {user.isActive ? "Active" : "Inactive"}
                       </Badge>
+                    </TableCell>
+
+                    <TableCell className="px-4 py-3">
+                      {user.currentStreak}
                     </TableCell>
 
                     <TableCell className="px-4 py-3 text-muted-foreground">

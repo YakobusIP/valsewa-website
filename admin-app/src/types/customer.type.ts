@@ -3,6 +3,7 @@ type Customer = {
   username: string;
   isActive: boolean;
   createdAt: string;
+  currentStreak: number;
 };
 
 export type { Customer };
