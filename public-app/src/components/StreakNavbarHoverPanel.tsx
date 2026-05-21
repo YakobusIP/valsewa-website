@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import Image from "next/image";
+
 interface StreakNavbarHoverPanelProps {
   streak: number;
   lastEligibleRent: Date | null;
@@ -58,21 +60,31 @@ const StreakNavbarHoverPanel = ({
     <div className="space-y-3">
       <div className="flex items-center gap-3 cursor-default">
         <p className="text-sm font-medium leading-snug cursor-default">
-          You&apos;re currently on a {streak}-day streak 🔥
+          You&apos;re currently on a <strong>{streak}-day streak</strong> 🔥
         </p>
       </div>
 
       {streak > 0 && countdown && (
         <div className="cursor-default">
           <div className="text-xs font-medium text-white/70">
-            Your streak will end in:{" "}
-            <span
-              className={`text-base font-bold tabular-nums mt-0.5 inline ${
+            Your streak will end in:
+          </div>
+          <div className="flex">
+            {countdown.urgent && (
+              <Image
+                src="/header/time run out icon.svg"
+                alt="timer"
+                width={16}
+                height={18}
+              />
+            )}
+            <div
+              className={`text-base font-bold tabular-nums mt-0.5 ${
                 countdown.urgent ? "text-[#C70515]" : "text-white"
               }`}
             >
               {countdown.text}
-            </span>
+            </div>
           </div>
         </div>
       )}

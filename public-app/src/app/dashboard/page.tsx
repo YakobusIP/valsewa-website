@@ -2,6 +2,8 @@
 
 import { Fragment, useEffect, useState } from "react";
 
+import { bookingService } from "@/services/booking.service";
+
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -30,10 +32,13 @@ export default function Dashboard() {
   const limit = 5;
   const { username, customerId, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [finishingAccountId, setFinishingAccountId] = useState<number | null>(
+    null
+  );
 
   const now = new Date();
 
-  const { booking, totalPages } = useActiveBooking(
+  const { booking, totalPages, refetch } = useActiveBooking(
     customerId?.toString() ?? "",
     page,
     limit
@@ -86,6 +91,30 @@ export default function Dashboard() {
       router.push(`/payments/${payments[0].id}`);
     } else {
       router.push(`/bookings/${booking.id}`);
+    }
+  };
+
+  const handleForceFinish = async (booking: BookingWithAccountEntity) => {
+    if (!isOnGoingOrder(booking) || finishingAccountId !== null) return;
+
+    setFinishingAccountId(booking.accountId);
+    try {
+      await bookingService.forceFinishBooking(booking.accountId);
+      toast({
+        title: "Booking finished",
+        description: `Order for ${booking.account.accountCode} has been finished. Status will update shortly.`
+      });
+      refetch();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to finish booking";
+      toast({
+        variant: "destructive",
+        title: "Could not finish booking",
+        description: message
+      });
+    } finally {
+      setFinishingAccountId(null);
     }
   };
 
@@ -220,6 +249,29 @@ export default function Dashboard() {
                             {booking.status.charAt(0).toUpperCase() +
                               booking.status.slice(1).toLowerCase()}
                           </button>
+                        ) : isOnGoingOrder(booking) ? (
+                          <button
+                            type="button"
+                            onClick={() => handleForceFinish(booking)}
+                            disabled={finishingAccountId === booking.accountId}
+                            className={cn(
+                              "group inline-flex items-center self-center justify-center px-3 py-2 rounded-md lg:text-lg text-sm cursor-pointer hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C70515] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F] disabled:opacity-60 disabled:cursor-wait",
+                              getStatusStyle(booking)
+                            )}
+                          >
+                            {finishingAccountId === booking.accountId ? (
+                              "Finishing..."
+                            ) : (
+                              <>
+                                <span className="group-hover:hidden">
+                                  On Going Order
+                                </span>
+                                <span className="hidden group-hover:inline">
+                                  Finish Booking
+                                </span>
+                              </>
+                            )}
+                          </button>
                         ) : (
                           <span
                             className={cn(
@@ -227,15 +279,13 @@ export default function Dashboard() {
                               getStatusStyle(booking)
                             )}
                           >
-                            {isOnGoingOrder(booking)
-                              ? "On Going Order"
-                              : booking.status.charAt(0).toUpperCase() +
-                                booking.status.slice(1).toLowerCase()}
+                            {booking.status.charAt(0).toUpperCase() +
+                              booking.status.slice(1).toLowerCase()}
                           </span>
                         )}
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm px-12 text-nowrap">
-                        {booking.status == "RESERVED" &&
+                        {isOnGoingOrder(booking) &&
                           booking.account.username && (
                             <div className="relative inline-flex items-center gap-2">
                               <span>{booking.account.username}</span>
@@ -256,7 +306,7 @@ export default function Dashboard() {
                           )}
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm text-nowrap px-10">
-                        {booking.status == "RESERVED" &&
+                        {isOnGoingOrder(booking) &&
                           booking.account.password && (
                             <div className="relative inline-flex items-center gap-2">
                               <span>{booking.account.password}</span>

@@ -1,6 +1,12 @@
-export type SortOption = "dateAdded" | "mostRented" | "cheapest" | "availableNow";
+export type SortOption =
+  | "tier"
+  | "dateAdded"
+  | "mostRented"
+  | "cheapest"
+  | "availableNow";
 
 export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "tier", label: "Tier" },
   { value: "dateAdded", label: "Date Added" },
   { value: "mostRented", label: "Most Rented" },
   { value: "cheapest", label: "Cheapest" },
@@ -11,6 +17,7 @@ export const SORT_MAP: Record<
   SortOption,
   { sortBy: string; direction: "asc" | "desc" }
 > = {
+  tier: { sortBy: "price_tier", direction: "asc" },
   dateAdded: { sortBy: "id", direction: "desc" },
   mostRented: { sortBy: "totalRentHour", direction: "desc" },
   cheapest: { sortBy: "price_tier", direction: "desc" },
@@ -35,10 +42,11 @@ export const DEFAULT_FILTERS: CatalogueFilters = {
   skinIds: [],
   minPrice: PRICE_MIN,
   maxPrice: PRICE_MAX,
-  sort: "dateAdded"
+  sort: "tier"
 };
 
 const VALID_SORTS: SortOption[] = [
+  "tier",
   "dateAdded",
   "mostRented",
   "cheapest",

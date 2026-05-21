@@ -24,6 +24,13 @@ import {
   CarouselNext,
   CarouselPrevious
 } from "@/components/ui/carousel";
+import {
+  Tooltip,
+  TooltipArrow,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip";
 
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/useToast";
@@ -115,8 +122,9 @@ export default function AccountDetailsPage() {
   }, []);
 
   useEffect(() => {
+    if (wantsDailyDrop) return;
     setSelectedDuration(null);
-  }, [mode]);
+  }, [mode, wantsDailyDrop]);
 
   useEffect(() => {
     if (account?.availabilityStatus === "IN_USE") {
@@ -503,6 +511,27 @@ export default function AccountDetailsPage() {
                 <p>Rank: </p>
                 <p className="font-semibold">{account.accountRank}</p>
               </div>
+              {account.isMfa && (
+                <div className="flex justify-between">
+                  <p>Log in: </p>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <p className="font-semibold cursor-help">
+                          Via QR (Whatsapp)
+                        </p>
+                      </TooltipTrigger>
+                      <TooltipContent
+                        side="bottom"
+                        className="overflow-visible bg-black text-white border-gray-500"
+                      >
+                        Send Login QR through Whatsapp after payment.
+                        <TooltipArrow />
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              )}
             </div>
 
             {/* SKIN LIST */}

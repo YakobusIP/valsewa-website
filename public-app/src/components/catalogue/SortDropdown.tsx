@@ -28,7 +28,7 @@ interface SortDropdownProps {
 
 export function SortDropdown({ currentSort, onChange }: SortDropdownProps) {
   const currentLabel =
-    SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Date Added";
+    SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Tier";
 
   return (
     <DropdownMenu>

@@ -84,8 +84,17 @@ export function calculateTimeRemaining(endAt: Date | null): string {
 
   if (diffMs <= 0) return "Expired";
 
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  const dayMs = 1000 * 60 * 60 * 24;
+  const hourMs = 1000 * 60 * 60;
+
+  if (diffMs > dayMs) {
+    const days = Math.floor(diffMs / dayMs);
+    const hours = Math.floor((diffMs % dayMs) / hourMs);
+    return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+  }
+
+  const hours = Math.floor(diffMs / hourMs);
+  const minutes = Math.floor((diffMs % hourMs) / (1000 * 60));
 
   return `${hours}h ${minutes}m`;
 }

@@ -37,8 +37,8 @@ export default function HeroTextBlock({
       {/* Logo - Desktop only */}
       <div className="hidden md:flex items-center gap-3 mb-4">
         <Image
-          src="/header/VALSEWA.svg"
-          alt="VALSEWA"
+          src={`/header/${activeBrand.toUpperCase()}.svg`}
+          alt={activeBrand.toUpperCase()}
           width={200}
           height={70}
           className="object-contain"

@@ -42,6 +42,7 @@ export type BookingEntity = {
   customerId: number | null;
   accountId: number;
   status: BOOKING_STATUS;
+  immediate: boolean;
   duration: string;
   quantity: number;
   startAt: Date | null;
@@ -57,6 +58,7 @@ export type BookingEntity = {
   mainValue: number;
   othersValue: number | null;
   adminFee: number | null;
+  bookingFee: number | null;
   discount: number | null;
   totalValue: number;
   active: boolean | null;

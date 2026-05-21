@@ -7,6 +7,7 @@ export type CustomerEntity = {
   username: string;
   isActive: boolean;
   createdAt: string;
+  currentStreak: number;
 };
 
 const BASE_PUBLIC_USER_URL = "/api/customer";

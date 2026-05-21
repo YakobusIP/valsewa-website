@@ -82,6 +82,20 @@ export const priceTierColumns: ColumnDef<PriceTier>[] = [
     size: "auto" as unknown as number
   },
   {
+    accessorKey: "booking_fee",
+    header: "Booking Fee",
+    cell: ({ row }) => {
+      const data = row.original;
+
+      return (
+        <span className="whitespace-pre-wrap line-clamp-5">
+          {formatShortIDR(data.bookingFee)}
+        </span>
+      );
+    },
+    size: "auto" as unknown as number
+  },
+  {
     id: "actions",
     cell: ({ row }) => {
       const data = row.original;

@@ -7,12 +7,15 @@ import { fetchAccountsPublic } from "@/services/accountService";
 import AccountsSection from "@/components/catalogue/AccountsSection";
 import { CatalogueHero } from "@/components/catalogue/CatalogueHero";
 import { CatalogueNavbar } from "@/components/catalogue/CatalogueNavbar";
-import { DailyDropModal } from "@/components/dailydrop/DailyDropModal";
 import { FilterBar } from "@/components/catalogue/FilterBar";
 import { FilterBarMobile } from "@/components/catalogue/FilterBarMobile";
 import { FilterBottomSheet } from "@/components/catalogue/FilterBottomSheet";
-import { SORT_MAP, SortOption } from "@/lib/catalogue-filters";
+import { DailyDropModal } from "@/components/dailydrop/DailyDropModal";
 
+import { AccountEntity } from "@/types/account.type";
+import { Skin } from "@/types/skin.type";
+
+import { SORT_MAP, SortOption } from "@/lib/catalogue-filters";
 import {
   CatalogueFilters,
   DEFAULT_FILTERS,
@@ -21,9 +24,6 @@ import {
   processTiers,
   serializeFilters
 } from "@/lib/catalogue-filters";
-
-import { AccountEntity } from "@/types/account.type";
-import { Skin } from "@/types/skin.type";
 
 import { useRouter } from "next/navigation";
 import { useDebounce } from "use-debounce";
@@ -158,7 +158,8 @@ export default function CatalogueClient({
         limit: 50,
         ranks: debouncedRanks.length ? debouncedRanks : undefined,
         tiers: debouncedTiers.length ? processTiers(debouncedTiers) : undefined,
-        min_price: debouncedPrice[0] > PRICE_MIN ? debouncedPrice[0] : undefined,
+        min_price:
+          debouncedPrice[0] > PRICE_MIN ? debouncedPrice[0] : undefined,
         max_price:
           debouncedPrice[1] < PRICE_MAX ? debouncedPrice[1] : undefined,
         skin_ids: debouncedSkins.length
@@ -248,7 +249,7 @@ export default function CatalogueClient({
     setSelectedTiers(DEFAULT_FILTERS.tiers);
     setPriceRange([DEFAULT_FILTERS.minPrice, DEFAULT_FILTERS.maxPrice]);
     setSelectedSkins([]);
-    setSortOption("mostRented");
+    setSortOption(DEFAULT_FILTERS.sort);
   }, []);
 
   const toggleSkin = useCallback((skin: Skin) => {

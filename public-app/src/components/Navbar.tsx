@@ -17,7 +17,7 @@ import LoginPage from "./LoginPage";
 import StreakCountdown from "./StreakCountdown";
 import StreakNavbarHoverPanel from "./StreakNavbarHoverPanel";
 import { Button } from "./ui/button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 interface NavbarProps {
   onLoginModalOpenChange?: (isOpen: boolean) => void;
@@ -28,6 +28,10 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
   const [streak, setStreak] = useState<number | null>(null);
   const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
   const [isCountdownVisible, setIsCountdownVisible] = useState(false);
+  const [streakOpen, setStreakOpen] = useState(false);
+  const [streakPinned, setStreakPinned] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [userPinned, setUserPinned] = useState(false);
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal
@@ -126,9 +130,31 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
 
           {/* Streak */}
           {isAuthenticated && streak !== null && (
-            <HoverCard openDelay={200}>
-              <HoverCardTrigger asChild>
-                <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
+            <Popover
+              open={streakOpen}
+              onOpenChange={(open) => {
+                if (!open && streakPinned) return;
+                setStreakOpen(open);
+              }}
+            >
+              <PopoverTrigger asChild>
+                <div
+                  className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center"
+                  onMouseEnter={() => setStreakOpen(true)}
+                  onMouseLeave={() => {
+                    if (!streakPinned) setStreakOpen(false);
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (streakPinned) {
+                      setStreakPinned(false);
+                      setStreakOpen(false);
+                    } else {
+                      setStreakPinned(true);
+                      setStreakOpen(true);
+                    }
+                  }}
+                >
                   <StreakCountdown
                     lastEligibleRent={lastEligibleRent}
                     onVisibilityChange={setIsCountdownVisible}
@@ -155,18 +181,21 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
                     {streak}
                   </span>
                 </div>
-              </HoverCardTrigger>
-              <HoverCardContent
+              </PopoverTrigger>
+              <PopoverContent
                 className="w-56 p-4 bg-[#C70515] border border-white/30 text-white"
                 align="end"
                 sideOffset={8}
+                onMouseLeave={() => {
+                  if (!streakPinned) setStreakOpen(false);
+                }}
               >
                 <StreakNavbarHoverPanel
                   streak={streak}
                   lastEligibleRent={lastEligibleRent}
                 />
-              </HoverCardContent>
-            </HoverCard>
+              </PopoverContent>
+            </Popover>
           )}
 
           {/* SIGN IN */}
@@ -203,9 +232,31 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
             </Fragment>
           )}
           {isAuthenticated && (
-            <HoverCard openDelay={200}>
-              <HoverCardTrigger asChild>
-                <div className="flex items-center justify-center gap-1 desktop:px-4 px-1 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer w-full">
+            <Popover
+              open={userOpen}
+              onOpenChange={(open) => {
+                if (!open && userPinned) return;
+                setUserOpen(open);
+              }}
+            >
+              <PopoverTrigger asChild>
+                <div
+                  className="flex items-center justify-center gap-1 desktop:px-4 px-1 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer w-full"
+                  onMouseEnter={() => setUserOpen(true)}
+                  onMouseLeave={() => {
+                    if (!userPinned) setUserOpen(false);
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (userPinned) {
+                      setUserPinned(false);
+                      setUserOpen(false);
+                    } else {
+                      setUserPinned(true);
+                      setUserOpen(true);
+                    }
+                  }}
+                >
                   <Image
                     src="/header/SignUp Icon.svg"
                     alt="User"
@@ -217,12 +268,15 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
                     {username}
                   </span>
                 </div>
-              </HoverCardTrigger>
+              </PopoverTrigger>
 
-              <HoverCardContent
+              <PopoverContent
                 className="w-72 p-4 bg-[#C70515] border border-white/30 text-white"
                 align="end"
                 sideOffset={8}
+                onMouseLeave={() => {
+                  if (!userPinned) setUserOpen(false);
+                }}
               >
                 <div className="space-y-4">
                   {/* User Info */}
@@ -260,8 +314,8 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
                     <span className="font-semibold">See More</span>
                   </Link>
                 </div>
-              </HoverCardContent>
-            </HoverCard>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       </div>

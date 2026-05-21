@@ -164,6 +164,9 @@
           type: number
         code:
           type: string
+        bookingFee:
+          type: integer
+          default: 0
         priceList:
           type: array
           items:
@@ -198,6 +201,9 @@
         code:
           type: string
           example: "C"
+        bookingFee:
+          type: integer
+          default: 0
         priceList:
           type: array
           items:
@@ -212,6 +218,8 @@
         code:
           type: string
           example: "C"
+        bookingFee:
+          type: integer
         replacePriceList:
           type: array
           items:
@@ -466,6 +474,7 @@
         customerId: { type: integer, nullable: true }
         accountId: { type: integer }
         status: { $ref: "#/components/schemas/BookingStatus" }
+        immediate: { type: boolean }
         duration: { type: string }
         quantity: { type: integer }
         startAt: { type: string, format: date-time, nullable: true }
@@ -479,6 +488,7 @@
         voucherMaxDiscount: { type: integer }
         mainValue: { type: integer }
         othersValue: { type: integer }
+        bookingFee: { type: integer, nullable: true }
         totalValue: { type: integer }
         account:
           type: pbject
@@ -2000,6 +2010,31 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/BookingResponse"
+
+  /api/bookings/finish-ongoing/{accountId}:
+    post:
+      tags: [Bookings]
+      summary: Finish ongoing booking (customer)
+      description: Ends the customer's active RESERVED booking early. Only applies while the rental is in progress.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingResponse"
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   # --- Payment Endpoints ---
   /api/bookings/payments/{id}:

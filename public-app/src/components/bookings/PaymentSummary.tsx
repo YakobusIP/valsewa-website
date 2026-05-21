@@ -62,7 +62,10 @@ function PaymentSummary({
     ]
   );
 
-  const isBookingFree = booking && subtotalPayment === 0;
+  const bookingFee = booking.immediate ? 0 : (booking.bookingFee ?? 0);
+
+  const isBookingFree =
+    booking && subtotalPayment === 0 && bookingFee === 0;
 
   const adminFee = useMemo(
     () =>
@@ -71,8 +74,8 @@ function PaymentSummary({
   );
 
   const totalPayment = useMemo(
-    () => subtotalPayment + adminFee,
-    [adminFee, subtotalPayment]
+    () => subtotalPayment + adminFee + bookingFee,
+    [adminFee, bookingFee, subtotalPayment]
   );
 
   const paymentMethodLabel = useMemo(() => {
@@ -207,6 +210,12 @@ function PaymentSummary({
           <div className="flex justify-between">
             <span>Admin Fee</span>
             <span>IDR {adminFee?.toLocaleString() ?? "0"}</span>
+          </div>
+        )}
+        {bookingFee !== 0 && (
+          <div className="flex justify-between">
+            <span>Booking Fee</span>
+            <span>IDR {bookingFee.toLocaleString()}</span>
           </div>
         )}
         {!isBookingFree ? (

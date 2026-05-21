@@ -66,7 +66,7 @@ export function FilterBarMobile({
   };
 
   const currentSortLabel =
-    SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Date Added";
+    SORT_OPTIONS.find((o) => o.value === currentSort)?.label ?? "Tier";
 
   const openSearch = async () => {
     setIsSearchOpen(true);

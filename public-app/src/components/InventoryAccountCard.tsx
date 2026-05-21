@@ -88,7 +88,7 @@ export default function InventoryAccountCard({
                       : "text-[10px] xs:text-sm tablet:text-sm xl:text-2xl desktop:text-[31.1px]"
                   )}
                 >
-                  {item.accountRank} | {item.accountCode}
+                  {item.accountRank.toUpperCase()} | {item.accountCode}
                 </p>
               </div>
             </div>

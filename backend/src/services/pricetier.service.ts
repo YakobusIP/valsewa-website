@@ -115,6 +115,7 @@ export class PriceTierService {
       return await prisma.priceTier.create({
         data: {
           code: payload.code,
+          bookingFee: payload.bookingFee ?? 0,
           priceList: payload.priceList
             ? {
                 create: payload.priceList.map((item) => ({
@@ -153,22 +154,68 @@ export class PriceTierService {
         replaceList.forEach((item) => validateDuration(item.duration));
 
         const result = await prisma.$transaction(async (tx) => {
-          const existing = await tx.priceTier.findUnique({ where: { id } });
+          const existing = await tx.priceTier.findUnique({
+            where: { id },
+            include: { priceList: { select: { id: true } } }
+          });
           if (!existing) throw new NotFoundError("Price tier not found!");
 
-          await tx.priceList.deleteMany({ where: { tierId: id } });
+          const existingIds = new Set(existing.priceList.map((p) => p.id));
+          const incomingIds = new Set(
+            replaceList
+              .filter((i) => i.id != null && existingIds.has(i.id))
+              .map((i) => i.id as number)
+          );
+          const toDelete = [...existingIds].filter(
+            (eid) => !incomingIds.has(eid)
+          );
+
+          if (toDelete.length > 0) {
+            const blocked = await tx.dailyDrop.findMany({
+              where: { priceListId: { in: toDelete } },
+              select: { priceListId: true },
+              distinct: ["priceListId"]
+            });
+            if (blocked.length > 0) {
+              throw new BadRequestError(
+                "Cannot remove price list item(s) that are still referenced by daily drops. Remove the daily drops first, or keep these rows and only edit their values."
+              );
+            }
+            await tx.priceList.deleteMany({ where: { id: { in: toDelete } } });
+          }
+
+          for (const item of replaceList) {
+            if (item.id != null && existingIds.has(item.id)) {
+              await tx.priceList.update({
+                where: { id: item.id },
+                data: {
+                  duration: item.duration,
+                  unratedPrice: item.unratedPrice,
+                  compPrice: item.compPrice
+                }
+              });
+            }
+          }
+
+          const toCreate = replaceList.filter(
+            (i) => i.id == null || !existingIds.has(i.id)
+          );
 
           const updated = await tx.priceTier.update({
             where: { id },
             data: {
-              code: payload.code ?? existing.code,
-              priceList: {
-                create: replaceList.map((item) => ({
-                  duration: item.duration,
-                  unratedPrice: item.unratedPrice,
-                  compPrice: item.compPrice
-                }))
-              }
+              code: payload.code ?? undefined,
+              bookingFee: payload.bookingFee ?? existing.bookingFee,
+              priceList:
+                toCreate.length > 0
+                  ? {
+                      create: toCreate.map((item) => ({
+                        duration: item.duration,
+                        unratedPrice: item.unratedPrice,
+                        compPrice: item.compPrice
+                      }))
+                    }
+                  : undefined
             },
             include: { priceList: true }
           });
@@ -182,13 +229,20 @@ export class PriceTierService {
       const updated = await prisma.priceTier.update({
         where: { id },
         data: {
-          code: payload.code
+          ...(payload.code !== undefined && { code: payload.code }),
+          ...(payload.bookingFee !== undefined && {
+            bookingFee: payload.bookingFee
+          })
         },
         include: { priceList: true }
       });
 
       return updated;
     } catch (error) {
+      if (error instanceof NotFoundError || error instanceof BadRequestError) {
+        throw error;
+      }
+
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2025"
@@ -201,6 +255,15 @@ export class PriceTierService {
         error.code === "P2002"
       ) {
         throw new PrismaUniqueError("Price tier code is already in use!");
+      }
+
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2003"
+      ) {
+        throw new BadRequestError(
+          "Cannot remove price list item(s) that are still referenced by daily drops."
+        );
       }
 
       if (error instanceof Prisma.PrismaClientValidationError) {

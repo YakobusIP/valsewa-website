@@ -378,7 +378,12 @@ export class BookingService {
       const totalPages = Math.ceil(total / limit);
 
       return {
-        bookings: paginatedBookings.map(this.mapBookingDataToBookingResponse),
+        bookings: paginatedBookings.map((booking) =>
+          this.mapBookingDataToBookingResponse(
+            booking,
+            this.isBookingActive(booking, now)
+          )
+        ),
         total,
         page,
         totalPages
@@ -396,7 +401,9 @@ export class BookingService {
         where: { customerId: customerId, status: BookingStatus.HOLD },
         orderBy: { startAt: "desc" }
       });
-      return bookings.map(this.mapBookingDataToBookingResponse);
+      return bookings.map((booking) =>
+        this.mapBookingDataToBookingResponse(booking)
+      );
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -460,7 +467,8 @@ export class BookingService {
     voucher: VoucherResponse | null,
     paymentMethod: PaymentMethodType | null,
     quantity: number,
-    dailyDropDiscountAmount: number = 0
+    dailyDropDiscountAmount: number = 0,
+    bookingFee: number = 0
   ) => {
     const mainValue = unratedPrice * quantity;
     const othersValue = isCompetitive
@@ -509,7 +517,7 @@ export class BookingService {
       }
     }
 
-    const totalValue = subtotalValue + adminFee;
+    const totalValue = subtotalValue + adminFee + bookingFee;
 
     const durationInHours = parseDurationToHours(duration);
 
@@ -599,7 +607,8 @@ export class BookingService {
             id: true,
             unratedPrice: true,
             compPrice: true,
-            duration: true
+            duration: true,
+            tier: { select: { bookingFee: true } }
           }
         }),
         // voucher
@@ -647,6 +656,11 @@ export class BookingService {
             )
           : 0;
 
+      const immediate = dailyDrop ? true : !startAt;
+      const applicableBookingFee = immediate ? 0 : priceList.tier.bookingFee;
+      const snapshotBookingFee =
+        applicableBookingFee > 0 ? applicableBookingFee : null;
+
       const {
         voucherType,
         voucherAmount,
@@ -667,10 +681,9 @@ export class BookingService {
         voucher,
         null,
         quantity,
-        dailyDropDiscountAmount
+        dailyDropDiscountAmount,
+        applicableBookingFee
       );
-
-      const immediate = dailyDrop ? true : !startAt;
 
       const now = new Date();
       const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
@@ -727,6 +740,7 @@ export class BookingService {
             mainValue,
             othersValue,
             discount,
+            bookingFee: snapshotBookingFee,
             totalValue,
             version: 1
           }
@@ -1067,6 +1081,10 @@ export class BookingService {
         ? 0
         : (booking.discount ?? 0);
 
+      const storedBookingFee = booking.immediate
+        ? 0
+        : (booking.bookingFee ?? 0);
+
       const {
         voucherType,
         voucherAmount,
@@ -1084,7 +1102,8 @@ export class BookingService {
         voucher,
         paymentMethodType,
         booking.quantity,
-        existingDailyDropDiscount
+        existingDailyDropDiscount,
+        storedBookingFee
       );
 
       const isBookingFree = totalValue === 0;
@@ -1567,6 +1586,29 @@ export class BookingService {
     }
   };
 
+  customerForceFinishBooking = async (
+    accountId: number,
+    customerId: number
+  ) => {
+    const now = new Date();
+
+    const activeBooking = await prisma.booking.findFirst({
+      where: {
+        accountId,
+        customerId,
+        status: BookingStatus.RESERVED,
+        startAt: { lte: now },
+        endAt: { gt: now }
+      }
+    });
+
+    if (!activeBooking) {
+      throw new NotFoundError("No ongoing booking found for this account.");
+    }
+
+    return this.forceFinishBooking(accountId);
+  };
+
   private finishLegacyBooking = async (accountId: number) => {
     const activeBooking = await prisma.account.findFirst({
       where: {
@@ -1840,6 +1882,24 @@ export class BookingService {
     return this.mapPaymentDataToPaymentResponse(updatedPayment);
   };
 
+  private isBookingActive = (
+    booking: Pick<Booking, "status" | "startAt" | "endAt">,
+    now: Date = new Date()
+  ): boolean => {
+    if (
+      booking.status !== BookingStatus.RESERVED ||
+      !booking.startAt ||
+      !booking.endAt
+    ) {
+      return false;
+    }
+
+    const nowMs = now.getTime();
+    return (
+      nowMs >= booking.startAt.getTime() && nowMs <= booking.endAt.getTime()
+    );
+  };
+
   private mapBookingDataToBookingResponse = (
     booking: Booking & {
       payments?: Payment[];
@@ -1854,7 +1914,8 @@ export class BookingService {
         password?: string;
         isMfa?: boolean;
       };
-    }
+    },
+    active?: boolean
   ): BookingResponse => {
     let status = booking.status;
     if (
@@ -1865,13 +1926,17 @@ export class BookingService {
       status = BookingStatus.EXPIRED;
     }
 
+    const accountIsMfa = booking.account?.isMfa ?? false;
+
     return {
       id: booking.id,
       readableNumber: booking.readableNumber.toString(),
       customerId: booking.customerId,
       accountId: booking.accountId,
       status,
+      immediate: booking.immediate,
       adminFee: booking.adminFee,
+      bookingFee: booking.bookingFee,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,
@@ -1888,7 +1953,7 @@ export class BookingService {
       othersValue: booking.othersValue,
       discount: booking.discount,
       totalValue: booking.totalValue,
-      active: null,
+      active: active ?? null,
       payments: booking.payments,
       customer: booking.customer,
       account: booking.account
@@ -1898,9 +1963,13 @@ export class BookingService {
             priceTierCode: booking.account.priceTierId?.toString() ?? "",
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
             nickname: booking.account.nickname ?? "",
-            username: booking.account.username,
-            password: booking.account.password,
-            isMfa: booking.account.isMfa
+            username:
+              active === false ? undefined : booking.account.username,
+            password:
+              active === false || accountIsMfa
+                ? undefined
+                : booking.account.password,
+            isMfa: accountIsMfa
           }
         : undefined
     };
@@ -1933,7 +2002,9 @@ export class BookingService {
       customerId: booking.customerId,
       accountId: booking.accountId,
       status,
+      immediate: booking.immediate,
       adminFee: booking.adminFee,
+      bookingFee: booking.bookingFee,
       duration: booking.duration,
       quantity: booking.quantity,
       startAt: booking.startAt,

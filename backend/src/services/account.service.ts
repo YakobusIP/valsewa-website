@@ -28,7 +28,7 @@ import {
 import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
 import { parseDurationToHours } from "../lib/utils";
-import { getOperationalWindow } from "../lib/operational-window";
+import { getDailyDropWindow } from "../lib/operational-window";
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
@@ -691,7 +691,7 @@ export class AccountService {
     try {
       const now = new Date();
 
-      const candidates = await prisma.account.findMany({
+      return await prisma.account.findMany({
         where: {
           isMfa: false,
           availabilityStatus: Status.AVAILABLE,
@@ -720,16 +720,9 @@ export class AccountService {
           isRecommended: true,
           isMfa: true
         },
-        take: 500
+        orderBy: [{ isRecommended: "desc" }, { totalRentHour: "desc" }],
+        take: 3
       });
-
-      const shuffled = [...candidates];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-
-      return shuffled.slice(0, 3);
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -845,11 +838,11 @@ export class AccountService {
         take: 2
       });
 
-      const { start: opStart, end: opEnd } = await getOperationalWindow();
+      const { start: dropStart, end: dropEnd } = await getDailyDropWindow();
       const dailyDrop = await prisma.dailyDrop.findFirst({
         where: {
           accountId: account.id,
-          date: { gte: opStart, lte: opEnd }
+          date: { gte: dropStart, lt: dropEnd }
         },
         select: { discount: true, priceListId: true }
       });
@@ -924,11 +917,11 @@ export class AccountService {
         take: 2
       });
 
-      const { start: opStart, end: opEnd } = await getOperationalWindow();
+      const { start: dropStart, end: dropEnd } = await getDailyDropWindow();
       const dailyDrop = await prisma.dailyDrop.findFirst({
         where: {
           accountId: account.id,
-          date: { gte: opStart, lte: opEnd }
+          date: { gte: dropStart, lt: dropEnd }
         },
         select: { discount: true, priceListId: true }
       });

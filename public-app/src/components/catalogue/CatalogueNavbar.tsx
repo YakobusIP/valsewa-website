@@ -9,11 +9,6 @@ import DesktopBrandSwitcher from "@/components/hero/DesktopBrandSwitcher";
 import { heroChromeVars } from "@/components/hero/heroChromeMetrics";
 import { Button } from "@/components/ui/button";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger
-} from "@/components/ui/hover-card";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger
@@ -66,6 +61,10 @@ export function CatalogueNavbar({
   const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
   const [isCountdownVisible, setIsCountdownVisible] = useState(false);
   const [streakHintOpen, setStreakHintOpen] = useState(false);
+  const [streakOpen, setStreakOpen] = useState(false);
+  const [streakPinned, setStreakPinned] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [userPinned, setUserPinned] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -170,9 +169,31 @@ export function CatalogueNavbar({
 
             {/* Streak */}
             {isAuthenticated && streak !== null && (
-              <HoverCard openDelay={200}>
-                <HoverCardTrigger asChild>
-                  <div className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center">
+              <Popover
+                open={streakOpen}
+                onOpenChange={(open) => {
+                  if (!open && streakPinned) return;
+                  setStreakOpen(open);
+                }}
+              >
+                <PopoverTrigger asChild>
+                  <div
+                    className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center"
+                    onMouseEnter={() => setStreakOpen(true)}
+                    onMouseLeave={() => {
+                      if (!streakPinned) setStreakOpen(false);
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (streakPinned) {
+                        setStreakPinned(false);
+                        setStreakOpen(false);
+                      } else {
+                        setStreakPinned(true);
+                        setStreakOpen(true);
+                      }
+                    }}
+                  >
                     <StreakCountdown
                       lastEligibleRent={lastEligibleRent}
                       onVisibilityChange={setIsCountdownVisible}
@@ -199,18 +220,21 @@ export function CatalogueNavbar({
                       {streak}
                     </span>
                   </div>
-                </HoverCardTrigger>
-                <HoverCardContent
+                </PopoverTrigger>
+                <PopoverContent
                   className="w-56 p-4 bg-[#C70515] border border-white/30 text-white"
                   align="end"
                   sideOffset={8}
+                  onMouseLeave={() => {
+                    if (!streakPinned) setStreakOpen(false);
+                  }}
                 >
                   <StreakNavbarHoverPanel
                     streak={streak}
                     lastEligibleRent={lastEligibleRent}
                   />
-                </HoverCardContent>
-              </HoverCard>
+                </PopoverContent>
+              </Popover>
             )}
 
             {!isAuthenticated && (
@@ -247,9 +271,31 @@ export function CatalogueNavbar({
             )}
 
             {isAuthenticated && (
-              <HoverCard openDelay={200}>
-                <HoverCardTrigger asChild>
-                  <div className="flex items-center justify-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer">
+              <Popover
+                open={userOpen}
+                onOpenChange={(open) => {
+                  if (!open && userPinned) return;
+                  setUserOpen(open);
+                }}
+              >
+                <PopoverTrigger asChild>
+                  <div
+                    className="flex items-center justify-center gap-2 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer"
+                    onMouseEnter={() => setUserOpen(true)}
+                    onMouseLeave={() => {
+                      if (!userPinned) setUserOpen(false);
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (userPinned) {
+                        setUserPinned(false);
+                        setUserOpen(false);
+                      } else {
+                        setUserPinned(true);
+                        setUserOpen(true);
+                      }
+                    }}
+                  >
                     <Image
                       src="/header/SignUp Icon.svg"
                       alt="User"
@@ -260,11 +306,14 @@ export function CatalogueNavbar({
                       {username}
                     </span>
                   </div>
-                </HoverCardTrigger>
-                <HoverCardContent
+                </PopoverTrigger>
+                <PopoverContent
                   className="w-72 p-4 bg-[#C70515] border border-white/30 text-white"
                   align="end"
                   sideOffset={8}
+                  onMouseLeave={() => {
+                    if (!userPinned) setUserOpen(false);
+                  }}
                 >
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 cursor-default">
@@ -295,8 +344,8 @@ export function CatalogueNavbar({
                       <span className="font-semibold">See More</span>
                     </Link>
                   </div>
-                </HoverCardContent>
-              </HoverCard>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
         </div>

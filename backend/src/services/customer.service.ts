@@ -29,7 +29,8 @@ export class CustomerService {
             id: true,
             username: true,
             isActive: true,
-            createdAt: true
+            createdAt: true,
+            currentStreak: true
           }
         });
 
@@ -52,7 +53,8 @@ export class CustomerService {
             id: true,
             username: true,
             isActive: true,
-            createdAt: true
+            createdAt: true,
+            currentStreak: true
           }
         });
 
@@ -156,10 +158,16 @@ export class CustomerService {
           data: { currentStreak: 0 }
         });
 
-        return { currentStreak: 0, lastEligibleRent: customer.lastEligibleRent };
+        return {
+          currentStreak: 0,
+          lastEligibleRent: customer.lastEligibleRent
+        };
       }
 
-      return { currentStreak: customer.currentStreak, lastEligibleRent: customer.lastEligibleRent };
+      return {
+        currentStreak: customer.currentStreak,
+        lastEligibleRent: customer.lastEligibleRent
+      };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
