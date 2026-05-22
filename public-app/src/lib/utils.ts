@@ -9,6 +9,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function formatBookingNumber(readableNumber: string) {
+  return `VS-${readableNumber.padStart(7, "0")}`;
+}
+
 export function getRankImageUrl(rank: string): string {
   if (!rank) return "/rank/unranked.webp";
   const baseRank = rank.trim().split(" ")[0].toLowerCase();
@@ -112,6 +116,24 @@ export function calculateDaysRented(
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   return Math.max(0, days);
+}
+
+export function formatRentalPeriod(
+  startAt: Date | null,
+  endAt: Date | null
+): string {
+  if (!startAt || !endAt) return "0 Day";
+
+  const diffMs = new Date(endAt).getTime() - new Date(startAt).getTime();
+  if (diffMs <= 0) return "0 Day";
+
+  const days = calculateDaysRented(startAt, endAt);
+  if (days > 0) {
+    return `${days} Day${days > 1 ? "s" : ""}`;
+  }
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  return `${hours}h`;
 }
 
 const DEFAULT_OPERATIONS_TZ = "Asia/Jakarta";

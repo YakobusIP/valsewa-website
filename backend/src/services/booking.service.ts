@@ -1382,7 +1382,9 @@ export class BookingService {
         if (completedBookings.length === 0) return 0;
 
         const bookingIds = completedBookings.map((b) => b.id);
-        const accountIds = completedBookings.map((b) => b.accountId);
+        const accountIds = [
+          ...new Set(completedBookings.map((b) => b.accountId))
+        ];
 
         await tx.booking.updateMany({
           where: {
@@ -1390,6 +1392,15 @@ export class BookingService {
           },
           data: {
             status: BookingStatus.COMPLETED
+          }
+        });
+
+        await tx.account.updateMany({
+          where: { id: { in: accountIds } },
+          data: {
+            currentBookingDate: null,
+            currentExpireAt: null,
+            currentBookingDuration: null
           }
         });
 
@@ -1525,8 +1536,9 @@ export class BookingService {
               ).count
             : 0;
 
-        // Mark accounts as AVAILABLE if they are IN_USE but no longer reserved
-        // Skip accounts with currentBookingDate set (they have an active booking)
+        // Mark accounts as AVAILABLE if they are IN_USE but no longer reserved.
+        // Skip accounts with currentBookingDate set — they are on the legacy rental path
+        // (cleared by updateExpireAt / finishBooking, not by Booking-table sync).
         const markedAvailable = (
           await tx.account.updateMany({
             where: {
