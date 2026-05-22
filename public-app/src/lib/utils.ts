@@ -9,6 +9,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function formatBookingNumber(readableNumber: string) {
+  return `VS-${readableNumber.padStart(7, "0")}`;
+}
+
 export function getRankImageUrl(rank: string): string {
   if (!rank) return "/rank/unranked.webp";
   const baseRank = rank.trim().split(" ")[0].toLowerCase();

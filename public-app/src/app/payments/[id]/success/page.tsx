@@ -14,7 +14,7 @@ import { BOOKING_STATUS, BookingWithAccountEntity } from "@/types/booking.type";
 
 import { formatDateToDateStr } from "@/lib/date-utils";
 import { instrumentSans, staatliches } from "@/lib/fonts";
-import { cn } from "@/lib/utils";
+import { cn, formatBookingNumber } from "@/lib/utils";
 
 import { AlertTriangleIcon, CheckIcon, CopyIcon, HomeIcon } from "lucide-react";
 import { notFound, useParams, useRouter } from "next/navigation";
@@ -113,8 +113,11 @@ export default function PaymentSuccessPage() {
   const isMfaEnabled = useMemo(() => booking?.account?.isMfa, [booking]);
 
   const generateMFAWhatsAppLink = () => {
-    return `https://wa.me/${WHATSAPP_CONFIG.phoneNumber}?text=${encodeURIComponent(WHATSAPP_CONFIG.mfaMessage + booking?.id)}`;
-  }
+    const bookingCode = booking?.readableNumber
+      ? formatBookingNumber(booking.readableNumber)
+      : "";
+    return `https://wa.me/${WHATSAPP_CONFIG.phoneNumber}?text=${encodeURIComponent(WHATSAPP_CONFIG.mfaMessage + bookingCode)}`;
+  };
 
   if (loading) {
     return <LoadingState />;

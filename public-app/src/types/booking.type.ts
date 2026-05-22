@@ -39,6 +39,7 @@ export enum PAYMENT_METHOD_TYPE {
 
 export type BookingEntity = {
   id: string;
+  readableNumber: string;
   customerId: number | null;
   accountId: number;
   status: BOOKING_STATUS;
