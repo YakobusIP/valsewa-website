@@ -114,6 +114,24 @@ export function calculateDaysRented(
   return Math.max(0, days);
 }
 
+export function formatRentalPeriod(
+  startAt: Date | null,
+  endAt: Date | null
+): string {
+  if (!startAt || !endAt) return "0 Day";
+
+  const diffMs = new Date(endAt).getTime() - new Date(startAt).getTime();
+  if (diffMs <= 0) return "0 Day";
+
+  const days = calculateDaysRented(startAt, endAt);
+  if (days > 0) {
+    return `${days} Day${days > 1 ? "s" : ""}`;
+  }
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  return `${hours}h`;
+}
+
 const DEFAULT_OPERATIONS_TZ = "Asia/Jakarta";
 
 export function isOutsideOperationalHours(
