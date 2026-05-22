@@ -78,15 +78,15 @@ export async function initCronJobs() {
     await postScheduler("/api/vouchers/check-expiration");
   });
 
-  schedule("sync-expired", "*/2 * * * *", async () => {
+  schedule("sync-expired", "*/1 * * * *", async () => {
     await postScheduler("/api/bookings/sync-expired");
   });
 
-  schedule("sync-completed", "*/2 * * * *", async () => {
+  schedule("sync-completed", "*/1 * * * *", async () => {
     await postScheduler("/api/bookings/sync-completed");
   });
 
-  schedule("sync-account-availability", "*/2 * * * *", async () => {
+  schedule("sync-account-availability", "*/1 * * * *", async () => {
     await postScheduler("/api/bookings/sync-account-availability");
   });
 }

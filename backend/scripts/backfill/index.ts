@@ -397,11 +397,34 @@ function findPriceListForLegacyDuration(
   priceList: PriceListRow[],
   legacyDurationHours: number
 ) {
-  const matches = priceList.filter(
-    (item) => durationHours(item.duration) === legacyDurationHours
+  const candidates = priceList
+    .map((item) => ({
+      item,
+      hours: durationHours(item.duration)
+    }))
+    .filter(({ hours }) => hours > 0);
+
+  const matches = candidates.filter(
+    ({ hours }) => hours === legacyDurationHours
   );
 
   if (matches.length === 0) {
+    const divisibleMatches = candidates
+      .map(({ item, hours }) => ({
+        item,
+        quantity: legacyDurationHours / hours
+      }))
+      .filter(
+        ({ quantity }) => Number.isInteger(quantity) && quantity > 0
+      );
+
+    if (divisibleMatches.length > 0) {
+      const [bestMatch] = divisibleMatches.sort(
+        (a, b) => durationHours(b.item.duration) - durationHours(a.item.duration)
+      );
+      return bestMatch;
+    }
+
     throw new Error(
       `Account ${accountId} has no PriceList row matching ${legacyDurationHours} legacy hours.`
     );
@@ -413,7 +436,10 @@ function findPriceListForLegacyDuration(
     );
   }
 
-  return matches[0];
+  return {
+    item: matches[0].item,
+    quantity: 1
+  };
 }
 
 async function createLegacyBookingIfNeeded(
@@ -446,7 +472,7 @@ async function createLegacyBookingIfNeeded(
 
   if (existing) return false;
 
-  const priceList = findPriceListForLegacyDuration(
+  const { item: priceList, quantity } = findPriceListForLegacyDuration(
     account.id,
     account.priceTier.priceList,
     fields.durationHoursValue!
@@ -456,8 +482,8 @@ async function createLegacyBookingIfNeeded(
   const othersValuePerUnit = account.isCompetitive
     ? priceList.compPrice - priceList.unratedPrice
     : 0;
-  const mainValue = mainValuePerUnit;
-  const othersValue = account.isCompetitive ? othersValuePerUnit : 0;
+  const mainValue = mainValuePerUnit * quantity;
+  const othersValue = account.isCompetitive ? othersValuePerUnit * quantity : 0;
   const totalValue = mainValue + othersValue;
 
   await prisma.booking.create({
@@ -465,7 +491,7 @@ async function createLegacyBookingIfNeeded(
       accountId: account.id,
       status: BookingStatus.RESERVED,
       duration: priceList.duration,
-      quantity: 1,
+      quantity,
       immediate: true,
       startAt: fields.startAt,
       endAt: fields.endAt,
