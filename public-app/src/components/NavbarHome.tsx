@@ -1,0 +1,385 @@
+"use client";
+
+import { type CSSProperties, Fragment, useEffect, useState } from "react";
+
+import { customerService } from "@/services/customer.service";
+
+import DesktopBrandSwitcher from "@/components/hero/DesktopBrandSwitcher";
+import { heroChromeVars } from "@/components/hero/heroChromeMetrics";
+
+import { useActiveBooking } from "@/hooks/useActiveBooking";
+import { useAuth } from "@/hooks/useAuth";
+
+import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
+
+import { ListPlus, MoreHorizontal, User } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import LoginPage from "./LoginPage";
+import StreakCountdown from "./StreakCountdown";
+import StreakNavbarHoverPanel from "./StreakNavbarHoverPanel";
+import { Button } from "./ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+
+interface NavbarProps {
+  activeBrand: "valsewa" | "valjubel" | "valjoki";
+  setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
+  isScrolled: boolean;
+}
+
+function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
+  const { isAuthenticated, username, customerId } = useAuth();
+  const { booking } = useActiveBooking(customerId?.toString() ?? "");
+
+  const [, setTick] = useState(0);
+  const [streak, setStreak] = useState<number | null>(null);
+  const [lastEligibleRent, setLastEligibleRent] = useState<Date | null>(null);
+  const [isCountdownVisible, setIsCountdownVisible] = useState(false);
+  const [streakOpen, setStreakOpen] = useState(false);
+  const [streakPinned, setStreakPinned] = useState(false);
+  const [userOpen, setUserOpen] = useState(false);
+  const [userPinned, setUserPinned] = useState(false);
+
+  const router = useRouter();
+  const [isComponentOpen, setIsComponentOpen] = useState(false);
+
+  const handleLoginClick = () => {
+    setIsComponentOpen(true); // open login modal
+  };
+  const handleSearchClick = () => {
+    router.push("/search");
+  };
+
+  const bookingReserved = booking?.find(
+    (i) =>
+      i.status == "RESERVED" && (i.endAt?.getTime() ?? Date.now()) > Date.now()
+  );
+  const accountCode = bookingReserved?.account.accountCode;
+
+  const rentedDays = calculateDaysRented(
+    bookingReserved?.startAt ?? null,
+    bookingReserved?.endAt ?? null
+  );
+  const remainingTime = calculateTimeRemaining(bookingReserved?.endAt ?? null);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTick((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setStreak(null);
+      setLastEligibleRent(null);
+      return;
+    }
+
+    customerService
+      .getMyStreak()
+      .then((data) => {
+        setStreak(data.currentStreak);
+        setLastEligibleRent(
+          data.lastEligibleRent ? new Date(data.lastEligibleRent) : null
+        );
+      })
+      .catch(() => {
+        setStreak(null);
+        setLastEligibleRent(null);
+      });
+  }, [isAuthenticated]);
+
+  return (
+    <div
+      style={heroChromeVars as CSSProperties}
+      className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 px-8 lg:px-16 ${
+        isScrolled ? "bg-black shadow-md shadow-black/20" : "bg-transparent"
+      }`}
+    >
+      <div className="relative mx-auto max-w-[1920px] h-[84px] tablet:h-[80px] flex items-center justify-between">
+        <div className="flex items-center gap-[var(--hero-logo-switcher-gap)]">
+          {/* Logo wrapper - positioned to align with hero notch on desktop, scales down on lg */}
+          <div className="relative -translate-y-1 w-[var(--hero-valforum-tab-width)] flex justify-center">
+            {!isScrolled && (
+              <figure className="relative w-[var(--hero-valforum-logo-width)]">
+                <Image
+                  src="/header/Valforum.svg"
+                  alt="logo"
+                  height={50}
+                  width={130}
+                  className="object-contain w-full h-auto"
+                />
+              </figure>
+            )}
+            {isScrolled && (
+              <Link href="/">
+                <figure className="relative tablet:max-w-[170px] sm:max-w-[170px] max-w-[170px]">
+                  <Image
+                    src="/header/VALSEWA.svg"
+                    alt="logo"
+                    height={80}
+                    width={170}
+                    className="object-contain"
+                  />
+                </figure>
+              </Link>
+            )}
+          </div>
+          <div
+            className={`absolute left-[calc(var(--hero-valforum-tab-width)+var(--hero-logo-switcher-gap))] top-[calc(var(--hero-notch-height)-var(--hero-logo-switcher-gap)+var(--hero-switcher-y-offset))] -translate-y-full transition-all duration-300 ${
+              isScrolled ? "opacity-0 pointer-events-none" : "opacity-100"
+            }`}
+          >
+            <DesktopBrandSwitcher
+              activeBrand={activeBrand}
+              setActiveBrand={setActiveBrand}
+            />
+          </div>
+        </div>
+        {/* NAV RIGHT SIDE */}
+        <div className="flex items-center desktop:gap-4 gap-2">
+          {/* SEARCH */}
+          <button onClick={handleSearchClick}>
+            <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
+              <Image
+                src="/header/Search Icon.svg"
+                alt="Search"
+                width={16}
+                height={16}
+              />
+            </div>
+          </button>
+
+          {/* TOP UP */}
+          <Link href="https://valforum.com/top-up">
+            <Button className="hidden lg:flex border border-white/30 rounded-xl hover:border-white transition">
+              <Image
+                src="/header/Diamond.svg"
+                alt="Top Up"
+                width={18}
+                height={18}
+              />
+              <span className="text-white text-xs tablet:text-sm font-bold font-instrumentSans">
+                Top Up
+              </span>
+            </Button>
+            <Button
+              size="icon"
+              className="lg:hidden border border-white/30 rounded-xl hover:border-white transition"
+            >
+              <Image
+                src="/header/Diamond.svg"
+                alt="Top Up"
+                width={18}
+                height={18}
+              />
+            </Button>
+          </Link>
+
+          {/* Streak */}
+          {isAuthenticated && streak !== null && (
+            <Popover
+              open={streakOpen}
+              onOpenChange={(open) => {
+                if (!open && streakPinned) return;
+                setStreakOpen(open);
+              }}
+            >
+              <PopoverTrigger asChild>
+                <div
+                  className="flex items-center px-1 py-2 border border-white/30 rounded-xl transition cursor-pointer w-full justify-center"
+                  onMouseEnter={() => setStreakOpen(true)}
+                  onMouseLeave={() => {
+                    if (!streakPinned) setStreakOpen(false);
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (streakPinned) {
+                      setStreakPinned(false);
+                      setStreakOpen(false);
+                    } else {
+                      setStreakPinned(true);
+                      setStreakOpen(true);
+                    }
+                  }}
+                >
+                  <StreakCountdown
+                    lastEligibleRent={lastEligibleRent}
+                    onVisibilityChange={setIsCountdownVisible}
+                    className="text-white text-sm font-bold mr-1"
+                  />
+
+                  {/* ICON SWITCH */}
+                  {isCountdownVisible ? (
+                    <Image
+                      src="/header/time run out icon.svg"
+                      alt="timer"
+                      width={16}
+                      height={18}
+                    />
+                  ) : (
+                    <Image
+                      src="/header/streak icon.svg"
+                      alt="streak"
+                      width={40}
+                      height={40}
+                    />
+                  )}
+
+                  <span className="text-white text-xs tablet:text-sm font-semibold [text-shadow:_-2px_0_0_#bd0c00,_2px_0_0_#bd0c00,_0_-2px_0_#bd0c00,_0_2px_0_#bd0c00]">
+                    {streak}
+                  </span>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-56 p-4 bg-[#C70515] border border-white/30 text-white"
+                align="end"
+                sideOffset={8}
+                onMouseLeave={() => {
+                  if (!streakPinned) setStreakOpen(false);
+                }}
+              >
+                <StreakNavbarHoverPanel
+                  streak={streak}
+                  lastEligibleRent={lastEligibleRent}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+
+          {/* SIGN IN */}
+          {!isAuthenticated && (
+            <Fragment>
+              <Button
+                onClick={handleLoginClick}
+                className="hidden lg:flex border border-black rounded-xl bg-white hover:bg-gray-100 transition-shadow duration-300 hover:shadow-[0_0_24px_rgba(255,255,255,0.95),0_0_56px_rgba(255,255,255,0.55),0_0_96px_rgba(255,255,255,0.25)]"
+              >
+                <Image
+                  src="/header/SignUp Icon.svg"
+                  alt="Sign In"
+                  width={18}
+                  height={18}
+                  className="filter invert"
+                />
+                <span className="text-black text-xs tablet:text-sm font-semibold hidden lg:block">
+                  Login/Sign Up
+                </span>
+              </Button>
+              <Button
+                onClick={handleLoginClick}
+                size="icon"
+                className="lg:hidden border border-black rounded-xl bg-white hover:bg-gray-100 transition-shadow duration-300 hover:shadow-[0_0_24px_rgba(255,255,255,0.95),0_0_56px_rgba(255,255,255,0.55),0_0_96px_rgba(255,255,255,0.25)]"
+              >
+                <Image
+                  src="/header/SignUp Icon.svg"
+                  alt="Sign In"
+                  width={18}
+                  height={18}
+                  className="filter invert"
+                />
+              </Button>
+            </Fragment>
+          )}
+          {isAuthenticated && (
+            <Popover
+              open={userOpen}
+              onOpenChange={(open) => {
+                if (!open && userPinned) return;
+                setUserOpen(open);
+              }}
+            >
+              <PopoverTrigger asChild>
+                <div
+                  className="flex items-center justify-center gap-1 px-4 py-2 border border-white/30 rounded-xl bg-[#C70515] hover:bg-[#a90411] transition cursor-pointer w-auto"
+                  onMouseEnter={() => setUserOpen(true)}
+                  onMouseLeave={() => {
+                    if (!userPinned) setUserOpen(false);
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (userPinned) {
+                      setUserPinned(false);
+                      setUserOpen(false);
+                    } else {
+                      setUserPinned(true);
+                      setUserOpen(true);
+                    }
+                  }}
+                >
+                  <Image
+                    src="/header/SignUp Icon.svg"
+                    alt="User"
+                    width={18}
+                    height={18}
+                  />
+                  <span className="text-white text-xs desktop:text-sm font-semibold">
+                    {username}
+                  </span>
+                </div>
+              </PopoverTrigger>
+
+              <PopoverContent
+                className="w-72 p-4 bg-[#C70515] border border-white/30 text-white text-left"
+                align="end"
+                sideOffset={8}
+                onMouseLeave={() => {
+                  if (!userPinned) setUserOpen(false);
+                }}
+              >
+                <div className="space-y-4">
+                  {/* User Info */}
+                  <div className="flex items-center justify-start gap-3 cursor-default">
+                    <User className="w-8 h-8 shrink-0" />
+                    <span className="font-semibold text-xl text-left">
+                      {username}
+                    </span>
+                  </div>
+
+                  {/* Ongoing Order */}
+                  {bookingReserved && (
+                    <div className="space-y-2 cursor-default">
+                      <div className="flex items-center gap-3">
+                        <ListPlus className="w-5 h-5" />
+                        <span className="font-semibold">On Going Order</span>
+                      </div>
+
+                      {/* Order Details */}
+                      <div className="space-y-1 cursor-default px-8">
+                        <div className="text-sm font-medium text-white/70">
+                          {accountCode} (Rented {rentedDays} days)
+                        </div>
+                        <div className="text-sm font-medium text-white/70">
+                          {remainingTime} left
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* See More */}
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-3 w-full rounded-lg transition"
+                  >
+                    <MoreHorizontal className="w-5 h-5" />
+                    <span className="font-semibold">See More</span>
+                  </Link>
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
+
+        {/* LOGIN POPUP */}
+        {isComponentOpen && (
+          <LoginPage onClose={() => setIsComponentOpen(false)} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default NavbarHome;

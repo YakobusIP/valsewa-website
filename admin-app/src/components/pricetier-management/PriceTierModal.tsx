@@ -5,24 +5,28 @@ import { priceTierService } from "@/services/pricetier.service";
 import DataTable from "@/components/data-table/DataTable";
 import { priceTierColumns } from "@/components/data-table/table-columns/PriceTierTableColumns";
 import PriceTierDetailModal from "@/components/pricetier-management/PriceTierDetailModal";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
 import { usePriceTier } from "@/hooks/usePriceTier";
 import { toast } from "@/hooks/useToast";
 
-import { CircleDollarSignIcon, SearchIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { useDebounce } from "use-debounce";
 
-export default function PriceTierModal() {
+export default function PriceTierModal({
+  open,
+  onOpenChange
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const {
     priceTierList,
     priceTierMetadata,
@@ -39,6 +43,23 @@ export default function PriceTierModal() {
 
   const [localSearch, setLocalSearch] = useState("");
   const [debouncedSearch] = useDebounce(localSearch, 1000);
+
+  useEffect(() => {
+    if (!open) return;
+    setPriceTierSearch(debouncedSearch);
+    setPriceTierListPage(1);
+  }, [debouncedSearch, setPriceTierSearch, setPriceTierListPage, open]);
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange(nextOpen);
+
+    if (!nextOpen) {
+      setLocalSearch("");
+      setPriceTierSearch("");
+      setPriceTierListPage(1);
+      setSelectedPriceTierRows({});
+    }
+  };
 
   const deleteManyPriceTiers = async () => {
     setIsLoadingDeletePriceTier(true);
@@ -67,47 +88,38 @@ export default function PriceTierModal() {
     }
   };
 
-  useEffect(() => {
-    setPriceTierSearch(debouncedSearch);
-    setPriceTierListPage(1);
-  }, [debouncedSearch, setPriceTierSearch, setPriceTierListPage]);
-
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button className="w-full xl:w-fit">
-          <CircleDollarSignIcon className="w-4 h-4" />
-          Price Tiers
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
-        <DialogHeader>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="flex flex-col w-full xl:w-2/5 overflow-y-auto max-h-[100dvh]">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Price Tiers</DialogTitle>
           <DialogDescription>Manage price tiers</DialogDescription>
         </DialogHeader>
-        <DataTable
-          columns={priceTierColumns}
-          data={priceTierList}
-          rowSelection={selectedPriceTierRows}
-          setRowSelection={setSelectedPriceTierRows}
-          isLoadingData={isLoadingPriceTier}
-          deleteData={deleteManyPriceTiers}
-          isLoadingDeleteData={isLoadingDeletePriceTier}
-          page={priceTierListPage}
-          setPage={setPriceTierListPage}
-          metadata={priceTierMetadata}
-          leftSideComponent={
-            <Input
-              startIcon={
-                <SearchIcon size={18} className="text-muted-foreground" />
-              }
-              placeholder="Search price tier..."
-              parentClassName="w-full xl:w-64"
-              onChange={(e) => setLocalSearch(e.target.value)}
-            />
-          }
-          rightSideComponent={<PriceTierDetailModal mode="add" />}
-        />
+        <div className="flex-1 overflow-y-auto">
+          <DataTable
+            columns={priceTierColumns}
+            data={priceTierList}
+            rowSelection={selectedPriceTierRows}
+            setRowSelection={setSelectedPriceTierRows}
+            isLoadingData={isLoadingPriceTier}
+            deleteData={deleteManyPriceTiers}
+            isLoadingDeleteData={isLoadingDeletePriceTier}
+            page={priceTierListPage}
+            setPage={setPriceTierListPage}
+            metadata={priceTierMetadata}
+            leftSideComponent={
+              <Input
+                startIcon={
+                  <SearchIcon size={18} className="text-muted-foreground" />
+                }
+                placeholder="Search price tier..."
+                parentClassName="w-full xl:w-64"
+                onChange={(e) => setLocalSearch(e.target.value)}
+              />
+            }
+            rightSideComponent={<PriceTierDetailModal mode="add" />}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

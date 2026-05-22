@@ -16,11 +16,21 @@ type AccountEntityRequest = {
   totalRentHour: number;
   password: string;
   passwordResetRequired: boolean;
-  skins: string[];
   thumbnail: number;
   otherImages: number[] | null;
   priceTier: number;
+  skinCount: number;
+  skinList: number[];
+  isCompetitive: boolean;
+  isRecommended: boolean;
+  isMfa?: boolean;
+  requirePasswordReset?: boolean;
 };
+
+type AccountWithSkins = Prisma.AccountGetPayload<{
+  omit: { legacySkinList: true };
+  include: { skinList: true };
+}>;
 
 type PublicAccount = Prisma.AccountGetPayload<{
   select: {
@@ -32,9 +42,13 @@ type PublicAccount = Prisma.AccountGetPayload<{
     currentExpireAt: true;
     totalRentHour: true;
     skinList: true;
+    skinCount: true;
     priceTier: true;
     thumbnail: true;
     otherImages: true;
+    isCompetitive: true;
+    isRecommended: true;
+    isMfa: true;
   };
 }>;
 
@@ -44,4 +58,39 @@ type UpdateResetLogRequest = {
   passwordResetRequired: boolean;
 };
 
-export type { AccountEntityRequest, PublicAccount, UpdateResetLogRequest };
+type DeleteResetLogRequest = {
+  accountId: number;
+};
+
+type GetAvailableAccountsRequest = {
+  startAt: Date;
+  endAt: Date;
+};
+
+type AccountSearchFilters = {
+  query?: string;
+  compeOnly?: boolean;
+  tiers?: string[];
+  skinCounts?: string[];
+  ranks?: string[];
+  skinIds?: number[];
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: string;
+  direction?: Prisma.SortOrder;
+};
+
+type UpdateAccountMFARequest = {
+  isMfa: boolean;
+};
+
+export type {
+  AccountEntityRequest,
+  AccountWithSkins,
+  PublicAccount,
+  UpdateResetLogRequest,
+  DeleteResetLogRequest,
+  GetAvailableAccountsRequest,
+  AccountSearchFilters,
+  UpdateAccountMFARequest
+};
