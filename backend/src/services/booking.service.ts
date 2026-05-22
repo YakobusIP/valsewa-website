@@ -1382,9 +1382,7 @@ export class BookingService {
         if (completedBookings.length === 0) return 0;
 
         const bookingIds = completedBookings.map((b) => b.id);
-        const accountIds = [
-          ...new Set(completedBookings.map((b) => b.accountId))
-        ];
+        const accountIds = completedBookings.map((b) => b.accountId);
 
         await tx.booking.updateMany({
           where: {
@@ -1392,15 +1390,6 @@ export class BookingService {
           },
           data: {
             status: BookingStatus.COMPLETED
-          }
-        });
-
-        await tx.account.updateMany({
-          where: { id: { in: accountIds } },
-          data: {
-            currentBookingDate: null,
-            currentExpireAt: null,
-            currentBookingDuration: null
           }
         });
 
