@@ -64,7 +64,7 @@ jobs:
             sudo mkdir -p "$DST"
             sudo rsync -rt --delete "$SRC/" "$DST/"
 
-            # Production: deploy systemd timer units. Staging uses node-cron in-process (backend/src/lib/cron.ts).
+            # Optional legacy systemd timers. When omitted, disable old timer units so node-cron is the only scheduler.
             if [ -n "${{ inputs.timers }}" ]; then
               CRON_PREFIX="backend-${{ inputs.environment }}-cron"
               
@@ -81,8 +81,8 @@ jobs:
               for t in ${{ inputs.timers }}; do
                 sudo systemctl enable --now "${CRON_PREFIX}@${t}.timer" || true
               done
-            elif [ "${{ inputs.environment }}" = "staging" ]; then
-              CRON_PREFIX="backend-staging-cron"
+            else
+              CRON_PREFIX="backend-${{ inputs.environment }}-cron"
               sudo systemctl list-unit-files "${CRON_PREFIX}@*.timer" --no-legend 2>/dev/null | awk '{print $1}' | while read -r unit; do
                 sudo systemctl disable --now "$unit" || true
               done

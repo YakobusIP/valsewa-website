@@ -16,11 +16,13 @@ ALTER TABLE "Account"
 ADD COLUMN "skinCount" INTEGER NOT NULL DEFAULT 0,
 ADD COLUMN "isCompetitive" BOOLEAN NOT NULL DEFAULT false,
 ADD COLUMN "isRecommended" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN "requirePasswordReset" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "requirePasswordReset" BOOLEAN NOT NULL DEFAULT true,
 ADD COLUMN "isMfa" BOOLEAN NOT NULL DEFAULT false,
 ALTER COLUMN "skinList" SET DEFAULT ARRAY[]::TEXT[];
 
-ALTER TABLE "PriceTier" ALTER COLUMN "description" DROP NOT NULL;
+ALTER TABLE "PriceTier"
+ADD COLUMN "bookingFee" INTEGER NOT NULL DEFAULT 0,
+ALTER COLUMN "description" DROP NOT NULL;
 
 ALTER TABLE "ImageUpload" ADD COLUMN "type" "MediaType" NOT NULL DEFAULT 'IMAGE';
 
@@ -127,6 +129,7 @@ CREATE TABLE "Booking" (
     "othersValue" INTEGER,
     "discount" INTEGER,
     "adminFee" INTEGER,
+    "bookingFee" INTEGER,
     "totalValue" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
