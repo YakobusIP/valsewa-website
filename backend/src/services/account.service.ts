@@ -1321,20 +1321,21 @@ export class AccountService {
   };
 
   private validateMfaEnablement = async (account: Account) => {
-    // Validation for legacy bookings
-    if (account.nextBookingDate)
-      throw new BadRequestError("Account not eligible for MFA enablement");
-
-    // Validation for new bookings
-    const activeBooking = await prisma.booking.findFirst({
+    // Order book must be empty: no scheduled next booking.
+    // Ongoing rentals (IN_USE / current RESERVED with startAt <= now) are allowed.
+    const nextBooking = await prisma.booking.findFirst({
       where: {
         accountId: account.id,
         status: BookingStatus.RESERVED,
-        startAt: { gte: new Date() }
-      }
+        startAt: { gt: new Date() }
+      },
+      select: { id: true }
     });
 
-    if (activeBooking)
-      throw new BadRequestError("Account not eligible for MFA enablement");
+    if (nextBooking) {
+      throw new BadRequestError(
+        "Cannot enable MFA while the account has a scheduled next booking (order book is not empty)."
+      );
+    }
   };
 }
