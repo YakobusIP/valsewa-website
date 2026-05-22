@@ -171,6 +171,22 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     }
   };
 
+  const handleDatePresetClick = (preset: NonNullable<DatePreset>) => {
+    setDatePreset((current) => (current === preset ? null : preset));
+    setDateFrom("");
+    setDateTo("");
+  };
+
+  const handleDateFromChange = (value: string) => {
+    setDateFrom(value);
+    if (value) setDatePreset(null);
+  };
+
+  const handleDateToChange = (value: string) => {
+    setDateTo(value);
+    if (value) setDatePreset(null);
+  };
+
   const resetFilter = () => {
     setSearch("");
     setDatePreset(null);
@@ -276,7 +292,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                   size="sm"
                   className="w-full"
                   variant={datePreset === "1D" ? "default" : "outline"}
-                  onClick={() => setDatePreset("1D")}
+                  onClick={() => handleDatePresetClick("1D")}
                 >
                   1 Day
                 </Button>
@@ -284,7 +300,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                   size="sm"
                   className="w-full"
                   variant={datePreset === "7D" ? "default" : "outline"}
-                  onClick={() => setDatePreset("7D")}
+                  onClick={() => handleDatePresetClick("7D")}
                 >
                   7 Days
                 </Button>
@@ -292,7 +308,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                   size="sm"
                   className="w-full"
                   variant={datePreset === "30D" ? "default" : "outline"}
-                  onClick={() => setDatePreset("30D")}
+                  onClick={() => handleDatePresetClick("30D")}
                 >
                   30 Days
                 </Button>
@@ -302,14 +318,14 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                 <input
                   type="date"
                   value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
+                  onChange={(e) => handleDateFromChange(e.target.value)}
                   className="w-full border rounded h-9 px-[0.15rem]"
                 />
                 <strong className="mt-1">-</strong>
                 <input
                   type="date"
                   value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
+                  onChange={(e) => handleDateToChange(e.target.value)}
                   className="w-full border rounded h-9 px-[0.15rem]"
                 />
               </div>
