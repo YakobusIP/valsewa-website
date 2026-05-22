@@ -5,7 +5,7 @@ import { getOperationalWindow } from "./operational-window";
 
 type CronJobName =
   | "daily-drop-randomizer"
-  | "update-expire-at"
+  | "update-rank"
   | "check-password-expiration"
   | "check-voucher-expiration"
   | "sync-expired"
@@ -66,8 +66,8 @@ export async function initCronJobs() {
     await postScheduler("/api/daily-drop/run-randomizer");
   });
 
-  schedule("update-expire-at", "0 * * * *", async () => {
-    await postScheduler("/api/accounts/update-expire-at");
+  schedule("update-rank", "0 0 * * *", async () => {
+    await postScheduler("/api/accounts/update-rank");
   });
 
   schedule("check-password-expiration", "*/15 * * * *", async () => {
