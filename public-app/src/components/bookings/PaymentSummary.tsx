@@ -48,6 +48,11 @@ function PaymentSummary({
     [voucher, booking.mainValue]
   );
 
+  const grossSubtotal = useMemo(
+    () => booking.mainValue + (booking.othersValue ?? 0),
+    [booking.mainValue, booking.othersValue]
+  );
+
   const subtotalPayment = useMemo(
     () =>
       booking.mainValue +
@@ -189,7 +194,7 @@ function PaymentSummary({
       <div className="space-y-2 text-xs sm:text-sm">
         <div className="flex justify-between">
           <span>Subtotal</span>
-          <span>IDR {booking.mainValue.toLocaleString()}</span>
+          <span>IDR {grossSubtotal.toLocaleString()}</span>
         </div>
         {isDailyDropBooking ? (
           <div className="flex justify-between text-yellow-400">
@@ -202,10 +207,6 @@ function PaymentSummary({
             <span>-IDR {voucherDiscount.toLocaleString()}</span>
           </div>
         ) : null}
-        <div className="flex justify-between">
-          <span>Other Fee</span>
-          <span>IDR {booking.othersValue?.toLocaleString() ?? "0"}</span>
-        </div>
         {adminFee !== 0 && (
           <div className="flex justify-between">
             <span>Admin Fee</span>
