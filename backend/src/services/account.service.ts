@@ -512,18 +512,17 @@ export class AccountService {
 
         return {
           ...datum,
-          // Priority: booking data > account data > null
-          currentBookingDate: b[0]?.startAt ?? datum.currentBookingDate ?? null,
+          currentBookingDate: b[0]?.startAt ?? null,
           currentBookingDuration: b[0]
             ? parseDurationToHours(b[0].duration)
-            : (datum.currentBookingDuration ?? null),
-          currentExpireAt: b[0]?.endAt ?? datum.currentExpireAt ?? null,
+            : null,
+          currentExpireAt: b[0]?.endAt ?? null,
 
-          nextBookingDate: b[1]?.startAt ?? datum.nextBookingDate ?? null,
+          nextBookingDate: b[1]?.startAt ?? null,
           nextBookingDuration: b[1]
             ? parseDurationToHours(b[1].duration)
-            : (datum.nextBookingDuration ?? null),
-          nextExpireAt: b[1]?.endAt ?? datum.nextExpireAt ?? null
+            : null,
+          nextExpireAt: b[1]?.endAt ?? null
         };
       });
 
@@ -648,8 +647,7 @@ export class AccountService {
 
         return {
           ...datum,
-          // Priority: booking data > account data > null
-          currentExpireAt: b[0]?.endAt ?? datum.currentExpireAt ?? null
+          currentExpireAt: b[0]?.endAt ?? null
         };
       });
 
@@ -771,19 +769,16 @@ export class AccountService {
 
       return {
         ...account,
-        // Priority: booking data > account data > null
-        currentBookingDate:
-          bookings[0]?.startAt ?? account.currentBookingDate ?? null,
+        currentBookingDate: bookings[0]?.startAt ?? null,
         currentBookingDuration: bookings[0]
           ? parseDurationToHours(bookings[0]?.duration)
-          : (account.currentBookingDuration ?? null),
-        currentExpireAt: bookings[0]?.endAt ?? account.currentExpireAt ?? null,
-        nextBookingDate:
-          bookings[1]?.startAt ?? account.nextBookingDate ?? null,
+          : null,
+        currentExpireAt: bookings[0]?.endAt ?? null,
+        nextBookingDate: bookings[1]?.startAt ?? null,
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
-          : (account.nextBookingDuration ?? null),
-        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null
+          : null,
+        nextExpireAt: bookings[1]?.endAt ?? null
       };
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -849,19 +844,16 @@ export class AccountService {
 
       return {
         ...account,
-        // Priority: booking data > account data > null
-        currentBookingDate:
-          bookings[0]?.startAt ?? account.currentBookingDate ?? null,
+        currentBookingDate: bookings[0]?.startAt ?? null,
         currentBookingDuration: bookings[0]
           ? parseDurationToHours(bookings[0]?.duration)
-          : (account.currentBookingDuration ?? null),
-        currentExpireAt: bookings[0]?.endAt ?? account.currentExpireAt ?? null,
-        nextBookingDate:
-          bookings[1]?.startAt ?? account.nextBookingDate ?? null,
+          : null,
+        currentExpireAt: bookings[0]?.endAt ?? null,
+        nextBookingDate: bookings[1]?.startAt ?? null,
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
-          : (account.nextBookingDuration ?? null),
-        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null,
+          : null,
+        nextExpireAt: bookings[1]?.endAt ?? null,
         dailyDrop
       };
     } catch (error) {
@@ -928,19 +920,16 @@ export class AccountService {
 
       return {
         ...account,
-        // Priority: booking data > account data > null
-        currentBookingDate:
-          bookings[0]?.startAt ?? account.currentBookingDate ?? null,
+        currentBookingDate: bookings[0]?.startAt ?? null,
         currentBookingDuration: bookings[0]
           ? parseDurationToHours(bookings[0]?.duration)
-          : (account.currentBookingDuration ?? null),
-        currentExpireAt: bookings[0]?.endAt ?? account.currentExpireAt ?? null,
-        nextBookingDate:
-          bookings[1]?.startAt ?? account.nextBookingDate ?? null,
+          : null,
+        currentExpireAt: bookings[0]?.endAt ?? null,
+        nextBookingDate: bookings[1]?.startAt ?? null,
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
-          : (account.nextBookingDuration ?? null),
-        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null,
+          : null,
+        nextExpireAt: bookings[1]?.endAt ?? null,
         dailyDrop
       };
     } catch (error) {
