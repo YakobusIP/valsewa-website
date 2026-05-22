@@ -520,6 +520,9 @@ export class BookingService {
     const totalValue = subtotalValue + adminFee + bookingFee;
 
     const durationInHours = parseDurationToHours(duration);
+    if (!Number.isFinite(durationInHours) || durationInHours <= 0) {
+      throw new BadRequestError(`Invalid booking duration: "${duration}"`);
+    }
 
     return {
       voucherType,
