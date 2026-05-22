@@ -688,10 +688,19 @@ export class BookingService {
         applicableBookingFee
       );
 
+      if (!Number.isFinite(durationInHours) || durationInHours <= 0) {
+        throw new BadRequestError(
+          `Invalid rental duration "${duration}". Use formats like 3h, 1d, or 1d 5h.`
+        );
+      }
+
       const now = new Date();
       const bookingExpiredAt = addMinutes(now, env.BOOKING_HOLD_TIME_MINUTES);
-      const bookingStartAt = immediate ? bookingExpiredAt : startAt!;
-      const bookingEndAt = addHours(bookingStartAt, durationInHours * quantity);
+      const bookingStartAt = immediate ? now : startAt!;
+      const bookingEndAt = addHours(
+        immediate ? bookingExpiredAt : bookingStartAt,
+        durationInHours * quantity
+      );
 
       if (account.isMfa && isOutsideOperationalHours(operationalHours, now)) {
         throw new BadRequestError(
@@ -1367,6 +1376,7 @@ export class BookingService {
         const completedBookings = await tx.booking.findMany({
           where: {
             status: BookingStatus.RESERVED,
+            startAt: { lte: now },
             endAt: { lte: now }
           },
           select: {
@@ -1793,21 +1803,34 @@ export class BookingService {
     };
 
     const bookingStatus = PAYMENT_TO_BOOKING_STATUS_MAP[paymentStatus];
-    const actualStart =
-      paymentStatus === PaymentStatus.SUCCESS && booking.immediate
-        ? new Date()
-        : undefined;
+
+    const rentalHours =
+      parseDurationToHours(booking.duration) * booking.quantity;
+    const rentalWindowUpdate: Pick<
+      Prisma.BookingUpdateInput,
+      "startAt" | "endAt"
+    > = {};
+
+    if (paymentStatus === PaymentStatus.SUCCESS) {
+      if (!Number.isFinite(rentalHours) || rentalHours <= 0) {
+        throw new BadRequestError(
+          `Invalid rental duration "${booking.duration}" on booking ${booking.id}.`
+        );
+      }
+
+      const rentalStart = booking.immediate
+        ? (paidAt ?? new Date())
+        : (booking.startAt ?? paidAt ?? new Date());
+
+      rentalWindowUpdate.startAt = rentalStart;
+      rentalWindowUpdate.endAt = addHours(rentalStart, rentalHours);
+    }
+
     const bookingUpdate: Prisma.BookingUpdateInput = {
       status: bookingStatus,
       expiredAt: null,
       version: { increment: 1 },
-      ...(actualStart && {
-        startAt: actualStart,
-        endAt: addHours(
-          actualStart,
-          parseDurationToHours(booking.duration) * booking.quantity
-        )
-      })
+      ...rentalWindowUpdate
     };
 
     const updatedPayment = await tx.payment.update({
@@ -1967,8 +1990,7 @@ export class BookingService {
             priceTierCode: booking.account.priceTierId?.toString() ?? "",
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
             nickname: booking.account.nickname ?? "",
-            username:
-              active === false ? undefined : booking.account.username,
+            username: active === false ? undefined : booking.account.username,
             password:
               active === false || accountIsMfa
                 ? undefined
