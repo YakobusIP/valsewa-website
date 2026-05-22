@@ -115,6 +115,40 @@ export class BookingService {
     return BigInt(numeric);
   };
 
+  private buildCreatedAtFilter = (
+    datePreset?: string,
+    dateFrom?: Date,
+    dateTo?: Date
+  ): Prisma.DateTimeFilter | undefined => {
+    if (datePreset) {
+      const now = new Date();
+      const from = new Date();
+      if (datePreset === "1D") from.setDate(now.getDate() - 1);
+      if (datePreset === "7D") from.setDate(now.getDate() - 7);
+      if (datePreset === "30D") from.setDate(now.getDate() - 30);
+
+      return { gte: from, lte: now };
+    }
+
+    if (dateFrom && dateTo) {
+      const to = new Date(dateTo);
+      to.setHours(23, 59, 59, 999);
+      return { gte: dateFrom, lte: to };
+    }
+
+    if (dateFrom) {
+      return { gte: dateFrom };
+    }
+
+    if (dateTo) {
+      const to = new Date(dateTo);
+      to.setHours(23, 59, 59, 999);
+      return { lte: to };
+    }
+
+    return undefined;
+  };
+
   getAllBookings = async (
     page?: number,
     limit?: number,
@@ -134,36 +168,13 @@ export class BookingService {
         whereCriteria.readableNumber = parsedId;
       }
 
-      // Handle date filtering
-      if (datePreset) {
-        const now = new Date();
-        const from = new Date();
-        if (datePreset === "1D") from.setDate(now.getDate() - 1);
-        if (datePreset === "7D") from.setDate(now.getDate() - 7);
-        if (datePreset === "30D") from.setDate(now.getDate() - 30);
-
-        whereCriteria.createdAt = {
-          gte: from,
-          lte: now
-        };
-      } else if (dateFrom && dateTo) {
-        const to = new Date(dateTo);
-        to.setHours(23, 59, 59, 999);
-
-        whereCriteria.createdAt = {
-          gte: dateFrom,
-          lte: to
-        };
-      } else if (dateFrom) {
-        whereCriteria.createdAt = {
-          gte: dateFrom
-        };
-      } else if (dateTo) {
-        const to = new Date(dateTo);
-        to.setHours(23, 59, 59, 999);
-        whereCriteria.createdAt = {
-          lte: to
-        };
+      const createdAtFilter = this.buildCreatedAtFilter(
+        datePreset,
+        dateFrom,
+        dateTo
+      );
+      if (createdAtFilter) {
+        whereCriteria.createdAt = createdAtFilter;
       }
 
       let data: Booking[];
@@ -296,15 +307,22 @@ export class BookingService {
     }
   };
 
-  getAccountRented = async (startDate?: Date, endDate?: Date) => {
+  getAccountRented = async (
+    datePreset?: string,
+    dateFrom?: Date,
+    dateTo?: Date
+  ) => {
     try {
+      const createdAtFilter = this.buildCreatedAtFilter(
+        datePreset,
+        dateFrom,
+        dateTo
+      );
+
       const stats = await prisma.booking.aggregate({
         where: {
           status: "COMPLETED",
-          createdAt: {
-            gte: startDate,
-            lte: endDate
-          }
+          ...(createdAtFilter ? { createdAt: createdAtFilter } : {})
         },
         _count: {
           id: true

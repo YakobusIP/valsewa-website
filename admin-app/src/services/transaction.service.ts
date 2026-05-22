@@ -54,16 +54,20 @@ const createBookingService = () => {
     }
   };
 
-  const getAccountRented = async (startDate?: string, endDate?: string) => {
+  const getAccountRented = async (
+    datePreset?: string | null,
+    dateFrom?: string,
+    dateTo?: string
+  ) => {
     try {
+      const params: Record<string, string> = {};
+      if (datePreset) params.datePreset = datePreset;
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
+
       const response = await interceptedAxios.get<
         ApiResponse<BookingStatistics>
-      >(`${BASE_BOOKING_URL}/rented`, {
-        params: {
-          start_date: startDate,
-          end_date: endDate
-        }
-      });
+      >(`${BASE_BOOKING_URL}/rented`, { params });
       return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));

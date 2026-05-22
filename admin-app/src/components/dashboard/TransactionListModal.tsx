@@ -31,7 +31,6 @@ import {
   PaymentEntity
 } from "@/types/booking.type";
 
-import { format } from "date-fns";
 import { useDebounce } from "use-debounce";
 
 import TransactionStatisticsGrid from "./TransactionStatisticGrid";
@@ -98,46 +97,16 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
 
   const fetchAccountRented = useCallback(async () => {
     try {
-      setLoading(true);
-
-      if (datePreset) {
-        const now = new Date();
-        const from = new Date();
-        if (datePreset === "1D") from.setDate(now.getDate() - 1);
-        if (datePreset === "7D") from.setDate(now.getDate() - 7);
-        if (datePreset === "30D") from.setDate(now.getDate() - 30);
-        const response = await bookingService.getAccountRented(
-          formatDateOnly(from),
-          formatDateOnly(now)
-        );
-        setStatistics(response.data);
-        return;
-      }
-
-      if (dateFrom && dateTo) {
-        const from = new Date(dateFrom);
-        const to = new Date(dateTo);
-        const response = await bookingService.getAccountRented(
-          formatDateOnly(from),
-          formatDateOnly(to)
-        );
-        setStatistics(response.data);
-        return;
-      }
-
-      const response = await bookingService.getAccountRented();
+      const response = await bookingService.getAccountRented(
+        debouncedDatePreset,
+        debouncedDateFrom,
+        debouncedDateTo
+      );
       setStatistics(response.data);
-      return;
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
-  }, [dateFrom, datePreset, dateTo]);
-
-  const formatDateOnly = (date: Date | string) => {
-    return format(new Date(date), "MM-dd-yyyy");
-  };
+  }, [debouncedDatePreset, debouncedDateFrom, debouncedDateTo]);
 
   const handleOpenEdit = (booking: BookingEntity) => {
     setSelectedBooking(booking);

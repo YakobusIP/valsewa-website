@@ -60,16 +60,14 @@ export class BookingController {
     next: NextFunction
   ) => {
     try {
-      const startDate = req.query.start_date
-        ? new Date(req.query.start_date as string)
-        : undefined;
-      const endDate = req.query.end_date
-        ? new Date(req.query.end_date as string)
-        : undefined;
+      const datePreset = req.query.datePreset as string | undefined;
+      const dateFrom = req.query.dateFrom as string | undefined;
+      const dateTo = req.query.dateTo as string | undefined;
 
       const data = await this.bookingService.getAccountRented(
-        startDate,
-        endDate
+        datePreset,
+        dateFrom ? new Date(dateFrom) : undefined,
+        dateTo ? new Date(dateTo) : undefined
       );
       return res.json({ data });
     } catch (error) {
