@@ -20,7 +20,7 @@ import { toast } from "@/hooks/useToast";
 
 import { BOOKING_STATUS, BookingWithAccountEntity } from "@/types/booking.type";
 
-import { calculateDaysRented, calculateTimeRemaining, cn } from "@/lib/utils";
+import { calculateTimeRemaining, cn, formatRentalPeriod } from "@/lib/utils";
 
 import { CopyIcon, LogOut } from "lucide-react";
 import Image from "next/image";
@@ -224,17 +224,10 @@ export default function Dashboard() {
                       <TableCell className="text-white text-center lg:text-lg text-sm text-nowrap px-12">
                         {isOnGoingOrder(booking)
                           ? calculateTimeRemaining(booking.endAt) + " Left"
-                          : calculateDaysRented(
+                          : formatRentalPeriod(
                               booking.startAt,
                               booking.endAt
-                            ) +
-                            " Day" +
-                            (calculateDaysRented(
-                              booking.startAt,
-                              booking.endAt
-                            ) > 1
-                              ? "s"
-                              : "")}
+                            )}
                       </TableCell>
                       <TableCell className="text-center lg:text-lg text-sm whitespace-nowrap px-12 text-nowrap">
                         {booking.status === BOOKING_STATUS.HOLD ? (
