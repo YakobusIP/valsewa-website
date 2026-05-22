@@ -27,7 +27,7 @@ export const addDays = (date: Date, daysToAdd: number) => {
 
 export const addHours = (date: Date, hoursToAdd: number) => {
   const d = new Date(date);
-  d.setHours(d.getHours() + hoursToAdd);
+  d.setTime(d.getTime() + hoursToAdd * 60 * 60 * 1000);
   return d;
 };
 
@@ -40,15 +40,19 @@ export const addMinutes = (date: Date, minutesToAdd: number) => {
 export const parseDurationToHours = (duration: string): number => {
   const lower = duration.toLowerCase().trim();
 
-  if (lower.endsWith("h")) {
-    return Number(lower.replace("h", ""));
+  const matches = Array.from(
+    lower.matchAll(/(\d+(?:\.\d+)?)\s*(d|day|days|h|hr|hrs|hour|hours)\b/g)
+  );
+
+  if (matches.length === 0) {
+    return 0;
   }
 
-  if (lower.endsWith("d")) {
-    return Number(lower.replace("d", "")) * 24;
-  }
-
-  return 0;
+  return matches.reduce((total, match) => {
+    const value = Number(match[1]);
+    const unit = match[2];
+    return total + (unit.startsWith("d") ? value * 24 : value);
+  }, 0);
 };
 
 export const parseToDate = (dateStr?: string): Date | null => {
