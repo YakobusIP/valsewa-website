@@ -4,7 +4,6 @@ import { Fragment, useEffect, useState } from "react";
 
 import { bookingService } from "@/services/booking.service";
 
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -235,10 +235,7 @@ export default function Dashboard() {
                       <TableCell className="text-white text-center lg:text-lg text-sm text-nowrap px-12">
                         {isOnGoingOrder(booking)
                           ? calculateTimeRemaining(booking.endAt) + " Left"
-                          : formatRentalPeriod(
-                              booking.startAt,
-                              booking.endAt
-                            )}
+                          : formatRentalPeriod(booking.startAt, booking.endAt)}
                       </TableCell>
                       <TableCell className="text-center lg:text-lg text-sm whitespace-nowrap px-12 text-nowrap">
                         {booking.status === BOOKING_STATUS.HOLD ? (
