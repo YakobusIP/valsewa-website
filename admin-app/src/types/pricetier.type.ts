@@ -1,9 +1,19 @@
 type PriceTier = {
   id: number;
   code: string;
-  description: string;
+  bookingFee: number;
+  priceList: PriceList[];
 };
 
-type PriceTierRequest = Omit<PriceTier, "id">;
+type PriceTierRequest = Omit<PriceTier, "id"> & {
+  bookingFee?: number;
+};
 
-export type { PriceTier, PriceTierRequest };
+type PriceList = {
+  id?: number;
+  duration: string;
+  unratedPrice: number;
+  compPrice: number;
+};
+
+export type { PriceTier, PriceTierRequest, PriceList };

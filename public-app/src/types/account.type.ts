@@ -1,18 +1,29 @@
+import { Skin } from "./skin.type";
+
 export type { AccountEntity, AccountEntityRequest, RankResponse };
+
+type PriceList = {
+  id: number;
+  duration: string;
+  unratedPrice: number;
+  compPrice: number;
+  tierId: number;
+};
 
 type PriceTier = {
   id: number;
   code: string;
-  description: string;
+  priceList: PriceList[];
 };
 
 type PriceTierRequest = Omit<PriceTier, "id">;
 
-export type { PriceTier, PriceTierRequest };
+export type { PriceList, PriceTier, PriceTierRequest };
 
 type UploadResponse = {
   id: number;
   imageUrl: string;
+  type: "IMAGE" | "VIDEO";
 };
 
 export type { UploadResponse };
@@ -30,19 +41,23 @@ type AccountEntity = {
   currentExpireAt?: Date | null;
   totalRentHour: number;
   password: string;
-  skinList: string[];
+  skinList: Skin[];
+  skinCount: number;
   stale_password: boolean;
   thumbnail: UploadResponse;
   otherImages: UploadResponse[] | null;
   priceTier: PriceTier;
   nickname: string;
+  isCompetitive: boolean;
+  isRecommended: boolean;
+  isMfa: boolean;
+  dailyDrop?: { discount: number; priceListId: number } | null;
 };
 
 export type CarouselSlide = {
   id: number;
-  image123: UploadResponse;
-  image126: UploadResponse;
-  image129: UploadResponse;
+  image: UploadResponse;
+  duration: number;
 };
 
 type AccountEntityRequest = Omit<
@@ -85,9 +100,31 @@ type MetadataResponse = {
   total: number;
 };
 
+type TierFilter = { id: string; isCompetitive: string } | null;
+
+type AccountsPublicParams = {
+  page?: number;
+  limit?: number;
+  q?: string;
+
+  compe_only?: boolean;
+  tiers?: string[];
+  skin_counts?: string[];
+  ranks?: string[];
+  skin_ids?: number[];
+
+  min_price?: number;
+  max_price?: number;
+
+  sortBy?: string;
+  direction?: "asc" | "desc";
+};
+
 export type {
   ApiResponseList,
   ApiResponseError,
   MessageResponse,
-  MetadataResponse
+  MetadataResponse,
+  TierFilter,
+  AccountsPublicParams
 };

@@ -19,6 +19,11 @@ class AuthRouter {
     this.router.post("/logout", this.authController.logout);
     this.router.get("/validate-token", this.authController.validateToken);
     this.router.post("/refresh-token", this.authController.refreshToken);
+
+    this.router.post("/publogin", this.authController.publogin);
+    this.router.post("/publogout", this.authController.publogout);
+    this.router.get("/pubvalidate-token", this.authController.pubvalidateToken);
+    this.router.post("/pubrefresh-token", this.authController.pubrefreshToken);
   }
 }
 
