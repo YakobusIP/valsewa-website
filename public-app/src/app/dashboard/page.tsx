@@ -4,6 +4,17 @@ import { Fragment, useEffect, useState } from "react";
 
 import { bookingService } from "@/services/booking.service";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -224,10 +235,7 @@ export default function Dashboard() {
                       <TableCell className="text-white text-center lg:text-lg text-sm text-nowrap px-12">
                         {isOnGoingOrder(booking)
                           ? calculateTimeRemaining(booking.endAt) + " Left"
-                          : formatRentalPeriod(
-                              booking.startAt,
-                              booking.endAt
-                            )}
+                          : formatRentalPeriod(booking.startAt, booking.endAt)}
                       </TableCell>
                       <TableCell className="text-center lg:text-lg text-sm whitespace-nowrap px-12 text-nowrap">
                         {booking.status === BOOKING_STATUS.HOLD ? (
@@ -243,28 +251,56 @@ export default function Dashboard() {
                               booking.status.slice(1).toLowerCase()}
                           </button>
                         ) : isOnGoingOrder(booking) ? (
-                          <button
-                            type="button"
-                            onClick={() => handleForceFinish(booking)}
-                            disabled={finishingAccountId === booking.accountId}
-                            className={cn(
-                              "group inline-flex items-center self-center justify-center px-3 py-2 rounded-md lg:text-lg text-sm cursor-pointer hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C70515] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F] disabled:opacity-60 disabled:cursor-wait",
-                              getStatusStyle(booking)
-                            )}
-                          >
-                            {finishingAccountId === booking.accountId ? (
-                              "Finishing..."
-                            ) : (
-                              <>
-                                <span className="group-hover:hidden">
-                                  On Going Order
-                                </span>
-                                <span className="hidden group-hover:inline">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button
+                                type="button"
+                                disabled={
+                                  finishingAccountId === booking.accountId
+                                }
+                                className={cn(
+                                  "group inline-flex items-center self-center justify-center px-3 py-2 rounded-md lg:text-lg text-sm cursor-pointer hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C70515] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F] disabled:opacity-60 disabled:cursor-wait",
+                                  getStatusStyle(booking)
+                                )}
+                              >
+                                {finishingAccountId === booking.accountId ? (
+                                  "Finishing..."
+                                ) : (
+                                  <>
+                                    <span className="group-hover:hidden">
+                                      On Going Order
+                                    </span>
+                                    <span className="hidden group-hover:inline">
+                                      Finish Booking
+                                    </span>
+                                  </>
+                                )}
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-black border border-[#C70515]">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-2xl text-white uppercase mb-4">
                                   Finish Booking
-                                </span>
-                              </>
-                            )}
-                          </button>
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="text-white">
+                                  This will end the active booking for{" "}
+                                  {booking.account.accountCode} immediately and
+                                  release the account after processing.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="text-white bg-black">
+                                  Keep Booking
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-[#C70515] text-white"
+                                  onClick={() => handleForceFinish(booking)}
+                                >
+                                  Finish Booking
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         ) : (
                           <span
                             className={cn(
