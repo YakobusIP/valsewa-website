@@ -41,7 +41,8 @@ export default function Dashboard() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const limit = 5;
-  const { username, customerId, logout } = useAuth();
+  const { username, customerId, logout, isAuthenticated, isAuthChecked } =
+    useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [finishingAccountId, setFinishingAccountId] = useState<number | null>(
     null
@@ -70,6 +71,14 @@ export default function Dashboard() {
   useEffect(() => {
     document.title = "Dashboard | Valsewa";
   }, []);
+
+  useEffect(() => {
+    if (!isAuthChecked) return;
+
+    if (!isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthChecked, isAuthenticated, router]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -128,6 +137,10 @@ export default function Dashboard() {
       setFinishingAccountId(null);
     }
   };
+
+  if (!isAuthChecked || !isAuthenticated) {
+    return null;
+  }
 
   return (
     <Fragment>
