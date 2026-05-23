@@ -313,7 +313,7 @@ export class BookingService {
     dateTo?: Date
   ) => {
     try {
-      const createdAtFilter = this.buildCreatedAtFilter(
+      const paidAtFilter = this.buildCreatedAtFilter(
         datePreset,
         dateFrom,
         dateTo
@@ -321,8 +321,14 @@ export class BookingService {
 
       const stats = await prisma.booking.aggregate({
         where: {
-          status: "COMPLETED",
-          ...(createdAtFilter ? { createdAt: createdAtFilter } : {})
+          payments: {
+            some: {
+              status: PaymentStatus.SUCCESS,
+              paidAt: paidAtFilter
+                ? { not: null, ...paidAtFilter }
+                : { not: null }
+            }
+          }
         },
         _count: {
           id: true
