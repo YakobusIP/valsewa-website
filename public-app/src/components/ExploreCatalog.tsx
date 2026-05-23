@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { FaArrowRight } from "react-icons/fa6";
 
-import CTAbackground from "./CTAbackground";
+const CTAbackground = dynamic(() => import("./CTAbackground"), { ssr: false });
 
 export default function ExploreCatalog() {
   return (
