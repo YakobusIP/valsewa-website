@@ -33,8 +33,9 @@ import { BOOKING_STATUS, BookingWithAccountEntity } from "@/types/booking.type";
 
 import { calculateTimeRemaining, cn, formatRentalPeriod } from "@/lib/utils";
 
-import { CopyIcon, LogOut } from "lucide-react";
+import { CopyIcon, ExternalLink, LogOut } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
@@ -112,6 +113,15 @@ export default function Dashboard() {
     } else {
       router.push(`/bookings/${booking.id}`);
     }
+  };
+
+  const getOngoingOrderConfirmationPath = (
+    booking: BookingWithAccountEntity
+  ): string | null => {
+    if (!isOnGoingOrder(booking)) return null;
+    const paymentId = booking.payments?.[0]?.id;
+    if (!paymentId) return null;
+    return `/payments/${paymentId}/success`;
   };
 
   const handleForceFinish = async (booking: BookingWithAccountEntity) => {
@@ -243,7 +253,28 @@ export default function Dashboard() {
                         {booking.createdAt?.toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm text-nowrap px-12">
-                        {booking.account.accountCode}
+                        {(() => {
+                          const confirmationPath =
+                            getOngoingOrderConfirmationPath(booking);
+                          if (confirmationPath) {
+                            return (
+                              <Link
+                                href={confirmationPath}
+                                className="inline-flex items-center justify-center gap-1.5 hover:text-[#C70515] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C70515] rounded"
+                              >
+                                {booking.account.accountCode}
+                                <ExternalLink
+                                  className="w-4 h-4 shrink-0"
+                                  aria-hidden
+                                />
+                                <span className="sr-only">
+                                  View order confirmation
+                                </span>
+                              </Link>
+                            );
+                          }
+                          return booking.account.accountCode;
+                        })()}
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm text-nowrap px-12">
                         {isOnGoingOrder(booking)
