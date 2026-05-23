@@ -606,28 +606,27 @@ export class AccountService {
         filteredData = fuseResults.map((result) => result.item);
       }
 
-      if (page === undefined || limit === undefined) {
-        return [filteredData as PublicAccount[], null];
-      }
-
       const accountIds = filteredData.map((a) => a.id);
 
-      const bookings = await prisma.booking.findMany({
-        where: {
-          accountId: { in: accountIds },
-          status: BookingStatus.RESERVED,
-          endAt: { gt: new Date() }
-        },
-        orderBy: {
-          startAt: "asc"
-        },
-        select: {
-          accountId: true,
-          startAt: true,
-          endAt: true,
-          duration: true
-        }
-      });
+      const bookings =
+        accountIds.length > 0
+          ? await prisma.booking.findMany({
+              where: {
+                accountId: { in: accountIds },
+                status: BookingStatus.RESERVED,
+                endAt: { gt: new Date() }
+              },
+              orderBy: {
+                startAt: "asc"
+              },
+              select: {
+                accountId: true,
+                startAt: true,
+                endAt: true,
+                duration: true
+              }
+            })
+          : [];
 
       const bookingMap = new Map<number, typeof bookings>();
 
@@ -642,7 +641,7 @@ export class AccountService {
         }
       }
 
-      const filteredDataWithBookings = filteredData.map((datum) => {
+      const enrichedData = filteredData.map((datum) => {
         const b = bookingMap.get(datum.id) ?? [];
 
         return {
@@ -651,7 +650,11 @@ export class AccountService {
         };
       });
 
-      const itemCount = filteredDataWithBookings.length;
+      if (page === undefined || limit === undefined) {
+        return [enrichedData as PublicAccount[], null];
+      }
+
+      const itemCount = enrichedData.length;
       const pageCount = Math.ceil(itemCount / limit);
 
       const metadata: Metadata = {
@@ -661,7 +664,7 @@ export class AccountService {
         total: itemCount
       };
 
-      const paginatedData = filteredDataWithBookings.slice(
+      const paginatedData = enrichedData.slice(
         (page - 1) * limit,
         page * limit
       );

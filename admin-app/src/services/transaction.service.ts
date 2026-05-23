@@ -17,13 +17,20 @@ const BASE_BOOKING_URL = "/api/bookings";
 
 const createBookingService = () => {
   const fetchAll = async (
+    page: number,
+    limit: number,
     query?: string,
     datePreset?: string | null,
     dateFrom?: string,
-    dateTo?: string
+    dateTo?: string,
+    hideInactive: boolean = true
   ) => {
     try {
-      const params: Record<string, string> = {};
+      const params: Record<string, string> = {
+        page: String(page),
+        limit: String(limit),
+        hideInactive: String(hideInactive)
+      };
       if (query) params.q = query;
       if (datePreset) params.datePreset = datePreset;
       if (dateFrom) params.dateFrom = dateFrom;

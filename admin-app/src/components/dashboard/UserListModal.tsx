@@ -1,9 +1,21 @@
 import { useEffect, useState } from "react";
 
 import { customerService } from "@/services/customer.service";
+import { toast } from "@/hooks/useToast";
 
 import ChangePasswordModal from "@/components/dashboard/ChangePasswordModal";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -19,14 +31,20 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
 
 import { Customer } from "@/types/customer.type";
 
-import { PlusIcon } from "lucide-react";
+import { Loader2, PlusIcon } from "lucide-react";
 
 import { Badge } from "../ui/badge";
 
 type User = Customer;
+
+type PendingStatusChange = {
+  user: User;
+  nextActive: boolean;
+};
 
 type Props = {
   open: boolean;
@@ -44,6 +62,10 @@ export default function UserListModal({
   const [error, setError] = useState<string | null>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [pendingStatusChange, setPendingStatusChange] =
+    useState<PendingStatusChange | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [hideInactive, setHideInactive] = useState(true);
 
   useEffect(() => {
     if (!open) return;
@@ -75,13 +97,82 @@ export default function UserListModal({
     setShowChangePassword(false);
   };
 
+  const requestStatusChange = (user: User) => {
+    setPendingStatusChange({ user, nextActive: !user.isActive });
+  };
+
+  const confirmStatusChange = async () => {
+    if (!pendingStatusChange) return;
+
+    const { user, nextActive } = pendingStatusChange;
+    setIsUpdatingStatus(true);
+
+    try {
+      await customerService.setActiveStatus(user.id, nextActive);
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, isActive: nextActive } : u))
+      );
+      toast({
+        title: nextActive ? "Activated" : "Deactivated",
+        description: nextActive
+          ? "Customer can log in again"
+          : "Customer can no longer log in"
+      });
+      setPendingStatusChange(null);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update customer status";
+      toast({
+        variant: "destructive",
+        title: "Update failed",
+        description: message
+      });
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const visibleUsers = hideInactive
+    ? users.filter((user) => user.isActive)
+    : users;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex flex-col w-full xl:w-3/5 max-h-[100dvh] overflow-y-auto">
+    <>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && (pendingStatusChange !== null || isUpdatingStatus)) {
+          return;
+        }
+        onOpenChange(nextOpen);
+      }}
+    >
+      <DialogContent
+        className="flex flex-col w-full xl:w-3/5 max-h-[100dvh] overflow-y-auto"
+        onInteractOutside={(e) => {
+          if (pendingStatusChange !== null || isUpdatingStatus) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader className="space-y-1">
           <DialogTitle>Customer List</DialogTitle>
           <DialogDescription>Manage registered customers</DialogDescription>
         </DialogHeader>
+
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="hide-inactive-customers"
+            checked={hideInactive}
+            onCheckedChange={(checked) => setHideInactive(checked === true)}
+          />
+          <Label
+            htmlFor="hide-inactive-customers"
+            className="text-sm font-normal cursor-pointer"
+          >
+            Hide deactivated customers
+          </Label>
+        </div>
 
         <div className="flex-1 overflow-auto">
           <Table>
@@ -119,20 +210,22 @@ export default function UserListModal({
                 </TableRow>
               )}
 
-              {!loading && !error && users.length === 0 && (
+              {!loading && !error && visibleUsers.length === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={5}
                     className="py-6 text-center text-muted-foreground"
                   >
-                    No customers found
+                    {hideInactive && users.some((u) => !u.isActive)
+                      ? "No active customers found"
+                      : "No customers found"}
                   </TableCell>
                 </TableRow>
               )}
 
               {!loading &&
                 !error &&
-                users.map((user) => (
+                visibleUsers.map((user) => (
                   <TableRow
                     key={user.id}
                     className="border-b last:border-b-0 hover:bg-muted transition-colors"
@@ -164,13 +257,26 @@ export default function UserListModal({
                     </TableCell>
 
                     <TableCell className="px-4 py-3">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openChangePassword(user)}
-                      >
-                        Change Password
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openChangePassword(user)}
+                        >
+                          Change Password
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={user.isActive ? "secondary" : "default"}
+                          onClick={() => requestStatusChange(user)}
+                          disabled={
+                            isUpdatingStatus &&
+                            pendingStatusChange?.user.id === user.id
+                          }
+                        >
+                          {user.isActive ? "Deactivate" : "Activate"}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -185,12 +291,52 @@ export default function UserListModal({
           </Button>
         </div>
       </DialogContent>
-
-      <ChangePasswordModal
-        open={showChangePassword}
-        user={selectedUser}
-        onClose={closeChangePassword}
-      />
     </Dialog>
+
+    <ChangePasswordModal
+      open={showChangePassword}
+      user={selectedUser}
+      onClose={closeChangePassword}
+    />
+
+    <AlertDialog
+      open={pendingStatusChange !== null}
+      onOpenChange={(isOpen) => {
+        if (!isOpen && !isUpdatingStatus) {
+          setPendingStatusChange(null);
+        }
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {pendingStatusChange?.nextActive
+              ? "Activate customer?"
+              : "Deactivate customer?"}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {pendingStatusChange?.nextActive
+              ? `"${pendingStatusChange.user.username}" will be able to log in again.`
+              : `"${pendingStatusChange?.user.username}" will no longer be able to log in. Their bookings are unchanged.`}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isUpdatingStatus}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={isUpdatingStatus}
+            onClick={(e) => {
+              e.preventDefault();
+              void confirmStatusChange();
+            }}
+          >
+            {isUpdatingStatus && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            {pendingStatusChange?.nextActive ? "Activate" : "Deactivate"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

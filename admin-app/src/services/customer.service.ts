@@ -40,9 +40,14 @@ const createCustomerService = () => {
     }
   };
 
-  const remove = async (id: number) => {
+  const setActiveStatus = async (id: number, isActive: boolean) => {
     try {
-      await interceptedAxios.delete(`${BASE_PUBLIC_USER_URL}/${id}`);
+      const response = await interceptedAxios.patch<MessageResponse>(
+        `${BASE_PUBLIC_USER_URL}/${id}/active-status`,
+        { isActive }
+      );
+
+      return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));
     }
@@ -64,7 +69,7 @@ const createCustomerService = () => {
   return {
     fetchAll,
     create,
-    remove,
+    setActiveStatus,
     updatePassword
   };
 };

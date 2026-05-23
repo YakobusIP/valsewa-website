@@ -1,9 +1,5 @@
 import { MessageResponse } from "@/types/api.type";
-import {
-  LoginRequest,
-  LoginResponse,
-  ValidateResponse
-} from "@/types/auth.type";
+import { LoginRequest, LoginResponse } from "@/types/auth.type";
 
 import {
   handleAxiosError,
@@ -42,18 +38,7 @@ const createAuthService = () => {
     }
   };
 
-  const validateToken = async () => {
-    try {
-      const response = await interceptedAxios.get<ValidateResponse>(
-        `${BASE_AUTH_URL}/pubvalidate-token`
-      );
-      return response.data;
-    } catch (error) {
-      throw new Error(handleAxiosError(error));
-    }
-  };
-
-  return { login, logout, validateToken };
+  return { login, logout };
 };
 
 const authService = createAuthService();

@@ -1,34 +1,25 @@
 import { useState } from "react";
 
-import { authService } from "@/services/auth.service";
-
 import { Button } from "@/components/ui/button";
+
+import { useAuth } from "@/hooks/useAuth";
 
 import { toast } from "@/hooks/useToast";
 
-import { setAccessToken } from "@/lib/axios";
-
 import { Loader2Icon, LogOutIcon } from "lucide-react";
-import { useNavigate } from "react-router";
 
 export default function LogoutButton() {
   const [isLoadingLogout, setIsLoadingLogout] = useState(false);
-
-  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
     setIsLoadingLogout(true);
 
     try {
-      const response = await authService.logout();
-
-      setAccessToken(null);
-      localStorage.removeItem("refreshToken");
-
-      navigate("/");
+      await logout();
       toast({
         title: "All set!",
-        description: response.message
+        description: "Logged out successfully"
       });
     } catch (error) {
       const errorMessage =

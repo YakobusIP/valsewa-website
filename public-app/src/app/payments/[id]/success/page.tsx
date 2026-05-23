@@ -57,6 +57,7 @@ export default function PaymentSuccessPage() {
 
     if (!auth.isAuthenticated) {
       router.push("/");
+      return;
     }
 
     // Fetch payment to get booking ID
