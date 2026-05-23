@@ -23,6 +23,9 @@ export class BookingController {
       const datePreset = req.query.datePreset as string | undefined;
       const dateFrom = req.query.dateFrom as string | undefined;
       const dateTo = req.query.dateTo as string | undefined;
+      const hideInactive =
+        req.query.hideInactive === undefined ||
+        req.query.hideInactive === "true";
 
       const [data, metadata] = await this.bookingService.getAllBookings(
         page ? parseInt(page as string) : undefined,
@@ -30,7 +33,8 @@ export class BookingController {
         query,
         datePreset,
         dateFrom ? new Date(dateFrom) : undefined,
-        dateTo ? new Date(dateTo) : undefined
+        dateTo ? new Date(dateTo) : undefined,
+        hideInactive
       );
 
       return res.json({ data, metadata });

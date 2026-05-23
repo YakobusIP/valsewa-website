@@ -5,6 +5,7 @@ import { bookingService } from "@/services/transaction.service";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Combobox, ComboboxOption } from "@/components/ui/combobox";
 import {
   Dialog,
@@ -24,6 +25,9 @@ import {
   TableRow
 } from "@/components/ui/table";
 
+import useWideScreen from "@/hooks/useWideScreen";
+
+import { MetadataResponse } from "@/types/api.type";
 import {
   BOOKING_STATUS,
   BookingEntity,
@@ -31,6 +35,7 @@ import {
   PaymentEntity
 } from "@/types/booking.type";
 
+import { Loader2Icon } from "lucide-react";
 import { useDebounce } from "use-debounce";
 
 import TransactionStatisticsGrid from "./TransactionStatisticGrid";
@@ -42,9 +47,19 @@ type Props = {
 
 type DatePreset = "1D" | "7D" | "30D" | null;
 
+const PAGINATION_SIZE = 100;
+
 export default function TransactionListModal({ open, onOpenChange }: Props) {
+  const isWideScreen = useWideScreen();
   const [bookings, setBookings] = useState<BookingEntity[]>([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [metadata, setMetadata] = useState<MetadataResponse>({
+    page: 1,
+    limit: PAGINATION_SIZE,
+    pageCount: 0,
+    total: 0
+  });
 
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebounce(search, 500);
@@ -54,6 +69,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const [debouncedDateFrom] = useDebounce(dateFrom, 500);
   const [dateTo, setDateTo] = useState("");
   const [debouncedDateTo] = useDebounce(dateTo, 500);
+  const [hideInactive, setHideInactive] = useState(true);
   const [statistics, setStatistics] = useState<BookingStatistics>({
     completedBookingCount: 0,
     totalIncome: 0
@@ -77,22 +93,28 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     try {
       setLoading(true);
       const res = await bookingService.fetchAll(
+        page,
+        PAGINATION_SIZE,
         debouncedSearch,
         debouncedDatePreset,
         debouncedDateFrom,
-        debouncedDateTo
+        debouncedDateTo,
+        hideInactive
       );
       setBookings(res.data);
+      setMetadata(res.metadata);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
   }, [
+    page,
     debouncedSearch,
     debouncedDatePreset,
     debouncedDateFrom,
-    debouncedDateTo
+    debouncedDateTo,
+    hideInactive
   ]);
 
   const fetchAccountRented = useCallback(async () => {
@@ -192,6 +214,8 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
     setDatePreset(null);
     setDateFrom("");
     setDateTo("");
+    setHideInactive(true);
+    setPage(1);
   };
 
   const formatCurrency = (v: number | null) =>
@@ -251,17 +275,37 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   };
 
   useEffect(() => {
+    setPage(1);
+  }, [
+    debouncedSearch,
+    debouncedDatePreset,
+    debouncedDateFrom,
+    debouncedDateTo,
+    hideInactive
+  ]);
+
+  useEffect(() => {
+    if (!open) {
+      setPage(1);
+      setHideInactive(true);
+    }
+  }, [open]);
+
+  useEffect(() => {
     if (!open) return;
-    fetchBookings();
     fetchAccountRented();
   }, [
     open,
     debouncedDatePreset,
     debouncedDateFrom,
     debouncedDateTo,
-    fetchAccountRented,
-    fetchBookings
+    fetchAccountRented
   ]);
+
+  useEffect(() => {
+    if (!open) return;
+    fetchBookings();
+  }, [open, fetchBookings]);
 
   return (
     <>
@@ -335,6 +379,22 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
               </Button>
             </div>
 
+            <div className="flex items-center gap-2 mt-3">
+              <Checkbox
+                id="hide-inactive-bookings"
+                checked={hideInactive}
+                onCheckedChange={(checked) =>
+                  setHideInactive(checked === true)
+                }
+              />
+              <Label
+                htmlFor="hide-inactive-bookings"
+                className="text-sm font-normal cursor-pointer"
+              >
+                Hide failed, expired & cancelled
+              </Label>
+            </div>
+
             <Table className="mt-2">
               <TableHeader>
                 <TableRow>
@@ -354,58 +414,102 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bookings.map((b) => (
-                  <TableRow key={b.id} className="border-b hover:bg-muted">
-                    <TableCell className="font-mono">
-                      {formatBookingNumber(b.readableNumber)}
-                    </TableCell>
-                    <TableCell>{formatDateTime(b.createdAt)}</TableCell>
-                    <TableCell>{b.customer?.username ?? "-"}</TableCell>
-                    <TableCell>{b.account?.accountCode ?? "-"}</TableCell>
-                    <TableCell>{formatCurrency(b.mainValue)}</TableCell>
-                    <TableCell>{formatCurrency(b.othersValue)}</TableCell>
-                    <TableCell>{formatCurrency(b.adminFee) ?? "-"}</TableCell>
-                    <TableCell className=" font-semibold">
-                      {formatCurrency(b.totalValue)}
-                    </TableCell>
-                    <TableCell className="font-semibold">
-                      {getLatestPayment(b.payments)?.paymentMethod ?? "-"}
-                    </TableCell>
-                    <TableCell className=" font-semibold">
-                      {b.duration ?? "-"}
-                    </TableCell>
-                    <TableCell>{renderBookingStatus(b.status)}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {getLatestPayment(b.payments)?.paidAt
-                        ? renderPaymentStatus(
-                            getLatestPayment(b.payments)!.status
-                          )
-                        : "-"}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-row gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleOpenEdit(b)}
-                        >
-                          Edit Total
-                        </Button>
-                        {b.status === "RESERVED" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleOpenOverrideBooking(b)}
-                          >
-                            Override Account
-                          </Button>
-                        )}
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={13} className="h-24 text-center">
+                      <div className="inline-flex items-center justify-center gap-2">
+                        <Loader2Icon className="w-4 h-4 animate-spin" />{" "}
+                        Loading...
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : bookings.length ? (
+                  bookings.map((b) => (
+                    <TableRow key={b.id} className="border-b hover:bg-muted">
+                      <TableCell className="font-mono">
+                        {formatBookingNumber(b.readableNumber)}
+                      </TableCell>
+                      <TableCell>{formatDateTime(b.createdAt)}</TableCell>
+                      <TableCell>{b.customer?.username ?? "-"}</TableCell>
+                      <TableCell>{b.account?.accountCode ?? "-"}</TableCell>
+                      <TableCell>{formatCurrency(b.mainValue)}</TableCell>
+                      <TableCell>{formatCurrency(b.othersValue)}</TableCell>
+                      <TableCell>{formatCurrency(b.adminFee) ?? "-"}</TableCell>
+                      <TableCell className=" font-semibold">
+                        {formatCurrency(b.totalValue)}
+                      </TableCell>
+                      <TableCell className="font-semibold">
+                        {getLatestPayment(b.payments)?.paymentMethod ?? "-"}
+                      </TableCell>
+                      <TableCell className=" font-semibold">
+                        {b.duration ?? "-"}
+                      </TableCell>
+                      <TableCell>{renderBookingStatus(b.status)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {getLatestPayment(b.payments)?.paidAt
+                          ? renderPaymentStatus(
+                              getLatestPayment(b.payments)!.status
+                            )
+                          : "-"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-row gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenEdit(b)}
+                          >
+                            Edit Total
+                          </Button>
+                          {b.status === "RESERVED" && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleOpenOverrideBooking(b)}
+                            >
+                              Override Account
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={13} className="h-24 text-center">
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
+
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                {metadata.total} transaction(s)
+              </p>
+              <div className="flex items-center space-x-2 py-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((prev) => prev - 1)}
+                  disabled={page <= 1 || loading}
+                >
+                  Previous
+                </Button>
+                <span className="inline-flex items-center border border-input rounded-md px-3 h-9 text-sm font-medium">
+                  {page} {isWideScreen && `/ ${metadata.pageCount || 0}`}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPage((prev) => prev + 1)}
+                  disabled={page >= metadata.pageCount || loading}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

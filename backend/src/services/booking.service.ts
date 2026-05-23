@@ -155,7 +155,8 @@ export class BookingService {
     query?: string,
     datePreset?: string,
     dateFrom?: Date,
-    dateTo?: Date
+    dateTo?: Date,
+    hideInactive: boolean = true
   ): Promise<[BookingResponse[], Metadata]> => {
     try {
       const trimmed = (query ?? "").trim();
@@ -166,6 +167,16 @@ export class BookingService {
       // Add readableNumber filter if query is provided
       if (parsedId !== undefined) {
         whereCriteria.readableNumber = parsedId;
+      }
+
+      if (hideInactive) {
+        whereCriteria.status = {
+          in: [
+            BookingStatus.HOLD,
+            BookingStatus.RESERVED,
+            BookingStatus.COMPLETED
+          ]
+        };
       }
 
       const createdAtFilter = this.buildCreatedAtFilter(
