@@ -1,8 +1,8 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { FaArrowRight } from "react-icons/fa6";
 
 const CTAbackground = dynamic(() => import("./CTAbackground"), { ssr: false });
@@ -46,7 +46,7 @@ export default function ExploreCatalog() {
       <div className="absolute bottom-12 w-full flex flex-col items-center text-center z-10 px-4">
         <p className="text-white text-xs">Don’t miss out our updates:</p>
 
-        <div className="flex gap-6 mt-3 text-white text-[9px] tablet:text-xs flex-wrap justify-center">
+        <div className="flex gap-6 my-3 text-white text-[9px] tablet:text-xs flex-wrap justify-center">
           <span className="flex items-center gap-2 font-antonio">
             <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALSEWA
@@ -76,6 +76,13 @@ export default function ExploreCatalog() {
             VALJOKI
           </Link>
         </div>
+
+        <a
+          href="mailto:valforumcom@gmail.com"
+          className="text-white text-xs mt-3"
+        >
+          valforumcom@gmail.com
+        </a>
       </div>
     </section>
   );
