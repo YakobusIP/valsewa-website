@@ -18,11 +18,13 @@ import {
   NotFoundError,
   PrismaUniqueError
 } from "../lib/error";
+import { buildCsv } from "../lib/csv";
 import {
   addHours,
   addMinutes,
   isOutsideOperationalHours,
   parseDurationToHours,
+  parseToDateStr,
   WIB_TZ
 } from "../lib/utils";
 import dayjs from "dayjs";
@@ -265,6 +267,121 @@ export class BookingService {
       if (error instanceof NotFoundError) throw error;
       throw new InternalServerError((error as Error).message);
     }
+  };
+
+  exportBookingsCsv = async (
+    query?: string,
+    datePreset?: string,
+    dateFrom?: Date,
+    dateTo?: Date
+  ): Promise<string> => {
+    try {
+      const trimmed = (query ?? "").trim();
+      const parsedId = this.parseBookingNumber(trimmed);
+
+      const whereCriteria: Prisma.BookingWhereInput = {
+        status: {
+          in: [BookingStatus.RESERVED, BookingStatus.COMPLETED]
+        }
+      };
+
+      if (parsedId !== undefined) {
+        whereCriteria.readableNumber = parsedId;
+      }
+
+      const createdAtFilter = this.buildCreatedAtFilter(
+        datePreset,
+        dateFrom,
+        dateTo
+      );
+      if (createdAtFilter) {
+        whereCriteria.createdAt = createdAtFilter;
+      }
+
+      const data = await prisma.booking.findMany({
+        where: whereCriteria,
+        orderBy: {
+          createdAt: "desc"
+        },
+        include: {
+          payments: true,
+          customer: {
+            select: {
+              username: true
+            }
+          },
+          account: {
+            select: {
+              accountCode: true
+            }
+          }
+        }
+      });
+
+      const headers = [
+        "ID",
+        "Date",
+        "Customer",
+        "Account",
+        "Main Value",
+        "Others Value",
+        "Admin Fee",
+        "Total",
+        "Payment Method",
+        "Duration",
+        "Booking Status",
+        "Payment Status"
+      ];
+
+      const rows = data.map((booking) => this.mapBookingToCsvRow(booking));
+
+      return buildCsv(headers, rows);
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new InternalServerError((error as Error).message);
+    }
+  };
+
+  private formatBookingNumberForCsv = (readableNumber: bigint | string): string => {
+    const numeric = readableNumber.toString().replace(/\D/g, "") || "0";
+    return `VS-${numeric.padStart(7, "0")}`;
+  };
+
+  private getLatestPaymentForCsv = (
+    payments: Payment[] | undefined
+  ): Payment | null => {
+    if (!payments || payments.length === 0) return null;
+
+    return [...payments].sort((a, b) => {
+      const aTime = a.paidAt ? new Date(a.paidAt).getTime() : 0;
+      const bTime = b.paidAt ? new Date(b.paidAt).getTime() : 0;
+      return bTime - aTime;
+    })[0];
+  };
+
+  private mapBookingToCsvRow = (
+    booking: Booking & {
+      payments?: Payment[];
+      customer?: { username: string } | null;
+      account?: { accountCode: string } | null;
+    }
+  ): string[] => {
+    const latestPayment = this.getLatestPaymentForCsv(booking.payments);
+
+    return [
+      this.formatBookingNumberForCsv(booking.readableNumber),
+      booking.createdAt ? parseToDateStr(booking.createdAt) : "",
+      booking.customer?.username ?? "",
+      booking.account?.accountCode ?? "",
+      booking.mainValue == null ? "" : String(booking.mainValue),
+      booking.othersValue == null ? "" : String(booking.othersValue),
+      booking.adminFee == null ? "" : String(booking.adminFee),
+      booking.totalValue == null ? "" : String(booking.totalValue),
+      latestPayment?.paymentMethod ?? "",
+      booking.duration ?? "",
+      booking.status,
+      latestPayment?.paidAt ? (latestPayment.status ?? "") : ""
+    ];
   };
 
   getBookingById = async (

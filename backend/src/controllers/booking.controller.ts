@@ -58,6 +58,38 @@ export class BookingController {
     }
   };
 
+  exportBookingsCsv = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const query = req.query.q as string;
+      const datePreset = req.query.datePreset as string | undefined;
+      const dateFrom = req.query.dateFrom as string | undefined;
+      const dateTo = req.query.dateTo as string | undefined;
+
+      const csv = await this.bookingService.exportBookingsCsv(
+        query,
+        datePreset,
+        dateFrom ? new Date(dateFrom) : undefined,
+        dateTo ? new Date(dateTo) : undefined
+      );
+
+      const filename = `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`
+      );
+
+      return res.send(`\uFEFF${csv}`);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getAccountRented = async (
     req: Request,
     res: Response,
