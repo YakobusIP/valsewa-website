@@ -443,7 +443,20 @@ export class BookingController {
       const accountId = parseInt(req.params.accountId, 10);
       if (!accountId) throw new BadRequestError("Account ID is required.");
 
-      const result = await this.bookingService.forceFinishBooking(accountId);
+      console.info(
+        "[forceFinishBooking:admin] request",
+        JSON.stringify({
+          accountId,
+          path: req.originalUrl,
+          ip: req.ip,
+          userAgent: req.get("user-agent") ?? null,
+          requestedAt: new Date().toISOString()
+        })
+      );
+
+      const result = await this.bookingService.forceFinishBooking(accountId, {
+        source: "admin"
+      });
 
       return res.status(200).json(result);
     } catch (error) {
@@ -462,6 +475,18 @@ export class BookingController {
 
       if (!accountId) throw new BadRequestError("Account ID is required.");
       if (!customerId) throw new BadRequestError("Customer ID is required.");
+
+      console.info(
+        "[forceFinishBooking:customer] request",
+        JSON.stringify({
+          accountId,
+          customerId,
+          path: req.originalUrl,
+          ip: req.ip,
+          userAgent: req.get("user-agent") ?? null,
+          requestedAt: new Date().toISOString()
+        })
+      );
 
       const result = await this.bookingService.customerForceFinishBooking(
         accountId,

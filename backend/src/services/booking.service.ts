@@ -72,6 +72,11 @@ export type PaymentMethodTypeAndCode = {
   bankCode?: BankCodes;
 };
 
+type ForceFinishActor = {
+  source: "admin" | "customer";
+  customerId?: number;
+};
+
 export const PAYMENT_METHODS_MAP: Record<
   PaymentMethodRequest,
   PaymentMethodTypeAndCode
@@ -1715,7 +1720,10 @@ export class BookingService {
     }
   };
 
-  forceFinishBooking = async (accountId: number) => {
+  forceFinishBooking = async (
+    accountId: number,
+    actor: ForceFinishActor = { source: "admin" }
+  ) => {
     try {
       const now = new Date();
 
@@ -1730,6 +1738,15 @@ export class BookingService {
       });
 
       if (!activeBooking) {
+        console.info(
+          "[forceFinishBooking] no active booking found",
+          JSON.stringify({
+            source: actor.source,
+            customerId: actor.customerId ?? null,
+            accountId,
+            checkedAt: now.toISOString()
+          })
+        );
         await this.finishLegacyBooking(accountId);
         return null;
       }
@@ -1744,6 +1761,22 @@ export class BookingService {
           version: { increment: 1 }
         }
       });
+
+      console.info(
+        "[forceFinishBooking] endAt overwritten",
+        JSON.stringify({
+          source: actor.source,
+          customerId: actor.customerId ?? null,
+          accountId,
+          bookingId: activeBooking.id,
+          previousStatus: activeBooking.status,
+          previousStartAt: activeBooking.startAt?.toISOString() ?? null,
+          previousEndAt: activeBooking.endAt?.toISOString() ?? null,
+          newEndAt: now.toISOString(),
+          previousVersion: activeBooking.version,
+          newVersion: updatedBooking.version
+        })
+      );
 
       return this.mapBookingDataToBookingResponse(updatedBooking);
     } catch (error) {
@@ -1772,7 +1805,10 @@ export class BookingService {
       throw new NotFoundError("No ongoing booking found for this account.");
     }
 
-    return this.forceFinishBooking(accountId);
+    return this.forceFinishBooking(accountId, {
+      source: "customer",
+      customerId
+    });
   };
 
   private finishLegacyBooking = async (accountId: number) => {
