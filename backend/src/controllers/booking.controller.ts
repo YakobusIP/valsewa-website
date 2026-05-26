@@ -58,6 +58,38 @@ export class BookingController {
     }
   };
 
+  exportBookingsCsv = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const query = req.query.q as string;
+      const datePreset = req.query.datePreset as string | undefined;
+      const dateFrom = req.query.dateFrom as string | undefined;
+      const dateTo = req.query.dateTo as string | undefined;
+
+      const csv = await this.bookingService.exportBookingsCsv(
+        query,
+        datePreset,
+        dateFrom ? new Date(dateFrom) : undefined,
+        dateTo ? new Date(dateTo) : undefined
+      );
+
+      const filename = `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${filename}"`
+      );
+
+      return res.send(`\uFEFF${csv}`);
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   getAccountRented = async (
     req: Request,
     res: Response,
@@ -411,7 +443,20 @@ export class BookingController {
       const accountId = parseInt(req.params.accountId, 10);
       if (!accountId) throw new BadRequestError("Account ID is required.");
 
-      const result = await this.bookingService.forceFinishBooking(accountId);
+      console.info(
+        "[forceFinishBooking:admin] request",
+        JSON.stringify({
+          accountId,
+          path: req.originalUrl,
+          ip: req.ip,
+          userAgent: req.get("user-agent") ?? null,
+          requestedAt: new Date().toISOString()
+        })
+      );
+
+      const result = await this.bookingService.forceFinishBooking(accountId, {
+        source: "admin"
+      });
 
       return res.status(200).json(result);
     } catch (error) {
@@ -430,6 +475,18 @@ export class BookingController {
 
       if (!accountId) throw new BadRequestError("Account ID is required.");
       if (!customerId) throw new BadRequestError("Customer ID is required.");
+
+      console.info(
+        "[forceFinishBooking:customer] request",
+        JSON.stringify({
+          accountId,
+          customerId,
+          path: req.originalUrl,
+          ip: req.ip,
+          userAgent: req.get("user-agent") ?? null,
+          requestedAt: new Date().toISOString()
+        })
+      );
 
       const result = await this.bookingService.customerForceFinishBooking(
         accountId,

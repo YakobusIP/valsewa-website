@@ -35,7 +35,7 @@ import {
   PaymentEntity
 } from "@/types/booking.type";
 
-import { Loader2Icon } from "lucide-react";
+import { DownloadIcon, Loader2Icon } from "lucide-react";
 import { useDebounce } from "use-debounce";
 
 import TransactionStatisticsGrid from "./TransactionStatisticGrid";
@@ -53,6 +53,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const isWideScreen = useWideScreen();
   const [bookings, setBookings] = useState<BookingEntity[]>([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [page, setPage] = useState(1);
   const [metadata, setMetadata] = useState<MetadataResponse>({
     page: 1,
@@ -207,6 +208,23 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const handleDateToChange = (value: string) => {
     setDateTo(value);
     if (value) setDatePreset(null);
+  };
+
+  const handleExportCsv = async () => {
+    try {
+      setExporting(true);
+      await bookingService.exportCsv(
+        debouncedSearch,
+        debouncedDatePreset,
+        debouncedDateFrom,
+        debouncedDateTo
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to export transactions");
+    } finally {
+      setExporting(false);
+    }
   };
 
   const resetFilter = () => {
@@ -376,6 +394,20 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
 
               <Button size="sm" variant="destructive" onClick={resetFilter}>
                 Reset
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleExportCsv}
+                disabled={exporting || loading}
+              >
+                {exporting ? (
+                  <Loader2Icon className="w-4 h-4 animate-spin" />
+                ) : (
+                  <DownloadIcon className="w-4 h-4" />
+                )}
+                Export CSV
               </Button>
             </div>
 

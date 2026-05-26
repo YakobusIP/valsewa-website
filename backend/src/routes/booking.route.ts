@@ -49,6 +49,11 @@ class BookingRouter {
       this.bookingController.getAccountRented
     );
     this.router.get(
+      "/export-csv",
+      authMiddleware,
+      this.bookingController.exportBookingsCsv
+    );
+    this.router.get(
       "/active-for-account/:accountId",
       authMiddleware,
       this.bookingController.getActiveBookingForAccount
