@@ -18,12 +18,18 @@ type Props = {
   rowSelection: RowSelectionState;
   deleteData: () => Promise<void>;
   isLoadingDeleteData: boolean;
+  title?: string;
+  description?: string;
+  buttonLabel?: string;
 };
 
 export default function DataDeleteButton({
   rowSelection,
   deleteData,
-  isLoadingDeleteData
+  isLoadingDeleteData,
+  title = "Are you absolutely sure?",
+  description = "This action cannot be undone. This will permanently delete the selected data and remove them from our servers.",
+  buttonLabel = "Delete"
 }: Props) {
   return (
     <AlertDialog>
@@ -34,16 +40,13 @@ export default function DataDeleteButton({
           disabled={Object.keys(rowSelection).length === 0}
         >
           <Trash2Icon className="w-4 h-4" />
-          Delete
+          {buttonLabel}
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the
-            selected data and remove them from our servers.
-          </AlertDialogDescription>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>

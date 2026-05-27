@@ -62,6 +62,7 @@ jobs:
 
             sudo mkdir -p "$DST"
             sudo rsync -rt --delete "$SRC/" "$DST/"
+            sudo chown -R "${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }}" "$DST"
 
             cd "$DST"
 
@@ -70,7 +71,7 @@ jobs:
             NEXT_PUBLIC_AXIOS_BASE_URL=${{ secrets.BACKEND_BASE_URL }}
             NODE_ENV=production
             EOF
-            sudo chown deploy:deploy "$DST/.env"
+            sudo chown "${{ secrets.SSH_USER }}:${{ secrets.SSH_USER }}" "$DST/.env"
             sudo chmod 600 "$DST/.env"
 
             npm ci --production

@@ -91,6 +91,7 @@ export type BookingResponse = {
   account?: {
     accountRank: string;
     accountCode: string;
+    archived: boolean;
     priceTierCode: string;
     thumbnailImageUrl: string;
     nickname: string;

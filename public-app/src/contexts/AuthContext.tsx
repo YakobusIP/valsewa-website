@@ -15,7 +15,13 @@ import { toast } from "@/hooks/useToast";
 import { AuthContextType } from "@/types/auth-context.type";
 import { loginFormSchema } from "@/types/zod.type";
 
-import { setAccessToken } from "@/lib/axios";
+import { decodePubAccessToken } from "@/lib/auth-token";
+import {
+  clearLocalAuthSession,
+  restoreSessionFromRefreshToken,
+  setAccessToken,
+  setSessionExpiredListener
+} from "@/lib/axios";
 
 import { usePathname, useRouter } from "next/navigation";
 import { z } from "zod";
@@ -38,14 +44,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
-  // ------------ LOGIN ------------
+  const applySessionFromAccessToken = useCallback((token: string) => {
+    const payload = decodePubAccessToken(token);
+    if (!payload) {
+      setIsAuthenticated(false);
+      setCustomerId(null);
+      setUsername(null);
+      return;
+    }
+
+    setCustomerId(payload.id);
+    setUsername(payload.username);
+    setIsAuthenticated(true);
+  }, []);
+
+  const clearSession = useCallback(() => {
+    setCustomerId(null);
+    setUsername(null);
+    setIsAuthenticated(false);
+  }, []);
+
   const login = async (values: z.infer<typeof loginFormSchema>) => {
     setIsLoadingLogin(true);
 
     try {
       const response = await authService.login(values);
 
-      // Save tokens
       setAccessToken(response.pubAccessToken);
       localStorage.setItem("refreshToken", response.pubRefreshToken);
 
@@ -70,59 +94,61 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  // ------------ LOGOUT ------------
   const logout = async () => {
-    try {
-      await authService.logout();
-    } catch {}
+    await authService.logout().catch(() => undefined);
 
-    localStorage.removeItem("refreshToken");
-    setAccessToken(null);
-
-    setCustomerId(null);
-    setUsername(null);
-    setIsAuthenticated(false);
-    setIsAuthChecked(false);
+    clearLocalAuthSession();
+    clearSession();
+    setIsAuthChecked(true);
 
     router.push("/");
   };
 
-  // ------------ VALIDATE TOKEN ------------
-  const validateToken = useCallback(async () => {
-    try {
-      const response = await authService.validateToken();
-
-      setUsername(response.username);
-      setCustomerId(response.id);
-      setIsAuthenticated(true);
-    } catch {
-      // Not authenticated
-      setIsAuthenticated(false);
+  useEffect(() => {
+    setSessionExpiredListener(() => {
+      clearSession();
 
       const publicRoutes = ["/", "/login"];
-
       if (!publicRoutes.includes(pathname)) {
         router.push("/");
       }
-    } finally {
-      setIsAuthChecked(true);
-    }
-  }, [router, pathname]);
+    });
 
-  // ------------ AUTO CHECK ON LOAD ------------
+    return () => setSessionExpiredListener(null);
+  }, [clearSession, pathname, router]);
+
   useEffect(() => {
-    const refreshToken = localStorage.getItem("refreshToken");
+    let cancelled = false;
 
-    if (!refreshToken) {
+    const initSession = async () => {
+      const refreshToken = localStorage.getItem("refreshToken");
+
+      if (!refreshToken) {
+        if (!cancelled) {
+          clearSession();
+          setIsAuthChecked(true);
+        }
+        return;
+      }
+
+      const accessToken = await restoreSessionFromRefreshToken();
+      if (cancelled) return;
+
+      if (accessToken) {
+        applySessionFromAccessToken(accessToken);
+      } else {
+        clearSession();
+      }
+
       setIsAuthChecked(true);
-      return;
-    }
+    };
 
-    // If we have a refresh token, we should ALWAYS validate it to restore session,
-    // even on public pages like home or login. This ensures the user sees their logged-in state.
+    initSession();
 
-    validateToken();
-  }, [pathname, validateToken]);
+    return () => {
+      cancelled = true;
+    };
+  }, [applySessionFromAccessToken, clearSession]);
 
   return (
     <AuthContext.Provider

@@ -4,6 +4,17 @@ import { Fragment, useEffect, useState } from "react";
 
 import { bookingService } from "@/services/booking.service";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -22,15 +33,17 @@ import { BOOKING_STATUS, BookingWithAccountEntity } from "@/types/booking.type";
 
 import { calculateTimeRemaining, cn, formatRentalPeriod } from "@/lib/utils";
 
-import { CopyIcon, LogOut } from "lucide-react";
+import { CopyIcon, ExternalLink, LogOut } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
   const router = useRouter();
   const [page, setPage] = useState(1);
   const limit = 5;
-  const { username, customerId, logout } = useAuth();
+  const { username, customerId, logout, isAuthenticated, isAuthChecked } =
+    useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [finishingAccountId, setFinishingAccountId] = useState<number | null>(
     null
@@ -59,6 +72,14 @@ export default function Dashboard() {
   useEffect(() => {
     document.title = "Dashboard | Valsewa";
   }, []);
+
+  useEffect(() => {
+    if (!isAuthChecked) return;
+
+    if (!isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthChecked, isAuthenticated, router]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -94,6 +115,15 @@ export default function Dashboard() {
     }
   };
 
+  const getOngoingOrderConfirmationPath = (
+    booking: BookingWithAccountEntity
+  ): string | null => {
+    if (!isOnGoingOrder(booking)) return null;
+    const paymentId = booking.payments?.[0]?.id;
+    if (!paymentId) return null;
+    return `/payments/${paymentId}/success`;
+  };
+
   const handleForceFinish = async (booking: BookingWithAccountEntity) => {
     if (!isOnGoingOrder(booking) || finishingAccountId !== null) return;
 
@@ -117,6 +147,10 @@ export default function Dashboard() {
       setFinishingAccountId(null);
     }
   };
+
+  if (!isAuthChecked || !isAuthenticated) {
+    return null;
+  }
 
   return (
     <Fragment>
@@ -219,15 +253,33 @@ export default function Dashboard() {
                         {booking.createdAt?.toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm text-nowrap px-12">
-                        {booking.account.accountCode}
+                        {(() => {
+                          const confirmationPath =
+                            getOngoingOrderConfirmationPath(booking);
+                          if (confirmationPath) {
+                            return (
+                              <Link
+                                href={confirmationPath}
+                                className="inline-flex items-center justify-center gap-1.5 hover:text-[#C70515] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C70515] rounded"
+                              >
+                                {booking.account.accountCode}
+                                <ExternalLink
+                                  className="w-4 h-4 shrink-0"
+                                  aria-hidden
+                                />
+                                <span className="sr-only">
+                                  View order confirmation
+                                </span>
+                              </Link>
+                            );
+                          }
+                          return booking.account.accountCode;
+                        })()}
                       </TableCell>
                       <TableCell className="text-white text-center lg:text-lg text-sm text-nowrap px-12">
                         {isOnGoingOrder(booking)
                           ? calculateTimeRemaining(booking.endAt) + " Left"
-                          : formatRentalPeriod(
-                              booking.startAt,
-                              booking.endAt
-                            )}
+                          : formatRentalPeriod(booking.startAt, booking.endAt)}
                       </TableCell>
                       <TableCell className="text-center lg:text-lg text-sm whitespace-nowrap px-12 text-nowrap">
                         {booking.status === BOOKING_STATUS.HOLD ? (
@@ -243,28 +295,56 @@ export default function Dashboard() {
                               booking.status.slice(1).toLowerCase()}
                           </button>
                         ) : isOnGoingOrder(booking) ? (
-                          <button
-                            type="button"
-                            onClick={() => handleForceFinish(booking)}
-                            disabled={finishingAccountId === booking.accountId}
-                            className={cn(
-                              "group inline-flex items-center self-center justify-center px-3 py-2 rounded-md lg:text-lg text-sm cursor-pointer hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C70515] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F] disabled:opacity-60 disabled:cursor-wait",
-                              getStatusStyle(booking)
-                            )}
-                          >
-                            {finishingAccountId === booking.accountId ? (
-                              "Finishing..."
-                            ) : (
-                              <>
-                                <span className="group-hover:hidden">
-                                  On Going Order
-                                </span>
-                                <span className="hidden group-hover:inline">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <button
+                                type="button"
+                                disabled={
+                                  finishingAccountId === booking.accountId
+                                }
+                                className={cn(
+                                  "group inline-flex items-center self-center justify-center px-3 py-2 rounded-md lg:text-lg text-sm cursor-pointer hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C70515] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0F0F0F] disabled:opacity-60 disabled:cursor-wait",
+                                  getStatusStyle(booking)
+                                )}
+                              >
+                                {finishingAccountId === booking.accountId ? (
+                                  "Finishing..."
+                                ) : (
+                                  <>
+                                    <span className="group-hover:hidden">
+                                      On Going Order
+                                    </span>
+                                    <span className="hidden group-hover:inline">
+                                      Finish Booking
+                                    </span>
+                                  </>
+                                )}
+                              </button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-black border border-[#C70515]">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-2xl text-white uppercase mb-4">
                                   Finish Booking
-                                </span>
-                              </>
-                            )}
-                          </button>
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="text-white">
+                                  This will end the active booking for{" "}
+                                  {booking.account.accountCode} immediately and
+                                  release the account after processing.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="text-white bg-black">
+                                  Keep Booking
+                                </AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-[#C70515] text-white"
+                                  onClick={() => handleForceFinish(booking)}
+                                >
+                                  Finish Booking
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         ) : (
                           <span
                             className={cn(

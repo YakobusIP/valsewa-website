@@ -78,11 +78,7 @@ const StreakNavbarHoverPanel = ({
                 height={18}
               />
             )}
-            <div
-              className={`text-base font-bold tabular-nums mt-0.5 ${
-                countdown.urgent ? "text-[#C70515]" : "text-white"
-              }`}
-            >
+            <div className="text-base font-bold tabular-nums mt-0.5 text-white">
               {countdown.text}
             </div>
           </div>

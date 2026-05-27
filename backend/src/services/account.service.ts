@@ -29,6 +29,10 @@ import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
 import { parseDurationToHours } from "../lib/utils";
 import { getDailyDropWindow } from "../lib/operational-window";
+import { getContextLogger } from "../lib/request-context";
+import { env } from "../lib/env";
+
+const accountLogger = () => getContextLogger({ component: "account" });
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
@@ -287,6 +291,7 @@ export class AccountService {
       filters;
 
     const where: Prisma.AccountWhereInput = {
+      archivedAt: null,
       availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
     };
 
@@ -419,8 +424,10 @@ export class AccountService {
     sortBy?: string,
     direction?: Prisma.SortOrder
   ): Promise<[AccountWithSkins[], Metadata]> => {
+    const start = Date.now();
     try {
       let data = await prisma.account.findMany({
+        where: { archivedAt: null },
         orderBy: {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
@@ -444,6 +451,7 @@ export class AccountService {
       }
 
       let filteredData: AccountWithSkins[] = data;
+      const filterStart = Date.now();
       if (query && query.trim().length > 0) {
         const trimmedQuery = query.trim();
         const fuseOptions: IFuseOptions<AccountWithSkins> = {
@@ -474,9 +482,11 @@ export class AccountService {
 
         filteredData = [...fuseItems, ...codeMatches];
       }
+      const filterDurationMs = Date.now() - filterStart;
 
       const accountIds = filteredData.map((a) => a.id);
 
+      const enrichStart = Date.now();
       const bookings = await prisma.booking.findMany({
         where: {
           accountId: { in: accountIds },
@@ -512,20 +522,20 @@ export class AccountService {
 
         return {
           ...datum,
-          // Priority: booking data > account data > null
-          currentBookingDate: b[0]?.startAt ?? datum.currentBookingDate ?? null,
+          currentBookingDate: b[0]?.startAt ?? null,
           currentBookingDuration: b[0]
             ? parseDurationToHours(b[0].duration)
-            : (datum.currentBookingDuration ?? null),
-          currentExpireAt: b[0]?.endAt ?? datum.currentExpireAt ?? null,
+            : null,
+          currentExpireAt: b[0]?.endAt ?? null,
 
-          nextBookingDate: b[1]?.startAt ?? datum.nextBookingDate ?? null,
+          nextBookingDate: b[1]?.startAt ?? null,
           nextBookingDuration: b[1]
             ? parseDurationToHours(b[1].duration)
-            : (datum.nextBookingDuration ?? null),
-          nextExpireAt: b[1]?.endAt ?? datum.nextExpireAt ?? null
+            : null,
+          nextExpireAt: b[1]?.endAt ?? null
         };
       });
+      const enrichDurationMs = Date.now() - enrichStart;
 
       const itemCount = filteredDataWithBookings.length;
       const pageCount = Math.ceil(itemCount / limit);
@@ -542,6 +552,28 @@ export class AccountService {
         page * limit
       );
 
+      const durationMs = Date.now() - start;
+      const isSlow = durationMs >= env.SLOW_REQUEST_THRESHOLD_MS;
+
+      accountLogger()[isSlow ? "warn" : "debug"](
+        {
+          event: isSlow
+            ? "account_admin_list_slow"
+            : "account_admin_list_completed",
+          page,
+          limit,
+          hasQuery: Boolean(query?.trim()),
+          sortBy,
+          direction,
+          resultCount: itemCount,
+          filterDurationMs,
+          enrichDurationMs,
+          durationMs,
+          slow: isSlow || undefined
+        },
+        "Admin account list completed"
+      );
+
       return [paginatedData, metadata];
     } catch (error) {
       throw new InternalServerError((error as Error).message);
@@ -553,6 +585,7 @@ export class AccountService {
     page?: number,
     limit?: number
   ): Promise<[PublicAccount[], Metadata | null]> => {
+    const start = Date.now();
     try {
       const { query, sortBy, direction = "asc" } = filters;
 
@@ -595,6 +628,7 @@ export class AccountService {
       }
 
       let filteredData: typeof data = data;
+      const filterStart = Date.now();
       if (query && query.trim().length > 0) {
         const fuseOptions: IFuseOptions<(typeof data)[0]> = {
           keys: ["accountCode", "skinList.name", "skinList.keyword"],
@@ -606,29 +640,46 @@ export class AccountService {
         const fuseResults = fuse.search(query);
         filteredData = fuseResults.map((result) => result.item);
       }
+      const filterDurationMs = Date.now() - filterStart;
 
-      if (page === undefined || limit === undefined) {
-        return [filteredData as PublicAccount[], null];
-      }
+      accountLogger().debug(
+        {
+          event: "account_public_search_filter_completed",
+          hasQuery: Boolean(query?.trim()),
+          queryLength: query?.trim().length ?? 0,
+          sortBy,
+          direction,
+          tierCount: filters.tiers?.length ?? 0,
+          rankCount: filters.ranks?.length ?? 0,
+          skinIdCount: filters.skinIds?.length ?? 0,
+          resultCount: filteredData.length,
+          durationMs: filterDurationMs
+        },
+        "Public account search filter completed"
+      );
 
       const accountIds = filteredData.map((a) => a.id);
 
-      const bookings = await prisma.booking.findMany({
-        where: {
-          accountId: { in: accountIds },
-          status: BookingStatus.RESERVED,
-          endAt: { gt: new Date() }
-        },
-        orderBy: {
-          startAt: "asc"
-        },
-        select: {
-          accountId: true,
-          startAt: true,
-          endAt: true,
-          duration: true
-        }
-      });
+      const enrichStart = Date.now();
+      const bookings =
+        accountIds.length > 0
+          ? await prisma.booking.findMany({
+              where: {
+                accountId: { in: accountIds },
+                status: BookingStatus.RESERVED,
+                endAt: { gt: new Date() }
+              },
+              orderBy: {
+                startAt: "asc"
+              },
+              select: {
+                accountId: true,
+                startAt: true,
+                endAt: true,
+                duration: true
+              }
+            })
+          : [];
 
       const bookingMap = new Map<number, typeof bookings>();
 
@@ -643,17 +694,49 @@ export class AccountService {
         }
       }
 
-      const filteredDataWithBookings = filteredData.map((datum) => {
+      const enrichedData = filteredData.map((datum) => {
         const b = bookingMap.get(datum.id) ?? [];
 
         return {
           ...datum,
-          // Priority: booking data > account data > null
-          currentExpireAt: b[0]?.endAt ?? datum.currentExpireAt ?? null
+          currentExpireAt: b[0]?.endAt ?? null
         };
       });
+      const enrichDurationMs = Date.now() - enrichStart;
 
-      const itemCount = filteredDataWithBookings.length;
+      accountLogger().debug(
+        {
+          event: "account_public_search_booking_enrichment_completed",
+          resultCount: enrichedData.length,
+          durationMs: enrichDurationMs
+        },
+        "Public account booking enrichment completed"
+      );
+
+      if (page === undefined || limit === undefined) {
+        const durationMs = Date.now() - start;
+        const isSlow = durationMs >= env.SLOW_REQUEST_THRESHOLD_MS;
+        accountLogger()[isSlow ? "warn" : "debug"](
+          {
+            event: isSlow
+              ? "account_public_search_slow"
+              : "account_public_search_completed",
+            hasQuery: Boolean(query?.trim()),
+            queryLength: query?.trim().length ?? 0,
+            sortBy,
+            direction,
+            resultCount: enrichedData.length,
+            filterDurationMs,
+            enrichDurationMs,
+            durationMs,
+            slow: isSlow || undefined
+          },
+          "Public account search completed"
+        );
+        return [enrichedData as PublicAccount[], null];
+      }
+
+      const itemCount = enrichedData.length;
       const pageCount = Math.ceil(itemCount / limit);
 
       const metadata: Metadata = {
@@ -663,9 +746,35 @@ export class AccountService {
         total: itemCount
       };
 
-      const paginatedData = filteredDataWithBookings.slice(
+      const paginatedData = enrichedData.slice(
         (page - 1) * limit,
         page * limit
+      );
+
+      const durationMs = Date.now() - start;
+      const isSlow = durationMs >= env.SLOW_REQUEST_THRESHOLD_MS;
+
+      accountLogger()[isSlow ? "warn" : "debug"](
+        {
+          event: isSlow
+            ? "account_public_search_slow"
+            : "account_public_search_completed",
+          page,
+          limit,
+          hasQuery: Boolean(query?.trim()),
+          queryLength: query?.trim().length ?? 0,
+          sortBy,
+          direction,
+          tierCount: filters.tiers?.length ?? 0,
+          rankCount: filters.ranks?.length ?? 0,
+          skinIdCount: filters.skinIds?.length ?? 0,
+          resultCount: itemCount,
+          filterDurationMs,
+          enrichDurationMs,
+          durationMs,
+          slow: isSlow || undefined
+        },
+        "Public account search completed"
       );
 
       return [paginatedData as PublicAccount[], metadata];
@@ -677,7 +786,7 @@ export class AccountService {
   getAllDatabaseAccounts = async (filter?: Prisma.AccountWhereInput) => {
     try {
       return await prisma.account.findMany({
-        where: filter,
+        where: { archivedAt: null, ...filter },
         omit: {
           legacySkinList: true
         }
@@ -693,6 +802,7 @@ export class AccountService {
 
       return await prisma.account.findMany({
         where: {
+          archivedAt: null,
           isMfa: false,
           availabilityStatus: Status.AVAILABLE,
           Booking: {
@@ -730,8 +840,8 @@ export class AccountService {
 
   getAccountById = async (id: number) => {
     try {
-      const account = await prisma.account.findUnique({
-        where: { id },
+      const account = await prisma.account.findFirst({
+        where: { id, archivedAt: null },
         omit: {
           legacySkinList: true
         },
@@ -771,19 +881,16 @@ export class AccountService {
 
       return {
         ...account,
-        // Priority: booking data > account data > null
-        currentBookingDate:
-          bookings[0]?.startAt ?? account.currentBookingDate ?? null,
+        currentBookingDate: bookings[0]?.startAt ?? null,
         currentBookingDuration: bookings[0]
           ? parseDurationToHours(bookings[0]?.duration)
-          : (account.currentBookingDuration ?? null),
-        currentExpireAt: bookings[0]?.endAt ?? account.currentExpireAt ?? null,
-        nextBookingDate:
-          bookings[1]?.startAt ?? account.nextBookingDate ?? null,
+          : null,
+        currentExpireAt: bookings[0]?.endAt ?? null,
+        nextBookingDate: bookings[1]?.startAt ?? null,
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
-          : (account.nextBookingDuration ?? null),
-        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null
+          : null,
+        nextExpireAt: bookings[1]?.endAt ?? null
       };
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -796,14 +903,14 @@ export class AccountService {
 
   getAccountByIdPublic = async (id: number) => {
     try {
-      const account = await prisma.account.findUnique({
+      const account = await prisma.account.findFirst({
         omit: {
           password: true,
           passwordResetRequired: true,
           rentHourUpdated: true,
           legacySkinList: true
         },
-        where: { id },
+        where: { id, archivedAt: null },
         include: {
           priceTier: {
             include: {
@@ -849,19 +956,16 @@ export class AccountService {
 
       return {
         ...account,
-        // Priority: booking data > account data > null
-        currentBookingDate:
-          bookings[0]?.startAt ?? account.currentBookingDate ?? null,
+        currentBookingDate: bookings[0]?.startAt ?? null,
         currentBookingDuration: bookings[0]
           ? parseDurationToHours(bookings[0]?.duration)
-          : (account.currentBookingDuration ?? null),
-        currentExpireAt: bookings[0]?.endAt ?? account.currentExpireAt ?? null,
-        nextBookingDate:
-          bookings[1]?.startAt ?? account.nextBookingDate ?? null,
+          : null,
+        currentExpireAt: bookings[0]?.endAt ?? null,
+        nextBookingDate: bookings[1]?.startAt ?? null,
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
-          : (account.nextBookingDuration ?? null),
-        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null,
+          : null,
+        nextExpireAt: bookings[1]?.endAt ?? null,
         dailyDrop
       };
     } catch (error) {
@@ -875,14 +979,14 @@ export class AccountService {
 
   getAccountByCodePublic = async (accountCode: string) => {
     try {
-      const account = await prisma.account.findUnique({
+      const account = await prisma.account.findFirst({
         omit: {
           password: true,
           passwordResetRequired: true,
           rentHourUpdated: true,
           legacySkinList: true
         },
-        where: { accountCode },
+        where: { accountCode, archivedAt: null },
         include: {
           priceTier: {
             include: {
@@ -928,19 +1032,16 @@ export class AccountService {
 
       return {
         ...account,
-        // Priority: booking data > account data > null
-        currentBookingDate:
-          bookings[0]?.startAt ?? account.currentBookingDate ?? null,
+        currentBookingDate: bookings[0]?.startAt ?? null,
         currentBookingDuration: bookings[0]
           ? parseDurationToHours(bookings[0]?.duration)
-          : (account.currentBookingDuration ?? null),
-        currentExpireAt: bookings[0]?.endAt ?? account.currentExpireAt ?? null,
-        nextBookingDate:
-          bookings[1]?.startAt ?? account.nextBookingDate ?? null,
+          : null,
+        currentExpireAt: bookings[0]?.endAt ?? null,
+        nextBookingDate: bookings[1]?.startAt ?? null,
         nextBookingDuration: bookings[1]
           ? parseDurationToHours(bookings[1]?.duration)
-          : (account.nextBookingDuration ?? null),
-        nextExpireAt: bookings[1]?.endAt ?? account.nextExpireAt ?? null,
+          : null,
+        nextExpireAt: bookings[1]?.endAt ?? null,
         dailyDrop
       };
     } catch (error) {
@@ -955,7 +1056,10 @@ export class AccountService {
   getAccountDuplicate = async (nickname: string, accountCode: string) => {
     try {
       const account = await prisma.account.findFirst({
-        where: { OR: [{ nickname }, { accountCode }] }
+        where: {
+          archivedAt: null,
+          OR: [{ nickname }, { accountCode }]
+        }
       });
 
       return !!account;
@@ -967,6 +1071,9 @@ export class AccountService {
   getAccountResetLogs = async () => {
     try {
       return await prisma.accountResetLog.findMany({
+        where: {
+          account: { archivedAt: null }
+        },
         include: {
           account: {
             select: { username: true, accountCode: true }
@@ -992,6 +1099,7 @@ export class AccountService {
 
       const availableAccounts = await prisma.account.findMany({
         where: {
+          archivedAt: null,
           availabilityStatus: { not: Status.NOT_AVAILABLE },
           id: { notIn: unavailableAccounts.map((v) => v.accountId) }
         },
@@ -1009,6 +1117,17 @@ export class AccountService {
   createAccount = async (data: AccountEntityRequest) => {
     try {
       const { skinList, thumbnail, otherImages, priceTier, ...scalars } = data;
+      const existing = await prisma.account.findFirst({
+        where: {
+          archivedAt: null,
+          accountCode: scalars.accountCode
+        },
+        select: { id: true }
+      });
+
+      if (existing) {
+        throw new PrismaUniqueError("Account code is already in use!");
+      }
 
       const skinCount = data.skinList.length;
       const skinConnect =
@@ -1032,6 +1151,8 @@ export class AccountService {
         }
       });
     } catch (error) {
+      if (error instanceof PrismaUniqueError) throw error;
+
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
@@ -1049,7 +1170,9 @@ export class AccountService {
 
   finishBooking = async (id: number) => {
     try {
-      const account = await prisma.account.findFirst({ where: { id } });
+      const account = await prisma.account.findFirst({
+        where: { id, archivedAt: null }
+      });
 
       if (!account) throw new NotFoundError("Account not found!");
 
@@ -1093,8 +1216,8 @@ export class AccountService {
     deleteResetLogs = false
   ) => {
     try {
-      const currentAccount = await prisma.account.findUnique({
-        where: { id },
+      const currentAccount = await prisma.account.findFirst({
+        where: { id, archivedAt: null },
         include: { thumbnail: true, otherImages: true }
       });
 
@@ -1103,6 +1226,24 @@ export class AccountService {
       const { thumbnail, otherImages, priceTier, skinList, ...scalars } = data;
 
       const updateData: Prisma.AccountUpdateInput = { ...scalars };
+
+      if (
+        scalars.accountCode !== undefined &&
+        scalars.accountCode !== currentAccount.accountCode
+      ) {
+        const duplicate = await prisma.account.findFirst({
+          where: {
+            archivedAt: null,
+            accountCode: scalars.accountCode,
+            id: { not: id }
+          },
+          select: { id: true }
+        });
+
+        if (duplicate) {
+          throw new PrismaUniqueError("Account code is already in use!");
+        }
+      }
 
       if (updateData.isMfa) {
         await this.validateMfaEnablement(currentAccount);
@@ -1187,7 +1328,7 @@ export class AccountService {
   updateExpireAt = async () => {
     try {
       const expiredAccounts = await prisma.account.findMany({
-        where: { currentExpireAt: { lt: new Date() } }
+        where: { archivedAt: null, currentExpireAt: { lt: new Date() } }
       });
 
       await prisma.$transaction(async (tx) => {
@@ -1268,47 +1409,66 @@ export class AccountService {
 
   deleteManyAccounts = async (ids: number[]) => {
     try {
-      const accounts = await prisma.account.findMany({
-        where: { id: { in: ids } },
-        select: { thumbnailId: true, otherImages: { select: { id: true } } }
+      const now = new Date();
+      const liveBooking = await prisma.booking.findFirst({
+        where: {
+          accountId: { in: ids },
+          OR: [
+            {
+              status: BookingStatus.RESERVED,
+              endAt: { gt: now }
+            },
+            {
+              status: BookingStatus.HOLD,
+              OR: [{ expiredAt: null }, { expiredAt: { gt: now } }]
+            }
+          ]
+        },
+        select: { accountId: true }
       });
 
-      const thumbnailIds = accounts
-        .map((acc) => acc.thumbnailId)
-        .filter((id) => id !== null && id !== undefined);
+      if (liveBooking) {
+        throw new BadRequestError(
+          "Cannot archive accounts with active or scheduled bookings."
+        );
+      }
 
-      const otherImageIds = accounts.flatMap((acc) =>
-        acc.otherImages.map((img) => img.id)
-      );
+      const result = await prisma.$transaction(async (tx) => {
+        const archived = await tx.account.updateMany({
+          where: { id: { in: ids }, archivedAt: null },
+          data: {
+            archivedAt: now,
+            availabilityStatus: Status.NOT_AVAILABLE,
+            currentBookingDate: null,
+            currentBookingDuration: null,
+            currentExpireAt: null,
+            nextBookingDate: null,
+            nextBookingDuration: null,
+            nextExpireAt: null,
+            passwordResetRequired: false,
+            isRecommended: false
+          }
+        });
 
-      const result = await prisma.account.deleteMany({
-        where: { id: { in: ids } }
+        await tx.accountResetLog.deleteMany({
+          where: { accountId: { in: ids } }
+        });
+
+        return archived;
       });
-
-      if (thumbnailIds.length > 0) {
-        const thumbnailDeletionPromises = thumbnailIds.map((id) =>
-          this.uploadService.deleteImage(id, "account-images")
-        );
-        await Promise.all(thumbnailDeletionPromises);
-      }
-
-      if (otherImageIds.length > 0) {
-        const otherImageDeletionPromises = otherImageIds.map((id) =>
-          this.uploadService.deleteImage(id, "account-images")
-        );
-        await Promise.all(otherImageDeletionPromises);
-      }
 
       return result;
     } catch (error) {
+      if (error instanceof BadRequestError) throw error;
+
       throw new InternalServerError((error as Error).message);
     }
   };
 
   updateAccountMFA = async (id: number, data: UpdateAccountMFARequest) => {
     try {
-      const account = await prisma.account.findUnique({
-        where: { id }
+      const account = await prisma.account.findFirst({
+        where: { id, archivedAt: null }
       });
 
       if (!account) throw new NotFoundError("Account not found!");
@@ -1332,20 +1492,21 @@ export class AccountService {
   };
 
   private validateMfaEnablement = async (account: Account) => {
-    // Validation for legacy bookings
-    if (account.nextBookingDate)
-      throw new BadRequestError("Account not eligible for MFA enablement");
-
-    // Validation for new bookings
-    const activeBooking = await prisma.booking.findFirst({
+    // Order book must be empty: no scheduled next booking.
+    // Ongoing rentals (IN_USE / current RESERVED with startAt <= now) are allowed.
+    const nextBooking = await prisma.booking.findFirst({
       where: {
         accountId: account.id,
         status: BookingStatus.RESERVED,
-        startAt: { gte: new Date() }
-      }
+        startAt: { gt: new Date() }
+      },
+      select: { id: true }
     });
 
-    if (activeBooking)
-      throw new BadRequestError("Account not eligible for MFA enablement");
+    if (nextBooking) {
+      throw new BadRequestError(
+        "Cannot enable MFA while the account has a scheduled next booking (order book is not empty)."
+      );
+    }
   };
 }

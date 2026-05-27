@@ -29,6 +29,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
       - name: Build backend
         working-directory: backend
         run: |
@@ -90,6 +97,17 @@ jobs:
 
             cd "$DST"
 
+            NODE_BIN="/usr/bin/node"
+            if [ ! -x "$NODE_BIN" ]; then
+              echo "Node binary not found at $NODE_BIN (systemd ExecStart uses this path)"
+              exit 1
+            fi
+            NODE_MAJOR="$("$NODE_BIN" -p "Number(process.version.slice(1).split('.')[0])")"
+            if [ "$NODE_MAJOR" -lt 20 ]; then
+              echo "Node 20+ required at $NODE_BIN before npm ci --production; found $("$NODE_BIN" -v)"
+              exit 1
+            fi
+
             # Setup .env
             cat > "$DST/.env" <<EOF
             DATABASE_URL=${{ secrets.DATABASE_URL }}
@@ -124,9 +142,17 @@ jobs:
             BOOKING_GRACE_TIME_MILLIS=${{ vars.BOOKING_GRACE_TIME_MILLIS }}
             NODE_ENV=${{ vars.BACKEND_NODE_ENV }}
             PORT=${{ vars.BACKEND_PORT }}
+            LOG_LEVEL=${{ vars.LOG_LEVEL }}
+            LOG_PRETTY=${{ vars.LOG_PRETTY }}
+            SLOW_REQUEST_THRESHOLD_MS=${{ vars.SLOW_REQUEST_THRESHOLD_MS }}
+            SLOW_DB_QUERY_THRESHOLD_MS=${{ vars.SLOW_DB_QUERY_THRESHOLD_MS }}
+            SLOW_EXTERNAL_REQUEST_THRESHOLD_MS=${{ vars.SLOW_EXTERNAL_REQUEST_THRESHOLD_MS }}
+            LOG_HASH_SECRET=${{ secrets.LOG_HASH_SECRET }}
             EOF
             sudo chown deploy:deploy "$DST/.env"
             sudo chmod 600 "$DST/.env"
+
+            export PATH="$(dirname "$NODE_BIN"):$PATH"
 
             npm ci --production
             npx prisma generate

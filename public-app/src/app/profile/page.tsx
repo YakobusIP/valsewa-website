@@ -18,7 +18,11 @@ export default function ProfilePage() {
   }, [auth, router]);
 
   if (!auth || !auth.isAuthChecked) {
-    return null; // or a loader
+    return null;
+  }
+
+  if (!auth.isAuthenticated) {
+    return null;
   }
 
   return (

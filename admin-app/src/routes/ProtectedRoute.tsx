@@ -7,7 +7,11 @@ type Props = {
 };
 
 export default function ProtectedRoute({ children }: Props) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthChecked } = useAuth();
+
+  if (!isAuthChecked) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return null;

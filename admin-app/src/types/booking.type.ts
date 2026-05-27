@@ -66,6 +66,7 @@ export type BookingEntity = {
   };
   account: {
     accountCode: string;
+    archived?: boolean;
   };
   adminFee: number;
 };
