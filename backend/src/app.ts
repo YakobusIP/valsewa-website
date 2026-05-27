@@ -5,6 +5,8 @@ import path from "path";
 import { env } from "./lib/env";
 
 import { errorMiddleware } from "./middleware/error.middleware";
+import { requestIdMiddleware } from "./middleware/request-id.middleware";
+import { httpLoggerMiddleware } from "./middleware/http-logger.middleware";
 
 import AuthRouter from "./routes/auth.route";
 import AccountRouter from "./routes/account.route";
@@ -27,6 +29,8 @@ import DailyDropRouter from "./routes/dailydrop.route";
 
 const app: Express = express();
 
+app.use(requestIdMiddleware);
+app.use(httpLoggerMiddleware);
 app.use(
   cors({
     credentials: true,

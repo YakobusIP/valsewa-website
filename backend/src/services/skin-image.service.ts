@@ -5,18 +5,43 @@ import {
   UnprocessableEntityError
 } from "../lib/error";
 import { WeaponsResponse, Weapon, SkinPayload } from "../types/image.type";
+import { getContextLogger } from "../lib/request-context";
+
+const skinImageLogger = () =>
+  getContextLogger({ component: "skin-image", provider: "valorant-api" });
 
 const VALORANT_WEAPONS_URL = "https://valorant-api.com/v1/weapons";
 
 export class ImageService {
   callAPI = async (): Promise<WeaponsResponse> => {
+    const start = Date.now();
     try {
       const response = await axios.get<WeaponsResponse>(VALORANT_WEAPONS_URL, {
         timeout: 10_000
       });
+
+      skinImageLogger().debug(
+        {
+          event: "external_request_completed",
+          provider: "valorant-api",
+          statusCode: response.status,
+          durationMs: Date.now() - start
+        },
+        "Valorant weapons API request completed"
+      );
+
       return response.data;
     } catch (error) {
-      console.error(error);
+      skinImageLogger().error(
+        {
+          event: "external_request_failed",
+          provider: "valorant-api",
+          durationMs: Date.now() - start,
+          errorName: (error as Error).name,
+          errorMessage: (error as Error).message
+        },
+        "Valorant weapons API request failed"
+      );
       if (error instanceof AxiosError && error.response?.data) {
         const status = error.response?.status ?? 0;
 

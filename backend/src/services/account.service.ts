@@ -29,6 +29,10 @@ import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
 import { parseDurationToHours } from "../lib/utils";
 import { getDailyDropWindow } from "../lib/operational-window";
+import { getContextLogger } from "../lib/request-context";
+import { env } from "../lib/env";
+
+const accountLogger = () => getContextLogger({ component: "account" });
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
@@ -420,6 +424,7 @@ export class AccountService {
     sortBy?: string,
     direction?: Prisma.SortOrder
   ): Promise<[AccountWithSkins[], Metadata]> => {
+    const start = Date.now();
     try {
       let data = await prisma.account.findMany({
         where: { archivedAt: null },
@@ -446,6 +451,7 @@ export class AccountService {
       }
 
       let filteredData: AccountWithSkins[] = data;
+      const filterStart = Date.now();
       if (query && query.trim().length > 0) {
         const trimmedQuery = query.trim();
         const fuseOptions: IFuseOptions<AccountWithSkins> = {
@@ -476,9 +482,11 @@ export class AccountService {
 
         filteredData = [...fuseItems, ...codeMatches];
       }
+      const filterDurationMs = Date.now() - filterStart;
 
       const accountIds = filteredData.map((a) => a.id);
 
+      const enrichStart = Date.now();
       const bookings = await prisma.booking.findMany({
         where: {
           accountId: { in: accountIds },
@@ -527,6 +535,7 @@ export class AccountService {
           nextExpireAt: b[1]?.endAt ?? null
         };
       });
+      const enrichDurationMs = Date.now() - enrichStart;
 
       const itemCount = filteredDataWithBookings.length;
       const pageCount = Math.ceil(itemCount / limit);
@@ -543,6 +552,28 @@ export class AccountService {
         page * limit
       );
 
+      const durationMs = Date.now() - start;
+      const isSlow = durationMs >= env.SLOW_REQUEST_THRESHOLD_MS;
+
+      accountLogger()[isSlow ? "warn" : "debug"](
+        {
+          event: isSlow
+            ? "account_admin_list_slow"
+            : "account_admin_list_completed",
+          page,
+          limit,
+          hasQuery: Boolean(query?.trim()),
+          sortBy,
+          direction,
+          resultCount: itemCount,
+          filterDurationMs,
+          enrichDurationMs,
+          durationMs,
+          slow: isSlow || undefined
+        },
+        "Admin account list completed"
+      );
+
       return [paginatedData, metadata];
     } catch (error) {
       throw new InternalServerError((error as Error).message);
@@ -554,6 +585,7 @@ export class AccountService {
     page?: number,
     limit?: number
   ): Promise<[PublicAccount[], Metadata | null]> => {
+    const start = Date.now();
     try {
       const { query, sortBy, direction = "asc" } = filters;
 
@@ -596,6 +628,7 @@ export class AccountService {
       }
 
       let filteredData: typeof data = data;
+      const filterStart = Date.now();
       if (query && query.trim().length > 0) {
         const fuseOptions: IFuseOptions<(typeof data)[0]> = {
           keys: ["accountCode", "skinList.name", "skinList.keyword"],
@@ -607,9 +640,27 @@ export class AccountService {
         const fuseResults = fuse.search(query);
         filteredData = fuseResults.map((result) => result.item);
       }
+      const filterDurationMs = Date.now() - filterStart;
+
+      accountLogger().debug(
+        {
+          event: "account_public_search_filter_completed",
+          hasQuery: Boolean(query?.trim()),
+          queryLength: query?.trim().length ?? 0,
+          sortBy,
+          direction,
+          tierCount: filters.tiers?.length ?? 0,
+          rankCount: filters.ranks?.length ?? 0,
+          skinIdCount: filters.skinIds?.length ?? 0,
+          resultCount: filteredData.length,
+          durationMs: filterDurationMs
+        },
+        "Public account search filter completed"
+      );
 
       const accountIds = filteredData.map((a) => a.id);
 
+      const enrichStart = Date.now();
       const bookings =
         accountIds.length > 0
           ? await prisma.booking.findMany({
@@ -651,8 +702,37 @@ export class AccountService {
           currentExpireAt: b[0]?.endAt ?? null
         };
       });
+      const enrichDurationMs = Date.now() - enrichStart;
+
+      accountLogger().debug(
+        {
+          event: "account_public_search_booking_enrichment_completed",
+          resultCount: enrichedData.length,
+          durationMs: enrichDurationMs
+        },
+        "Public account booking enrichment completed"
+      );
 
       if (page === undefined || limit === undefined) {
+        const durationMs = Date.now() - start;
+        const isSlow = durationMs >= env.SLOW_REQUEST_THRESHOLD_MS;
+        accountLogger()[isSlow ? "warn" : "debug"](
+          {
+            event: isSlow
+              ? "account_public_search_slow"
+              : "account_public_search_completed",
+            hasQuery: Boolean(query?.trim()),
+            queryLength: query?.trim().length ?? 0,
+            sortBy,
+            direction,
+            resultCount: enrichedData.length,
+            filterDurationMs,
+            enrichDurationMs,
+            durationMs,
+            slow: isSlow || undefined
+          },
+          "Public account search completed"
+        );
         return [enrichedData as PublicAccount[], null];
       }
 
@@ -669,6 +749,32 @@ export class AccountService {
       const paginatedData = enrichedData.slice(
         (page - 1) * limit,
         page * limit
+      );
+
+      const durationMs = Date.now() - start;
+      const isSlow = durationMs >= env.SLOW_REQUEST_THRESHOLD_MS;
+
+      accountLogger()[isSlow ? "warn" : "debug"](
+        {
+          event: isSlow
+            ? "account_public_search_slow"
+            : "account_public_search_completed",
+          page,
+          limit,
+          hasQuery: Boolean(query?.trim()),
+          queryLength: query?.trim().length ?? 0,
+          sortBy,
+          direction,
+          tierCount: filters.tiers?.length ?? 0,
+          rankCount: filters.ranks?.length ?? 0,
+          skinIdCount: filters.skinIds?.length ?? 0,
+          resultCount: itemCount,
+          filterDurationMs,
+          enrichDurationMs,
+          durationMs,
+          slow: isSlow || undefined
+        },
+        "Public account search completed"
       );
 
       return [paginatedData as PublicAccount[], metadata];

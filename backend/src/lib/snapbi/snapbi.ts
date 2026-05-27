@@ -1,12 +1,15 @@
 import crypto from "crypto";
 import SnapBiApiRequestor from "./snapbi.api-requestor";
 import SnapBiConfig from "./snapbi.config";
+import { getContextLogger } from "../request-context";
 import {
   HttpHeaders,
   PaymentMethod,
   SnapBiRequestBody,
   AccessTokenResponse
 } from "./types";
+
+const snapBiLogger = () => getContextLogger({ component: "snapbi" });
 
 export default class SnapBi {
   /* ==========================
@@ -237,12 +240,16 @@ export default class SnapBi {
       .sign("RSA-SHA256", Buffer.from(payload), privateKey)
       .toString("base64");
 
-    console.log(
-      "[getTransactionSignature] payload:",
-      payload,
-      ", signature:",
-      signature
-    );
+    if (SnapBiConfig.enableLogging) {
+      snapBiLogger().debug(
+        {
+          event: "snapbi_signature_generated",
+          method: method.toUpperCase(),
+          path
+        },
+        "SnapBI transaction signature generated"
+      );
+    }
 
     return signature;
   }

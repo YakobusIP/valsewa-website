@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../lib/env";
+import { patchRequestContext, refreshRequestLogger } from "../lib/request-context";
 
 const SCHEDULER_API_KEY = env.SCHEDULER_API_KEY;
 
@@ -20,6 +21,10 @@ export const schedulerMiddleware = (
   if (apiKey !== SCHEDULER_API_KEY) {
     return res.status(401).json({ error: "Access denied!" });
   }
+
+  req.isScheduler = true;
+  patchRequestContext({ isScheduler: true });
+  refreshRequestLogger(req);
 
   return next();
 };

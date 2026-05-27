@@ -3,6 +3,9 @@ import { BadRequestError, InternalServerError } from "../lib/error";
 import { prisma } from "../lib/prisma";
 import { Metadata } from "../types/metadata.type";
 import bcrypt from "bcrypt";
+import { getContextLogger } from "../lib/request-context";
+
+const customerLogger = () => getContextLogger({ component: "customer" });
 
 export class CustomerService {
   getAllCustomers = async (
@@ -187,10 +190,22 @@ export class CustomerService {
         }
       });
 
-      console.log(`Found ${expiredCustomers.length} expired customers.`);
+      customerLogger().info(
+        {
+          event: "password_expiration_check_completed",
+          expiredCount: expiredCustomers.length
+        },
+        "Password expiration check completed"
+      );
 
       const updatePromises = expiredCustomers.map((customer) => {
-        console.log(`Deactivating customer: ${customer.username}`);
+        customerLogger().debug(
+          {
+            event: "customer_deactivated_password_expired",
+            customerId: customer.id
+          },
+          "Deactivating expired customer"
+        );
         return this.toggleCustomerActiveStatus(customer.id, false);
       });
 

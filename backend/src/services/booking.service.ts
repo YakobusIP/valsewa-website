@@ -53,7 +53,10 @@ import {
 import { FaspayClient } from "../faspay/faspay.client";
 import { Metadata } from "../types/metadata.type";
 import { env } from "../lib/env";
+import { getContextLogger } from "../lib/request-context";
 import { SettingService } from "./setting.service";
+
+const bookingLogger = () => getContextLogger({ component: "booking" });
 
 export const PAYMENT_TO_BOOKING_STATUS_MAP: Record<
   PaymentStatus,
@@ -702,6 +705,7 @@ export class BookingService {
   createBooking = async (
     data: CreateBookingRequest
   ): Promise<BookingResponse> => {
+    const start = Date.now();
     try {
       const {
         customerId,
@@ -919,7 +923,23 @@ export class BookingService {
         });
       });
 
-      return this.mapBookingDataToBookingResponse(booking);
+      const response = this.mapBookingDataToBookingResponse(booking);
+      const durationMs = Date.now() - start;
+      const isSlow = durationMs >= env.SLOW_REQUEST_THRESHOLD_MS;
+
+      bookingLogger()[isSlow ? "warn" : "debug"](
+        {
+          event: isSlow ? "booking_creation_slow" : "booking_creation_completed",
+          bookingId: booking.id,
+          customerId: data.customerId,
+          accountId: data.accountId,
+          durationMs,
+          slow: isSlow || undefined
+        },
+        "Booking creation completed"
+      );
+
+      return response;
     } catch (error) {
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
@@ -1494,6 +1514,7 @@ export class BookingService {
   };
 
   syncExpiredBookings = async () => {
+    const start = Date.now();
     try {
       const nowWithGrace = new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS);
 
@@ -1525,6 +1546,16 @@ export class BookingService {
         return expired.count;
       });
 
+      const durationMs = Date.now() - start;
+      bookingLogger().info(
+        {
+          event: "sync_expired_bookings_completed",
+          count,
+          durationMs
+        },
+        "Sync expired bookings completed"
+      );
+
       return { count };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
@@ -1532,6 +1563,7 @@ export class BookingService {
   };
 
   syncCompletedBookings = async () => {
+    const start = Date.now();
     try {
       const count = await prisma.$transaction(async (tx) => {
         const now = new Date();
@@ -1633,6 +1665,16 @@ export class BookingService {
         return bookingIds.length;
       });
 
+      const durationMs = Date.now() - start;
+      bookingLogger().info(
+        {
+          event: "sync_completed_bookings_completed",
+          count,
+          durationMs
+        },
+        "Sync completed bookings completed"
+      );
+
       return { count };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
@@ -1640,10 +1682,11 @@ export class BookingService {
   };
 
   syncAccountAvailability = async () => {
+    const start = Date.now();
     try {
       const now = new Date();
 
-      return await prisma.$transaction(async (tx) => {
+      const result = await prisma.$transaction(async (tx) => {
         const reservedAccountIds = await tx.booking.findMany({
           where: {
             status: BookingStatus.RESERVED,
@@ -1725,6 +1768,18 @@ export class BookingService {
 
         return { markedInUse, markedAvailable };
       });
+
+      bookingLogger().info(
+        {
+          event: "sync_account_availability_completed",
+          markedInUse: result.markedInUse,
+          markedAvailable: result.markedAvailable,
+          durationMs: Date.now() - start
+        },
+        "Sync account availability completed"
+      );
+
+      return result;
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -1748,14 +1803,15 @@ export class BookingService {
       });
 
       if (!activeBooking) {
-        console.info(
-          "[forceFinishBooking] no active booking found",
-          JSON.stringify({
+        bookingLogger().info(
+          {
+            event: "force_finish_booking_no_active_booking",
             source: actor.source,
             customerId: actor.customerId ?? null,
             accountId,
             checkedAt: now.toISOString()
-          })
+          },
+          "No active booking found for force finish"
         );
         await this.finishLegacyBooking(accountId);
         return null;
@@ -1772,9 +1828,9 @@ export class BookingService {
         }
       });
 
-      console.info(
-        "[forceFinishBooking] endAt overwritten",
-        JSON.stringify({
+      bookingLogger().info(
+        {
+          event: "force_finish_booking_end_at_overwritten",
           source: actor.source,
           customerId: actor.customerId ?? null,
           accountId,
@@ -1785,7 +1841,8 @@ export class BookingService {
           newEndAt: now.toISOString(),
           previousVersion: activeBooking.version,
           newVersion: updatedBooking.version
-        })
+        },
+        "Force finish booking endAt overwritten"
       );
 
       return this.mapBookingDataToBookingResponse(updatedBooking);
@@ -1901,6 +1958,7 @@ export class BookingService {
     bankCode?: BankCodes,
     bankAccountName?: string
   ): Promise<Payment> => {
+    const start = Date.now();
     try {
       if (!booking.expiredAt) {
         throw new BadRequestError("Booking expiredAt is missing!");
@@ -1914,13 +1972,27 @@ export class BookingService {
           expiredAt: booking.expiredAt
         });
 
-        return await prisma.payment.update({
+        const updated = await prisma.payment.update({
           where: { id: payment.id },
           data: {
             providerPaymentId: providerResponse.providerPaymentId,
             qrUrl: providerResponse.qrUrl
           }
         });
+
+        bookingLogger().debug(
+          {
+            event: "payment_provider_request_completed",
+            bookingId: booking.id,
+            paymentId: payment.id,
+            paymentMethod,
+            provider: "faspay",
+            durationMs: Date.now() - start
+          },
+          "Payment provider request completed"
+        );
+
+        return updated;
       }
 
       if (paymentMethod === PaymentMethodType.VIRTUAL_ACCOUNT) {
@@ -1950,7 +2022,7 @@ export class BookingService {
           expiredAt: booking.expiredAt
         });
 
-        return await prisma.payment.update({
+        const updated = await prisma.payment.update({
           where: { id: payment.id },
           data: {
             providerPaymentId: providerResponse.providerPaymentId,
@@ -1959,6 +2031,20 @@ export class BookingService {
             bankAccountName: providerResponse.bankAccountName
           }
         });
+
+        bookingLogger().debug(
+          {
+            event: "payment_provider_request_completed",
+            bookingId: booking.id,
+            paymentId: payment.id,
+            paymentMethod,
+            provider: "faspay",
+            durationMs: Date.now() - start
+          },
+          "Payment provider request completed"
+        );
+
+        return updated;
       }
 
       if (paymentMethod === PaymentMethodType.MANUAL) {
@@ -1970,7 +2056,19 @@ export class BookingService {
 
       throw new BadRequestError("Payment method is not supported!");
     } catch (error) {
-      console.error("Process payment to provider failed:", error);
+      bookingLogger().error(
+        {
+          event: "payment_provider_request_failed",
+          bookingId: booking.id,
+          paymentId: payment.id,
+          paymentMethod,
+          provider: "faspay",
+          durationMs: Date.now() - start,
+          errorName: (error as Error).name,
+          errorMessage: (error as Error).message
+        },
+        "Payment provider request failed"
+      );
       await prisma.booking.update({
         where: { id: payment.bookingId },
         data: {

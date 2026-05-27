@@ -6,6 +6,9 @@ import {
 } from "../lib/error";
 import { prisma } from "../lib/prisma";
 import { Metadata } from "../types/metadata.type";
+import { getContextLogger } from "../lib/request-context";
+
+const voucherLogger = () => getContextLogger({ component: "voucher" });
 
 export class VoucherService {
   getAll = async (
@@ -196,10 +199,22 @@ export class VoucherService {
         }
       });
 
-      console.log(`Found ${expiredVouchers.length} expired vouchers.`);
+      voucherLogger().info(
+        {
+          event: "voucher_expiration_check_completed",
+          expiredCount: expiredVouchers.length
+        },
+        "Voucher expiration check completed"
+      );
 
       const updatePromises = expiredVouchers.map((voucher) => {
-        console.log(`Deactivating voucher: ${voucher.voucherName}`);
+        voucherLogger().debug(
+          {
+            event: "voucher_deactivated_expired",
+            voucherId: voucher.id
+          },
+          "Deactivating expired voucher"
+        );
         return this.toggleVoucherValidity(voucher.id, false);
       });
 
