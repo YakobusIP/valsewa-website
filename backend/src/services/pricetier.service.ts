@@ -403,6 +403,7 @@ export class PriceTierService {
       for (const rankBase of rankBases) {
         const accounts = await prisma.account.findMany({
           where: {
+            archivedAt: null,
             OR: [
               { accountRank: { startsWith: `${rankBase} ` } },
               { accountRank: rankBase }

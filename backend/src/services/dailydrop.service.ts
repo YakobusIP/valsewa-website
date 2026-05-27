@@ -85,7 +85,8 @@ export class DailyDropService {
 
       const drops = await prisma.dailyDrop.findMany({
         where: {
-          date: { gte: start, lt: end }
+          date: { gte: start, lt: end },
+          account: { archivedAt: null }
         },
         orderBy: { slot: "asc" },
         include: {
@@ -196,6 +197,7 @@ export class DailyDropService {
     } of slotConfigs) {
       const accounts = await prisma.account.findMany({
         where: {
+          archivedAt: null,
           availabilityStatus: "AVAILABLE",
           ...(config.allowedAccountIds.length > 0
             ? { id: { in: config.allowedAccountIds } }

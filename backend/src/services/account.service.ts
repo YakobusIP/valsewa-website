@@ -287,6 +287,7 @@ export class AccountService {
       filters;
 
     const where: Prisma.AccountWhereInput = {
+      archivedAt: null,
       availabilityStatus: { in: ["AVAILABLE", "IN_USE"] }
     };
 
@@ -421,6 +422,7 @@ export class AccountService {
   ): Promise<[AccountWithSkins[], Metadata]> => {
     try {
       let data = await prisma.account.findMany({
+        where: { archivedAt: null },
         orderBy: {
           availabilityStatus: sortBy === "availability" ? direction : undefined
         },
@@ -678,7 +680,7 @@ export class AccountService {
   getAllDatabaseAccounts = async (filter?: Prisma.AccountWhereInput) => {
     try {
       return await prisma.account.findMany({
-        where: filter,
+        where: { archivedAt: null, ...filter },
         omit: {
           legacySkinList: true
         }
@@ -694,6 +696,7 @@ export class AccountService {
 
       return await prisma.account.findMany({
         where: {
+          archivedAt: null,
           isMfa: false,
           availabilityStatus: Status.AVAILABLE,
           Booking: {
@@ -731,8 +734,8 @@ export class AccountService {
 
   getAccountById = async (id: number) => {
     try {
-      const account = await prisma.account.findUnique({
-        where: { id },
+      const account = await prisma.account.findFirst({
+        where: { id, archivedAt: null },
         omit: {
           legacySkinList: true
         },
@@ -794,14 +797,14 @@ export class AccountService {
 
   getAccountByIdPublic = async (id: number) => {
     try {
-      const account = await prisma.account.findUnique({
+      const account = await prisma.account.findFirst({
         omit: {
           password: true,
           passwordResetRequired: true,
           rentHourUpdated: true,
           legacySkinList: true
         },
-        where: { id },
+        where: { id, archivedAt: null },
         include: {
           priceTier: {
             include: {
@@ -870,14 +873,14 @@ export class AccountService {
 
   getAccountByCodePublic = async (accountCode: string) => {
     try {
-      const account = await prisma.account.findUnique({
+      const account = await prisma.account.findFirst({
         omit: {
           password: true,
           passwordResetRequired: true,
           rentHourUpdated: true,
           legacySkinList: true
         },
-        where: { accountCode },
+        where: { accountCode, archivedAt: null },
         include: {
           priceTier: {
             include: {
@@ -947,7 +950,10 @@ export class AccountService {
   getAccountDuplicate = async (nickname: string, accountCode: string) => {
     try {
       const account = await prisma.account.findFirst({
-        where: { OR: [{ nickname }, { accountCode }] }
+        where: {
+          archivedAt: null,
+          OR: [{ nickname }, { accountCode }]
+        }
       });
 
       return !!account;
@@ -959,6 +965,9 @@ export class AccountService {
   getAccountResetLogs = async () => {
     try {
       return await prisma.accountResetLog.findMany({
+        where: {
+          account: { archivedAt: null }
+        },
         include: {
           account: {
             select: { username: true, accountCode: true }
@@ -984,6 +993,7 @@ export class AccountService {
 
       const availableAccounts = await prisma.account.findMany({
         where: {
+          archivedAt: null,
           availabilityStatus: { not: Status.NOT_AVAILABLE },
           id: { notIn: unavailableAccounts.map((v) => v.accountId) }
         },
@@ -1001,6 +1011,17 @@ export class AccountService {
   createAccount = async (data: AccountEntityRequest) => {
     try {
       const { skinList, thumbnail, otherImages, priceTier, ...scalars } = data;
+      const existing = await prisma.account.findFirst({
+        where: {
+          archivedAt: null,
+          accountCode: scalars.accountCode
+        },
+        select: { id: true }
+      });
+
+      if (existing) {
+        throw new PrismaUniqueError("Account code is already in use!");
+      }
 
       const skinCount = data.skinList.length;
       const skinConnect =
@@ -1024,6 +1045,8 @@ export class AccountService {
         }
       });
     } catch (error) {
+      if (error instanceof PrismaUniqueError) throw error;
+
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
@@ -1041,7 +1064,9 @@ export class AccountService {
 
   finishBooking = async (id: number) => {
     try {
-      const account = await prisma.account.findFirst({ where: { id } });
+      const account = await prisma.account.findFirst({
+        where: { id, archivedAt: null }
+      });
 
       if (!account) throw new NotFoundError("Account not found!");
 
@@ -1085,8 +1110,8 @@ export class AccountService {
     deleteResetLogs = false
   ) => {
     try {
-      const currentAccount = await prisma.account.findUnique({
-        where: { id },
+      const currentAccount = await prisma.account.findFirst({
+        where: { id, archivedAt: null },
         include: { thumbnail: true, otherImages: true }
       });
 
@@ -1095,6 +1120,24 @@ export class AccountService {
       const { thumbnail, otherImages, priceTier, skinList, ...scalars } = data;
 
       const updateData: Prisma.AccountUpdateInput = { ...scalars };
+
+      if (
+        scalars.accountCode !== undefined &&
+        scalars.accountCode !== currentAccount.accountCode
+      ) {
+        const duplicate = await prisma.account.findFirst({
+          where: {
+            archivedAt: null,
+            accountCode: scalars.accountCode,
+            id: { not: id }
+          },
+          select: { id: true }
+        });
+
+        if (duplicate) {
+          throw new PrismaUniqueError("Account code is already in use!");
+        }
+      }
 
       if (updateData.isMfa) {
         await this.validateMfaEnablement(currentAccount);
@@ -1179,7 +1222,7 @@ export class AccountService {
   updateExpireAt = async () => {
     try {
       const expiredAccounts = await prisma.account.findMany({
-        where: { currentExpireAt: { lt: new Date() } }
+        where: { archivedAt: null, currentExpireAt: { lt: new Date() } }
       });
 
       await prisma.$transaction(async (tx) => {
@@ -1260,47 +1303,66 @@ export class AccountService {
 
   deleteManyAccounts = async (ids: number[]) => {
     try {
-      const accounts = await prisma.account.findMany({
-        where: { id: { in: ids } },
-        select: { thumbnailId: true, otherImages: { select: { id: true } } }
+      const now = new Date();
+      const liveBooking = await prisma.booking.findFirst({
+        where: {
+          accountId: { in: ids },
+          OR: [
+            {
+              status: BookingStatus.RESERVED,
+              endAt: { gt: now }
+            },
+            {
+              status: BookingStatus.HOLD,
+              OR: [{ expiredAt: null }, { expiredAt: { gt: now } }]
+            }
+          ]
+        },
+        select: { accountId: true }
       });
 
-      const thumbnailIds = accounts
-        .map((acc) => acc.thumbnailId)
-        .filter((id) => id !== null && id !== undefined);
+      if (liveBooking) {
+        throw new BadRequestError(
+          "Cannot archive accounts with active or scheduled bookings."
+        );
+      }
 
-      const otherImageIds = accounts.flatMap((acc) =>
-        acc.otherImages.map((img) => img.id)
-      );
+      const result = await prisma.$transaction(async (tx) => {
+        const archived = await tx.account.updateMany({
+          where: { id: { in: ids }, archivedAt: null },
+          data: {
+            archivedAt: now,
+            availabilityStatus: Status.NOT_AVAILABLE,
+            currentBookingDate: null,
+            currentBookingDuration: null,
+            currentExpireAt: null,
+            nextBookingDate: null,
+            nextBookingDuration: null,
+            nextExpireAt: null,
+            passwordResetRequired: false,
+            isRecommended: false
+          }
+        });
 
-      const result = await prisma.account.deleteMany({
-        where: { id: { in: ids } }
+        await tx.accountResetLog.deleteMany({
+          where: { accountId: { in: ids } }
+        });
+
+        return archived;
       });
-
-      if (thumbnailIds.length > 0) {
-        const thumbnailDeletionPromises = thumbnailIds.map((id) =>
-          this.uploadService.deleteImage(id, "account-images")
-        );
-        await Promise.all(thumbnailDeletionPromises);
-      }
-
-      if (otherImageIds.length > 0) {
-        const otherImageDeletionPromises = otherImageIds.map((id) =>
-          this.uploadService.deleteImage(id, "account-images")
-        );
-        await Promise.all(otherImageDeletionPromises);
-      }
 
       return result;
     } catch (error) {
+      if (error instanceof BadRequestError) throw error;
+
       throw new InternalServerError((error as Error).message);
     }
   };
 
   updateAccountMFA = async (id: number, data: UpdateAccountMFARequest) => {
     try {
-      const account = await prisma.account.findUnique({
-        where: { id }
+      const account = await prisma.account.findFirst({
+        where: { id, archivedAt: null }
       });
 
       if (!account) throw new NotFoundError("Account not found!");

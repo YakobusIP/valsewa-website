@@ -218,7 +218,8 @@ export class BookingService {
             account: {
               select: {
                 accountCode: true,
-                accountRank: true
+                accountRank: true,
+                archivedAt: true
               }
             }
           }
@@ -251,7 +252,8 @@ export class BookingService {
             account: {
               select: {
                 accountCode: true,
-                accountRank: true
+                accountRank: true,
+                archivedAt: true
               }
             }
           }
@@ -749,9 +751,10 @@ export class BookingService {
             })
           : Promise.resolve(0),
         // account
-        prisma.account.findUnique({
+        prisma.account.findFirst({
           where: {
             id: accountId,
+            archivedAt: null,
             availabilityStatus: { not: Status.NOT_AVAILABLE }
           },
           select: {
@@ -931,8 +934,8 @@ export class BookingService {
     try {
       const { accountCode, totalValue, startAt } = data;
 
-      const account = await prisma.account.findUnique({
-        where: { accountCode: accountCode }
+      const account = await prisma.account.findFirst({
+        where: { accountCode, archivedAt: null }
       });
       if (!account) throw new NotFoundError("Account not found!");
 
@@ -1089,9 +1092,10 @@ export class BookingService {
     try {
       const { accountId, startAt, duration, totalValue } = data;
 
-      const account = await prisma.account.findUnique({
+      const account = await prisma.account.findFirst({
         where: {
           id: accountId,
+          archivedAt: null,
           availabilityStatus: { not: Status.NOT_AVAILABLE }
         }
       });
@@ -1169,9 +1173,10 @@ export class BookingService {
         if (!originalAccount)
           throw new NotFoundError("Original account not found!");
 
-        const account = await tx.account.findUnique({
+        const account = await tx.account.findFirst({
           where: {
             id: accountId,
+            archivedAt: null,
             availabilityStatus: { not: Status.NOT_AVAILABLE }
           }
         });
@@ -1566,6 +1571,7 @@ export class BookingService {
         const accountsForReset = await tx.account.findMany({
           where: {
             id: { in: accountIds },
+            archivedAt: null,
             requirePasswordReset: true
           },
           select: { id: true }
@@ -1576,7 +1582,8 @@ export class BookingService {
         if (resetAccountIdSet.size > 0) {
           await tx.account.updateMany({
             where: {
-              id: { in: resetAccountIds }
+              id: { in: resetAccountIds },
+              archivedAt: null
             },
             data: {
               passwordResetRequired: true
@@ -1656,6 +1663,7 @@ export class BookingService {
             ? await tx.account.findMany({
                 where: {
                   id: { in: activeAccountIds },
+                  archivedAt: null,
                   availabilityStatus: { not: Status.IN_USE },
                   currentBookingDate: null
                 },
@@ -1685,6 +1693,7 @@ export class BookingService {
                 await tx.account.updateMany({
                   where: {
                     id: { in: activeAccountIds },
+                    archivedAt: null,
                     availabilityStatus: { not: Status.IN_USE },
                     currentBookingDate: null
                   },
@@ -1701,6 +1710,7 @@ export class BookingService {
         const markedAvailable = (
           await tx.account.updateMany({
             where: {
+              archivedAt: null,
               availabilityStatus: Status.IN_USE,
               currentBookingDate: null,
               ...(activeAccountIds.length > 0 && {
@@ -2122,6 +2132,7 @@ export class BookingService {
       account?: {
         accountRank: string;
         accountCode: string;
+        archivedAt?: Date | null;
         priceTierId?: number;
         thumbnailId?: number | null;
         nickname?: string;
@@ -2175,6 +2186,7 @@ export class BookingService {
         ? {
             accountRank: booking.account.accountRank,
             accountCode: booking.account.accountCode,
+            archived: booking.account.archivedAt !== null,
             priceTierCode: booking.account.priceTierId?.toString() ?? "",
             thumbnailImageUrl: booking.account.thumbnailId?.toString() ?? "",
             nickname: booking.account.nickname ?? "",
@@ -2239,6 +2251,7 @@ export class BookingService {
       account: {
         accountRank: booking.account.accountRank,
         accountCode: booking.account.accountCode,
+        archived: booking.account.archivedAt !== null,
         priceTierCode: booking.account.priceTier.code,
         thumbnailImageUrl: booking.account.thumbnail?.imageUrl ?? "",
         nickname: booking.account.nickname ?? "",

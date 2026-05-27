@@ -463,7 +463,17 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                       </TableCell>
                       <TableCell>{formatDateTime(b.createdAt)}</TableCell>
                       <TableCell>{b.customer?.username ?? "-"}</TableCell>
-                      <TableCell>{b.account?.accountCode ?? "-"}</TableCell>
+                      <TableCell>
+                        <span
+                          className={
+                            b.account?.archived
+                              ? "font-medium text-red-600"
+                              : undefined
+                          }
+                        >
+                          {b.account?.accountCode ?? "-"}
+                        </span>
+                      </TableCell>
                       <TableCell>{formatCurrency(b.mainValue)}</TableCell>
                       <TableCell>{formatCurrency(b.othersValue)}</TableCell>
                       <TableCell>{formatCurrency(b.adminFee) ?? "-"}</TableCell>
