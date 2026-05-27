@@ -165,6 +165,7 @@ export default function BookingDetailPage() {
 
     if (!auth.isAuthenticated) {
       router.push("/");
+      return;
     }
 
     bookingService

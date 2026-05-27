@@ -43,6 +43,9 @@ interface DataTableProps<TData extends Identifiable, TValue> {
   page: number;
   setPage: Dispatch<SetStateAction<number>>;
   metadata?: MetadataResponse;
+  deleteTitle?: string;
+  deleteDescription?: string;
+  deleteButtonLabel?: string;
 }
 
 function DataTable<TData extends Identifiable, TValue>({
@@ -57,7 +60,10 @@ function DataTable<TData extends Identifiable, TValue>({
   isLoadingDeleteData,
   page,
   setPage,
-  metadata
+  metadata,
+  deleteTitle,
+  deleteDescription,
+  deleteButtonLabel
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -90,6 +96,9 @@ function DataTable<TData extends Identifiable, TValue>({
               rowSelection={rowSelection}
               deleteData={deleteData}
               isLoadingDeleteData={isLoadingDeleteData}
+              title={deleteTitle}
+              description={deleteDescription}
+              buttonLabel={deleteButtonLabel}
             />
           </div>
         </div>

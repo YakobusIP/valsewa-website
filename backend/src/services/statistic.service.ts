@@ -6,6 +6,7 @@ export class StatisticService {
     try {
       const accounts = await prisma.account.groupBy({
         by: ["availabilityStatus"],
+        where: { archivedAt: null },
         _count: { availabilityStatus: true }
       });
 

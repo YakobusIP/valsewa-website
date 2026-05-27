@@ -1,26 +1,44 @@
 import { ApiResponseError } from "@/types/api.type";
 
+import { shouldRefreshAccessToken } from "@/lib/auth-token";
+
 import axios, { AxiosError, AxiosInstance } from "axios";
-import type { AxiosRequestConfig } from "axios";
+import type { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 
 let accessToken: string | null = null;
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value: string) => void;
-  reject: (error: unknown) => void;
-}> = [];
+let refreshPromise: Promise<string> | null = null;
+let sessionEpoch = 0;
+
+let sessionExpiredListener: (() => void) | null = null;
+
+const SESSION_ENDED_DURING_REFRESH = "Session ended during refresh";
+
+const invalidateSession = () => {
+  sessionEpoch += 1;
+  refreshPromise = null;
+};
+
+const REFRESH_URL = "/api/auth/refresh-token";
+const LOGIN_URL_FRAGMENT = "auth/login";
+const LOGOUT_URL_FRAGMENT = "auth/logout";
+const REFRESH_URL_FRAGMENT = "auth/refresh-token";
 
 interface CustomAxiosRequestConfig extends AxiosRequestConfig {
-  _retry: boolean;
+  _retry?: boolean;
 }
 
 const interceptedAxios: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_AXIOS_BASE_URL
 });
 
+export const setSessionExpiredListener = (listener: (() => void) | null) => {
+  sessionExpiredListener = listener;
+};
+
 export const setAccessToken = (token: string | null) => {
+  accessToken = token;
+
   if (token) {
-    accessToken = token;
     interceptedAxios.defaults.headers.common["Authorization"] =
       `Bearer ${token}`;
   } else {
@@ -28,37 +46,146 @@ export const setAccessToken = (token: string | null) => {
   }
 };
 
-/**
- * Processes the queue of failed requests after token refresh.
- * @param error Any error that occurred during the refresh.
- */
-const processQueue = (error: unknown, token: string | null = null) => {
-  failedQueue.forEach((promise) => {
-    if (error) {
-      promise.reject(error);
-    } else if (token) {
-      promise.resolve(token);
+const getStoredRefreshToken = (): string | null =>
+  localStorage.getItem("refreshToken");
+
+const clearStoredSession = () => {
+  localStorage.removeItem("refreshToken");
+  invalidateSession();
+  setAccessToken(null);
+  sessionExpiredListener?.();
+};
+
+export const clearLocalAuthSession = () => {
+  localStorage.removeItem("refreshToken");
+  invalidateSession();
+  setAccessToken(null);
+};
+
+const isSessionStillValid = (
+  epochAtStart: number,
+  refreshTokenUsed: string
+): boolean =>
+  sessionEpoch === epochAtStart && getStoredRefreshToken() === refreshTokenUsed;
+
+const isAuthExemptUrl = (config?: CustomAxiosRequestConfig): boolean => {
+  if (!config?.url) return false;
+  const url = config.url;
+  return (
+    url.includes(LOGIN_URL_FRAGMENT) ||
+    url.includes(LOGOUT_URL_FRAGMENT) ||
+    url.includes(REFRESH_URL_FRAGMENT)
+  );
+};
+
+const stripAuthorizationHeader = (config: InternalAxiosRequestConfig) => {
+  if (!config.headers) return;
+  delete config.headers.Authorization;
+  delete config.headers.authorization;
+};
+
+export const refreshAccessToken = async (): Promise<string> => {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  const refreshToken = getStoredRefreshToken();
+  if (!refreshToken) {
+    clearStoredSession();
+    throw new Error("No refresh token available");
+  }
+
+  const epochAtStart = sessionEpoch;
+
+  const inFlightRefresh = (async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_AXIOS_BASE_URL}${REFRESH_URL}`,
+        null,
+        {
+          headers: {
+            Authorization: `Bearer ${refreshToken}`
+          }
+        }
+      );
+
+      if (!isSessionStillValid(epochAtStart, refreshToken)) {
+        throw new Error(SESSION_ENDED_DURING_REFRESH);
+      }
+
+      const newAccessToken = response.data.accessToken as string;
+      setAccessToken(newAccessToken);
+      return newAccessToken;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message === SESSION_ENDED_DURING_REFRESH
+      ) {
+        throw error;
+      }
+      clearStoredSession();
+      throw error;
     }
-  });
-  failedQueue = [];
+  })();
+
+  refreshPromise = inFlightRefresh;
+
+  void inFlightRefresh.then(
+    () => {
+      if (refreshPromise === inFlightRefresh) refreshPromise = null;
+    },
+    () => {
+      if (refreshPromise === inFlightRefresh) refreshPromise = null;
+    }
+  );
+
+  return inFlightRefresh;
+};
+
+export const restoreSessionFromRefreshToken = async (): Promise<
+  string | null
+> => {
+  if (accessToken) return accessToken;
+  if (!getStoredRefreshToken()) return null;
+
+  try {
+    return await refreshAccessToken();
+  } catch {
+    return null;
+  }
 };
 
 interceptedAxios.interceptors.request.use(
-  (config) => {
-    if (accessToken) {
-      config.headers["Authorization"] = `Bearer ${accessToken}`;
+  async (config: InternalAxiosRequestConfig) => {
+    if (isAuthExemptUrl(config)) {
+      stripAuthorizationHeader(config);
+      return config;
     }
+
+    const storedRefreshToken = getStoredRefreshToken();
+    if (storedRefreshToken && shouldRefreshAccessToken(accessToken)) {
+      await refreshAccessToken();
+    }
+
+    if (accessToken && config.headers) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
 interceptedAxios.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as CustomAxiosRequestConfig;
+    const originalRequest = error.config as
+      | CustomAxiosRequestConfig
+      | undefined;
+
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
 
     if (error.response?.status === 403) {
       return Promise.reject(error);
@@ -66,64 +193,20 @@ interceptedAxios.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
-      !originalRequest.url?.includes("auth/login") &&
+      !isAuthExemptUrl(originalRequest) &&
       !originalRequest._retry
     ) {
       originalRequest._retry = true;
 
-      if (error.response.status === 401) {
-        if (isRefreshing) {
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          })
-            .then((token) => {
-              if (originalRequest.headers) {
-                originalRequest.headers["Authorization"] = `Bearer ${token}`;
-              }
-              return interceptedAxios(originalRequest);
-            })
-            .catch((err) => {
-              return Promise.reject(err);
-            });
+      try {
+        const newAccessToken = await refreshAccessToken();
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         }
+        return interceptedAxios(originalRequest);
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
       }
-
-      isRefreshing = true;
-
-      return new Promise((resolve, reject) => {
-        const refreshToken = localStorage.getItem("refreshToken");
-
-        if (!refreshToken) reject(new Error("No refresh token available"));
-        axios
-          .post(
-            `${import.meta.env.VITE_AXIOS_BASE_URL}/api/auth/refresh-token`,
-            null,
-            {
-              headers: {
-                Authorization: `Bearer ${refreshToken}`
-              }
-            }
-          )
-          .then((response) => {
-            const newAccessToken = response.data.accessToken;
-            setAccessToken(newAccessToken);
-
-            processQueue(null, newAccessToken);
-            if (originalRequest.headers) {
-              originalRequest.headers["Authorization"] =
-                `Bearer ${newAccessToken}`;
-            }
-            resolve(interceptedAxios(originalRequest));
-          })
-          .catch((refreshError) => {
-            localStorage.removeItem("refreshToken");
-            processQueue(refreshError, null);
-            reject(refreshError);
-          })
-          .finally(() => {
-            isRefreshing = false;
-          });
-      });
     }
 
     return Promise.reject(error);

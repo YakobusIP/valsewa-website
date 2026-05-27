@@ -17,13 +17,20 @@ const BASE_BOOKING_URL = "/api/bookings";
 
 const createBookingService = () => {
   const fetchAll = async (
+    page: number,
+    limit: number,
     query?: string,
     datePreset?: string | null,
     dateFrom?: string,
-    dateTo?: string
+    dateTo?: string,
+    hideInactive: boolean = true
   ) => {
     try {
-      const params: Record<string, string> = {};
+      const params: Record<string, string> = {
+        page: String(page),
+        limit: String(limit),
+        hideInactive: String(hideInactive)
+      };
       if (query) params.q = query;
       if (datePreset) params.datePreset = datePreset;
       if (dateFrom) params.dateFrom = dateFrom;
@@ -54,16 +61,62 @@ const createBookingService = () => {
     }
   };
 
-  const getAccountRented = async (startDate?: string, endDate?: string) => {
+  const exportCsv = async (
+    query?: string,
+    datePreset?: string | null,
+    dateFrom?: string,
+    dateTo?: string
+  ) => {
     try {
+      const params: Record<string, string> = {};
+      if (query) params.q = query;
+      if (datePreset) params.datePreset = datePreset;
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
+
+      const response = await interceptedAxios.get(
+        `${BASE_BOOKING_URL}/export-csv`,
+        {
+          params,
+          responseType: "blob"
+        }
+      );
+
+      const disposition = response.headers["content-disposition"] as
+        | string
+        | undefined;
+      const filenameMatch = disposition?.match(/filename="([^"]+)"/);
+      const filename =
+        filenameMatch?.[1] ??
+        `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
+  const getAccountRented = async (
+    datePreset?: string | null,
+    dateFrom?: string,
+    dateTo?: string
+  ) => {
+    try {
+      const params: Record<string, string> = {};
+      if (datePreset) params.datePreset = datePreset;
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
+
       const response = await interceptedAxios.get<
         ApiResponse<BookingStatistics>
-      >(`${BASE_BOOKING_URL}/rented`, {
-        params: {
-          start_date: startDate,
-          end_date: endDate
-        }
-      });
+      >(`${BASE_BOOKING_URL}/rented`, { params });
       return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));
@@ -135,6 +188,7 @@ const createBookingService = () => {
 
   return {
     fetchAll,
+    exportCsv,
     update,
     getAccountRented,
     overrideBooking,

@@ -183,6 +183,7 @@ export default function PaymentDetailPage() {
 
     if (!auth.isAuthenticated) {
       router.push("/");
+      return;
     }
 
     bookingService

@@ -9,6 +9,9 @@ import { getDailyDropWindow } from "../lib/operational-window";
 import { prisma } from "../lib/prisma";
 import { addHours, parseDurationToHours } from "../lib/utils";
 import { UpsertDailyDropConfigRequest } from "../types/dailydrop.type";
+import { getContextLogger } from "../lib/request-context";
+
+const dailyDropLogger = () => getContextLogger({ component: "dailydrop" });
 
 export class DailyDropService {
   getConfig = async () => {
@@ -85,7 +88,8 @@ export class DailyDropService {
 
       const drops = await prisma.dailyDrop.findMany({
         where: {
-          date: { gte: start, lt: end }
+          date: { gte: start, lt: end },
+          account: { archivedAt: null }
         },
         orderBy: { slot: "asc" },
         include: {
@@ -196,6 +200,7 @@ export class DailyDropService {
     } of slotConfigs) {
       const accounts = await prisma.account.findMany({
         where: {
+          archivedAt: null,
           availabilityStatus: "AVAILABLE",
           ...(config.allowedAccountIds.length > 0
             ? { id: { in: config.allowedAccountIds } }
@@ -223,8 +228,9 @@ export class DailyDropService {
       const eligible = accounts.filter((a) => a.priceTier.priceList.length > 0);
 
       if (eligible.length === 0) {
-        console.warn(
-          `[DailyDrop] No eligible accounts for slot ${slot}, skipping`
+        dailyDropLogger().warn(
+          { event: "daily_drop_no_eligible_accounts", slot },
+          "No eligible accounts for daily drop slot"
         );
         continue;
       }
@@ -274,8 +280,9 @@ export class DailyDropService {
       });
 
       if (filtered.length === 0) {
-        console.warn(
-          `[DailyDrop] No candidates with free duration window for slot ${slot}, skipping`
+        dailyDropLogger().warn(
+          { event: "daily_drop_no_free_duration_window", slot },
+          "No candidates with free duration window for daily drop slot"
         );
         continue;
       }

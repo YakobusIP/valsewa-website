@@ -616,11 +616,6 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
     ) => {
       if (event.key === "Enter") {
         setIsPopoverOpen(true);
-      } else if (event.key === "Backspace" && !event.currentTarget.value) {
-        const newSelectedValues = [...selectedValues];
-        newSelectedValues.pop();
-        setSelectedValues(newSelectedValues);
-        onValueChange(newSelectedValues);
       }
     };
 
@@ -1036,7 +1031,7 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
             align="start"
             onEscapeKeyDown={() => setIsPopoverOpen(false)}
           >
-            <Command>
+            <Command shouldFilter={false}>
               {searchable && (
                 <CommandInput
                   placeholder="Search options..."

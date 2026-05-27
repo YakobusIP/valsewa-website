@@ -154,7 +154,7 @@ export default function Dashboard() {
       fetchAllAccounts();
       toast({
         title: "All set!",
-        description: `${deletedIds.length} account(s) deleted successfully`
+        description: `${deletedIds.length} account(s) archived successfully`
       });
     } catch (error) {
       const errorMessage =
@@ -280,6 +280,9 @@ export default function Dashboard() {
             deleteData={deleteManyAccounts}
             isLoadingData={isLoadingAccount}
             isLoadingDeleteData={isLoadingDeleteAccount}
+            deleteButtonLabel="Archive"
+            deleteTitle="Archive selected accounts?"
+            deleteDescription="Archived accounts become unrentable and disappear from live account lists, but their booking history stays intact."
             page={accountListPage}
             setPage={setAccountListPage}
             metadata={accountMetadata}
