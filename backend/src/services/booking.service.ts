@@ -22,6 +22,7 @@ import { buildCsv } from "../lib/csv";
 import {
   addHours,
   addMinutes,
+  assertScheduledBookingWithinOperationalHours,
   isOutsideOperationalHours,
   parseDurationToHours,
   parseToDateStr,
@@ -125,6 +126,18 @@ export class BookingService {
     return BigInt(numeric);
   };
 
+  private getWibDateBoundary = (
+    date: Date,
+    boundary: "start" | "end"
+  ): Date => {
+    const dateKey = dayjs.utc(date).format("YYYY-MM-DD");
+    const day = dayjs.tz(dateKey, WIB_TZ);
+
+    return (
+      boundary === "start" ? day.startOf("day") : day.endOf("day")
+    ).toDate();
+  };
+
   private buildCreatedAtFilter = (
     datePreset?: string,
     dateFrom?: Date,
@@ -141,19 +154,18 @@ export class BookingService {
     }
 
     if (dateFrom && dateTo) {
-      const to = new Date(dateTo);
-      to.setHours(23, 59, 59, 999);
-      return { gte: dateFrom, lte: to };
+      return {
+        gte: this.getWibDateBoundary(dateFrom, "start"),
+        lte: this.getWibDateBoundary(dateTo, "end")
+      };
     }
 
     if (dateFrom) {
-      return { gte: dateFrom };
+      return { gte: this.getWibDateBoundary(dateFrom, "start") };
     }
 
     if (dateTo) {
-      const to = new Date(dateTo);
-      to.setHours(23, 59, 59, 999);
-      return { lte: to };
+      return { lte: this.getWibDateBoundary(dateTo, "end") };
     }
 
     return undefined;
@@ -472,13 +484,17 @@ export class BookingService {
           id: true
         },
         _sum: {
-          totalValue: true
+          totalValue: true,
+          adminFee: true
         }
       });
 
+      const totalValue = stats._sum.totalValue ?? 0;
+      const adminFeeTotal = stats._sum.adminFee ?? 0;
+
       return {
         completedBookingCount: stats._count.id,
-        totalIncome: stats._sum.totalValue ?? 0
+        totalIncome: totalValue - adminFeeTotal
       };
     } catch (error) {
       throw new InternalServerError((error as Error).message);
@@ -872,6 +888,27 @@ export class BookingService {
         );
       }
 
+      if (!immediate) {
+        if (!startAt) {
+          throw new BadRequestError("Scheduled booking requires a start time.");
+        }
+        if (account.isMfa) {
+          if (bookingStartAt < now) {
+            throw new BadRequestError(
+              "Scheduled start time must be in the future."
+            );
+          }
+          try {
+            assertScheduledBookingWithinOperationalHours(
+              operationalHours,
+              bookingStartAt
+            );
+          } catch (error) {
+            throw new BadRequestError((error as Error).message);
+          }
+        }
+      }
+
       const booking = await prisma.$transaction(async (tx) => {
         // Prevent race condition
         await tx.$executeRaw`SELECT id FROM "Account" WHERE id = ${accountId} FOR UPDATE`;
@@ -1125,6 +1162,19 @@ export class BookingService {
       const durationInHours = parseDurationToHours(duration);
 
       const endAt = addHours(startAt, durationInHours);
+
+      if (account.isMfa) {
+        const operationalHours =
+          await this.settingService.getOperationalHours();
+        try {
+          assertScheduledBookingWithinOperationalHours(
+            operationalHours,
+            startAt
+          );
+        } catch (error) {
+          throw new BadRequestError((error as Error).message);
+        }
+      }
 
       const booking = await prisma.$transaction(async (tx) => {
         // Prevent race condition
