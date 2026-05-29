@@ -58,6 +58,7 @@ export type BookingEntity = {
   voucherMaxDiscount: number | null;
   mainValue: number;
   othersValue: number | null;
+  bookingFee: number | null;
   discount: number | null;
   totalValue: number;
   payments: PaymentEntity[];
