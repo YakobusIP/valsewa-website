@@ -244,6 +244,9 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
           currency: "IDR"
         }).format(v);
 
+  const getOthersValueWithBookingFee = (booking: BookingEntity) =>
+    (booking.othersValue ?? 0) + (booking.bookingFee ?? 0);
+
   const formatDateTime = (d: Date | string | null) =>
     d ? new Date(d).toLocaleString("id-ID") : "-";
 
@@ -475,7 +478,9 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                         </span>
                       </TableCell>
                       <TableCell>{formatCurrency(b.mainValue)}</TableCell>
-                      <TableCell>{formatCurrency(b.othersValue)}</TableCell>
+                      <TableCell>
+                        {formatCurrency(getOthersValueWithBookingFee(b))}
+                      </TableCell>
                       <TableCell>{formatCurrency(b.adminFee) ?? "-"}</TableCell>
                       <TableCell className=" font-semibold">
                         {formatCurrency(b.totalValue)}
