@@ -443,15 +443,18 @@ export class BookingController {
       const accountId = parseInt(req.params.accountId, 10);
       if (!accountId) throw new BadRequestError("Account ID is required.");
 
-      console.info(
-        "[forceFinishBooking:admin] request",
-        JSON.stringify({
+      req.log.info(
+        {
+          event: "force_finish_booking_requested",
+          requestId: req.id,
+          correlationId: req.correlationId,
+          source: "admin",
           accountId,
           path: req.originalUrl,
           ip: req.ip,
-          userAgent: req.get("user-agent") ?? null,
-          requestedAt: new Date().toISOString()
-        })
+          userAgent: req.get("user-agent") ?? null
+        },
+        "Force finish booking requested"
       );
 
       const result = await this.bookingService.forceFinishBooking(accountId, {
@@ -476,16 +479,19 @@ export class BookingController {
       if (!accountId) throw new BadRequestError("Account ID is required.");
       if (!customerId) throw new BadRequestError("Customer ID is required.");
 
-      console.info(
-        "[forceFinishBooking:customer] request",
-        JSON.stringify({
+      req.log.info(
+        {
+          event: "force_finish_booking_requested",
+          requestId: req.id,
+          correlationId: req.correlationId,
+          source: "customer",
           accountId,
           customerId,
           path: req.originalUrl,
           ip: req.ip,
-          userAgent: req.get("user-agent") ?? null,
-          requestedAt: new Date().toISOString()
-        })
+          userAgent: req.get("user-agent") ?? null
+        },
+        "Force finish booking requested"
       );
 
       const result = await this.bookingService.customerForceFinishBooking(
@@ -546,18 +552,8 @@ export class BookingController {
     res: Response,
     next: NextFunction
   ) => {
+    const start = Date.now();
     try {
-      console.log(
-        "[callbackFaspayPayment] Processing faspay callback payment with request:",
-        JSON.stringify({
-          method: req.method,
-          path: req.originalUrl,
-          headers: req.headers,
-          body: req.body,
-          query: req.query,
-          params: req.params
-        })
-      );
       const payload = req.body;
       const {
         trx_id,
@@ -568,6 +564,19 @@ export class BookingController {
         payment_status_code,
         signature
       } = payload;
+
+      req.log.info(
+        {
+          event: "faspay_callback_received",
+          requestId: req.id,
+          correlationId: req.correlationId,
+          billNo: bill_no,
+          trxId: trx_id,
+          paymentStatusCode: payment_status_code,
+          hasSignature: Boolean(signature)
+        },
+        "Faspay callback received"
+      );
 
       if (!trx_id || !payment_status_code || !signature)
         throw new BadRequestError("Missing required fields.");
@@ -580,6 +589,16 @@ export class BookingController {
           notificationUrlPath: "/api/bookings/faspay/callback"
         })
       ) {
+        req.log.warn(
+          {
+            event: "faspay_callback_signature_invalid",
+            requestId: req.id,
+          correlationId: req.correlationId,
+            billNo: bill_no,
+            trxId: trx_id
+          },
+          "Faspay callback signature invalid"
+        );
         throw new ForbiddenError("Signature Invalid");
       }
 
@@ -600,9 +619,17 @@ export class BookingController {
         response_date: parseToDateStr(new Date())
       };
 
-      console.log(
-        "[vaInquiry] Processed faspay callback payment with result:",
-        JSON.stringify(result)
+      req.log.info(
+        {
+          event: "faspay_callback_processed",
+          requestId: req.id,
+          correlationId: req.correlationId,
+          billNo: bill_no,
+          trxId: trx_id,
+          paymentStatus: FASPAY_NOTIFICATION_STATUS_MAP[payment_status_code],
+          durationMs: Date.now() - start
+        },
+        "Faspay callback processed"
       );
 
       return res.status(200).json(result);
@@ -611,7 +638,18 @@ export class BookingController {
         return res.status(403).send("Signature Invalid");
       }
 
-      console.error("Webhook processing error:", error);
+      req.log.error(
+        {
+          event: "faspay_callback_processing_failed",
+          requestId: req.id,
+          correlationId: req.correlationId,
+          errorName: (error as Error).name,
+          errorMessage: (error as Error).message,
+          durationMs: Date.now() - start
+        },
+        "Faspay callback processing failed"
+      );
+
       return res.status(200).json({
         response: "Payment Notification",
         trx_id: "",

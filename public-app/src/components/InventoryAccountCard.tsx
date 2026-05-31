@@ -29,7 +29,7 @@ export default function InventoryAccountCard({
 
   return (
     <Link
-      href={`/accounts/${item.accountCode}`}
+      href={`/accounts/${encodeURIComponent(item.accountCode.trim())}`}
       target={openInNewTab ? "_blank" : undefined}
       rel={openInNewTab ? "noopener noreferrer" : undefined}
       className={cn(

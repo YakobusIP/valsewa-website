@@ -7,6 +7,10 @@ import axios, {
 import https from "https";
 import SnapBiConfig from "./snapbi.config";
 import { HttpHeaders } from "./types";
+import { getContextLogger } from "../request-context";
+import { env } from "../env";
+
+const snapBiLogger = () => getContextLogger({ component: "snapbi" });
 
 interface ErrorResponse {
   message: string;
@@ -14,63 +18,87 @@ interface ErrorResponse {
   [key: string]: any;
 }
 
+function parseUrlParts(url: string): { host?: string; path?: string } {
+  try {
+    const parsed = new URL(url);
+    return { host: parsed.host, path: parsed.pathname };
+  } catch {
+    return { path: url.split("?")[0] };
+  }
+}
+
 export default class SnapBiApiRequestor {
   private static axiosInstance: AxiosInstance =
     SnapBiApiRequestor.createAxios();
 
-  /* ==========================
-   * AXIOS INITIALIZATION
-   * ========================== */
   private static createAxios(): AxiosInstance {
     const instance = axios.create({
       httpsAgent: new https.Agent({
-        rejectUnauthorized: false // ⚠️ keep as-is (Snap BI behavior)
+        rejectUnauthorized: false
       }),
       validateStatus: (status) => status >= 200 && status < 300
     });
 
-    /* ==========================
-     * REQUEST INTERCEPTOR
-     * ========================== */
     instance.interceptors.request.use(
       (config) => {
-        if (SnapBiConfig.enableLogging) {
-          console.log(`➡️  Request URL: ${config.url}`);
-          console.log(
-            `➡️  Headers:\n${JSON.stringify(config.headers, null, 2)}`
-          );
-          if (config.data) {
-            console.log(`➡️  Body:\n${JSON.stringify(config.data, null, 2)}`);
-          }
-        }
+        (config as AxiosRequestConfig & { metadata?: { start: number } }).metadata = {
+          start: Date.now()
+        };
         return config;
       },
-      (error) => {
-        if (SnapBiConfig.enableLogging) {
-          console.error(`❌ Request Error: ${error.message}`);
-        }
-        return Promise.reject(error);
-      }
+      (error) => Promise.reject(error)
     );
 
-    /* ==========================
-     * RESPONSE INTERCEPTOR
-     * ========================== */
     instance.interceptors.response.use(
       (response: AxiosResponse) => {
-        if (SnapBiConfig.enableLogging) {
-          console.log(`⬅️  Status: ${response.status}`);
-          console.log(`⬅️  Body:\n${JSON.stringify(response.data, null, 2)}`);
-        }
+        const metadata = (response.config as AxiosRequestConfig & {
+          metadata?: { start: number };
+        }).metadata;
+        const durationMs = metadata ? Date.now() - metadata.start : undefined;
+        const urlParts = parseUrlParts(response.config.url ?? "");
+
+        const isSlow =
+          durationMs !== undefined &&
+          durationMs >= env.SLOW_EXTERNAL_REQUEST_THRESHOLD_MS;
+
+        snapBiLogger()[isSlow ? "warn" : "debug"](
+          {
+            event: isSlow
+              ? "external_request_slow"
+              : "external_request_completed",
+            provider: "snapbi",
+            host: urlParts.host,
+            path: urlParts.path,
+            statusCode: response.status,
+            durationMs,
+            slow: isSlow || undefined
+          },
+          "SnapBI request completed"
+        );
+
         return response;
       },
       (error: AxiosError) => {
-        if (SnapBiConfig.enableLogging) {
-          console.error(`❌ Response Error: ${error.message}`);
-          console.error(
-            `❌ Response Body:\n${JSON.stringify(error.response?.data, null, 2)}`
-          );
-        }
+        const metadata = (error.config as AxiosRequestConfig & {
+          metadata?: { start: number };
+        } | undefined)?.metadata;
+        const durationMs = metadata ? Date.now() - metadata.start : undefined;
+        const urlParts = parseUrlParts(error.config?.url ?? "");
+
+        snapBiLogger().error(
+          {
+            event: "external_request_failed",
+            provider: "snapbi",
+            host: urlParts.host,
+            path: urlParts.path,
+            statusCode: error.response?.status,
+            durationMs,
+            errorName: error.name,
+            errorMessage: error.message
+          },
+          "SnapBI request failed"
+        );
+
         return Promise.reject(error);
       }
     );
@@ -78,9 +106,6 @@ export default class SnapBiApiRequestor {
     return instance;
   }
 
-  /* ==========================
-   * PUBLIC API
-   * ========================== */
   static async remoteCall<T = any>(
     url: string,
     headers: HttpHeaders,
@@ -100,9 +125,6 @@ export default class SnapBiApiRequestor {
     }
   }
 
-  /* ==========================
-   * ERROR HANDLING
-   * ========================== */
   private static normalizeError(error: any): ErrorResponse {
     if (axios.isAxiosError(error)) {
       if (error.response) {

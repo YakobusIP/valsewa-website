@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { BadRequestError, ForbiddenError } from "../lib/error";
 import { FaspayService } from "../services/faspay.service";
 import { FaspayClient } from "../faspay/faspay.client";
+import { hashIdentifier, last4 } from "../lib/log-sanitize";
 
 export class FaspayController {
   constructor(
@@ -10,19 +11,8 @@ export class FaspayController {
   ) {}
 
   vaInquiry = async (req: Request, res: Response, next: NextFunction) => {
+    const start = Date.now();
     try {
-      console.log(
-        "[vaInquiry] Processing faspay virtual account inquiry with request:",
-        JSON.stringify({
-          method: req.method,
-          path: req.originalUrl,
-          headers: req.headers,
-          body: req.body,
-          query: req.query,
-          params: req.params
-        })
-      );
-
       const payload = req.body;
       const {
         partnerServiceId,
@@ -32,6 +22,20 @@ export class FaspayController {
       } = req.body;
       const signature = req.header("x-signature");
       const timestamp = req.header("x-timestamp");
+
+      req.log.info(
+        {
+          event: "faspay_va_inquiry_received",
+          requestId: req.id,
+          correlationId: req.correlationId,
+          inquiryRequestId,
+          hasVirtualAccountNo: Boolean(virtualAccountNo),
+          virtualAccountNoLast4: last4(virtualAccountNo),
+          customerNoHash: hashIdentifier(customerNo),
+          hasSignature: Boolean(signature)
+        },
+        "Faspay VA inquiry received"
+      );
 
       const requiredFields = {
         partnerServiceId,
@@ -60,8 +64,18 @@ export class FaspayController {
           vaUrlPath: "/v1.0/transfer-va/inquiry"
         })
       ) {
+        req.log.warn(
+          {
+            event: "faspay_callback_signature_invalid",
+            requestId: req.id,
+          correlationId: req.correlationId,
+            inquiryRequestId
+          },
+          "Faspay VA inquiry signature invalid"
+        );
         throw new ForbiddenError("Signature Invalid");
       }
+
       const result = await this.faspayService.vaInquiry({
         partnerServiceId,
         customerNo,
@@ -69,9 +83,16 @@ export class FaspayController {
         inquiryRequestId
       });
 
-      console.log(
-        "[vaInquiry] Processed faspay virtual account inquiry with result:",
-        JSON.stringify(result)
+      req.log.info(
+        {
+          event: "faspay_va_inquiry_processed",
+          requestId: req.id,
+          correlationId: req.correlationId,
+          inquiryRequestId,
+          responseCode: result.responseCode,
+          durationMs: Date.now() - start
+        },
+        "Faspay VA inquiry processed"
       );
 
       if (result.responseCode.startsWith("404")) {
@@ -92,19 +113,8 @@ export class FaspayController {
   };
 
   vaPayment = async (req: Request, res: Response, next: NextFunction) => {
+    const start = Date.now();
     try {
-      console.log(
-        "[vaPayment] Processing faspay virtual account payment with request:",
-        JSON.stringify({
-          method: req.method,
-          path: req.originalUrl,
-          headers: req.headers,
-          body: req.body,
-          query: req.query,
-          params: req.params
-        })
-      );
-
       const payload = req.body;
       const {
         partnerServiceId,
@@ -117,6 +127,19 @@ export class FaspayController {
       } = req.body;
       const signature = req.header("x-signature");
       const timestamp = req.header("x-timestamp");
+
+      req.log.info(
+        {
+          event: "faspay_va_payment_received",
+          requestId: req.id,
+          correlationId: req.correlationId,
+          paymentRequestId,
+          hasReferenceNo: Boolean(referenceNo),
+          referenceNoHash: hashIdentifier(referenceNo),
+          hasSignature: Boolean(signature)
+        },
+        "Faspay VA payment received"
+      );
 
       const requiredFields = {
         partnerServiceId,
@@ -150,6 +173,16 @@ export class FaspayController {
           vaUrlPath: "/v1.0/transfer-va/payment"
         })
       ) {
+        req.log.warn(
+          {
+            event: "faspay_callback_signature_invalid",
+            requestId: req.id,
+          correlationId: req.correlationId,
+            paymentRequestId,
+            referenceNoHash: hashIdentifier(referenceNo)
+          },
+          "Faspay VA payment signature invalid"
+        );
         throw new ForbiddenError("Signature Invalid");
       }
 
@@ -163,9 +196,17 @@ export class FaspayController {
         referenceNo
       });
 
-      console.log(
-        "[vaPayment] Processed faspay virtual account payment with result:",
-        JSON.stringify(result)
+      req.log.info(
+        {
+          event: "faspay_va_payment_processed",
+          requestId: req.id,
+          correlationId: req.correlationId,
+          paymentRequestId,
+          referenceNoHash: hashIdentifier(referenceNo),
+          responseCode: result.responseCode,
+          durationMs: Date.now() - start
+        },
+        "Faspay VA payment processed"
       );
 
       return res.status(200).json(result);

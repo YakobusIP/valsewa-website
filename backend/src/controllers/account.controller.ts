@@ -311,7 +311,8 @@ export class AccountController {
         updateAllAccountRankQueue.add(
           {
             id: account.id,
-            nickname: account.nickname
+            nickname: account.nickname,
+            correlationId: req.correlationId
           },
           {
             removeOnComplete: true,

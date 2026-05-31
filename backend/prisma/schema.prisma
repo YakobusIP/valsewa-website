@@ -18,7 +18,7 @@ model Account {
   id                     Int       @id @default(autoincrement())
   username               String
   nickname               String
-  accountCode            String    @unique
+  accountCode            String
   description            String?
   accountRank            String
   availabilityStatus     Status    @default(AVAILABLE)
@@ -37,6 +37,7 @@ model Account {
   skinCount              Int       @default(0)
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
+  archivedAt             DateTime?
   isCompetitive          Boolean   @default(false)
   isRecommended          Boolean   @default(false)
   requirePasswordReset   Boolean   @default(true)

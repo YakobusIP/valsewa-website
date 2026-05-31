@@ -4,36 +4,73 @@ import {
   NotFoundError,
   UnprocessableEntityError
 } from "../lib/error";
-import { prisma } from "../lib/prisma";
 import { env } from "../lib/env";
 import { RankDataResponse, RankErrorResponse } from "../types/rank.type";
+import { getContextLogger } from "../lib/request-context";
 
 const HENRIKDEV_BASE_URL = "https://api.henrikdev.xyz/valorant/v2/mmr";
 const REGION = "ap";
 
+const rankLogger = () =>
+  getContextLogger({ component: "rank", provider: "henrikdev" });
+
 export class RankService {
   callAPI = async (name: string, tag: string) => {
+    const start = Date.now();
+
     try {
       const rankResponse = await axios.get<RankDataResponse>(
         `${HENRIKDEV_BASE_URL}/${REGION}/${name}/${tag}`,
         {
-          headers: { Authorization: env.HENRIKDEV_API_KEY }
+          headers: { Authorization: env.HENRIKDEV_API_KEY },
+          timeout: 15_000
         }
+      );
+
+      const durationMs = Date.now() - start;
+      const isSlow = durationMs >= env.SLOW_EXTERNAL_REQUEST_THRESHOLD_MS;
+
+      rankLogger()[isSlow ? "warn" : "debug"](
+        {
+          event: isSlow
+            ? "external_request_slow"
+            : "external_request_completed",
+          provider: "henrikdev",
+          statusCode: rankResponse.status,
+          durationMs,
+          slow: isSlow || undefined
+        },
+        "HenrikDev API request completed"
       );
 
       return rankResponse.data;
     } catch (error) {
-      console.error(error);
-      if (error instanceof AxiosError && error.response?.data) {
-        const responseData = error.response.data as RankErrorResponse;
+      const durationMs = Date.now() - start;
+      const axiosError = error as AxiosError;
+      const statusCode = axiosError.response?.status;
 
-        if (error.response.status === 500 || error.response.status === 504) {
+      rankLogger().error(
+        {
+          event: "external_request_failed",
+          provider: "henrikdev",
+          statusCode,
+          durationMs,
+          errorName: (error as Error).name,
+          errorMessage: (error as Error).message
+        },
+        "HenrikDev API request failed"
+      );
+
+      if (axiosError.response?.data) {
+        const responseData = axiosError.response.data as RankErrorResponse;
+
+        if (statusCode === 500 || statusCode === 504) {
           throw new UnprocessableEntityError(
             "External API server is unavailable!"
           );
         }
 
-        if (error.response.status === 429) {
+        if (statusCode === 429) {
           throw new UnprocessableEntityError(
             "External API rate limit reached!"
           );

@@ -69,7 +69,45 @@ const envSchema = z.object({
       const parsed = parseInt(value ?? "30000", 10);
       if (isNaN(parsed)) throw new Error("Booking grace time must be a number");
       return parsed;
-    })
+    }),
+
+  LOG_LEVEL: z
+    .enum(["trace", "debug", "info", "warn", "error", "fatal", "silent"])
+    .optional()
+    .default("info"),
+  LOG_PRETTY: z
+    .string()
+    .optional()
+    .transform((value) => value === "true")
+    .default("false"),
+  SLOW_REQUEST_THRESHOLD_MS: z
+    .string()
+    .optional()
+    .transform((value) => {
+      const parsed = parseInt(value ?? "1000", 10);
+      if (isNaN(parsed))
+        throw new Error("SLOW_REQUEST_THRESHOLD_MS must be a number");
+      return parsed;
+    }),
+  SLOW_DB_QUERY_THRESHOLD_MS: z
+    .string()
+    .optional()
+    .transform((value) => {
+      const parsed = parseInt(value ?? "300", 10);
+      if (isNaN(parsed))
+        throw new Error("SLOW_DB_QUERY_THRESHOLD_MS must be a number");
+      return parsed;
+    }),
+  SLOW_EXTERNAL_REQUEST_THRESHOLD_MS: z
+    .string()
+    .optional()
+    .transform((value) => {
+      const parsed = parseInt(value ?? "1000", 10);
+      if (isNaN(parsed))
+        throw new Error("SLOW_EXTERNAL_REQUEST_THRESHOLD_MS must be a number");
+      return parsed;
+    }),
+  LOG_HASH_SECRET: z.string().default("development-log-hash-secret")
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

@@ -37,7 +37,8 @@ export async function fetchAccountByCode(
   code: string
 ): Promise<AccountEntity | null> {
   try {
-    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/code/${code}`;
+    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL
+      }/api/accounts/public/code/${encodeURIComponent(code.trim())}`;
     const response = await axios.get(url);
     return response.data;
   } catch {

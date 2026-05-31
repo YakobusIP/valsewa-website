@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../lib/env";
 import { PubTokenPayload } from "../controllers/auth.controller";
+import { patchRequestContext, refreshRequestLogger } from "../lib/request-context";
 
 const PUB_ACCESS_TOKEN_SECRET =
   env.PUB_ACCESS_TOKEN_SECRET || "pub_access_token_secret";
@@ -34,6 +35,8 @@ export const customerMiddleware = (
 
     const payload = decoded as PubTokenPayload;
     req.customer = { id: payload.id };
+    patchRequestContext({ customerId: payload.id });
+    refreshRequestLogger(req);
 
     return next();
   });

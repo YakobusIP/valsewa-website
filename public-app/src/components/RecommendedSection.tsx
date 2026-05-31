@@ -72,7 +72,7 @@ export default function RecommendedSection() {
 
     return (
       <Link
-        href={`/accounts/${account.accountCode}`}
+        href={`/accounts/${encodeURIComponent(account.accountCode.trim())}`}
         target="_blank"
         className="block cursor-pointer"
       >

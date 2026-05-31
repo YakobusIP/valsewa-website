@@ -12,10 +12,6 @@ on:
       service_name:
         required: true
         type: string
-      timers:
-        required: false
-        type: string
-        default: ""
 
 jobs:
   deploy:
@@ -28,6 +24,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
 
       - name: Build backend
         working-directory: backend
@@ -64,31 +67,18 @@ jobs:
             sudo mkdir -p "$DST"
             sudo rsync -rt --delete "$SRC/" "$DST/"
 
-            # Optional legacy systemd timers. When omitted, disable old timer units so node-cron is the only scheduler.
-            if [ -n "${{ inputs.timers }}" ]; then
-              CRON_PREFIX="backend-${{ inputs.environment }}-cron"
-              
-              # Copy unit files into /etc/systemd/system/
-              sudo rsync -rt "$SRC/infrastructure/cron/${{ inputs.environment }}/" /etc/systemd/system/ || true
-              sudo systemctl daemon-reload
-
-              # Disable old timers for this env (avoid leftovers)
-              sudo systemctl list-unit-files "${CRON_PREFIX}@*.timer" --no-legend 2>/dev/null | awk '{print $1}' | while read -r unit; do
-                sudo systemctl disable --now "$unit" || true
-              done
-
-              # Enable only requested timers (space-separated list)
-              for t in ${{ inputs.timers }}; do
-                sudo systemctl enable --now "${CRON_PREFIX}@${t}.timer" || true
-              done
-            else
-              CRON_PREFIX="backend-${{ inputs.environment }}-cron"
-              sudo systemctl list-unit-files "${CRON_PREFIX}@*.timer" --no-legend 2>/dev/null | awk '{print $1}' | while read -r unit; do
-                sudo systemctl disable --now "$unit" || true
-              done
-            fi
-
             cd "$DST"
+
+            NODE_BIN="/usr/bin/node"
+            if [ ! -x "$NODE_BIN" ]; then
+              echo "Node binary not found at $NODE_BIN (systemd ExecStart uses this path)"
+              exit 1
+            fi
+            NODE_MAJOR="$("$NODE_BIN" -p "Number(process.version.slice(1).split('.')[0])")"
+            if [ "$NODE_MAJOR" -lt 20 ]; then
+              echo "Node 20+ required at $NODE_BIN before npm ci --production; found $("$NODE_BIN" -v)"
+              exit 1
+            fi
 
             # Setup .env
             cat > "$DST/.env" <<EOF
@@ -124,9 +114,17 @@ jobs:
             BOOKING_GRACE_TIME_MILLIS=${{ vars.BOOKING_GRACE_TIME_MILLIS }}
             NODE_ENV=${{ vars.BACKEND_NODE_ENV }}
             PORT=${{ vars.BACKEND_PORT }}
+            LOG_LEVEL=${{ vars.LOG_LEVEL }}
+            LOG_PRETTY=${{ vars.LOG_PRETTY }}
+            SLOW_REQUEST_THRESHOLD_MS=${{ vars.SLOW_REQUEST_THRESHOLD_MS }}
+            SLOW_DB_QUERY_THRESHOLD_MS=${{ vars.SLOW_DB_QUERY_THRESHOLD_MS }}
+            SLOW_EXTERNAL_REQUEST_THRESHOLD_MS=${{ vars.SLOW_EXTERNAL_REQUEST_THRESHOLD_MS }}
+            LOG_HASH_SECRET=${{ secrets.LOG_HASH_SECRET }}
             EOF
             sudo chown deploy:deploy "$DST/.env"
             sudo chmod 600 "$DST/.env"
+
+            export PATH="$(dirname "$NODE_BIN"):$PATH"
 
             npm ci --production
             npx prisma generate

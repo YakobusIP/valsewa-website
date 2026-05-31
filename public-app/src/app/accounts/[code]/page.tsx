@@ -39,6 +39,7 @@ import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
 import { OperationalHoursEntity } from "@/types/setting.type";
 
 import { staatliches } from "@/lib/fonts";
+import { getOperationalHoursLabel } from "@/lib/operational-hours";
 import { cn, getRankImageUrl, isOutsideOperationalHours } from "@/lib/utils";
 
 import { isAxiosError } from "axios";
@@ -132,6 +133,20 @@ export default function AccountDetailsPage() {
     }
   }, [account]);
 
+  function parseDurationToHours(duration: string): number {
+    const lower = duration.toLowerCase().trim();
+
+    if (lower.endsWith("h")) {
+      return Number(lower.replace("h", ""));
+    }
+
+    if (lower.endsWith("d")) {
+      return Number(lower.replace("d", "")) * 24;
+    }
+
+    return 0;
+  }
+
   const getStartDateTime = (): Date | null => {
     if (!bookDate || !startTime) return null;
 
@@ -161,9 +176,31 @@ export default function AccountDetailsPage() {
     if (!selectedDuration) return;
 
     const startAt = getStartDateTime();
-    if (account?.isMfa && isOutsideOperationalHours(operationalHours)) {
+
+    if (
+      account?.isMfa &&
+      mode === "RENT" &&
+      isOutsideOperationalHours(operationalHours)
+    ) {
       await loadRecommendedAccounts();
       setShowOutsideHoursModal(true);
+      return;
+    }
+
+    if (
+      account?.isMfa &&
+      mode === "BOOK" &&
+      startAt &&
+      isOutsideOperationalHours(operationalHours, startAt)
+    ) {
+      const hoursLabel = getOperationalHoursLabel(operationalHours);
+      toast({
+        variant: "destructive",
+        title: "Outside operational hours",
+        description: hoursLabel
+          ? `Choose a start time within ${hoursLabel}.`
+          : "Choose a start time within operational hours."
+      });
       return;
     }
 
@@ -210,20 +247,6 @@ export default function AccountDetailsPage() {
   const priceList = useMemo(() => {
     return account?.priceTier?.priceList ?? [];
   }, [account?.priceTier?.priceList]);
-
-  function parseDurationToHours(duration: string): number {
-    const lower = duration.toLowerCase().trim();
-
-    if (lower.endsWith("h")) {
-      return Number(lower.replace("h", ""));
-    }
-
-    if (lower.endsWith("d")) {
-      return Number(lower.replace("d", "")) * 24;
-    }
-
-    return 0;
-  }
 
   useEffect(() => {
     if (!selectedDuration || !startTime || qty === 0) {
