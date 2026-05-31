@@ -78,7 +78,7 @@ const formSchema = z.object({
       /^(?!.*#.*#)(.*\S)#(\S.*)$/,
       "Nickname must be in the format name#tag"
     ),
-  accountCode: z.string().nonempty("Code is required"),
+  accountCode: z.string().trim().nonempty("Code is required"),
   description: z.string().optional(),
   priceTier: z.number({ required_error: "Price tier is required" }),
   accountRank: z.string().nonempty("Rank is required"),
@@ -305,7 +305,9 @@ export default function AccountDetailModal({
 
   const copyPublicLinkToClipboard = async () => {
     await navigator.clipboard.writeText(
-      `${import.meta.env.VITE_PUBLIC_APP_URL}/accounts/${encodeURIComponent(data?.accountCode ?? "")}`
+      `${import.meta.env.VITE_PUBLIC_APP_URL}/accounts/${encodeURIComponent(
+        (data?.accountCode ?? "").trim()
+      )}`
     );
     toast({
       title: "All set!",
@@ -418,6 +420,7 @@ export default function AccountDetailModal({
     setIsLoadingSubmit(true);
     const normalizedValues: SubmitValues = {
       ...values,
+      accountCode: values.accountCode.trim(),
       totalRentHour: parsedTotalRentHour
     };
 
@@ -511,7 +514,7 @@ export default function AccountDetailModal({
       accountCodeValue &&
       accountCodeValue.trim() !== ""
     ) {
-      debouncedDuplicateHandler(usernameValue, accountCodeValue);
+      debouncedDuplicateHandler(usernameValue, accountCodeValue.trim());
     }
   }, [mode, usernameValue, accountCodeValue, debouncedDuplicateHandler]);
 

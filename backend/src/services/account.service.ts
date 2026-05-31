@@ -284,6 +284,10 @@ export class AccountService {
     return code.replace(/-/g, "").toLowerCase();
   }
 
+  private normalizeAccountCode(code: string): string {
+    return code.trim();
+  }
+
   private buildPublicAccountsWhere(
     filters: AccountSearchFilters
   ): Prisma.AccountWhereInput {
@@ -979,14 +983,14 @@ export class AccountService {
 
   getAccountByCodePublic = async (accountCode: string) => {
     try {
-      const account = await prisma.account.findFirst({
+      const normalizedAccountCode = this.normalizeAccountCode(accountCode);
+      const publicAccountArgs = {
         omit: {
           password: true,
           passwordResetRequired: true,
           rentHourUpdated: true,
           legacySkinList: true
         },
-        where: { accountCode, archivedAt: null },
         include: {
           priceTier: {
             include: {
@@ -997,6 +1001,11 @@ export class AccountService {
           thumbnail: true,
           otherImages: true
         }
+      } satisfies Pick<Prisma.AccountFindFirstArgs, "omit" | "include">;
+
+      let account = await prisma.account.findFirst({
+        ...publicAccountArgs,
+        where: { accountCode: normalizedAccountCode, archivedAt: null }
       });
 
       if (!account) {
@@ -1055,10 +1064,11 @@ export class AccountService {
 
   getAccountDuplicate = async (nickname: string, accountCode: string) => {
     try {
+      const normalizedAccountCode = this.normalizeAccountCode(accountCode);
       const account = await prisma.account.findFirst({
         where: {
           archivedAt: null,
-          OR: [{ nickname }, { accountCode }]
+          OR: [{ nickname }, { accountCode: normalizedAccountCode }]
         }
       });
 
@@ -1117,11 +1127,21 @@ export class AccountService {
   createAccount = async (data: AccountEntityRequest) => {
     try {
       const { skinList, thumbnail, otherImages, priceTier, ...scalars } = data;
+      const normalizedAccountCode = this.normalizeAccountCode(
+        scalars.accountCode
+      );
+
+      if (!normalizedAccountCode) {
+        throw new BadRequestError("Account code cannot be empty!");
+      }
+
+      const normalizedScalars = {
+        ...scalars,
+        accountCode: normalizedAccountCode
+      };
+
       const existing = await prisma.account.findFirst({
-        where: {
-          archivedAt: null,
-          accountCode: scalars.accountCode
-        },
+        where: { archivedAt: null, accountCode: normalizedAccountCode },
         select: { id: true }
       });
 
@@ -1137,12 +1157,12 @@ export class AccountService {
 
       return await prisma.account.create({
         data: {
-          ...scalars,
           ...data,
+          ...normalizedScalars,
           skinCount,
           skinList: skinConnect,
           thumbnail: { connect: { id: thumbnail } },
-          availabilityStatus: scalars.availabilityStatus as Status,
+          availabilityStatus: normalizedScalars.availabilityStatus as Status,
           otherImages: { connect: otherImages?.map((id) => ({ id })) },
           priceTier: { connect: { id: priceTier } }
         },
@@ -1224,17 +1244,30 @@ export class AccountService {
       if (!currentAccount) throw new NotFoundError("Account not found!");
 
       const { thumbnail, otherImages, priceTier, skinList, ...scalars } = data;
+      const normalizedScalars = { ...scalars };
 
-      const updateData: Prisma.AccountUpdateInput = { ...scalars };
+      if (normalizedScalars.accountCode !== undefined) {
+        const normalizedAccountCode = this.normalizeAccountCode(
+          normalizedScalars.accountCode
+        );
+
+        if (!normalizedAccountCode) {
+          throw new BadRequestError("Account code cannot be empty!");
+        }
+
+        normalizedScalars.accountCode = normalizedAccountCode;
+      }
+
+      const updateData: Prisma.AccountUpdateInput = { ...normalizedScalars };
 
       if (
-        scalars.accountCode !== undefined &&
-        scalars.accountCode !== currentAccount.accountCode
+        normalizedScalars.accountCode !== undefined &&
+        normalizedScalars.accountCode !== currentAccount.accountCode
       ) {
         const duplicate = await prisma.account.findFirst({
           where: {
             archivedAt: null,
-            accountCode: scalars.accountCode,
+            accountCode: normalizedScalars.accountCode,
             id: { not: id }
           },
           select: { id: true }
