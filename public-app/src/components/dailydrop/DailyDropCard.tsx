@@ -299,7 +299,7 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
           </span>
         ) : (
           <Link
-            href={`/accounts/${encodeURIComponent(drop.account.accountCode)}?mode=dailydrop`}
+            href={`/accounts/${encodeURIComponent(drop.account.accountCode.trim())}?mode=dailydrop`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}

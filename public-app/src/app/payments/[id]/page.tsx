@@ -63,7 +63,11 @@ function PaymentStatusView({ payment }: { payment: PaymentWithBookingEntity }) {
 
       <button
         onClick={() =>
-          router.push(`/accounts/${payment.booking.account.accountCode}`)
+          router.push(
+            `/accounts/${encodeURIComponent(
+              payment.booking.account.accountCode.trim()
+            )}`
+          )
         }
         className="mt-4 px-6 py-3 text-base sm:text-lg font-semibold rounded bg-neutral-700 hover:bg-neutral-600 transition"
       >
