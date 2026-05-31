@@ -990,9 +990,10 @@ export class BookingService {
   ): Promise<BookingResponse> => {
     try {
       const { accountCode, totalValue, startAt } = data;
+      const normalizedAccountCode = accountCode.trim();
 
       const account = await prisma.account.findFirst({
-        where: { accountCode, archivedAt: null }
+        where: { accountCode: normalizedAccountCode, archivedAt: null }
       });
       if (!account) throw new NotFoundError("Account not found!");
 
