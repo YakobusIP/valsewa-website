@@ -10,6 +10,10 @@ import {
 import { BookingService } from "./booking.service";
 import { parseToLocalDate } from "../lib/utils";
 import { env } from "../lib/env";
+import { getContextLogger } from "../lib/request-context";
+import { hashIdentifier, last4 } from "../lib/log-sanitize";
+
+const faspayLogger = () => getContextLogger({ component: "faspay" });
 
 export class FaspayService {
   constructor(private readonly bookingService: BookingService) {}
@@ -106,6 +110,7 @@ export class FaspayService {
   };
 
   vaPayment = async (data: VaPaymentRequest): Promise<VaPaymentResponse> => {
+    const start = Date.now();
     try {
       const {
         partnerServiceId,
@@ -124,6 +129,18 @@ export class FaspayService {
       });
 
       if (!payment || !payment.booking) {
+        faspayLogger().warn(
+          {
+            event: "faspay_va_payment_lookup_missed",
+            paymentRequestId,
+            referenceNoHash: hashIdentifier(referenceNo),
+            virtualAccountNoLast4: last4(virtualAccountNo),
+            customerNoHash: hashIdentifier(customerNo),
+            durationMs: Date.now() - start
+          },
+          "Faspay VA payment lookup missed"
+        );
+
         return {
           responseCode: "4042512",
           responseMessage: "Payment not found"
@@ -135,6 +152,23 @@ export class FaspayService {
       }
 
       if (payment.booking.totalValue.toFixed(2) !== paidAmount.value) {
+        faspayLogger().warn(
+          {
+            event: "faspay_va_payment_amount_mismatch",
+            paymentId: payment.id,
+            bookingId: payment.booking.id,
+            paymentRequestId,
+            referenceNoHash: hashIdentifier(referenceNo),
+            expectedAmount: payment.booking.totalValue.toFixed(2),
+            receivedAmount: paidAmount.value,
+            currency: paidAmount.currency,
+            currentPaymentStatus: payment.status,
+            currentBookingStatus: payment.booking.status,
+            durationMs: Date.now() - start
+          },
+          "Faspay VA payment amount mismatch"
+        );
+
         return {
           responseCode: "4042513",
           responseMessage: "Invalid amount"
@@ -142,6 +176,20 @@ export class FaspayService {
       }
 
       if (this.bookingService.isPaymentFinal(payment.status)) {
+        faspayLogger().warn(
+          {
+            event: "faspay_va_payment_already_final",
+            paymentId: payment.id,
+            bookingId: payment.booking.id,
+            paymentRequestId,
+            referenceNoHash: hashIdentifier(referenceNo),
+            currentPaymentStatus: payment.status,
+            currentBookingStatus: payment.booking.status,
+            durationMs: Date.now() - start
+          },
+          "Faspay VA payment already final"
+        );
+
         return {
           responseCode: "2002500",
           responseMessage: "Success",
@@ -156,6 +204,20 @@ export class FaspayService {
         };
       }
 
+      faspayLogger().info(
+        {
+          event: "faspay_va_payment_finalizing",
+          paymentId: payment.id,
+          bookingId: payment.booking.id,
+          paymentRequestId,
+          referenceNoHash: hashIdentifier(referenceNo),
+          currentPaymentStatus: payment.status,
+          currentBookingStatus: payment.booking.status,
+          paidAt: trxDateTime
+        },
+        "Faspay VA payment finalizing"
+      );
+
       const updatedPayment = await prisma.$transaction(
         async (tx: Prisma.TransactionClient) => {
           return await this.bookingService.finalizeStatus(
@@ -167,6 +229,19 @@ export class FaspayService {
             referenceNo
           );
         }
+      );
+
+      faspayLogger().info(
+        {
+          event: "faspay_va_payment_finalized",
+          paymentId: payment.id,
+          bookingId: payment.booking.id,
+          paymentRequestId,
+          referenceNoHash: hashIdentifier(referenceNo),
+          resultPaymentStatus: updatedPayment.status,
+          durationMs: Date.now() - start
+        },
+        "Faspay VA payment finalized"
       );
 
       return {
@@ -182,6 +257,20 @@ export class FaspayService {
         }
       };
     } catch (error) {
+      faspayLogger().error(
+        {
+          event: "faspay_va_payment_failed",
+          paymentRequestId: data.paymentRequestId,
+          referenceNoHash: hashIdentifier(data.referenceNo),
+          virtualAccountNoLast4: last4(data.virtualAccountNo),
+          customerNoHash: hashIdentifier(data.customerNo),
+          errorName: (error as Error).name,
+          errorMessage: (error as Error).message,
+          durationMs: Date.now() - start
+        },
+        "Faspay VA payment failed"
+      );
+
       return {
         responseCode: "5002501",
         responseMessage: (error as Error).message
