@@ -33,7 +33,12 @@ import { BOOKING_STATUS, BookingWithAccountEntity } from "@/types/booking.type";
 
 import { calculateTimeRemaining, cn, formatRentalPeriod } from "@/lib/utils";
 
-import { CopyIcon, ExternalLink, LogOut } from "lucide-react";
+import {
+  AlertTriangleIcon,
+  CopyIcon,
+  ExternalLink,
+  LogOut
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -322,25 +327,28 @@ export default function Dashboard() {
                               </button>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="bg-black border border-[#C70515]">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle className="text-2xl text-white uppercase mb-4">
-                                  Finish Booking
-                                </AlertDialogTitle>
+                              <AlertDialogHeader className="items-center text-center sm:text-center">
+                                <div className="flex flex-col items-center gap-3 mb-4">
+                                  <AlertTriangleIcon className="w-20 h-20 text-[#C70515]" />
+                                  <AlertDialogTitle className="text-2xl text-white uppercase">
+                                    Selesaikan Booking?
+                                  </AlertDialogTitle>
+                                </div>
                                 <AlertDialogDescription className="text-white">
-                                  This will end the active booking for{" "}
-                                  {booking.account.accountCode} immediately and
-                                  release the account after processing.
+                                  Apakah kamu yakin ingin menyelesaikan booking
+                                  untuk {booking.account.accountCode}? Akunmu
+                                  tidak akan bisa diakses lagi.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel className="text-white bg-black">
-                                  Keep Booking
+                                  Kembali
                                 </AlertDialogCancel>
                                 <AlertDialogAction
                                   className="bg-[#C70515] text-white"
                                   onClick={() => handleForceFinish(booking)}
                                 >
-                                  Finish Booking
+                                  Selesaikan Booking
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
