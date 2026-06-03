@@ -112,11 +112,11 @@ function CardBack({ drop, cardWidth }: CardBackProps) {
   const thumbSize = Math.round(cardWidth * 0.85);
   const offsetY = triangleSize * 0.4;
   const offsetX = triangleSize * -0.25;
-  const displayCode = drop.account.priceTier.code.includes("COMP -")
-    ? drop.account.priceTier.code
+  const displayCode = drop.account.isCompetitive
+    ? `COMPE - ${drop.account.priceTier.code}`
     : `UNRATED - ${drop.account.priceTier.code}`;
 
-  const isCompTier = drop.account.priceTier.code.includes("COMP");
+  const isCompTier = drop.account.isCompetitive;
   const tierBadgeSize = Math.max(18, Math.round(cardWidth * 0.08));
   const tierStripHeight = Math.max(14, Math.round(tierBadgeSize * 0.85));
   const tierPillOverlap = Math.round(tierBadgeSize * 0.42);
