@@ -84,7 +84,7 @@ const formSchema = z.object({
   accountRank: z.string().nonempty("Rank is required"),
   password: z.string().nonempty("Password is required"),
   passwordResetRequired: z.boolean().optional(),
-  skinList: z.array(z.number()).min(1, "At least 1 skin is required"),
+  skinList: z.array(z.number()),
   thumbnail: z.union([
     z.instanceof(File, { message: "Thumbnail is required" }),
     z.object({ id: z.number(), imageUrl: z.string().url() })
