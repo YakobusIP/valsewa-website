@@ -98,10 +98,16 @@ const createBookingService = () => {
     }
   };
 
-  const forceFinishBooking = async (accountId: number) => {
+  const forceFinishBooking = async (accountId: number, actionId?: string) => {
     try {
+      const headers: Record<string, string> = {};
+      if (actionId) {
+        headers["x-client-action-id"] = actionId;
+      }
       const response = await interceptedAxios.post<BookingEntity>(
-        `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/finish-ongoing/${accountId}`
+        `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/bookings/finish-ongoing/${accountId}`,
+        undefined,
+        { headers }
       );
       return response.data;
     } catch (error) {

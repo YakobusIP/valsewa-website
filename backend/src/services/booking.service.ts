@@ -80,6 +80,7 @@ export type PaymentMethodTypeAndCode = {
 type ForceFinishActor = {
   source: "admin" | "customer";
   customerId?: number;
+  clientActionId?: string | null;
 };
 
 export const PAYMENT_METHODS_MAP: Record<
@@ -1962,6 +1963,7 @@ export class BookingService {
             event: "force_finish_booking_no_active_booking",
             source: actor.source,
             customerId: actor.customerId ?? null,
+            clientActionId: actor.clientActionId ?? null,
             accountId,
             checkedAt: now.toISOString()
           },
@@ -1987,6 +1989,7 @@ export class BookingService {
           event: "force_finish_booking_end_at_overwritten",
           source: actor.source,
           customerId: actor.customerId ?? null,
+          clientActionId: actor.clientActionId ?? null,
           accountId,
           bookingId: activeBooking.id,
           previousStatus: activeBooking.status,
@@ -2008,7 +2011,8 @@ export class BookingService {
 
   customerForceFinishBooking = async (
     accountId: number,
-    customerId: number
+    customerId: number,
+    clientActionId: string | null = null
   ) => {
     const now = new Date();
 
@@ -2028,7 +2032,8 @@ export class BookingService {
 
     return this.forceFinishBooking(accountId, {
       source: "customer",
-      customerId
+      customerId,
+      clientActionId
     });
   };
 
