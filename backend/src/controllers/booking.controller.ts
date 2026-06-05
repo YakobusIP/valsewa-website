@@ -475,6 +475,7 @@ export class BookingController {
     try {
       const accountId = parseInt(req.params.accountId, 10);
       const customerId = req.customer?.id;
+      const clientActionId = req.header("x-client-action-id") ?? null;
 
       if (!accountId) throw new BadRequestError("Account ID is required.");
       if (!customerId) throw new BadRequestError("Customer ID is required.");
@@ -487,6 +488,7 @@ export class BookingController {
           source: "customer",
           accountId,
           customerId,
+          clientActionId,
           path: req.originalUrl,
           ip: req.ip,
           userAgent: req.get("user-agent") ?? null
@@ -496,7 +498,8 @@ export class BookingController {
 
       const result = await this.bookingService.customerForceFinishBooking(
         accountId,
-        customerId
+        customerId,
+        clientActionId
       );
 
       return res.status(200).json(result);
