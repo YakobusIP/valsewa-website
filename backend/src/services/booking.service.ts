@@ -56,6 +56,7 @@ import { Metadata } from "../types/metadata.type";
 import { env } from "../lib/env";
 import { getContextLogger } from "../lib/request-context";
 import { SettingService } from "./setting.service";
+import { hashIdentifier, last4 } from "../lib/log-sanitize";
 
 const bookingLogger = () => getContextLogger({ component: "booking" });
 
@@ -79,6 +80,7 @@ export type PaymentMethodTypeAndCode = {
 type ForceFinishActor = {
   source: "admin" | "customer";
   customerId?: number;
+  clientActionId?: string | null;
 };
 
 export const PAYMENT_METHODS_MAP: Record<
@@ -1488,6 +1490,7 @@ export class BookingService {
     paymentId: string,
     customerId: number
   ): Promise<PaymentResponse> => {
+    const start = Date.now();
     try {
       let payment = await prisma.payment.findUnique({
         where: { id: paymentId },
@@ -1500,17 +1503,92 @@ export class BookingService {
         !payment ||
         !payment.booking ||
         payment.booking.customerId !== customerId
-      )
+      ) {
+        bookingLogger().warn(
+          {
+            event: "payment_verify_record_not_found",
+            paymentId,
+            customerId,
+            hasPayment: Boolean(payment),
+            hasBooking: Boolean(payment?.booking),
+            durationMs: Date.now() - start
+          },
+          "Payment verification record not found"
+        );
         throw new NotFoundError("Record not found!");
+      }
+
+      bookingLogger().info(
+        {
+          event: "payment_verify_requested",
+          paymentId: payment.id,
+          bookingId: payment.booking.id,
+          customerId,
+          paymentMethod: payment.paymentMethod,
+          bankCode: payment.bankCode,
+          currentPaymentStatus: payment.status,
+          currentBookingStatus: payment.booking.status
+        },
+        "Payment verification requested"
+      );
 
       if (this.isPaymentFinal(payment.status)) {
+        const event =
+          payment.status === PaymentStatus.SUCCESS &&
+          payment.booking.status !== BookingStatus.RESERVED
+            ? "payment_verify_already_final_booking_not_reserved"
+            : "payment_verify_already_final";
+
+        bookingLogger().warn(
+          {
+            event,
+            paymentId: payment.id,
+            bookingId: payment.booking.id,
+            customerId,
+            paymentMethod: payment.paymentMethod,
+            currentPaymentStatus: payment.status,
+            currentBookingStatus: payment.booking.status,
+            durationMs: Date.now() - start
+          },
+          "Payment verification found already-final payment"
+        );
         return this.mapPaymentWithBookingDataToPaymentResponse(payment);
       }
 
       const providerResponse =
         await this.faspayClient.getPaymentStatus(payment);
 
+      bookingLogger().info(
+        {
+          event: "payment_verify_provider_status_received",
+          paymentId: payment.id,
+          bookingId: payment.booking.id,
+          customerId,
+          paymentMethod: payment.paymentMethod,
+          bankCode: payment.bankCode,
+          providerResponseCode: providerResponse.responseCode,
+          providerPaymentStatus: providerResponse.paymentStatus,
+          providerPaymentId: providerResponse.providerPaymentId,
+          durationMs: Date.now() - start
+        },
+        "Payment verification provider status received"
+      );
+
       if (this.isPaymentFinal(providerResponse.paymentStatus)) {
+        bookingLogger().info(
+          {
+            event: "payment_verify_finalizing",
+            paymentId: payment.id,
+            bookingId: payment.booking.id,
+            customerId,
+            currentPaymentStatus: payment.status,
+            currentBookingStatus: payment.booking.status,
+            providerPaymentStatus: providerResponse.paymentStatus,
+            paidAt: providerResponse.paidAt
+          },
+          "Payment verification finalizing status"
+        );
+
         return await prisma.$transaction(async (tx) => {
           return await this.finalizeStatus(
             tx,
@@ -1522,8 +1600,34 @@ export class BookingService {
         });
       }
 
+      bookingLogger().info(
+        {
+          event: "payment_verify_provider_pending",
+          paymentId: payment.id,
+          bookingId: payment.booking.id,
+          customerId,
+          paymentMethod: payment.paymentMethod,
+          bankCode: payment.bankCode,
+          providerResponseCode: providerResponse.responseCode,
+          providerPaymentStatus: providerResponse.paymentStatus,
+          durationMs: Date.now() - start
+        },
+        "Payment verification provider status still pending"
+      );
+
       return this.mapPaymentWithBookingDataToPaymentResponse(payment);
     } catch (error) {
+      bookingLogger().error(
+        {
+          event: "payment_verify_failed",
+          paymentId,
+          customerId,
+          errorName: (error as Error).name,
+          errorMessage: (error as Error).message,
+          durationMs: Date.now() - start
+        },
+        "Payment verification failed"
+      );
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
       if (error instanceof BadRequestError) throw error;
@@ -1859,6 +1963,7 @@ export class BookingService {
             event: "force_finish_booking_no_active_booking",
             source: actor.source,
             customerId: actor.customerId ?? null,
+            clientActionId: actor.clientActionId ?? null,
             accountId,
             checkedAt: now.toISOString()
           },
@@ -1884,6 +1989,7 @@ export class BookingService {
           event: "force_finish_booking_end_at_overwritten",
           source: actor.source,
           customerId: actor.customerId ?? null,
+          clientActionId: actor.clientActionId ?? null,
           accountId,
           bookingId: activeBooking.id,
           previousStatus: activeBooking.status,
@@ -1905,7 +2011,8 @@ export class BookingService {
 
   customerForceFinishBooking = async (
     accountId: number,
-    customerId: number
+    customerId: number,
+    clientActionId: string | null = null
   ) => {
     const now = new Date();
 
@@ -1925,7 +2032,8 @@ export class BookingService {
 
     return this.forceFinishBooking(accountId, {
       source: "customer",
-      customerId
+      customerId,
+      clientActionId
     });
   };
 
@@ -1949,6 +2057,7 @@ export class BookingService {
   };
 
   callbackFaspayPayment = async (data: CallbackNotificationRequest) => {
+    const start = Date.now();
     try {
       const { billNo, paymentStatus, paidAt } = data;
 
@@ -1961,22 +2070,90 @@ export class BookingService {
       });
 
       // If payment is not found/pending, we simply ignore
-      if (!payment || !payment.booking) return;
+      if (!payment || !payment.booking) {
+        bookingLogger().warn(
+          {
+            event: "faspay_callback_payment_lookup_missed",
+            billNoHash: hashIdentifier(billNo),
+            billNoLast4: last4(billNo),
+            incomingPaymentStatus: paymentStatus,
+            hasPayment: Boolean(payment),
+            hasBooking: Boolean(payment?.booking),
+            reason: "payment_not_found_or_not_pending",
+            durationMs: Date.now() - start
+          },
+          "Faspay callback payment lookup missed"
+        );
+        return;
+      }
 
       if (this.isPaymentFinal(paymentStatus)) {
+        bookingLogger().info(
+          {
+            event: "faspay_callback_payment_finalizing",
+            paymentId: payment.id,
+            bookingId: payment.booking.id,
+            currentPaymentStatus: payment.status,
+            currentBookingStatus: payment.booking.status,
+            incomingPaymentStatus: paymentStatus,
+            paidAt
+          },
+          "Faspay callback finalizing payment"
+        );
+
         return await prisma.$transaction(async (tx) => {
-          return await this.finalizeStatus(
+          const updatedPayment = await this.finalizeStatus(
             tx,
             payment,
             payment.booking!,
             paymentStatus,
             paidAt
           );
+
+          bookingLogger().info(
+            {
+              event: "faspay_callback_payment_finalized",
+              paymentId: payment.id,
+              bookingId: payment.booking!.id,
+              incomingPaymentStatus: paymentStatus,
+              resultPaymentStatus: updatedPayment.status,
+              expectedBookingStatus: PAYMENT_TO_BOOKING_STATUS_MAP[paymentStatus],
+              durationMs: Date.now() - start
+            },
+            "Faspay callback finalized payment"
+          );
+
+          return updatedPayment;
         });
       }
 
+      bookingLogger().info(
+        {
+          event: "faspay_callback_payment_ignored_non_final",
+          paymentId: payment.id,
+          bookingId: payment.booking.id,
+          currentPaymentStatus: payment.status,
+          currentBookingStatus: payment.booking.status,
+          incomingPaymentStatus: paymentStatus,
+          durationMs: Date.now() - start
+        },
+        "Faspay callback ignored non-final payment status"
+      );
+
       return this.mapPaymentDataToPaymentResponse(payment);
     } catch (error) {
+      bookingLogger().error(
+        {
+          event: "faspay_callback_payment_failed",
+          billNoHash: hashIdentifier(data.billNo),
+          billNoLast4: last4(data.billNo),
+          incomingPaymentStatus: data.paymentStatus,
+          errorName: (error as Error).name,
+          errorMessage: (error as Error).message,
+          durationMs: Date.now() - start
+        },
+        "Faspay callback payment processing failed"
+      );
       if (error instanceof PrismaUniqueError) throw error;
       if (error instanceof NotFoundError) throw error;
       if (error instanceof BadRequestError) throw error;
