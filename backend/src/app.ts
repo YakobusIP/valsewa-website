@@ -26,6 +26,7 @@ import CustomerRouter from "./routes/customer.route";
 import SnapBiConfig from "./lib/snapbi/snapbi.config";
 import SettingRouter from "./routes/setting.route";
 import DailyDropRouter from "./routes/dailydrop.route";
+import ClientEventRouter from "./routes/client-event.route";
 
 const app: Express = express();
 
@@ -67,6 +68,7 @@ app.use("/api/bookings", BookingRouter);
 app.use("/api/faspay", FaspayRouter);
 app.use("/api/settings", SettingRouter);
 app.use("/api/daily-drop", DailyDropRouter);
+app.use("/api/client-events", ClientEventRouter);
 
 const swaggerDefinition: OAS3Definition = {
   openapi: "3.0.0",
