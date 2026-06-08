@@ -146,13 +146,19 @@ export class BookingService {
     dateTo?: Date
   ): Prisma.DateTimeFilter | undefined => {
     if (datePreset) {
-      const now = new Date();
-      const from = new Date();
-      if (datePreset === "1D") from.setDate(now.getDate() - 1);
-      if (datePreset === "7D") from.setDate(now.getDate() - 7);
-      if (datePreset === "30D") from.setDate(now.getDate() - 30);
+      const today = new Date();
+      let daysBack = 0;
+      if (datePreset === "1D") daysBack = 0;
+      if (datePreset === "7D") daysBack = 6;
+      if (datePreset === "30D") daysBack = 29;
 
-      return { gte: from, lte: now };
+      const from = new Date(today);
+      from.setDate(today.getDate() - daysBack);
+
+      return {
+        gte: this.getWibDateBoundary(from, "start"),
+        lte: this.getWibDateBoundary(today, "end")
+      };
     }
 
     if (dateFrom && dateTo) {
