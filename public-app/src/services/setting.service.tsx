@@ -1,7 +1,6 @@
-
 import { OperationalHoursEntity } from "@/types/setting.type";
-import axios from "axios";
 
+import axios from "axios";
 
 export async function fetchOperationalHours(): Promise<OperationalHoursEntity | null> {
   try {

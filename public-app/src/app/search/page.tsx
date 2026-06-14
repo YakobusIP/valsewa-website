@@ -1,21 +1,20 @@
-import CatalogueClient from "./catalogue-client";
-
 import { fetchAccountsPublic } from "@/services/accountService";
 import { fetchSkinsByIds } from "@/services/skin.service";
 
 import { SORT_MAP } from "@/lib/catalogue-filters";
-
 import {
+  PRICE_MAX,
+  PRICE_MIN,
   buildDescription,
   buildTitle,
   parseSearchParams,
   processTiers,
-  serializeFilters,
-  PRICE_MIN,
-  PRICE_MAX
+  serializeFilters
 } from "@/lib/catalogue-filters";
 
 import type { Metadata } from "next";
+
+import CatalogueClient from "./catalogue-client";
 
 export const dynamic = "force-dynamic";
 

@@ -41,7 +41,9 @@ export default class SnapBiApiRequestor {
 
     instance.interceptors.request.use(
       (config) => {
-        (config as AxiosRequestConfig & { metadata?: { start: number } }).metadata = {
+        (
+          config as AxiosRequestConfig & { metadata?: { start: number } }
+        ).metadata = {
           start: Date.now()
         };
         return config;
@@ -51,9 +53,11 @@ export default class SnapBiApiRequestor {
 
     instance.interceptors.response.use(
       (response: AxiosResponse) => {
-        const metadata = (response.config as AxiosRequestConfig & {
-          metadata?: { start: number };
-        }).metadata;
+        const metadata = (
+          response.config as AxiosRequestConfig & {
+            metadata?: { start: number };
+          }
+        ).metadata;
         const durationMs = metadata ? Date.now() - metadata.start : undefined;
         const urlParts = parseUrlParts(response.config.url ?? "");
 
@@ -79,9 +83,13 @@ export default class SnapBiApiRequestor {
         return response;
       },
       (error: AxiosError) => {
-        const metadata = (error.config as AxiosRequestConfig & {
-          metadata?: { start: number };
-        } | undefined)?.metadata;
+        const metadata = (
+          error.config as
+            | (AxiosRequestConfig & {
+                metadata?: { start: number };
+              })
+            | undefined
+        )?.metadata;
         const durationMs = metadata ? Date.now() - metadata.start : undefined;
         const urlParts = parseUrlParts(error.config?.url ?? "");
 

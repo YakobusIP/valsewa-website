@@ -2,7 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../lib/env";
 import { TokenPayload } from "../controllers/auth.controller";
-import { patchRequestContext, refreshRequestLogger } from "../lib/request-context";
+import {
+  patchRequestContext,
+  refreshRequestLogger
+} from "../lib/request-context";
 
 const ACCESS_TOKEN_SECRET = env.ACCESS_TOKEN_SECRET || "access_token_secret";
 
