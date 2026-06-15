@@ -75,14 +75,14 @@ Auth middleware patches `customerId`, `adminUsername`, and `isScheduler` into th
 
 ## Environment variables
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `LOG_LEVEL` | `info` | `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `silent` |
-| `LOG_PRETTY` | `false` | Pretty-print in development when `true` |
-| `SLOW_REQUEST_THRESHOLD_MS` | `1000` | HTTP requests slower than this log at `warn` |
-| `SLOW_DB_QUERY_THRESHOLD_MS` | `300` | Prisma queries slower than this log as `slow_db_query` |
-| `SLOW_EXTERNAL_REQUEST_THRESHOLD_MS` | `1000` | External API calls slower than this log at `warn` |
-| `LOG_HASH_SECRET` | `development-log-hash-secret` | HMAC key for identifier hashes in logs |
+| Variable                             | Default                       | Description                                                  |
+| ------------------------------------ | ----------------------------- | ------------------------------------------------------------ |
+| `LOG_LEVEL`                          | `info`                        | `trace`, `debug`, `info`, `warn`, `error`, `fatal`, `silent` |
+| `LOG_PRETTY`                         | `false`                       | Pretty-print in development when `true`                      |
+| `SLOW_REQUEST_THRESHOLD_MS`          | `1000`                        | HTTP requests slower than this log at `warn`                 |
+| `SLOW_DB_QUERY_THRESHOLD_MS`         | `300`                         | Prisma queries slower than this log as `slow_db_query`       |
+| `SLOW_EXTERNAL_REQUEST_THRESHOLD_MS` | `1000`                        | External API calls slower than this log at `warn`            |
+| `LOG_HASH_SECRET`                    | `development-log-hash-secret` | HMAC key for identifier hashes in logs                       |
 
 Recommended values:
 

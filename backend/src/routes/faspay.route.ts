@@ -17,7 +17,10 @@ class faspayServiceRouter {
     this.router = Router();
     this.faspayClient = new FaspayClient();
     this.settingService = new SettingService();
-    this.bookingService = new BookingService(this.faspayClient, this.settingService);
+    this.bookingService = new BookingService(
+      this.faspayClient,
+      this.settingService
+    );
     this.faspayService = new FaspayService(this.bookingService);
     this.faspayController = new FaspayController(
       this.faspayService,

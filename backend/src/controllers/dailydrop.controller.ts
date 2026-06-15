@@ -29,7 +29,9 @@ export class DailyDropController {
   ) => {
     try {
       await this.dailyDropService.runRandomizer();
-      return res.json({ message: "Daily Drop randomizer executed successfully!" });
+      return res.json({
+        message: "Daily Drop randomizer executed successfully!"
+      });
     } catch (error) {
       return next(error);
     }

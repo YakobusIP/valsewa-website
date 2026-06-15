@@ -26,7 +26,10 @@ async function loadOperationalHours(): Promise<OperationalHoursParts> {
     where: { key: OPERATIONAL_HOURS_KEY }
   });
 
-  let openH = 9, openM = 0, closeH = 22, closeM = 0;
+  let openH = 9,
+    openM = 0,
+    closeH = 22,
+    closeM = 0;
   let tz = "Asia/Jakarta";
 
   if (setting?.value) {
@@ -48,8 +51,12 @@ export async function getOperationalWindow(): Promise<OperationalWindow> {
 
   const today = dayjs().tz(tz).format("YYYY-MM-DD");
 
-  const start = dayjs.tz(`${today} ${pad(openH)}:${pad(openM)}:00`, tz).toDate();
-  const end = dayjs.tz(`${today} ${pad(closeH)}:${pad(closeM)}:00`, tz).toDate();
+  const start = dayjs
+    .tz(`${today} ${pad(openH)}:${pad(openM)}:00`, tz)
+    .toDate();
+  const end = dayjs
+    .tz(`${today} ${pad(closeH)}:${pad(closeM)}:00`, tz)
+    .toDate();
 
   return { start, end, tz };
 }

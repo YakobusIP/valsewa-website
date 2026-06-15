@@ -93,7 +93,9 @@ export default function OutsideOperationalHoursModal({
               <p className="mt-2 max-w-full font-bold">
                 {hoursLabel ? `${hoursLabel} WIB` : "—"}
               </p>
-              <p className="mt-2 max-w-full">Try again within our operational hour.</p>
+              <p className="mt-2 max-w-full">
+                Try again within our operational hour.
+              </p>
               <p className="mt-8 max-w-full break-words font-semibold">
                 Or see our account recommendations that doesn’t require MFA
                 verification:
@@ -103,7 +105,10 @@ export default function OutsideOperationalHoursModal({
         </DialogHeader>
 
         <div className="mt-6 min-w-0 max-w-full min-[1728px]:hidden">
-          <Carousel className="w-full min-w-0" opts={{ align: "center", loop: true }}>
+          <Carousel
+            className="w-full min-w-0"
+            opts={{ align: "center", loop: true }}
+          >
             <CarouselContent className="min-w-0">
               {accounts.map((account) => (
                 <CarouselItem

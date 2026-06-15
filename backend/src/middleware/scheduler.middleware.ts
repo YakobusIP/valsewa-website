@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { env } from "../lib/env";
-import { patchRequestContext, refreshRequestLogger } from "../lib/request-context";
+import {
+  patchRequestContext,
+  refreshRequestLogger
+} from "../lib/request-context";
 
 const SCHEDULER_API_KEY = env.SCHEDULER_API_KEY;
 

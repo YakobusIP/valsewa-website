@@ -59,9 +59,7 @@ export function isOutsideOperationalHours(
 
   const atMinutes = getMinutesInTimezone(at, bounds.tz);
 
-  return (
-    atMinutes < bounds.openMinutes || atMinutes > bounds.lastOrderMinutes
-  );
+  return atMinutes < bounds.openMinutes || atMinutes > bounds.lastOrderMinutes;
 }
 
 export function getOperationalHoursLabel(

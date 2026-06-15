@@ -19,7 +19,6 @@ import { Skin } from "@/types/skin.type";
 import { ArrowUpDown, Search, SlidersHorizontal, X } from "lucide-react";
 import Image from "next/image";
 
-
 import { SORT_OPTIONS, SortOption } from "./SortDropdown";
 
 interface FilterBarMobileProps {
@@ -175,7 +174,6 @@ export function FilterBarMobile({
       {/* Filter + Sort row (hidden during skin search) */}
       {!isSearchOpen && (
         <div className="flex items-center justify-between gap-2">
-
           {/* FILTER BUTTON */}
           <button
             onClick={onOpenFilterSheet}

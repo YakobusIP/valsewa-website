@@ -68,7 +68,7 @@ export class FaspayController {
           {
             event: "faspay_callback_signature_invalid",
             requestId: req.id,
-          correlationId: req.correlationId,
+            correlationId: req.correlationId,
             inquiryRequestId
           },
           "Faspay VA inquiry signature invalid"
@@ -177,7 +177,7 @@ export class FaspayController {
           {
             event: "faspay_callback_signature_invalid",
             requestId: req.id,
-          correlationId: req.correlationId,
+            correlationId: req.correlationId,
             paymentRequestId,
             referenceNoHash: hashIdentifier(referenceNo)
           },

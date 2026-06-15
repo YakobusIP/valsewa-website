@@ -11,8 +11,7 @@ export const errorMiddleware = async (
   _: NextFunction
 ) => {
   const statusCode = err.statusCode || 500;
-  const includeStack =
-    env.NODE_ENV !== "production" || statusCode >= 500;
+  const includeStack = env.NODE_ENV !== "production" || statusCode >= 500;
 
   const payload: Record<string, unknown> = {
     event: "http_request_failed",

@@ -1,7 +1,11 @@
 import { prisma } from "../lib/prisma";
 import { InternalServerError } from "../lib/error";
 import { validateTime } from "../lib/utils";
-import { OPERATIONAL_HOURS_KEY, OperationalHours, UpdateOperationalHoursRequest } from "../types/setting.type";
+import {
+  OPERATIONAL_HOURS_KEY,
+  OperationalHours,
+  UpdateOperationalHoursRequest
+} from "../types/setting.type";
 
 export class SettingService {
   getSetting = async (key: string) => {

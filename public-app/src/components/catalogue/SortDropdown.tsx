@@ -1,22 +1,18 @@
 "use client";
 
-import { ArrowUpDown } from "lucide-react";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuTrigger,
+  DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuLabel,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
+import { SORT_MAP, SORT_OPTIONS, SortOption } from "@/lib/catalogue-filters";
 import { cn } from "@/lib/utils";
-import {
-  SortOption,
-  SORT_OPTIONS,
-  SORT_MAP
-} from "@/lib/catalogue-filters";
+
+import { ArrowUpDown } from "lucide-react";
 
 export type { SortOption };
 export { SORT_OPTIONS, SORT_MAP };
@@ -64,7 +60,6 @@ export function SortDropdown({ currentSort, onChange }: SortDropdownProps) {
               className="cursor-pointer"
             >
               {opt.label}
-              
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

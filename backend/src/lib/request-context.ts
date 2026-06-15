@@ -25,9 +25,7 @@ export function getRequestContext(): RequestContextStore | undefined {
 }
 
 export function patchRequestContext(
-  partial: Partial<
-    Omit<RequestContextStore, "requestId" | "correlationId">
-  >
+  partial: Partial<Omit<RequestContextStore, "requestId" | "correlationId">>
 ): void {
   const store = storage.getStore();
   if (store) {

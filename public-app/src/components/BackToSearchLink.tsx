@@ -1,7 +1,8 @@
 "use client";
 
-import Link, { LinkProps } from "next/link";
 import { ReactNode, useEffect, useState } from "react";
+
+import Link, { LinkProps } from "next/link";
 
 const STORAGE_KEY = "valsewa.lastSearchUrl";
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;

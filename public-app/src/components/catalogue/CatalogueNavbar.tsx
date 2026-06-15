@@ -108,7 +108,6 @@ export function CatalogueNavbar({
       });
   }, [isAuthenticated]);
 
-
   return (
     <>
       {/* ─── DESKTOP / TABLET (md+) ─── */}
