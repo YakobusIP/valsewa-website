@@ -69,7 +69,9 @@ export default function SettingsModal({
     try {
       const promises: Promise<unknown>[] = [];
 
-      promises.push(settingService.updateSetting(SETTING_KEY, reminderText));
+      promises.push(
+        settingService.updateSetting(SETTING_KEY, reminderText)
+      );
 
       if (openTime || closeTime) {
         if (!openTime || !closeTime) {

@@ -35,8 +35,8 @@ export const updateAllAccountRankQueue = new Queue<UpdateJobData>(
     defaultJobOptions: {
       attempts: 5,
       backoff: {
-        type: "exponential",
-        delay: 1000
+        type: "fixed",
+        delay: 60_000
       }
     }
   }
@@ -107,10 +107,12 @@ const processUpdateAllAccountQueue = async (job: Job<UpdateJobData>) => {
           "Queue job failed"
         );
 
-        if (
-          error instanceof NotFoundError ||
-          error instanceof UnprocessableEntityError
-        ) {
+        if (error instanceof NotFoundError) {
+          await job.moveToFailed(error, true);
+          return;
+        }
+
+        if (error instanceof UnprocessableEntityError) {
           throw error;
         }
 

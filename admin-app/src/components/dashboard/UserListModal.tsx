@@ -192,7 +192,7 @@ export default function UserListModal({
                 {loading && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="py-6 text-center text-muted-foreground"
                     >
                       Loading customers...
@@ -203,7 +203,7 @@ export default function UserListModal({
                 {error && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="py-6 text-center text-destructive"
                     >
                       {error}
@@ -214,7 +214,7 @@ export default function UserListModal({
                 {!loading && !error && visibleUsers.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="py-6 text-center text-muted-foreground"
                     >
                       {hideInactive && users.some((u) => !u.isActive)
@@ -285,7 +285,6 @@ export default function UserListModal({
             </Table>
           </div>
 
-          {/* FOOTER */}
           <div className="flex justify-end mt-4">
             <Button onClick={onOpenCreateUser}>
               <PlusIcon /> Create User

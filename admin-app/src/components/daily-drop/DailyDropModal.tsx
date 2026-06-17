@@ -26,7 +26,6 @@ import {
   UpsertDailyDropConfigPayload
 } from "@/types/dailydrop.type";
 import { PriceTier } from "@/types/pricetier.type";
-
 import { SORT_ORDER } from "@/lib/enums";
 
 import { Loader2Icon, RefreshCwIcon, ZapIcon } from "lucide-react";
@@ -118,11 +117,9 @@ export default function DailyDropModal({
 
   const [discountMin, setDiscountMin] = useState("");
   const [discountMax, setDiscountMax] = useState("");
-  const [slotDiscounts, setSlotDiscounts] = useState<[string, string, string]>([
-    "",
-    "",
-    ""
-  ]);
+  const [slotDiscounts, setSlotDiscounts] = useState<
+    [string, string, string]
+  >(["", "", ""]);
   const [slots, setSlots] = useState<[SlotConfig, SlotConfig, SlotConfig]>([
     { ...EMPTY_SLOT },
     { ...EMPTY_SLOT },
@@ -613,7 +610,9 @@ export default function DailyDropModal({
                             modalPopover={true}
                             options={durationOptions}
                             defaultValue={slots[idx].durationValues}
-                            onValueChange={(v) => updateSlotDurations(idx, v)}
+                            onValueChange={(v) =>
+                              updateSlotDurations(idx, v)
+                            }
                             placeholder="All durations"
                             resetOnDefaultValueChange
                           />

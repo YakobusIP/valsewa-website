@@ -62,16 +62,19 @@ function PaymentStatusView({ payment }: { payment: PaymentWithBookingEntity }) {
       </h1>
 
       <button
-        onClick={() =>
+        onClick={() => {
+          const accountCode = payment.booking?.account?.accountCode?.trim();
           router.push(
-            `/accounts/${encodeURIComponent(
-              payment.booking.account.accountCode.trim()
-            )}`
-          )
-        }
+            accountCode
+              ? `/accounts/${encodeURIComponent(accountCode)}`
+              : "/dashboard"
+          );
+        }}
         className="mt-4 px-6 py-3 text-base sm:text-lg font-semibold rounded bg-neutral-700 hover:bg-neutral-600 transition"
       >
-        Back to Account
+        {payment.booking?.account?.accountCode
+          ? "Back to Account"
+          : "Back to Dashboard"}
       </button>
     </div>
   );
@@ -120,7 +123,7 @@ export default function PaymentDetailPage() {
       setPayment(updatedPayment);
       if (
         updatedPayment.status === PAYMENT_STATUS.SUCCESS &&
-        updatedPayment.booking.status === BOOKING_STATUS.RESERVED
+        updatedPayment.booking?.status === BOOKING_STATUS.RESERVED
       ) {
         router.push(`/payments/${id}/success`);
       }
@@ -198,7 +201,7 @@ export default function PaymentDetailPage() {
         if (
           res &&
           res.status === PAYMENT_STATUS.SUCCESS &&
-          res.booking.status === BOOKING_STATUS.RESERVED
+          res.booking?.status === BOOKING_STATUS.RESERVED
         ) {
           router.push(`/payments/${id}/success`);
         }
@@ -225,7 +228,7 @@ export default function PaymentDetailPage() {
 
   if (
     payment.status === PAYMENT_STATUS.SUCCESS &&
-    payment.booking.status === BOOKING_STATUS.RESERVED
+    payment.booking?.status === BOOKING_STATUS.RESERVED
   ) {
     router.push(`/payments/${id}/success`);
     return;

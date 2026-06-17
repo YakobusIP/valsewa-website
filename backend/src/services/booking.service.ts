@@ -146,13 +146,19 @@ export class BookingService {
     dateTo?: Date
   ): Prisma.DateTimeFilter | undefined => {
     if (datePreset) {
-      const now = new Date();
-      const from = new Date();
-      if (datePreset === "1D") from.setDate(now.getDate() - 1);
-      if (datePreset === "7D") from.setDate(now.getDate() - 7);
-      if (datePreset === "30D") from.setDate(now.getDate() - 30);
+      const today = new Date();
+      let daysBack = 0;
+      if (datePreset === "1D") daysBack = 0;
+      if (datePreset === "7D") daysBack = 6;
+      if (datePreset === "30D") daysBack = 29;
 
-      return { gte: from, lte: now };
+      const from = new Date(today);
+      from.setDate(today.getDate() - daysBack);
+
+      return {
+        gte: this.getWibDateBoundary(from, "start"),
+        lte: this.getWibDateBoundary(today, "end")
+      };
     }
 
     if (dateFrom && dateTo) {
@@ -1359,8 +1365,8 @@ export class BookingService {
 
       const isBookingFree = totalValue === 0;
 
-      const { payment, isPaymentNew } = await prisma.$transaction(
-        async (tx) => {
+      const { payment, isPaymentNew, finalizedPaymentResponse } =
+        await prisma.$transaction(async (tx) => {
           await tx.$executeRaw`
             SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE
           `;
@@ -1393,7 +1399,11 @@ export class BookingService {
           });
 
           if (payment) {
-            return { payment, isPaymentNew: false };
+            return {
+              payment,
+              isPaymentNew: false,
+              finalizedPaymentResponse: null
+            };
           }
 
           if (isBookingFree) {
@@ -1409,14 +1419,18 @@ export class BookingService {
                 paidAt: new Date()
               }
             });
-            await this.finalizeStatus(
+            const finalizedPayment = await this.finalizeStatus(
               tx,
               payment,
               updatedBooking,
               PaymentStatus.SUCCESS,
               new Date()
             );
-            return { payment, isPaymentNew: false };
+            return {
+              payment,
+              isPaymentNew: false,
+              finalizedPaymentResponse: finalizedPayment
+            };
           }
 
           payment = await tx.payment.create({
@@ -1431,9 +1445,16 @@ export class BookingService {
             }
           });
 
-          return { payment, isPaymentNew: true };
-        }
-      );
+          return {
+            payment,
+            isPaymentNew: true,
+            finalizedPaymentResponse: null
+          };
+        });
+
+      if (finalizedPaymentResponse) {
+        return finalizedPaymentResponse;
+      }
 
       if (!isPaymentNew) {
         return this.mapPaymentDataToPaymentResponse(payment);
@@ -1593,7 +1614,7 @@ export class BookingService {
           "Payment verification finalizing status"
         );
 
-        return await prisma.$transaction(async (tx) => {
+        const response = await prisma.$transaction(async (tx) => {
           return await this.finalizeStatus(
             tx,
             payment,
@@ -1602,6 +1623,20 @@ export class BookingService {
             providerResponse.paidAt
           );
         });
+
+        bookingLogger().info(
+          {
+            event: "payment_verify_finalized_response_ready",
+            paymentId,
+            bookingId: response.bookingId,
+            customerId,
+            hasBooking: Boolean(response.booking),
+            responseBookingStatus: response.booking?.status
+          },
+          "Payment verification finalized response ready"
+        );
+
+        return response;
       }
 
       bookingLogger().info(
@@ -2362,7 +2397,7 @@ export class BookingService {
       ...rentalWindowUpdate
     };
 
-    const updatedPayment = await tx.payment.update({
+    await tx.payment.update({
       where: { id: payment.id },
       data: paymentUpdate
     });
@@ -2435,7 +2470,28 @@ export class BookingService {
       }
     }
 
-    return this.mapPaymentDataToPaymentResponse(updatedPayment);
+    const updatedPaymentWithBooking = await tx.payment.findUnique({
+      where: { id: payment.id },
+      include: {
+        booking: {
+          include: {
+            account: {
+              select: { accountCode: true }
+            }
+          }
+        }
+      }
+    });
+
+    if (!updatedPaymentWithBooking) {
+      throw new InternalServerError(
+        `Payment ${payment.id} not found after finalization.`
+      );
+    }
+
+    return this.mapPaymentWithBookingDataToPaymentResponse(
+      updatedPaymentWithBooking
+    );
   };
 
   private isBookingActive = (
