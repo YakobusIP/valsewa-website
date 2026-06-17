@@ -185,7 +185,10 @@ export function FilterBar({
 
               {/* RIGHT: daily-drop + skin search */}
               <div className="flex items-center gap-3 ml-auto shrink-0">
-                <button onClick={onOpenDailyDrop} className="flex items-center justify-center h-10 border border-white/30 rounded-xl hover:border-white transition shrink-0 px-3">
+                <button
+                  onClick={onOpenDailyDrop}
+                  className="flex items-center justify-center h-10 border border-white/30 rounded-xl hover:border-white transition shrink-0 px-3"
+                >
                   <Image
                     src="/daily-drop-catalogue.svg"
                     alt="Daily Drop"

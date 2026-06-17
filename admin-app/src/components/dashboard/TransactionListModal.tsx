@@ -418,9 +418,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
               <Checkbox
                 id="hide-inactive-bookings"
                 checked={hideInactive}
-                onCheckedChange={(checked) =>
-                  setHideInactive(checked === true)
-                }
+                onCheckedChange={(checked) => setHideInactive(checked === true)}
               />
               <Label
                 htmlFor="hide-inactive-bookings"

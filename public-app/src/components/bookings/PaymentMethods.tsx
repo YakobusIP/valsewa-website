@@ -70,8 +70,6 @@ function PaymentMethods({
         role="radiogroup"
         aria-label="Payment methods"
       >
-
-
         <div>
           <div className="grid grid-cols-2 sm:grid-cols-none sm:flex sm:flex-wrap gap-3 sm:gap-4">
             {VA_METHODS.map((method) => (

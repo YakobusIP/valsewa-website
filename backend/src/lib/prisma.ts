@@ -72,10 +72,7 @@ prisma.$on("query", (event: Prisma.QueryEvent) => {
   }
 
   if (env.NODE_ENV !== "production" && env.LOG_LEVEL === "debug") {
-    prismaLogger().debug(
-      { event: "db_query", ...fields },
-      "Database query"
-    );
+    prismaLogger().debug({ event: "db_query", ...fields }, "Database query");
   }
 });
 

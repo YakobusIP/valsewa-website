@@ -30,8 +30,12 @@ export class SettingController {
       return next(error);
     }
   };
-  
-  getOperationalHours = async (req: Request, res: Response, next: NextFunction) => {
+
+  getOperationalHours = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const value = await this.settingService.getOperationalHours();
       return res.status(200).json(value);
@@ -40,7 +44,11 @@ export class SettingController {
     }
   };
 
-  updateOperationalHours = async (req: Request, res: Response, next: NextFunction) => {
+  updateOperationalHours = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const { open, close, lastOrderBufferInMinutes, timezone } = req.body;
 

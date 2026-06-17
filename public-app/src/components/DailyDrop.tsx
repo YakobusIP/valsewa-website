@@ -1,5 +1,6 @@
-import Image from "next/image";
 import React from "react";
+
+import Image from "next/image";
 import { FaFire } from "react-icons/fa";
 
 type DailyDropProps = {

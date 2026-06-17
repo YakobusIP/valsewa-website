@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 import { useAuth } from "@/hooks/useAuth";
-
 import { toast } from "@/hooks/useToast";
 
 import { Loader2Icon, LogOutIcon } from "lucide-react";

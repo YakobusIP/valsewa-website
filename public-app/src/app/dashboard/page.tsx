@@ -202,22 +202,19 @@ export default function Dashboard() {
     return `/payments/${paymentId}/success`;
   };
 
-  const handleDialogOpen = useCallback(
-    (booking: BookingWithAccountEntity) => {
-      const actionId = generateActionId();
-      setActiveActionId(actionId);
-      dialogOpenedAtRef.current = Date.now();
-      setLastKnownActionId(actionId);
+  const handleDialogOpen = useCallback((booking: BookingWithAccountEntity) => {
+    const actionId = generateActionId();
+    setActiveActionId(actionId);
+    dialogOpenedAtRef.current = Date.now();
+    setLastKnownActionId(actionId);
 
-      void logClientEvent({
-        eventName: "force_finish_dialog_opened",
-        actionId,
-        bookingId: booking.id,
-        accountId: booking.accountId
-      });
-    },
-    []
-  );
+    void logClientEvent({
+      eventName: "force_finish_dialog_opened",
+      actionId,
+      bookingId: booking.id,
+      accountId: booking.accountId
+    });
+  }, []);
 
   const handleForceFinish = useCallback(
     async (booking: BookingWithAccountEntity) => {

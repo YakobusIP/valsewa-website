@@ -2,9 +2,12 @@
 
 import { useEffect } from "react";
 
-import { logClientEvent, getLastKnownActionId } from "@/lib/client-event-logger";
-
 import { useAuth } from "@/hooks/useAuth";
+
+import {
+  getLastKnownActionId,
+  logClientEvent
+} from "@/lib/client-event-logger";
 
 function truncate(str: string, maxLen: number): string {
   if (str.length <= maxLen) return str;
@@ -28,9 +31,7 @@ export default function Error({
       metadata: {
         errorName: truncate(error.name || "Unknown", 128),
         errorMessage: truncate(error.message || "No message", 512),
-        componentStack: error.digest
-          ? truncate(error.digest, 256)
-          : undefined
+        componentStack: error.digest ? truncate(error.digest, 256) : undefined
       }
     });
   }, [error, isAuthenticated]);

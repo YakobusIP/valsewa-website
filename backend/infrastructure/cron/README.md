@@ -169,10 +169,10 @@ Keep this section up to date when adding/removing crons.
 
 > Tip: verify reality with `systemctl cat backend-production-cron@<job>.service` and `systemctl cat backend-production-cron@<job>.timer`, not memory.
 
-| Job (instance)                                      | Endpoint hit                         | Schedule (OnCalendar) | Notes             |
-| --------------------------------------------------- | ------------------------------------ | --------------------- | ----------------- |
-| `backend-production-cron@update-expire-at.timer`      | `POST /api/accounts/update-expire-at` | `*-*-* *:0/15:00`     | every 15 minutes  |
-| `backend-production-cron@update-rank.timer`         | `POST /api/accounts/update-rank`      | `*-*-* 00:00:00`      | daily at midnight |
+| Job (instance)                                   | Endpoint hit                          | Schedule (OnCalendar) | Notes             |
+| ------------------------------------------------ | ------------------------------------- | --------------------- | ----------------- |
+| `backend-production-cron@update-expire-at.timer` | `POST /api/accounts/update-expire-at` | `*-*-* *:0/15:00`     | every 15 minutes  |
+| `backend-production-cron@update-rank.timer`      | `POST /api/accounts/update-rank`      | `*-*-* 00:00:00`      | daily at midnight |
 
 ## Quick Troubleshooting
 

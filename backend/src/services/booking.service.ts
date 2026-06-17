@@ -366,7 +366,9 @@ export class BookingService {
     }
   };
 
-  private formatBookingNumberForCsv = (readableNumber: bigint | string): string => {
+  private formatBookingNumberForCsv = (
+    readableNumber: bigint | string
+  ): string => {
     const numeric = readableNumber.toString().replace(/\D/g, "") || "0";
     return `VS-${numeric.padStart(7, "0")}`;
   };
@@ -968,7 +970,9 @@ export class BookingService {
 
       bookingLogger()[isSlow ? "warn" : "debug"](
         {
-          event: isSlow ? "booking_creation_slow" : "booking_creation_completed",
+          event: isSlow
+            ? "booking_creation_slow"
+            : "booking_creation_completed",
           bookingId: booking.id,
           customerId: data.customerId,
           accountId: data.accountId,
@@ -2117,7 +2121,8 @@ export class BookingService {
               bookingId: payment.booking!.id,
               incomingPaymentStatus: paymentStatus,
               resultPaymentStatus: updatedPayment.status,
-              expectedBookingStatus: PAYMENT_TO_BOOKING_STATUS_MAP[paymentStatus],
+              expectedBookingStatus:
+                PAYMENT_TO_BOOKING_STATUS_MAP[paymentStatus],
               durationMs: Date.now() - start
             },
             "Faspay callback finalized payment"

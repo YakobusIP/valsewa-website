@@ -69,9 +69,7 @@ export default function SettingsModal({
     try {
       const promises: Promise<unknown>[] = [];
 
-      promises.push(
-        settingService.updateSetting(SETTING_KEY, reminderText)
-      );
+      promises.push(settingService.updateSetting(SETTING_KEY, reminderText));
 
       if (openTime || closeTime) {
         if (!openTime || !closeTime) {
@@ -141,36 +139,36 @@ export default function SettingsModal({
             </p>
           </div>
           <div className="grid gap-4 py-2">
-          <div className="grid gap-2">
-            <Label>Operational Hours (WIB)</Label>
+            <div className="grid gap-2">
+              <Label>Operational Hours (WIB)</Label>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <Label className="text-xs text-muted-foreground">Open</Label>
-                <input
-                  type="time"
-                  value={openTime}
-                  onChange={(e) => setOpenTime(e.target.value)}
-                  className="border border-gray-300 rounded-md px-2 py-2"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Open</Label>
+                  <input
+                    type="time"
+                    value={openTime}
+                    onChange={(e) => setOpenTime(e.target.value)}
+                    className="border border-gray-300 rounded-md px-2 py-2"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Close</Label>
+                  <input
+                    type="time"
+                    value={closeTime}
+                    onChange={(e) => setCloseTime(e.target.value)}
+                    className="border border-gray-300 rounded-md px-2 py-2"
+                  />
+                </div>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <Label className="text-xs text-muted-foreground">Close</Label>
-                <input
-                  type="time"
-                  value={closeTime}
-                  onChange={(e) => setCloseTime(e.target.value)}
-                  className="border border-gray-300 rounded-md px-2 py-2"
-                />
-              </div>
+              <p className="text-xs text-muted-foreground">
+                Last order akan otomatis dihitung 30 menit sebelum jam tutup.
+              </p>
             </div>
-
-            <p className="text-xs text-muted-foreground">
-              Last order akan otomatis dihitung 30 menit sebelum jam tutup.
-            </p>
           </div>
-        </div>
         </div>
         <DialogFooter>
           <Button onClick={handleSave} disabled={loading}>
