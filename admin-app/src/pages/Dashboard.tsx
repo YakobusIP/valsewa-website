@@ -22,7 +22,6 @@ import UserListModal from "@/components/dashboard/UserListModal";
 import VoucherModal from "@/components/dashboard/VoucherModal";
 import DataTable from "@/components/data-table/DataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
-import DailyDropModal from "@/components/daily-drop/DailyDropModal";
 import PriceTierModal from "@/components/pricetier-management/PriceTierModal";
 import SkinManagementModal from "@/components/skin-management/SkinManagementModal";
 
