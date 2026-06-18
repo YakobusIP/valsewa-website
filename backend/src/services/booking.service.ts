@@ -663,6 +663,7 @@ export class BookingService {
     const othersValue = isCompetitive
       ? (compPrice - unratedPrice) * quantity
       : 0;
+    const grossSubtotal = mainValue + othersValue;
 
     let voucherType = null;
     let voucherAmount = null;
@@ -672,7 +673,7 @@ export class BookingService {
       voucherType = voucher.type;
       if (voucher.type === Type.PERSENTASE) {
         voucherAmount = voucher.percentage ?? 0;
-        discount = mainValue * voucherAmount * 0.01;
+        discount = grossSubtotal * voucherAmount * 0.01;
       } else {
         voucherAmount = voucher.nominal ?? 0;
         discount = voucherAmount;
@@ -683,12 +684,12 @@ export class BookingService {
         discount = Math.min(discount, voucherMaxDiscount);
       }
 
-      discount = Math.min(discount, mainValue);
+      discount = Math.min(discount, grossSubtotal);
     } else if (dailyDropDiscountAmount > 0) {
-      discount = Math.min(dailyDropDiscountAmount, mainValue + othersValue);
+      discount = Math.min(dailyDropDiscountAmount, grossSubtotal);
     }
 
-    const subtotalValue = mainValue + othersValue - discount;
+    const subtotalValue = grossSubtotal - discount;
 
     let adminFee = 0;
     if (subtotalValue !== 0) {
@@ -843,10 +844,13 @@ export class BookingService {
       }
 
       const dailyDropPercent = dailyDrop?.discount ?? 0;
+      const dailyDropPriceBase = account.isCompetitive
+        ? priceList.compPrice
+        : priceList.unratedPrice;
       const dailyDropDiscountAmount =
         dailyDropPercent > 0
           ? Math.round(
-              priceList.unratedPrice * quantity * dailyDropPercent * 0.01
+              dailyDropPriceBase * quantity * dailyDropPercent * 0.01
             )
           : 0;
 

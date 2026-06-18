@@ -51,14 +51,14 @@ function PaymentSummary({
     !booking.voucherName && (booking.discount ?? 0) > 0;
   const dailyDropDiscount = isDailyDropBooking ? (booking.discount ?? 0) : 0;
 
-  const voucherDiscount = useMemo(
-    () => calculateVoucherDiscount(voucher, booking.mainValue),
-    [voucher, booking.mainValue]
-  );
-
   const grossSubtotal = useMemo(
     () => booking.mainValue + (booking.othersValue ?? 0),
     [booking.mainValue, booking.othersValue]
+  );
+
+  const voucherDiscount = useMemo(
+    () => calculateVoucherDiscount(voucher, grossSubtotal),
+    [voucher, grossSubtotal]
   );
 
   const subtotalPayment = useMemo(
