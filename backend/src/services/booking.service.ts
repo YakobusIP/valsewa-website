@@ -57,6 +57,7 @@ import { env } from "../lib/env";
 import { getContextLogger } from "../lib/request-context";
 import { SettingService } from "./setting.service";
 import { hashIdentifier, last4 } from "../lib/log-sanitize";
+import { VOUCHER_ERROR, VoucherService } from "./voucher.service";
 
 const bookingLogger = () => getContextLogger({ component: "booking" });
 
@@ -941,6 +942,35 @@ export class BookingService {
           );
         }
 
+        let quotaReserved = false;
+        let resolvedVoucherId: number | null = null;
+        let resolvedVoucherMinOrderValue: number | null = null;
+        if (voucherId) {
+          const voucherEntity = await tx.voucher.findFirst({
+            where: { id: voucherId, deletedAt: null }
+          });
+
+          const now = new Date();
+          if (
+            !voucherEntity ||
+            !voucherEntity.isValid ||
+            !voucherEntity.isVisible ||
+            now < voucherEntity.dateStart ||
+            now > voucherEntity.dateEnd
+          ) {
+            throw new BadRequestError(VOUCHER_ERROR.NOT_FOUND);
+          }
+
+          VoucherService.assertVoucherUsable(
+            voucherEntity,
+            mainValue + (othersValue ?? 0)
+          );
+          await VoucherService.reserveVoucherQuota(tx, voucherEntity, customerId);
+          quotaReserved = true;
+          resolvedVoucherId = voucherEntity.id;
+          resolvedVoucherMinOrderValue = voucherEntity.minOrderValue;
+        }
+
         return await tx.booking.create({
           data: {
             customerId,
@@ -956,15 +986,18 @@ export class BookingService {
             othersValuePerUnit: account.isCompetitive
               ? effectiveCompPrice - effectiveUnratedPrice
               : 0,
+            voucherId: resolvedVoucherId,
             voucherName: voucher?.voucherName,
             voucherType,
             voucherAmount,
             voucherMaxDiscount,
+            voucherMinOrderValue: resolvedVoucherMinOrderValue,
             mainValue,
             othersValue,
             discount,
             bookingFee: snapshotBookingFee,
             totalValue,
+            quotaReserved,
             version: 1
           }
         });
@@ -1320,50 +1353,23 @@ export class BookingService {
       if (
         booking.expiredAt < new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS)
       ) {
-        await prisma.booking.update({
-          where: { id: booking.id },
-          data: { status: BookingStatus.EXPIRED }
+        await prisma.$transaction(async (tx) => {
+          await VoucherService.releaseVoucherQuotaIfReserved(
+            tx,
+            booking,
+            BookingStatus.HOLD,
+            BookingStatus.EXPIRED
+          );
+          await tx.booking.update({
+            where: { id: booking.id },
+            data: { status: BookingStatus.EXPIRED }
+          });
         });
         throw new BadRequestError("Booking is expired!");
       }
 
-      const voucher = voucherId
-        ? await this.getValidVoucherById(voucherId)
-        : null;
-
       const { paymentMethodType, bankCode } =
         PAYMENT_METHODS_MAP[paymentMethod];
-
-      const existingDailyDropDiscount = booking.voucherName
-        ? 0
-        : (booking.discount ?? 0);
-
-      const storedBookingFee = booking.immediate
-        ? 0
-        : (booking.bookingFee ?? 0);
-
-      const {
-        voucherType,
-        voucherAmount,
-        voucherMaxDiscount,
-        mainValue,
-        othersValue,
-        discount,
-        adminFee,
-        totalValue
-      } = this.calculateValues(
-        booking.mainValuePerUnit,
-        (booking.mainValuePerUnit ?? 0) + (booking.othersValuePerUnit ?? 0),
-        booking.account.isCompetitive,
-        booking.duration,
-        voucher,
-        paymentMethodType,
-        booking.quantity,
-        existingDailyDropDiscount,
-        storedBookingFee
-      );
-
-      const isBookingFree = totalValue === 0;
 
       const { payment, isPaymentNew, finalizedPaymentResponse } =
         await prisma.$transaction(async (tx) => {
@@ -1371,45 +1377,152 @@ export class BookingService {
             SELECT id FROM "Booking" WHERE id = ${bookingId} FOR UPDATE
           `;
 
+          const lockedBooking = await tx.booking.findUnique({
+            where: { id: booking.id }
+          });
+
+          if (!lockedBooking) {
+            throw new NotFoundError("Booking not found!");
+          }
+
+          const existingPayment = await tx.payment.findFirst({
+            where: {
+              bookingId: lockedBooking.id,
+              status: { in: [PaymentStatus.PENDING, PaymentStatus.SUCCESS] }
+            }
+          });
+
+          if (existingPayment) {
+            return {
+              payment: existingPayment,
+              isPaymentNew: false,
+              finalizedPaymentResponse: null
+            };
+          }
+
+          const requestedVoucherId = voucherId ?? null;
+          let effectiveVoucherId = requestedVoucherId;
+
+          if (lockedBooking.quotaReserved) {
+            const lockedVoucherId = lockedBooking.voucherId ?? null;
+            if (
+              requestedVoucherId != null &&
+              requestedVoucherId !== lockedVoucherId
+            ) {
+              throw new BadRequestError(VOUCHER_ERROR.VOUCHER_LOCKED);
+            }
+            if (requestedVoucherId === null && lockedVoucherId !== null) {
+              throw new BadRequestError(VOUCHER_ERROR.VOUCHER_LOCKED);
+            }
+            effectiveVoucherId = lockedVoucherId;
+          }
+
+          let lockedVoucherEntity = null;
+          let lockedVoucher: VoucherResponse | null = null;
+
+          if (lockedBooking.quotaReserved && lockedBooking.voucherName) {
+            lockedVoucher =
+              this.mapBookingSnapshotToVoucherResponse(lockedBooking);
+          } else if (effectiveVoucherId != null) {
+            lockedVoucherEntity = await tx.voucher.findFirst({
+              where: { id: effectiveVoucherId, deletedAt: null }
+            });
+            const now = new Date();
+            if (
+              !lockedVoucherEntity ||
+              !lockedVoucherEntity.isValid ||
+              !lockedVoucherEntity.isVisible ||
+              now < lockedVoucherEntity.dateStart ||
+              now > lockedVoucherEntity.dateEnd
+            ) {
+              throw new BadRequestError(VOUCHER_ERROR.NOT_FOUND);
+            }
+
+            lockedVoucher = this.mapVoucherDataToVoucherResponse(
+              lockedVoucherEntity
+            );
+          }
+
+          const existingDailyDropDiscount = lockedBooking.voucherName
+            ? 0
+            : (lockedBooking.discount ?? 0);
+
+          const storedBookingFee = lockedBooking.immediate
+            ? 0
+            : (lockedBooking.bookingFee ?? 0);
+
+          const {
+            voucherType,
+            voucherAmount,
+            voucherMaxDiscount,
+            mainValue,
+            othersValue,
+            discount,
+            adminFee,
+            totalValue: calculatedTotalValue
+          } = this.calculateValues(
+            lockedBooking.mainValuePerUnit,
+            (lockedBooking.mainValuePerUnit ?? 0) +
+              (lockedBooking.othersValuePerUnit ?? 0),
+            booking.account.isCompetitive,
+            lockedBooking.duration,
+            lockedVoucher,
+            paymentMethodType,
+            lockedBooking.quantity,
+            existingDailyDropDiscount,
+            storedBookingFee
+          );
+
+          if (lockedVoucherEntity && !lockedBooking.quotaReserved) {
+            VoucherService.assertVoucherUsable(
+              lockedVoucherEntity,
+              mainValue + (othersValue ?? 0)
+            );
+          }
+
+          let quotaReserved = lockedBooking.quotaReserved;
+          if (lockedVoucherEntity && !lockedBooking.quotaReserved) {
+            await VoucherService.reserveVoucherQuota(
+              tx,
+              lockedVoucherEntity,
+              lockedBooking.customerId
+            );
+            quotaReserved = true;
+          }
+
+          const bookingIsFree = calculatedTotalValue === 0;
+
           const updatedBooking = await tx.booking.update({
-            where: { id: booking.id },
+            where: { id: lockedBooking.id },
             data: {
-              voucherName: voucher?.voucherName,
+              voucherId: lockedBooking.quotaReserved
+                ? lockedBooking.voucherId
+                : (lockedVoucherEntity?.id ?? null),
+              voucherName: lockedVoucher?.voucherName ?? null,
               voucherType,
               voucherAmount,
               voucherMaxDiscount,
+              voucherMinOrderValue: lockedBooking.quotaReserved
+                ? lockedBooking.voucherMinOrderValue
+                : (lockedVoucherEntity?.minOrderValue ?? null),
               mainValue,
               othersValue,
               discount,
               adminFee,
-              totalValue,
+              totalValue: calculatedTotalValue,
+              quotaReserved,
               version: { increment: 1 },
-              ...(isBookingFree && {
+              ...(bookingIsFree && {
                 status: BookingStatus.RESERVED,
                 expiredAt: null
               })
             }
           });
 
-          let payment = await tx.payment.findFirst({
-            where: {
-              bookingId: booking.id,
-              status: { in: [PaymentStatus.PENDING, PaymentStatus.SUCCESS] }
-            }
-          });
-
-          if (payment) {
-            return {
-              payment,
-              isPaymentNew: false,
-              finalizedPaymentResponse: null
-            };
-          }
-
-          if (isBookingFree) {
-            payment = await tx.payment.create({
+          if (bookingIsFree) {
+            const freePayment = await tx.payment.create({
               data: {
-                bookingId: booking.id,
+                bookingId: lockedBooking.id,
                 status: PaymentStatus.SUCCESS,
                 value: updatedBooking.totalValue,
                 currency: "IDR",
@@ -1421,21 +1534,21 @@ export class BookingService {
             });
             const finalizedPayment = await this.finalizeStatus(
               tx,
-              payment,
+              freePayment,
               updatedBooking,
               PaymentStatus.SUCCESS,
               new Date()
             );
             return {
-              payment,
+              payment: freePayment,
               isPaymentNew: false,
               finalizedPaymentResponse: finalizedPayment
             };
           }
 
-          payment = await tx.payment.create({
+          const newPayment = await tx.payment.create({
             data: {
-              bookingId: booking.id,
+              bookingId: lockedBooking.id,
               status: PaymentStatus.PENDING,
               value: updatedBooking.totalValue,
               currency: "IDR",
@@ -1446,7 +1559,7 @@ export class BookingService {
           });
 
           return {
-            payment,
+            payment: newPayment,
             isPaymentNew: true,
             finalizedPaymentResponse: null
           };
@@ -1486,23 +1599,36 @@ export class BookingService {
     customerId: number
   ): Promise<BookingResponse> => {
     try {
-      let booking = await prisma.booking.findUnique({
-        where: { id: bookingId, customerId }
+      const booking = await prisma.$transaction(async (tx) => {
+        const current = await tx.booking.findUnique({
+          where: { id: bookingId, customerId }
+        });
+
+        if (!current) throw new NotFoundError("Booking not found!");
+
+        if (current.status === BookingStatus.HOLD) {
+          await VoucherService.releaseVoucherQuotaIfReserved(
+            tx,
+            current,
+            BookingStatus.HOLD,
+            BookingStatus.CANCELLED
+          );
+
+          const updated = await tx.booking.update({
+            where: { id: current.id },
+            data: { status: BookingStatus.CANCELLED }
+          });
+
+          await tx.payment.updateMany({
+            where: { bookingId, status: PaymentStatus.PENDING },
+            data: { status: PaymentStatus.CANCELLED }
+          });
+
+          return updated;
+        }
+
+        return current;
       });
-
-      if (!booking) throw new NotFoundError("Booking not found!");
-
-      if (booking.status === BookingStatus.HOLD) {
-        booking = await prisma.booking.update({
-          where: { id: booking.id },
-          data: { status: BookingStatus.CANCELLED }
-        });
-
-        await prisma.payment.updateMany({
-          where: { bookingId, status: PaymentStatus.PENDING },
-          data: { status: PaymentStatus.CANCELLED }
-        });
-      }
 
       return this.mapBookingDataToBookingResponse(booking);
     } catch (error) {
@@ -1713,6 +1839,24 @@ export class BookingService {
       const nowWithGrace = new Date(Date.now() - env.BOOKING_GRACE_TIME_MILLIS);
 
       const count = await prisma.$transaction(async (tx) => {
+        const expiringBookings = await tx.booking.findMany({
+          where: {
+            status: BookingStatus.HOLD,
+            expiredAt: { lte: nowWithGrace }
+          }
+        });
+
+        if (expiringBookings.length === 0) return 0;
+
+        for (const expiringBooking of expiringBookings) {
+          await VoucherService.releaseVoucherQuotaIfReserved(
+            tx,
+            expiringBooking,
+            BookingStatus.HOLD,
+            BookingStatus.EXPIRED
+          );
+        }
+
         const expired = await tx.booking.updateMany({
           where: {
             status: BookingStatus.HOLD,
@@ -1722,8 +1866,6 @@ export class BookingService {
             status: BookingStatus.EXPIRED
           }
         });
-
-        if (expired.count === 0) return 0;
 
         await tx.payment.updateMany({
           where: {
@@ -2204,14 +2346,7 @@ export class BookingService {
   private getValidVoucherById = async (
     voucherId: number
   ): Promise<VoucherResponse> => {
-    const voucher = await prisma.voucher.findFirst({
-      where: { id: voucherId }
-    });
-
-    if (!voucher) throw new BadRequestError("Voucher not found!");
-
-    if (!voucher.isValid) throw new BadRequestError("Voucher not valid!");
-
+    const voucher = await VoucherService.getPublicVoucherById(voucherId);
     return this.mapVoucherDataToVoucherResponse(voucher);
   };
 
@@ -2337,17 +2472,33 @@ export class BookingService {
         },
         "Payment provider request failed"
       );
-      await prisma.booking.update({
-        where: { id: payment.bookingId },
-        data: {
-          status: PaymentStatus.FAILED
+
+      return await prisma.$transaction(async (tx) => {
+        const currentBooking = await tx.booking.findUnique({
+          where: { id: payment.bookingId }
+        });
+
+        if (
+          currentBooking?.status === BookingStatus.HOLD &&
+          currentBooking.quotaReserved
+        ) {
+          await VoucherService.releaseVoucherQuotaIfReserved(
+            tx,
+            currentBooking,
+            BookingStatus.HOLD,
+            BookingStatus.FAILED
+          );
         }
-      });
-      return await prisma.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: PaymentStatus.FAILED
-        }
+
+        await tx.booking.update({
+          where: { id: payment.bookingId },
+          data: { status: BookingStatus.FAILED }
+        });
+
+        return await tx.payment.update({
+          where: { id: payment.id },
+          data: { status: PaymentStatus.FAILED }
+        });
       });
     }
   };
@@ -2396,6 +2547,20 @@ export class BookingService {
       version: { increment: 1 },
       ...rentalWindowUpdate
     };
+
+    if (
+      booking.status === BookingStatus.HOLD &&
+      (bookingStatus === BookingStatus.EXPIRED ||
+        bookingStatus === BookingStatus.CANCELLED ||
+        bookingStatus === BookingStatus.FAILED)
+    ) {
+      await VoucherService.releaseVoucherQuotaIfReserved(
+        tx,
+        booking,
+        BookingStatus.HOLD,
+        bookingStatus
+      );
+    }
 
     await tx.payment.update({
       where: { id: payment.id },
@@ -2705,6 +2870,29 @@ export class BookingService {
         readableNumber: payment.booking?.readableNumber.toString(),
         accountCode: payment.booking?.account?.accountCode
       }
+    };
+  };
+
+  private mapBookingSnapshotToVoucherResponse = (
+    booking: Pick<
+      Booking,
+      | "voucherId"
+      | "voucherName"
+      | "voucherType"
+      | "voucherAmount"
+      | "voucherMaxDiscount"
+    >
+  ): VoucherResponse => {
+    const type = booking.voucherType ?? Type.NOMINAL;
+    return {
+      id: booking.voucherId ?? 0,
+      voucherName: booking.voucherName ?? "",
+      isValid: true,
+      type,
+      percentage:
+        type === Type.PERSENTASE ? (booking.voucherAmount ?? null) : null,
+      nominal: type === Type.NOMINAL ? (booking.voucherAmount ?? null) : null,
+      maxDiscount: booking.voucherMaxDiscount ?? null
     };
   };
 

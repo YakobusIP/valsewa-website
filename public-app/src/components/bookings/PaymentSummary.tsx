@@ -9,6 +9,14 @@ import { VoucherEntity } from "@/types/voucher.type";
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { instrumentSans, staatliches } from "@/lib/fonts";
 import { calculateAdminFee, calculateVoucherDiscount, cn } from "@/lib/utils";
+import {
+  formatMinimumOrderMessage,
+  getVoucherErrorTitle
+} from "@/lib/voucher-errors";
+
+import { toast } from "@/hooks/useToast";
+
+import { extractErrorMessage } from "@/lib/error-handler";
 
 import VoucherModal from "./VoucherModal";
 
@@ -90,23 +98,47 @@ function PaymentSummary({
   }, [paymentMethod]);
 
   const onApplyVoucher = useCallback(
-    async (voucherName: string | null) => {
-      if (!voucherName || !voucherName.trim() || isApplyingVoucher) return;
+    async (name: string | null) => {
+      if (!name || !name.trim() || isApplyingVoucher) return;
 
       try {
         setIsApplyingVoucher(true);
-        const result = await fetchVoucher(voucherName);
-        setVoucher(result);
+        const result = await fetchVoucher(name);
+
         if (!result) {
+          setVoucher(null);
           setVoucherName("");
+          return;
         }
+
+        if (
+          result.minOrderValue != null &&
+          grossSubtotal < result.minOrderValue
+        ) {
+          toast({
+            variant: "destructive",
+            title: "Minimum order not met",
+            description: formatMinimumOrderMessage(result.minOrderValue)
+          });
+          setVoucher(null);
+          setVoucherName("");
+          return;
+        }
+
+        setVoucher(result);
       } catch (err) {
-        console.error("Failed to apply voucher", err);
+        setVoucher(null);
+        const message = extractErrorMessage(err, "Apply voucher failed");
+        toast({
+          variant: "destructive",
+          title: getVoucherErrorTitle(message),
+          description: message
+        });
       } finally {
         setIsApplyingVoucher(false);
       }
     },
-    [isApplyingVoucher, fetchVoucher, setVoucher]
+    [isApplyingVoucher, fetchVoucher, setVoucher, grossSubtotal]
   );
 
   const handleVoucherKeyPress = useCallback(

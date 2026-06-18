@@ -146,7 +146,8 @@ model Customer {
   currentStreak     Int       @default(0)
   lastEligibleRent  DateTime?
 
-  Booking Booking[]
+  Booking          Booking[]
+  voucherUserUsage VoucherUserUsage[]
 }
 
 model CarouselSlide {
@@ -212,16 +213,19 @@ model Booking {
   // Pricing
   mainValuePerUnit   Int
   othersValuePerUnit Int?
-  voucherName        String?
-  voucherType        Type?
-  voucherAmount      Float?
-  voucherMaxDiscount Float?
-  mainValue          Int
+  voucherName            String?
+  voucherId              Int?
+  voucherType            Type?
+  voucherAmount          Float?
+  voucherMaxDiscount     Float?
+  voucherMinOrderValue   Float?
+  mainValue              Int
   othersValue        Int?
   discount           Int? // voucher discount or daily drop discount (mutually exclusive)
   adminFee           Int?
   bookingFee         Int?
   totalValue         Int // mainValue + otherValue + adminFee + bookingFee - discount
+  quotaReserved      Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -230,6 +234,7 @@ model Booking {
   payments Payment[]
   customer Customer? @relation(fields: [customerId], references: [id])
   account  Account   @relation(fields: [accountId], references: [id])
+  voucher  Voucher?  @relation(fields: [voucherId], references: [id], onDelete: SetNull)
 
   @@index([accountId, status, startAt])
   @@index([accountId, status, endAt]) // availability check
@@ -237,6 +242,8 @@ model Booking {
   @@index([status, expiredAt]) // cleanup
   @@index([status, endAt]) // for sync completed bookings
   @@index([status, startAt]) // for sync account availability
+  @@index([voucherId, status])
+  @@index([voucherId, customerId, status])
 }
 
 model Payment {
@@ -277,18 +284,44 @@ enum Type {
 }
 
 model Voucher {
-  id          Int      @id @default(autoincrement())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  voucherName String   @unique
-  isValid     Boolean  @default(true)
-  isVisible   Boolean  @default(true)
-  type        Type
-  percentage  Float?
-  nominal     Float?
-  maxDiscount Float?
-  dateStart   DateTime
-  dateEnd     DateTime
+  id              Int       @id @default(autoincrement())
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  voucherName     String    @unique
+  isValid         Boolean   @default(true)
+  isVisible       Boolean   @default(true)
+  type            Type
+  percentage      Float?
+  nominal         Float?
+  maxDiscount     Float?
+  minOrderValue   Float?
+  maxGlobalUsage  Int?
+  maxUsagePerUser Int?
+  usageCount      Int       @default(0)
+  dateStart       DateTime
+  dateEnd         DateTime
+  deletedAt       DateTime?
+
+  userUsages VoucherUserUsage[]
+  bookings   Booking[]
+
+  @@index([deletedAt])
+}
+
+model VoucherUserUsage {
+  id         Int      @id @default(autoincrement())
+  voucherId  Int
+  customerId Int
+  usageCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  voucher  Voucher  @relation(fields: [voucherId], references: [id])
+  customer Customer @relation(fields: [customerId], references: [id])
+
+  @@unique([voucherId, customerId])
+  @@index([voucherId])
+  @@index([customerId])
 }
 
 model GlobalSettings {

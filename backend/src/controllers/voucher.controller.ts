@@ -1,5 +1,15 @@
 import { Request, Response, NextFunction } from "express";
+import { BadRequestError } from "../lib/error";
 import { VoucherService } from "../services/voucher.service";
+
+const toOptionalNumber = (value: unknown): number | null => {
+  if (value === "" || value == null) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new BadRequestError("Invalid numeric value");
+  }
+  return parsed;
+};
 
 export class VoucherController {
   constructor(private readonly voucherService: VoucherService) {}
@@ -17,6 +27,16 @@ export class VoucherController {
       );
 
       return res.json({ data, metadata });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getVoucherById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const data = await this.voucherService.findById(Number(id));
+      return res.json({ data });
     } catch (error) {
       return next(error);
     }
@@ -53,6 +73,42 @@ export class VoucherController {
     }
   };
 
+  getUsageSummary = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { id } = req.params;
+      const data = await this.voucherService.getUsageSummary(Number(id));
+      return res.json({ data });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  getUsageBookings = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    try {
+      const { id } = req.params;
+      const page = req.query.page ? parseInt(req.query.page as string) : 1;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
+      const [data, metadata] = await this.voucherService.getUsageBookings(
+        Number(id),
+        page,
+        limit
+      );
+
+      return res.json({ data, metadata });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
   createVoucher = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const {
@@ -61,6 +117,9 @@ export class VoucherController {
         percentage,
         nominal,
         maxDiscount,
+        minOrderValue,
+        maxGlobalUsage,
+        maxUsagePerUser,
         dateStart,
         dateEnd
       } = req.body;
@@ -71,6 +130,9 @@ export class VoucherController {
         percentage,
         nominal,
         maxDiscount,
+        minOrderValue: toOptionalNumber(minOrderValue),
+        maxGlobalUsage: toOptionalNumber(maxGlobalUsage),
+        maxUsagePerUser: toOptionalNumber(maxUsagePerUser),
         dateStart: new Date(dateStart),
         dateEnd: new Date(dateEnd)
       });
@@ -78,6 +140,48 @@ export class VoucherController {
       return res.status(201).json({
         message: "Voucher created successfully"
       });
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  updateVoucher = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const { minOrderValue, maxGlobalUsage, maxUsagePerUser, dateEnd } =
+        req.body;
+
+      const lockedFields = [
+        "type",
+        "percentage",
+        "nominal",
+        "maxDiscount",
+        "dateStart",
+        "isValid",
+        "isVisible",
+        "voucherName"
+      ] as const;
+
+      for (const field of lockedFields) {
+        if (req.body[field] !== undefined) {
+          throw new BadRequestError(`${field} cannot be updated`);
+        }
+      }
+
+      await this.voucherService.update(Number(id), {
+        ...(minOrderValue !== undefined && {
+          minOrderValue: toOptionalNumber(minOrderValue)
+        }),
+        ...(maxGlobalUsage !== undefined && {
+          maxGlobalUsage: toOptionalNumber(maxGlobalUsage)
+        }),
+        ...(maxUsagePerUser !== undefined && {
+          maxUsagePerUser: toOptionalNumber(maxUsagePerUser)
+        }),
+        ...(dateEnd !== undefined && { dateEnd: new Date(dateEnd) })
+      });
+
+      return res.status(200).json({ message: "Voucher updated successfully" });
     } catch (error) {
       return next(error);
     }
