@@ -28,6 +28,8 @@ import {
 
 import useWideScreen from "@/hooks/useWideScreen";
 
+import { formatBookingDuration } from "@/lib/utils";
+
 import { MetadataResponse } from "@/types/api.type";
 import {
   BookingEntity,
@@ -478,7 +480,7 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                         {getLatestPayment(b.payments)?.paymentMethod ?? "-"}
                       </TableCell>
                       <TableCell className=" font-semibold">
-                        {b.duration ?? "-"}
+                        {formatBookingDuration(b.duration, b.quantity)}
                       </TableCell>
                       <TableCell>
                         <BookingStatusBadge status={b.status} />
