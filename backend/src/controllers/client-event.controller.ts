@@ -6,11 +6,7 @@ import {
 import { BadRequestError } from "../lib/error";
 
 export class ClientEventController {
-  logClientEvent = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  logClientEvent = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const parsed = clientEventSchema.safeParse(req.body);
       if (!parsed.success) {

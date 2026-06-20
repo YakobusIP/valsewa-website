@@ -414,13 +414,12 @@ function findPriceListForLegacyDuration(
         item,
         quantity: legacyDurationHours / hours
       }))
-      .filter(
-        ({ quantity }) => Number.isInteger(quantity) && quantity > 0
-      );
+      .filter(({ quantity }) => Number.isInteger(quantity) && quantity > 0);
 
     if (divisibleMatches.length > 0) {
       const [bestMatch] = divisibleMatches.sort(
-        (a, b) => durationHours(b.item.duration) - durationHours(a.item.duration)
+        (a, b) =>
+          durationHours(b.item.duration) - durationHours(a.item.duration)
       );
       return bestMatch;
     }

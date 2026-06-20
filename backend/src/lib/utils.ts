@@ -116,4 +116,3 @@ export const validateTime = (time: string) => {
     throw new Error(`Invalid time format: ${time}. Use HH:mm`);
   }
 };
-

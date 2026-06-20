@@ -8,12 +8,13 @@ export async function fetchAccounts(
   sortBy: string
 ): Promise<AccountEntity[]> {
   try {
-    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL
-      }/api/accounts/public?page=1&limit=1000&q=${encodeURIComponent(
-        search
-      )}&sortBy=${encodeURIComponent(sortBy)}&direction=${encodeURIComponent(
-        direction
-      )}`;
+    const url = `${
+      process.env.NEXT_PUBLIC_AXIOS_BASE_URL
+    }/api/accounts/public?page=1&limit=1000&q=${encodeURIComponent(
+      search
+    )}&sortBy=${encodeURIComponent(sortBy)}&direction=${encodeURIComponent(
+      direction
+    )}`;
     const response = await axios.get(url);
     return response.data.data;
   } catch (error) {
@@ -37,8 +38,9 @@ export async function fetchAccountByCode(
   code: string
 ): Promise<AccountEntity | null> {
   try {
-    const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL
-      }/api/accounts/public/code/${encodeURIComponent(code.trim())}`;
+    const url = `${
+      process.env.NEXT_PUBLIC_AXIOS_BASE_URL
+    }/api/accounts/public/code/${encodeURIComponent(code.trim())}`;
     const response = await axios.get(url);
     return response.data;
   } catch {
@@ -133,7 +135,9 @@ export async function fetchAccountsPublic(
   }
 }
 
-export async function fetchNonMfaRecommendedAccounts(): Promise<AccountEntity[]> {
+export async function fetchNonMfaRecommendedAccounts(): Promise<
+  AccountEntity[]
+> {
   try {
     const url = `${process.env.NEXT_PUBLIC_AXIOS_BASE_URL}/api/accounts/public/recommended`;
     const response = await axios.get(url);

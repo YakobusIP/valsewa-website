@@ -62,16 +62,19 @@ function PaymentStatusView({ payment }: { payment: PaymentWithBookingEntity }) {
       </h1>
 
       <button
-        onClick={() =>
+        onClick={() => {
+          const accountCode = payment.booking?.account?.accountCode?.trim();
           router.push(
-            `/accounts/${encodeURIComponent(
-              payment.booking.account.accountCode.trim()
-            )}`
-          )
-        }
+            accountCode
+              ? `/accounts/${encodeURIComponent(accountCode)}`
+              : "/dashboard"
+          );
+        }}
         className="mt-4 px-6 py-3 text-base sm:text-lg font-semibold rounded bg-neutral-700 hover:bg-neutral-600 transition"
       >
-        Back to Account
+        {payment.booking?.account?.accountCode
+          ? "Back to Account"
+          : "Back to Dashboard"}
       </button>
     </div>
   );
@@ -120,7 +123,7 @@ export default function PaymentDetailPage() {
       setPayment(updatedPayment);
       if (
         updatedPayment.status === PAYMENT_STATUS.SUCCESS &&
-        updatedPayment.booking.status === BOOKING_STATUS.RESERVED
+        updatedPayment.booking?.status === BOOKING_STATUS.RESERVED
       ) {
         router.push(`/payments/${id}/success`);
       }
@@ -198,7 +201,7 @@ export default function PaymentDetailPage() {
         if (
           res &&
           res.status === PAYMENT_STATUS.SUCCESS &&
-          res.booking.status === BOOKING_STATUS.RESERVED
+          res.booking?.status === BOOKING_STATUS.RESERVED
         ) {
           router.push(`/payments/${id}/success`);
         }
@@ -225,7 +228,7 @@ export default function PaymentDetailPage() {
 
   if (
     payment.status === PAYMENT_STATUS.SUCCESS &&
-    payment.booking.status === BOOKING_STATUS.RESERVED
+    payment.booking?.status === BOOKING_STATUS.RESERVED
   ) {
     router.push(`/payments/${id}/success`);
     return;
@@ -279,18 +282,19 @@ export default function PaymentDetailPage() {
             </div>
 
             <div
-              className={`${payment.qrUrl ? "grid grid-cols-2" : "flex flex-col"
-                } max-desktop:flex max-desktop:flex-col items-center pt-16 w-full gap-4 mx-auto tablet:mt-4 mt-2 lg:mt-8 max-w-[1000px]`}
+              className={`${
+                payment.qrUrl ? "grid grid-cols-2" : "flex flex-col"
+              } max-desktop:flex max-desktop:flex-col items-center pt-16 w-full gap-4 mx-auto tablet:mt-4 mt-2 lg:mt-8 max-w-[1000px]`}
             >
               <div className="flex-1 w-auto flex flex-col items-center gap-5">
                 {payment.qrUrl && (
-                  <div className="w-full p-3 sm:p-4 overflow-hidden bg-white rounded-md mx-auto max-w-64 sm:max-w-72 max-h-64 sm:max-h-72">
+                  <div className="w-full p-3 sm:p-4 overflow-hidden bg-white rounded-md mx-auto max-w-64 sm:max-w-72 max-h-64 sm:max-h-72 [color-scheme:light]">
                     <Image
                       src={payment.qrUrl}
                       alt="QRIS payment code"
                       width={300}
                       height={300}
-                      className="object-cover w-full h-auto"
+                      className="object-contain w-full h-auto bg-white"
                       priority
                     />
                   </div>

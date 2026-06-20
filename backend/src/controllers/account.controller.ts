@@ -129,7 +129,11 @@ export class AccountController {
     }
   };
 
-  getAccountByIdPublic = async (req: Request, res: Response, next: NextFunction) => {
+  getAccountByIdPublic = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const account = await this.accountService.getAccountByIdPublic(
         parseInt(req.params.id)
@@ -141,7 +145,11 @@ export class AccountController {
     }
   };
 
-  getAccountByCodePublic = async (req: Request, res: Response, next: NextFunction) => {
+  getAccountByCodePublic = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       const account = await this.accountService.getAccountByCodePublic(
         req.params.code
@@ -381,7 +389,11 @@ export class AccountController {
     }
   };
 
-  updateAccountMFA = async (req: Request, res: Response, next: NextFunction) => {
+  updateAccountMFA = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
     try {
       await this.accountService.updateAccountMFA(
         parseInt(req.params.id),

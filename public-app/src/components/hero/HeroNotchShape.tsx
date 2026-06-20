@@ -1,8 +1,6 @@
 export default function HeroNotchShape() {
   return (
-    <div
-      className="absolute inset-0 max-w-[1920px] overflow-x-clip overflow-y-visible pointer-events-none hidden md:block [--hero-panel-bg:radial-gradient(80%_80%_at_0%_50%,#210004_0%,#000000_60%)]"
-    >
+    <div className="absolute inset-0 max-w-[1920px] overflow-x-clip overflow-y-visible pointer-events-none hidden md:block [--hero-panel-bg:radial-gradient(80%_80%_at_0%_50%,#210004_0%,#000000_60%)]">
       {/* Background panels */}
       <div className="absolute left-0 right-0 bottom-0 top-[var(--hero-notch-height)] rounded-b-2xl rounded-tr-2xl bg-[var(--hero-panel-bg)]" />
       <div className="absolute left-0 top-0 h-[var(--hero-notch-height)] w-[var(--hero-valforum-tab-width)] rounded-t-2xl bg-[var(--hero-panel-bg)]" />

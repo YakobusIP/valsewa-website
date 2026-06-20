@@ -596,7 +596,7 @@ export class BookingController {
           {
             event: "faspay_callback_signature_invalid",
             requestId: req.id,
-          correlationId: req.correlationId,
+            correlationId: req.correlationId,
             billNo: bill_no,
             trxId: trx_id
           },

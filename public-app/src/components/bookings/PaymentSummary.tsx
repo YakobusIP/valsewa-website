@@ -9,6 +9,14 @@ import { VoucherEntity } from "@/types/voucher.type";
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { instrumentSans, staatliches } from "@/lib/fonts";
 import { calculateAdminFee, calculateVoucherDiscount, cn } from "@/lib/utils";
+import {
+  formatMinimumOrderMessage,
+  getVoucherErrorTitle
+} from "@/lib/voucher-errors";
+
+import { toast } from "@/hooks/useToast";
+
+import { extractErrorMessage } from "@/lib/error-handler";
 
 import VoucherModal from "./VoucherModal";
 
@@ -41,16 +49,16 @@ function PaymentSummary({
 
   const isDailyDropBooking =
     !booking.voucherName && (booking.discount ?? 0) > 0;
-  const dailyDropDiscount = isDailyDropBooking ? booking.discount ?? 0 : 0;
-
-  const voucherDiscount = useMemo(
-    () => calculateVoucherDiscount(voucher, booking.mainValue),
-    [voucher, booking.mainValue]
-  );
+  const dailyDropDiscount = isDailyDropBooking ? (booking.discount ?? 0) : 0;
 
   const grossSubtotal = useMemo(
     () => booking.mainValue + (booking.othersValue ?? 0),
     [booking.mainValue, booking.othersValue]
+  );
+
+  const voucherDiscount = useMemo(
+    () => calculateVoucherDiscount(voucher, grossSubtotal),
+    [voucher, grossSubtotal]
   );
 
   const subtotalPayment = useMemo(
@@ -69,8 +77,7 @@ function PaymentSummary({
 
   const bookingFee = booking.immediate ? 0 : (booking.bookingFee ?? 0);
 
-  const isBookingFree =
-    booking && subtotalPayment === 0 && bookingFee === 0;
+  const isBookingFree = booking && subtotalPayment === 0 && bookingFee === 0;
 
   const adminFee = useMemo(
     () =>
@@ -91,23 +98,47 @@ function PaymentSummary({
   }, [paymentMethod]);
 
   const onApplyVoucher = useCallback(
-    async (voucherName: string | null) => {
-      if (!voucherName || !voucherName.trim() || isApplyingVoucher) return;
+    async (name: string | null) => {
+      if (!name || !name.trim() || isApplyingVoucher) return;
 
       try {
         setIsApplyingVoucher(true);
-        const result = await fetchVoucher(voucherName);
-        setVoucher(result);
+        const result = await fetchVoucher(name);
+
         if (!result) {
+          setVoucher(null);
           setVoucherName("");
+          return;
         }
+
+        if (
+          result.minOrderValue != null &&
+          grossSubtotal < result.minOrderValue
+        ) {
+          toast({
+            variant: "destructive",
+            title: "Minimum order not met",
+            description: formatMinimumOrderMessage(result.minOrderValue)
+          });
+          setVoucher(null);
+          setVoucherName("");
+          return;
+        }
+
+        setVoucher(result);
       } catch (err) {
-        console.error("Failed to apply voucher", err);
+        setVoucher(null);
+        const message = extractErrorMessage(err, "Apply voucher failed");
+        toast({
+          variant: "destructive",
+          title: getVoucherErrorTitle(message),
+          description: message
+        });
       } finally {
         setIsApplyingVoucher(false);
       }
     },
-    [isApplyingVoucher, fetchVoucher, setVoucher]
+    [isApplyingVoucher, fetchVoucher, setVoucher, grossSubtotal]
   );
 
   const handleVoucherKeyPress = useCallback(
@@ -133,7 +164,6 @@ function PaymentSummary({
     setTotalPayment(totalPayment);
   }, [totalPayment, setTotalPayment]);
 
-
   if (!booking) return null;
 
   return (
@@ -150,7 +180,9 @@ function PaymentSummary({
           ORDER SUMMARY
         </h1>
         <div className="mt-2">
-          <label className="text-xs sm:text-sm text-[#D9D9D9]">Promo Code</label>
+          <label className="text-xs sm:text-sm text-[#D9D9D9]">
+            Promo Code
+          </label>
           <div className="flex flex-row gap-2 max-tablet:gap-0 border border-[#F9FAFB] rounded-lg p-3 mt-2">
             <input
               type="text"
@@ -255,9 +287,7 @@ function PaymentSummary({
         </button>
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-gray-300"></div>
-          <p className="text-xs sm:text-sm whitespace-nowrap">
-            Any Questions?
-          </p>
+          <p className="text-xs sm:text-sm whitespace-nowrap">Any Questions?</p>
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
         <button

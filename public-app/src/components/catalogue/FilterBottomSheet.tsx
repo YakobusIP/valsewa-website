@@ -2,13 +2,8 @@
 
 import { useEffect } from "react";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle
-} from "@/components/ui/sheet";
-
 import { Checkbox } from "@/components/ui/checkbox";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
 
 import { cn } from "@/lib/utils";
@@ -51,12 +46,14 @@ export function FilterBottomSheet({
   onPriceChange,
   matchingCount,
   onApply,
-  onResetAll,
+  onResetAll
 }: FilterBottomSheetProps) {
   // Optional: prevent background scroll
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   return (

@@ -1,4 +1,5 @@
-"use client"
+"use client";
+
 import { memo, useMemo } from "react";
 
 import { BookingWithAccountEntity } from "@/types/booking.type";

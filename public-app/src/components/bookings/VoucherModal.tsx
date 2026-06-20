@@ -121,11 +121,13 @@ export default function VoucherModal({
   return (
     <Fragment>
       <Dialog open={open} onOpenChange={setOpen}>
-        {!isDailyDrop && (<DialogTrigger asChild>
-          <button className="text-[#E8C545] underline hover:text-yellow-400">
-            Explore Promo Codes
-          </button>
-        </DialogTrigger>)}
+        {!isDailyDrop && (
+          <DialogTrigger asChild>
+            <button className="text-[#E8C545] underline hover:text-yellow-400">
+              Explore Promo Codes
+            </button>
+          </DialogTrigger>
+        )}
 
         <DialogContent className="bg-black border border-zinc-700 max-h-[90vh] overflow-y-auto">
           <DialogHeader>

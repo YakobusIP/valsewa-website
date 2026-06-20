@@ -157,9 +157,7 @@ export function buildDescription(f: CatalogueFilters): string {
   if (f.tiers.length) bits.push(`tiers: ${f.tiers.join(", ")}`);
   if (f.skinIds.length) bits.push(`${f.skinIds.length} skin filter(s)`);
   if (f.minPrice !== PRICE_MIN || f.maxPrice !== PRICE_MAX) {
-    bits.push(
-      `price ${formatRupiah(f.minPrice)}–${formatRupiah(f.maxPrice)}`
-    );
+    bits.push(`price ${formatRupiah(f.minPrice)}–${formatRupiah(f.maxPrice)}`);
   }
   if (!bits.length) {
     return "Browse our full inventory of premium Valorant accounts.";

@@ -131,7 +131,10 @@ export async function initCronJobs() {
   });
 
   schedule("update-rank", "0 0 * * *", async (correlationId) => {
-    const result = await postScheduler("/api/accounts/update-rank", correlationId);
+    const result = await postScheduler(
+      "/api/accounts/update-rank",
+      correlationId
+    );
     cronLogger.debug({
       event: "cron_scheduler_call",
       job: "update-rank",
@@ -141,19 +144,23 @@ export async function initCronJobs() {
     });
   });
 
-  schedule("check-password-expiration", "*/15 * * * *", async (correlationId) => {
-    const result = await postScheduler(
-      "/api/customer/check-password-expiration",
-      correlationId
-    );
-    cronLogger.debug({
-      event: "cron_scheduler_call",
-      job: "check-password-expiration",
-      path: "/api/customer/check-password-expiration",
-      correlationId,
-      ...result
-    });
-  });
+  schedule(
+    "check-password-expiration",
+    "*/15 * * * *",
+    async (correlationId) => {
+      const result = await postScheduler(
+        "/api/customer/check-password-expiration",
+        correlationId
+      );
+      cronLogger.debug({
+        event: "cron_scheduler_call",
+        job: "check-password-expiration",
+        path: "/api/customer/check-password-expiration",
+        correlationId,
+        ...result
+      });
+    }
+  );
 
   schedule("check-voucher-expiration", "*/5 * * * *", async (correlationId) => {
     const result = await postScheduler(
@@ -197,19 +204,23 @@ export async function initCronJobs() {
     });
   });
 
-  schedule("sync-account-availability", "*/1 * * * *", async (correlationId) => {
-    const result = await postScheduler(
-      "/api/bookings/sync-account-availability",
-      correlationId
-    );
-    cronLogger.debug({
-      event: "cron_scheduler_call",
-      job: "sync-account-availability",
-      path: "/api/bookings/sync-account-availability",
-      correlationId,
-      ...result
-    });
-  });
+  schedule(
+    "sync-account-availability",
+    "*/1 * * * *",
+    async (correlationId) => {
+      const result = await postScheduler(
+        "/api/bookings/sync-account-availability",
+        correlationId
+      );
+      cronLogger.debug({
+        event: "cron_scheduler_call",
+        job: "sync-account-availability",
+        path: "/api/bookings/sync-account-availability",
+        correlationId,
+        ...result
+      });
+    }
+  );
 
   cronLogger.info({ event: "cron_jobs_initialized" }, "Cron jobs initialized");
 }

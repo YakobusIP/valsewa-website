@@ -97,7 +97,6 @@ const NavbarHomeMobile = ({
       });
   }, [isAuthenticated]);
 
-
   return (
     <div
       className={`fixed top-0 left-0 right-[var(--scrollbar-width,0px)] z-50 transition-all duration-300 pt-3 pb-3 ${

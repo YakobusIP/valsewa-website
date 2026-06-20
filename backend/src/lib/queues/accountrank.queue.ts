@@ -9,10 +9,7 @@ import {
 } from "../error";
 import { AccountService } from "../../services/account.service";
 import { UploadService } from "../../services/upload.service";
-import {
-  getContextLogger,
-  runWithRequestContext
-} from "../request-context";
+import { getContextLogger, runWithRequestContext } from "../request-context";
 
 const queueLogger = () =>
   getContextLogger({ component: "queue", queue: "updateAllAccountRankQueue" });
@@ -38,8 +35,8 @@ export const updateAllAccountRankQueue = new Queue<UpdateJobData>(
     defaultJobOptions: {
       attempts: 5,
       backoff: {
-        type: "exponential",
-        delay: 1000
+        type: "fixed",
+        delay: 60_000
       }
     }
   }
@@ -52,72 +49,77 @@ const processUpdateAllAccountQueue = async (job: Job<UpdateJobData>) => {
   const jobRequestId = randomUUID();
   const correlationId = job.data.correlationId;
 
-  await runWithRequestContext({ requestId: jobRequestId, correlationId }, async () => {
-    const start = Date.now();
-    queueLogger().info(
-      {
-        event: "queue_job_started",
-        queue: "updateAllAccountRankQueue",
-        jobId: job.id,
-        accountId: job.data.id,
-        correlationId,
-        attemptsMade: job.attemptsMade
-      },
-      "Queue job started"
-    );
-
-    try {
-      const [name, tag] = job.data.nickname.split("#");
-
-      if (!name || !tag) {
-        throw new UnprocessableEntityError(
-          "Invalid nickname format. Expected name#tag"
-        );
-      }
-
-      const rankResponse = await rankService.callAPI(name, tag);
-      await accountService.updateAccount(job.data.id, {
-        accountRank: rankResponse.data.current_data.currenttierpatched
-      });
-
+  await runWithRequestContext(
+    { requestId: jobRequestId, correlationId },
+    async () => {
+      const start = Date.now();
       queueLogger().info(
         {
-          event: "queue_job_completed",
+          event: "queue_job_started",
           queue: "updateAllAccountRankQueue",
           jobId: job.id,
           accountId: job.data.id,
           correlationId,
-          attemptsMade: job.attemptsMade,
-          durationMs: Date.now() - start
+          attemptsMade: job.attemptsMade
         },
-        "Queue job completed"
-      );
-    } catch (error) {
-      queueLogger().error(
-        {
-          event: "queue_job_failed",
-          queue: "updateAllAccountRankQueue",
-          jobId: job.id,
-          accountId: job.data.id,
-          correlationId,
-          attemptsMade: job.attemptsMade,
-          durationMs: Date.now() - start,
-          errorName: (error as Error).name,
-          errorMessage: (error as Error).message
-        },
-        "Queue job failed"
+        "Queue job started"
       );
 
-      if (
-        error instanceof NotFoundError ||
-        error instanceof UnprocessableEntityError
-      ) {
-        throw error;
+      try {
+        const [name, tag] = job.data.nickname.split("#");
+
+        if (!name || !tag) {
+          throw new UnprocessableEntityError(
+            "Invalid nickname format. Expected name#tag"
+          );
+        }
+
+        const rankResponse = await rankService.callAPI(name, tag);
+        await accountService.updateAccount(job.data.id, {
+          accountRank: rankResponse.data.current_data.currenttierpatched
+        });
+
+        queueLogger().info(
+          {
+            event: "queue_job_completed",
+            queue: "updateAllAccountRankQueue",
+            jobId: job.id,
+            accountId: job.data.id,
+            correlationId,
+            attemptsMade: job.attemptsMade,
+            durationMs: Date.now() - start
+          },
+          "Queue job completed"
+        );
+      } catch (error) {
+        queueLogger().error(
+          {
+            event: "queue_job_failed",
+            queue: "updateAllAccountRankQueue",
+            jobId: job.id,
+            accountId: job.data.id,
+            correlationId,
+            attemptsMade: job.attemptsMade,
+            durationMs: Date.now() - start,
+            errorName: (error as Error).name,
+            errorMessage: (error as Error).message
+          },
+          "Queue job failed"
+        );
+
+        if (error instanceof NotFoundError) {
+          await job.moveToFailed(error, true);
+          return;
+        }
+
+        if (error instanceof UnprocessableEntityError) {
+          throw error;
+        }
+
+        throw new InternalServerError((error as Error).message);
       }
-
-      throw new InternalServerError((error as Error).message);
     }
-  });
+  );
 };
 
 updateAllAccountRankQueue.process(processUpdateAllAccountQueue);

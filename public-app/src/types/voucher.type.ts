@@ -14,6 +14,7 @@ export type VoucherEntity = {
   percentage: number | null;
   nominal: number | null;
   maxDiscount: number | null;
+  minOrderValue?: number | null;
   dateStart: Date;
   dateEnd: Date;
 };

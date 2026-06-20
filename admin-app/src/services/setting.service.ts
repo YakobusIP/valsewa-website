@@ -12,7 +12,7 @@ export type OperationalHoursEntity = {
 export type UpdateOperationalHoursRequest = {
   open: string;
   close: string;
-}
+};
 
 const createSettingService = () => {
   const getSetting = async (key: string) => {
@@ -39,7 +39,7 @@ const createSettingService = () => {
     }
   };
 
-  const getOperationalHours = async(): Promise<OperationalHoursEntity> => {
+  const getOperationalHours = async (): Promise<OperationalHoursEntity> => {
     try {
       const response = await interceptedAxios.get<OperationalHoursEntity>(
         `${BASE_SETTING_URL}/operational-hours`
@@ -48,9 +48,11 @@ const createSettingService = () => {
     } catch (error) {
       throw new Error(handleAxiosError(error));
     }
-  }
+  };
 
-  const updateOperationalHours = async (data: UpdateOperationalHoursRequest) => {
+  const updateOperationalHours = async (
+    data: UpdateOperationalHoursRequest
+  ) => {
     try {
       const response = await interceptedAxios.put<{
         key: string;

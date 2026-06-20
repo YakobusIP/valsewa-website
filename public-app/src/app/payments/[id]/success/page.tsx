@@ -43,7 +43,7 @@ export default function PaymentSuccessPage() {
 
   const WHATSAPP_CONFIG = {
     phoneNumber: "6285175343447",
-    mfaMessage: "Halo admin VALSEWA aku mau request MFA dengan booking code: ",
+    mfaMessage: "Halo admin VALSEWA aku mau request MFA dengan booking code: "
   };
 
   const auth = useAuth();
@@ -105,10 +105,7 @@ export default function PaymentSuccessPage() {
   }, [booking?.endAt]);
 
   const showCredentials = useMemo(() => {
-    return (
-      booking?.active === true &&
-      booking?.account?.username
-    );
+    return booking?.active === true && booking?.account?.username;
   }, [booking]);
 
   const isMfaEnabled = useMemo(() => booking?.account?.isMfa, [booking]);
@@ -158,10 +155,8 @@ export default function PaymentSuccessPage() {
         </div>
 
         <div className="grid gap-10 lg:gap-10">
-
           {/* LEFT: Booking Details */}
           <div className="flex flex-col items-center text-center space-y-4 h-auto">
-
             {/* ✅ WhatsApp CTA (ONLY MFA) */}
             {isMfaEnabled && (
               <button
@@ -173,9 +168,7 @@ export default function PaymentSuccessPage() {
                 </div>
 
                 <div className="flex flex-col text-left leading-tight">
-                  <span className="text-sm text-white/80">
-                    Send QR code to
-                  </span>
+                  <span className="text-sm text-white/80">Send QR code to</span>
                   <span className="text-base font-semibold text-white">
                     Valsewa by Whatsapp
                   </span>
@@ -198,11 +191,17 @@ export default function PaymentSuccessPage() {
                   <div className="flex justify-between">
                     <span className="text-gray-400">Riot Password</span>
                     <button
-                      onClick={() => handleCopyPassword(booking.account.password!)}
+                      onClick={() =>
+                        handleCopyPassword(booking.account.password!)
+                      }
                       className="flex items-center gap-2"
                     >
                       {booking.account.password}
-                      {passwordCopied ? <CheckIcon size={14} /> : <CopyIcon size={14} />}
+                      {passwordCopied ? (
+                        <CheckIcon size={14} />
+                      ) : (
+                        <CopyIcon size={14} />
+                      )}
                     </button>
                   </div>
                 )}
@@ -280,14 +279,11 @@ export default function PaymentSuccessPage() {
                   1
                 </span>
                 <span className="flex flex-col text-left">
-                  <p>
-                    Your rental period ends at:
-                  </p>
+                  <p>Your rental period ends at:</p>
                   <p className="bg-[#7C000A] px-2 py-1 rounded-sm">
                     <b>({endDate})</b>
                   </p>
                 </span>
-
               </div>
 
               <div className="flex gap-4">
@@ -295,7 +291,8 @@ export default function PaymentSuccessPage() {
                   2
                 </span>
                 <p className="text-left">
-                  Ensure the account is logged out on time, or a fine will be charged.
+                  Ensure the account is logged out on time, or a fine will be
+                  charged.
                 </p>
               </div>
             </div>
@@ -304,25 +301,28 @@ export default function PaymentSuccessPage() {
               <div className="flex items-center justify-center font-bold">
                 Cancelation
               </div>
-              <p>This booking is <b>final</b> and cannot be modified after confirmation.</p>
-              <p>Please note that <b>cancellation is non-refundable</b>.</p>
+              <p>
+                This booking is <b>final</b> and cannot be modified after
+                confirmation.
+              </p>
+              <p>
+                Please note that <b>cancellation is non-refundable</b>.
+              </p>
             </div>
 
             <div className="text-sm pt-4 text-[#F9FAFB] space-y-2 pb-8 px-8">
               <p>
-                If you encounter any difficulties or have questions, please contact our{" "}
+                If you encounter any difficulties or have questions, please
+                contact our{" "}
                 <span
                   className="text-yellow-400 underline cursor-pointer"
                   onClick={() =>
-                    window.open(
-                      "https://wa.me/6285175343447",
-                      "_blank"
-                    )
+                    window.open("https://wa.me/6285175343447", "_blank")
                   }
                 >
                   Customer Service
-                </span>
-                {" "}team for assistance.
+                </span>{" "}
+                team for assistance.
               </p>
             </div>
           </div>
@@ -354,14 +354,11 @@ export default function PaymentSuccessPage() {
                   1
                 </span>
                 <span className="flex flex-col">
-                  <p>
-                    Your rental period ends at:
-                  </p>
+                  <p>Your rental period ends at:</p>
                   <p className="bg-[#7C000A] px-2 py-1 rounded-sm">
                     <b>({endDate})</b>
                   </p>
                 </span>
-
               </div>
 
               <div className="flex gap-3">
@@ -369,7 +366,8 @@ export default function PaymentSuccessPage() {
                   2
                 </span>
                 <p>
-                  Ensure the account is logged out on time, or a fine will be charged.
+                  Ensure the account is logged out on time, or a fine will be
+                  charged.
                 </p>
               </div>
             </div>
@@ -378,28 +376,32 @@ export default function PaymentSuccessPage() {
               <div className="flex items-center justify-center font-bold">
                 Cancelation
               </div>
-              <p>This booking is <b>final</b> and cannot be modified after confirmation.</p>
-              <p>Please note that <b>cancellation is non-refundable</b>.</p>
+              <p>
+                This booking is <b>final</b> and cannot be modified after
+                confirmation.
+              </p>
+              <p>
+                Please note that <b>cancellation is non-refundable</b>.
+              </p>
             </div>
 
             <div className="text-sm pt-4 text-[#F9FAFB] space-y-2">
               <p>
-                If you encounter any difficulties or have questions, please contact our{" "}
+                If you encounter any difficulties or have questions, please
+                contact our{" "}
                 <span
                   className="text-yellow-400 underline cursor-pointer"
                   onClick={() =>
-                    window.open(
-                      "https://wa.me/6285175343447",
-                      "_blank"
-                    )
+                    window.open("https://wa.me/6285175343447", "_blank")
                   }
                 >
                   Customer Service
-                </span>
-                {" "}team for assistance.
+                </span>{" "}
+                team for assistance.
               </p>
             </div>
-          </div>)}
+          </div>
+        )}
       </div>
     </main>
   );

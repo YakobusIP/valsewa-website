@@ -65,8 +65,6 @@ function createRootLogger(): Logger {
 
 export const logger = createRootLogger();
 
-export function createChildLogger(
-  bindings: Record<string, unknown>
-): Logger {
+export function createChildLogger(bindings: Record<string, unknown>): Logger {
   return logger.child(bindings);
 }
