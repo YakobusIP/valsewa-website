@@ -35,14 +35,14 @@ export function calculateVoucherDiscount(
     nominal: number | null;
     maxDiscount: number | null;
   } | null,
-  mainValue: number
+  orderSubtotal: number
 ): number {
   if (!voucher) return 0;
 
   let discount = 0;
   if (voucher.type === TYPE.PERSENTASE) {
     const voucherAmount = voucher.percentage ?? 0;
-    discount = mainValue * voucherAmount * 0.01;
+    discount = orderSubtotal * voucherAmount * 0.01;
   } else {
     const voucherAmount = voucher.nominal ?? 0;
     discount = voucherAmount;
@@ -52,7 +52,7 @@ export function calculateVoucherDiscount(
     discount = Math.min(discount, voucher.maxDiscount);
   }
 
-  return Math.min(discount, mainValue);
+  return Math.min(discount, orderSubtotal);
 }
 
 export function calculateAdminFee(

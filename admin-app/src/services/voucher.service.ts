@@ -1,5 +1,11 @@
 import { ApiResponseList, MessageResponse } from "@/types/api.type";
-import { CreateVoucherPayload, VoucherType } from "@/types/voucher.type";
+import {
+  CreateVoucherPayload,
+  UpdateVoucherPayload,
+  VoucherType,
+  VoucherUsageBookingRow,
+  VoucherUsageSummary
+} from "@/types/voucher.type";
 
 import { handleAxiosError, interceptedAxios } from "@/lib/axios";
 
@@ -12,6 +18,10 @@ export type VoucherEntity = {
   percentage?: number | null;
   nominal?: number | null;
   maxDiscount?: number | null;
+  minOrderValue?: number | null;
+  maxGlobalUsage?: number | null;
+  maxUsagePerUser?: number | null;
+  usageCount: number;
   dateStart: Date;
   dateEnd: Date;
   createdAt: Date;
@@ -55,7 +65,7 @@ const createVoucherService = () => {
     }
   };
 
-  const update = async (id: number, data: Partial<CreateVoucherPayload>) => {
+  const update = async (id: number, data: UpdateVoucherPayload) => {
     try {
       const response = await interceptedAxios.put<MessageResponse>(
         `${BASE_VOUCHER_URL}/${id}`,
@@ -74,11 +84,38 @@ const createVoucherService = () => {
         data: VoucherEntity;
       }>(`${BASE_VOUCHER_URL}/${id}`);
 
+      return response.data.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
+  const fetchUsageSummary = async (id: number) => {
+    try {
+      const response = await interceptedAxios.get<{
+        data: VoucherUsageSummary;
+      }>(`${BASE_VOUCHER_URL}/${id}/usage/summary`);
+
+      return response.data.data;
+    } catch (error) {
+      throw new Error(handleAxiosError(error));
+    }
+  };
+
+  const fetchUsageBookings = async (id: number, page = 1, limit = 20) => {
+    try {
+      const response = await interceptedAxios.get<
+        ApiResponseList<VoucherUsageBookingRow>
+      >(`${BASE_VOUCHER_URL}/${id}/usage/bookings`, {
+        params: { page, limit }
+      });
+
       return response.data;
     } catch (error) {
       throw new Error(handleAxiosError(error));
     }
   };
+
   const toggleStatus = async (id: number) => {
     try {
       const res = await interceptedAxios.patch<MessageResponse>(
@@ -90,6 +127,7 @@ const createVoucherService = () => {
       throw new Error(handleAxiosError(error));
     }
   };
+
   const toggleStatusVisibility = async (id: number) => {
     try {
       const res = await interceptedAxios.patch<MessageResponse>(
@@ -108,6 +146,8 @@ const createVoucherService = () => {
     remove,
     update,
     findById,
+    fetchUsageSummary,
+    fetchUsageBookings,
     toggleStatus,
     toggleStatusVisibility
   };

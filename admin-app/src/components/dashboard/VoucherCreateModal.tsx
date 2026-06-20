@@ -22,6 +22,9 @@ type VoucherForm = {
   percentage: string;
   nominal: string;
   maxDiscount: string;
+  minOrderValue: string;
+  maxGlobalUsage: string;
+  maxUsagePerUser: string;
   dateStart: string;
   dateEnd: string;
 };
@@ -47,6 +50,9 @@ export default function VoucherCreateModal({
     percentage: "",
     nominal: "",
     maxDiscount: "",
+    minOrderValue: "",
+    maxGlobalUsage: "",
+    maxUsagePerUser: "",
     dateStart: "",
     dateEnd: ""
   });
@@ -92,17 +98,59 @@ export default function VoucherCreateModal({
       return;
     }
 
+    const toOptionalNumber = (value: string) => {
+      if (!value.trim()) return null;
+      return Number(value);
+    };
+
+    const toOptionalPositiveInteger = (
+      value: string,
+      label: string
+    ): number | null => {
+      if (!value.trim()) return null;
+      const num = Number(value);
+      if (!Number.isInteger(num) || num < 1) {
+        alert(`${label} must be a whole number of at least 1`);
+        return null;
+      }
+      return num;
+    };
+
+    const maxGlobalUsage = toOptionalPositiveInteger(
+      form.maxGlobalUsage,
+      "Max global usage"
+    );
+    if (form.maxGlobalUsage.trim() && maxGlobalUsage === null) {
+      setLoading(false);
+      return;
+    }
+
+    const maxUsagePerUser = toOptionalPositiveInteger(
+      form.maxUsagePerUser,
+      "Max usage per user"
+    );
+    if (form.maxUsagePerUser.trim() && maxUsagePerUser === null) {
+      setLoading(false);
+      return;
+    }
+
     const payload: CreateVoucherPayload = {
       voucherName: form.voucherName,
       isValid: form.isValid,
-      isVisble: form.isVisible,
+      isVisible: form.isVisible,
       type: form.type,
 
-      percentage: form.type === "PERSENTASE" ? Number(form.percentage) : null,
+      percentage:
+        form.type === "PERSENTASE" ? toOptionalNumber(form.percentage) : null,
 
-      nominal: form.type === "NOMINAL" ? Number(form.nominal) : null,
+      nominal: form.type === "NOMINAL" ? toOptionalNumber(form.nominal) : null,
 
-      maxDiscount: form.type === "PERSENTASE" ? Number(form.maxDiscount) : null,
+      maxDiscount:
+        form.type === "PERSENTASE" ? toOptionalNumber(form.maxDiscount) : null,
+
+      minOrderValue: toOptionalNumber(form.minOrderValue),
+      maxGlobalUsage,
+      maxUsagePerUser,
 
       dateStart: new Date(form.dateStart),
       dateEnd: new Date(form.dateEnd)
@@ -121,6 +169,9 @@ export default function VoucherCreateModal({
         percentage: "",
         nominal: "",
         maxDiscount: "",
+        minOrderValue: "",
+        maxGlobalUsage: "",
+        maxUsagePerUser: "",
         dateStart: "",
         dateEnd: ""
       });
@@ -215,6 +266,52 @@ export default function VoucherCreateModal({
               />
             </div>
           )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                Minimum Order Value
+              </label>
+              <input
+                type="number"
+                name="minOrderValue"
+                value={form.minOrderValue}
+                onChange={handleChange}
+                placeholder="Leave empty for none"
+                className="border w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                Max Global Usage
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="1"
+                name="maxGlobalUsage"
+                value={form.maxGlobalUsage}
+                onChange={handleChange}
+                placeholder="Leave empty for unlimited"
+                className="border w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                Max Usage per User
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="1"
+                name="maxUsagePerUser"
+                value={form.maxUsagePerUser}
+                onChange={handleChange}
+                placeholder="Leave empty for unlimited"
+                className="border w-full p-2 rounded-md"
+              />
+            </div>
+          </div>
 
           {/* Date Range */}
           <div className="grid grid-cols-2 gap-4">
