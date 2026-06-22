@@ -25,11 +25,31 @@ class VoucherRouter {
       this.voucherController.getActiveVouchers
     );
     this.router.get(
-      "/active/:voucherName",
+      "/active/:voucherCode",
       customerMiddleware,
-      this.voucherController.getActiveVoucherByVoucherName
+      this.voucherController.getActiveVoucherByVoucherCode
+    );
+    this.router.get(
+      "/:id/usage/summary",
+      authMiddleware,
+      this.voucherController.getUsageSummary
+    );
+    this.router.get(
+      "/:id/usage/bookings",
+      authMiddleware,
+      this.voucherController.getUsageBookings
+    );
+    this.router.get(
+      "/:id",
+      authMiddleware,
+      this.voucherController.getVoucherById
     );
     this.router.post("/", authMiddleware, this.voucherController.createVoucher);
+    this.router.put(
+      "/:id",
+      authMiddleware,
+      this.voucherController.updateVoucher
+    );
     this.router.patch(
       "/:id/toggle",
       authMiddleware,

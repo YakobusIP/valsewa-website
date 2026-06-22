@@ -288,13 +288,13 @@ export default function PaymentDetailPage() {
             >
               <div className="flex-1 w-auto flex flex-col items-center gap-5">
                 {payment.qrUrl && (
-                  <div className="w-full p-3 sm:p-4 overflow-hidden bg-white rounded-md mx-auto max-w-64 sm:max-w-72 max-h-64 sm:max-h-72">
+                  <div className="w-full p-3 sm:p-4 overflow-hidden bg-white rounded-md mx-auto max-w-64 sm:max-w-72 max-h-64 sm:max-h-72 [color-scheme:light]">
                     <Image
                       src={payment.qrUrl}
                       alt="QRIS payment code"
                       width={300}
                       height={300}
-                      className="object-cover w-full h-auto"
+                      className="object-contain w-full h-auto bg-white"
                       priority
                     />
                   </div>

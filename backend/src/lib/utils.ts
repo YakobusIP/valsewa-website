@@ -35,6 +35,12 @@ export const addDays = (date: Date, daysToAdd: number) => {
   return d;
 };
 
+export const subtractDays = (date: Date, daysToSubtract: number) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() - daysToSubtract);
+  return d;
+};
+
 export const addHours = (date: Date, hoursToAdd: number) => {
   const d = new Date(date);
   d.setTime(d.getTime() + hoursToAdd * 60 * 60 * 1000);

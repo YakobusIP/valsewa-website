@@ -9,6 +9,14 @@ import { VoucherEntity } from "@/types/voucher.type";
 import { PAYMENT_METHOD_LABELS } from "@/lib/constants";
 import { instrumentSans, staatliches } from "@/lib/fonts";
 import { calculateAdminFee, calculateVoucherDiscount, cn } from "@/lib/utils";
+import {
+  formatMinimumOrderMessage,
+  getVoucherErrorTitle
+} from "@/lib/voucher-errors";
+
+import { toast } from "@/hooks/useToast";
+
+import { extractErrorMessage } from "@/lib/error-handler";
 
 import VoucherModal from "./VoucherModal";
 
@@ -17,7 +25,7 @@ type PaymentSummaryProps = {
   paymentMethod: PAYMENT_METHOD_REQUEST | null;
   voucher: VoucherEntity | null;
   setVoucher: (value: VoucherEntity | null) => void;
-  fetchVoucher: (voucherName: string) => Promise<VoucherEntity | null>;
+  fetchVoucher: (voucherCode: string) => Promise<VoucherEntity | null>;
   setBookingFree: (value: boolean) => void;
   setTotalPayment: (value: number) => void;
   onSubmit: () => Promise<void>;
@@ -34,7 +42,7 @@ function PaymentSummary({
   onSubmit
 }: PaymentSummaryProps) {
   const [loading, setLoading] = useState(false);
-  const [voucherName, setVoucherName] = useState("");
+  const [voucherCode, setVoucherCode] = useState("");
   const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
 
   const isDisabled = !booking || !paymentMethod;
@@ -43,14 +51,14 @@ function PaymentSummary({
     !booking.voucherName && (booking.discount ?? 0) > 0;
   const dailyDropDiscount = isDailyDropBooking ? (booking.discount ?? 0) : 0;
 
-  const voucherDiscount = useMemo(
-    () => calculateVoucherDiscount(voucher, booking.mainValue),
-    [voucher, booking.mainValue]
-  );
-
   const grossSubtotal = useMemo(
     () => booking.mainValue + (booking.othersValue ?? 0),
     [booking.mainValue, booking.othersValue]
+  );
+
+  const voucherDiscount = useMemo(
+    () => calculateVoucherDiscount(voucher, grossSubtotal),
+    [voucher, grossSubtotal]
   );
 
   const subtotalPayment = useMemo(
@@ -90,32 +98,56 @@ function PaymentSummary({
   }, [paymentMethod]);
 
   const onApplyVoucher = useCallback(
-    async (voucherName: string | null) => {
-      if (!voucherName || !voucherName.trim() || isApplyingVoucher) return;
+    async (name: string | null) => {
+      if (!name || !name.trim() || isApplyingVoucher) return;
 
       try {
         setIsApplyingVoucher(true);
-        const result = await fetchVoucher(voucherName);
-        setVoucher(result);
+        const result = await fetchVoucher(name);
+
         if (!result) {
-          setVoucherName("");
+          setVoucher(null);
+          setVoucherCode("");
+          return;
         }
+
+        if (
+          result.minOrderValue != null &&
+          grossSubtotal < result.minOrderValue
+        ) {
+          toast({
+            variant: "destructive",
+            title: "Minimum order not met",
+            description: formatMinimumOrderMessage(result.minOrderValue)
+          });
+          setVoucher(null);
+          setVoucherCode("");
+          return;
+        }
+
+        setVoucher(result);
       } catch (err) {
-        console.error("Failed to apply voucher", err);
+        setVoucher(null);
+        const message = extractErrorMessage(err, "Apply voucher failed");
+        toast({
+          variant: "destructive",
+          title: getVoucherErrorTitle(message),
+          description: message
+        });
       } finally {
         setIsApplyingVoucher(false);
       }
     },
-    [isApplyingVoucher, fetchVoucher, setVoucher]
+    [isApplyingVoucher, fetchVoucher, setVoucher, grossSubtotal]
   );
 
   const handleVoucherKeyPress = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && voucherName.trim()) {
-        onApplyVoucher(voucherName);
+      if (e.key === "Enter" && voucherCode.trim()) {
+        onApplyVoucher(voucherCode);
       }
     },
-    [voucherName, onApplyVoucher]
+    [voucherCode, onApplyVoucher]
   );
 
   const handleSubmit = async () => {
@@ -154,8 +186,8 @@ function PaymentSummary({
           <div className="flex flex-row gap-2 max-tablet:gap-0 border border-[#F9FAFB] rounded-lg p-3 mt-2">
             <input
               type="text"
-              value={voucherName}
-              onChange={(e) => setVoucherName(e.target.value)}
+              value={voucherCode}
+              onChange={(e) => setVoucherCode(e.target.value)}
               onKeyPress={handleVoucherKeyPress}
               placeholder="Enter Promo Code"
               className="flex-1 px-3 py-2 text-sm bg-[#1C1C1C] rounded outline-none"
@@ -165,8 +197,8 @@ function PaymentSummary({
 
             <button
               type="button"
-              onClick={() => onApplyVoucher(voucherName)}
-              disabled={!voucherName.trim() || isApplyingVoucher}
+              onClick={() => onApplyVoucher(voucherCode)}
+              disabled={!voucherCode.trim() || isApplyingVoucher}
               className="px-4 py-2 text-sm sm:text-base bg-[#C70515] text-[#D9D9D9] font-semibold rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#b81a1a] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
               aria-label="Apply promo code"
             >

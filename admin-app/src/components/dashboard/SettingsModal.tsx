@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -27,8 +28,10 @@ export default function SettingsModal({
   const [reminderText, setReminderText] = useState("");
   const [openTime, setOpenTime] = useState("");
   const [closeTime, setCloseTime] = useState("");
+  const [passwordExpiryDays, setPasswordExpiryDays] = useState("30");
 
   const SETTING_KEY = "reminder_text";
+  const PASSWORD_EXPIRY_DAYS_KEY = "password_expiry_days";
 
   const fetchReminderText = async () => {
     setLoading(true);
@@ -64,13 +67,38 @@ export default function SettingsModal({
     }
   };
 
+  const fetchPasswordExpiryDays = async () => {
+    try {
+      const data = await settingService.getSetting(PASSWORD_EXPIRY_DAYS_KEY);
+      setPasswordExpiryDays(data.value || "30");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          variant: "destructive",
+          title: "Error fetching password expiry setting",
+          description: error.message
+        });
+      }
+    }
+  };
+
   const handleSave = async () => {
     setLoading(true);
     try {
+      const expiryDays = Number.parseInt(passwordExpiryDays, 10);
+      if (!Number.isFinite(expiryDays) || expiryDays < 1) {
+        throw new Error("Password expiry days must be at least 1");
+      }
+
       const promises: Promise<unknown>[] = [];
 
+      promises.push(settingService.updateSetting(SETTING_KEY, reminderText));
+
       promises.push(
-        settingService.updateSetting(SETTING_KEY, reminderText)
+        settingService.updateSetting(
+          PASSWORD_EXPIRY_DAYS_KEY,
+          String(expiryDays)
+        )
       );
 
       if (openTime || closeTime) {
@@ -115,6 +143,7 @@ export default function SettingsModal({
     if (open) {
       fetchReminderText();
       fetchOperationalHours();
+      fetchPasswordExpiryDays();
     }
   }, [open]);
 
@@ -140,37 +169,53 @@ export default function SettingsModal({
               {"{password}"}, {"{accountCode}"}, dan {"{expired}"}.
             </p>
           </div>
-          <div className="grid gap-4 py-2">
           <div className="grid gap-2">
-            <Label>Operational Hours (WIB)</Label>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <Label className="text-xs text-muted-foreground">Open</Label>
-                <input
-                  type="time"
-                  value={openTime}
-                  onChange={(e) => setOpenTime(e.target.value)}
-                  className="border border-gray-300 rounded-md px-2 py-2"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <Label className="text-xs text-muted-foreground">Close</Label>
-                <input
-                  type="time"
-                  value={closeTime}
-                  onChange={(e) => setCloseTime(e.target.value)}
-                  className="border border-gray-300 rounded-md px-2 py-2"
-                />
-              </div>
-            </div>
-
+            <Label htmlFor="password-expiry-days">
+              Customer Password Expiry (days)
+            </Label>
+            <Input
+              id="password-expiry-days"
+              type="number"
+              min={1}
+              value={passwordExpiryDays}
+              onChange={(e) => setPasswordExpiryDays(e.target.value)}
+            />
             <p className="text-xs text-muted-foreground">
-              Last order akan otomatis dihitung 30 menit sebelum jam tutup.
+              Menghitung ulang masa berlaku semua customer. Akun yang sudah
+              melewati batas baru akan langsung dinonaktifkan.
             </p>
           </div>
-        </div>
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-2">
+              <Label>Operational Hours (WIB)</Label>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Open</Label>
+                  <input
+                    type="time"
+                    value={openTime}
+                    onChange={(e) => setOpenTime(e.target.value)}
+                    className="border border-gray-300 rounded-md px-2 py-2"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <Label className="text-xs text-muted-foreground">Close</Label>
+                  <input
+                    type="time"
+                    value={closeTime}
+                    onChange={(e) => setCloseTime(e.target.value)}
+                    className="border border-gray-300 rounded-md px-2 py-2"
+                  />
+                </div>
+              </div>
+
+              <p className="text-xs text-muted-foreground">
+                Last order akan otomatis dihitung 30 menit sebelum jam tutup.
+              </p>
+            </div>
+          </div>
         </div>
         <DialogFooter>
           <Button onClick={handleSave} disabled={loading}>

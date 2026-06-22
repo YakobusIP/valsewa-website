@@ -11,6 +11,7 @@ import { accountService, isCanceledError } from "@/services/account.service";
 import { statisticService } from "@/services/statistic.service";
 
 import CarouselManagementModal from "@/components/carousel-management/CarouselManagementModal";
+import DailyDropModal from "@/components/daily-drop/DailyDropModal";
 import AccountDetailModal from "@/components/dashboard/AccountDetailModal";
 import Navbar from "@/components/dashboard/Navbar";
 import SettingsModal from "@/components/dashboard/SettingsModal";
@@ -21,7 +22,6 @@ import UserListModal from "@/components/dashboard/UserListModal";
 import VoucherModal from "@/components/dashboard/VoucherModal";
 import DataTable from "@/components/data-table/DataTable";
 import { accountColumns } from "@/components/data-table/table-columns/AccountTableColumns";
-import DailyDropModal from "@/components/daily-drop/DailyDropModal";
 import PriceTierModal from "@/components/pricetier-management/PriceTierModal";
 import SkinManagementModal from "@/components/skin-management/SkinManagementModal";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 
 import { voucherService } from "@/services/voucher.service";
@@ -12,9 +10,12 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 
+import { toast } from "@/hooks/useToast";
+
 import { CreateVoucherPayload, VoucherType } from "@/types/voucher.type";
 
 type VoucherForm = {
+  voucherCode: string;
   voucherName: string;
   isValid: boolean;
   isVisible: boolean;
@@ -22,6 +23,9 @@ type VoucherForm = {
   percentage: string;
   nominal: string;
   maxDiscount: string;
+  minOrderValue: string;
+  maxGlobalUsage: string;
+  maxUsagePerUser: string;
   dateStart: string;
   dateEnd: string;
 };
@@ -40,6 +44,7 @@ export default function VoucherCreateModal({
   const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState<VoucherForm>({
+    voucherCode: "",
     voucherName: "",
     isValid: true,
     isVisible: true,
@@ -47,6 +52,9 @@ export default function VoucherCreateModal({
     percentage: "",
     nominal: "",
     maxDiscount: "",
+    minOrderValue: "",
+    maxGlobalUsage: "",
+    maxUsagePerUser: "",
     dateStart: "",
     dateEnd: ""
   });
@@ -86,23 +94,110 @@ export default function VoucherCreateModal({
     e.preventDefault();
     setLoading(true);
 
-    if (!form.voucherName) {
-      alert("Voucher name is required");
+    if (!form.voucherCode.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Create failed",
+        description: "Voucher code is required"
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (!form.voucherName.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Create failed",
+        description: "Voucher name is required"
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (!form.dateStart || !form.dateEnd) {
+      toast({
+        variant: "destructive",
+        title: "Create failed",
+        description: "Start date and end date are required"
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (form.type === "PERSENTASE" && !form.percentage.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Create failed",
+        description: "Percentage is required"
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (form.type === "NOMINAL" && !form.nominal.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Create failed",
+        description: "Nominal is required"
+      });
+      setLoading(false);
+      return;
+    }
+
+    const toOptionalNumber = (value: string) => {
+      if (!value.trim()) return null;
+      return Number(value);
+    };
+
+    const toOptionalPositiveInteger = (value: string): number | null => {
+      if (!value.trim()) return null;
+      const num = Number(value);
+      if (!Number.isInteger(num) || num < 1) {
+        return null;
+      }
+      return num;
+    };
+
+    const maxGlobalUsage = toOptionalPositiveInteger(form.maxGlobalUsage);
+    if (form.maxGlobalUsage.trim() && maxGlobalUsage === null) {
+      toast({
+        variant: "destructive",
+        title: "Create failed",
+        description: "Max global usage must be a whole number of at least 1"
+      });
+      setLoading(false);
+      return;
+    }
+
+    const maxUsagePerUser = toOptionalPositiveInteger(form.maxUsagePerUser);
+    if (form.maxUsagePerUser.trim() && maxUsagePerUser === null) {
+      toast({
+        variant: "destructive",
+        title: "Create failed",
+        description: "Max usage per user must be a whole number of at least 1"
+      });
       setLoading(false);
       return;
     }
 
     const payload: CreateVoucherPayload = {
-      voucherName: form.voucherName,
+      voucherCode: form.voucherCode.trim(),
+      voucherName: form.voucherName.trim(),
       isValid: form.isValid,
-      isVisble: form.isVisible,
+      isVisible: form.isVisible,
       type: form.type,
 
-      percentage: form.type === "PERSENTASE" ? Number(form.percentage) : null,
+      percentage:
+        form.type === "PERSENTASE" ? toOptionalNumber(form.percentage) : null,
 
-      nominal: form.type === "NOMINAL" ? Number(form.nominal) : null,
+      nominal: form.type === "NOMINAL" ? toOptionalNumber(form.nominal) : null,
 
-      maxDiscount: form.type === "PERSENTASE" ? Number(form.maxDiscount) : null,
+      maxDiscount:
+        form.type === "PERSENTASE" ? toOptionalNumber(form.maxDiscount) : null,
+
+      minOrderValue: toOptionalNumber(form.minOrderValue),
+      maxGlobalUsage,
+      maxUsagePerUser,
 
       dateStart: new Date(form.dateStart),
       dateEnd: new Date(form.dateEnd)
@@ -114,6 +209,7 @@ export default function VoucherCreateModal({
       onOpenChange(false);
 
       setForm({
+        voucherCode: "",
         voucherName: "",
         isValid: true,
         isVisible: true,
@@ -121,11 +217,18 @@ export default function VoucherCreateModal({
         percentage: "",
         nominal: "",
         maxDiscount: "",
+        minOrderValue: "",
+        maxGlobalUsage: "",
+        maxUsagePerUser: "",
         dateStart: "",
         dateEnd: ""
       });
     } catch (error) {
-      alert((error as Error).message);
+      toast({
+        variant: "destructive",
+        title: "Create failed",
+        description: (error as Error).message
+      });
     } finally {
       setLoading(false);
     }
@@ -139,24 +242,35 @@ export default function VoucherCreateModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Voucher Name */}
           <div>
             <label className="block mb-1 text-sm font-medium">
-              Voucher Name
+              Voucher Name <span className="text-destructive">*</span>
             </label>
             <input
               name="voucherName"
               value={form.voucherName}
               onChange={handleChange}
-              placeholder="Enter voucher name"
+              placeholder="Enter voucher display name"
               className="border w-full p-2 rounded-md"
             />
           </div>
 
-          {/* Voucher Type */}
           <div>
             <label className="block mb-1 text-sm font-medium">
-              Voucher Type
+              Voucher Code <span className="text-destructive">*</span>
+            </label>
+            <input
+              name="voucherCode"
+              value={form.voucherCode}
+              onChange={handleChange}
+              placeholder="Enter unique promo code"
+              className="border w-full p-2 rounded-md"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm font-medium">
+              Voucher Type <span className="text-destructive">*</span>
             </label>
             <select
               name="type"
@@ -174,7 +288,7 @@ export default function VoucherCreateModal({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block mb-1 text-sm font-medium">
-                  Percentage (%)
+                  Percentage (%) <span className="text-destructive">*</span>
                 </label>
                 <input
                   type="number"
@@ -204,7 +318,9 @@ export default function VoucherCreateModal({
 
           {form.type === "NOMINAL" && (
             <div>
-              <label className="block mb-1 text-sm font-medium">Nominal</label>
+              <label className="block mb-1 text-sm font-medium">
+                Nominal <span className="text-destructive">*</span>
+              </label>
               <input
                 type="number"
                 name="nominal"
@@ -216,11 +332,57 @@ export default function VoucherCreateModal({
             </div>
           )}
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                Minimum Order Value
+              </label>
+              <input
+                type="number"
+                name="minOrderValue"
+                value={form.minOrderValue}
+                onChange={handleChange}
+                placeholder="Leave empty for none"
+                className="border w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                Max Global Usage
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="1"
+                name="maxGlobalUsage"
+                value={form.maxGlobalUsage}
+                onChange={handleChange}
+                placeholder="Leave empty for unlimited"
+                className="border w-full p-2 rounded-md"
+              />
+            </div>
+            <div>
+              <label className="block mb-1 text-sm font-medium">
+                Max Usage per User
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="1"
+                name="maxUsagePerUser"
+                value={form.maxUsagePerUser}
+                onChange={handleChange}
+                placeholder="Leave empty for unlimited"
+                className="border w-full p-2 rounded-md"
+              />
+            </div>
+          </div>
+
           {/* Date Range */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block mb-1 text-sm font-medium">
-                Start Date
+                Start Date <span className="text-destructive">*</span>
               </label>
               <input
                 type="datetime-local"
@@ -232,7 +394,9 @@ export default function VoucherCreateModal({
             </div>
 
             <div>
-              <label className="block mb-1 text-sm font-medium">End Date</label>
+              <label className="block mb-1 text-sm font-medium">
+                End Date <span className="text-destructive">*</span>
+              </label>
               <input
                 type="datetime-local"
                 name="dateEnd"

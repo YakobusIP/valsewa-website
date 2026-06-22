@@ -1,8 +1,4 @@
-import {
-  InternalServerError,
-  UnauthorizedError,
-  BadRequestError
-} from "../lib/error";
+import { InternalServerError, UnauthorizedError } from "../lib/error";
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcrypt";
 
@@ -41,9 +37,7 @@ export class AuthService {
         );
       }
 
-      const passwordExpiredAt = new Date(user.passwordChangedAt);
-      passwordExpiredAt.setDate(passwordExpiredAt.getDate() + 30);
-      if (new Date() > passwordExpiredAt) {
+      if (!user.passwordExpireAt || new Date() > user.passwordExpireAt) {
         throw new UnauthorizedError(
           "Password already expired, Please contact our team"
         );
@@ -61,31 +55,4 @@ export class AuthService {
     }
   }
 
-  async register(username: string, password: string) {
-    try {
-      // Check if user already exists
-      const existingUser = await prisma.customer.findUnique({
-        where: { username }
-      });
-
-      if (existingUser) {
-        throw new BadRequestError("Username already exists");
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const user = await prisma.customer.create({
-        data: {
-          username,
-          password: hashedPassword,
-          passwordChangedAt: new Date(),
-          isActive: true
-        }
-      });
-
-      return user;
-    } catch (error) {
-      throw new InternalServerError((error as Error).message);
-    }
-  }
 }

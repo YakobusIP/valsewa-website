@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { accountService } from "@/services/account.service";
 import { bookingService } from "@/services/transaction.service";
 
+import BookingStatusBadge from "@/components/dashboard/BookingStatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,9 +28,10 @@ import {
 
 import useWideScreen from "@/hooks/useWideScreen";
 
+import { formatBookingDuration } from "@/lib/utils";
+
 import { MetadataResponse } from "@/types/api.type";
 import {
-  BOOKING_STATUS,
   BookingEntity,
   BookingStatistics,
   PaymentEntity
@@ -250,17 +252,6 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
   const formatDateTime = (d: Date | string | null) =>
     d ? new Date(d).toLocaleString("id-ID") : "-";
 
-  const renderBookingStatus = (status: BOOKING_STATUS) => {
-    const map: Record<BOOKING_STATUS, string> = {
-      HOLD: "bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20",
-      RESERVED: "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20",
-      EXPIRED: "bg-gray-500/10 text-gray-500 hover:bg-gray-500/20",
-      FAILED: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
-      CANCELLED: "bg-red-500/10 text-red-500 hover:bg-red-500/20",
-      COMPLETED: "bg-green-500/10 text-green-600 hover:bg-green-500/20"
-    };
-    return <Badge className={map[status]}>{status}</Badge>;
-  };
   const renderPaymentStatus = (status?: string | null) => {
     if (!status) return "-";
 
@@ -489,9 +480,11 @@ export default function TransactionListModal({ open, onOpenChange }: Props) {
                         {getLatestPayment(b.payments)?.paymentMethod ?? "-"}
                       </TableCell>
                       <TableCell className=" font-semibold">
-                        {b.duration ?? "-"}
+                        {formatBookingDuration(b.duration, b.quantity)}
                       </TableCell>
-                      <TableCell>{renderBookingStatus(b.status)}</TableCell>
+                      <TableCell>
+                        <BookingStatusBadge status={b.status} />
+                      </TableCell>
                       <TableCell className="text-xs text-muted-foreground">
                         {getLatestPayment(b.payments)?.paidAt
                           ? renderPaymentStatus(

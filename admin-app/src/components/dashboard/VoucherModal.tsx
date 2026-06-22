@@ -11,13 +11,32 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table";
 
 import { toast } from "@/hooks/useToast";
 
 import { formatNumeric } from "@/utils/formatCurrency";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, MoreHorizontal, Plus } from "lucide-react";
 
 import VoucherCreateModal from "./VoucherCreateModal";
+import VoucherDetailModal from "./VoucherDetailModal";
+import VoucherEditModal from "./VoucherEditModal";
+import { formatQuotaDisplay } from "./VoucherStatisticsGrid";
 
 type VoucherModalProps = {
   open: boolean;
@@ -31,6 +50,11 @@ export default function VoucherModal({
   const [vouchers, setVouchers] = useState<VoucherEntity[]>([]);
   const [loading, setLoading] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
+  const [selectedVoucher, setSelectedVoucher] = useState<VoucherEntity | null>(
+    null
+  );
+  const [openDetail, setOpenDetail] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
 
   const getVouchers = useCallback(async () => {
     try {
@@ -81,7 +105,6 @@ export default function VoucherModal({
     try {
       await voucherService.toggleStatus(id);
 
-      // Update UI instantly (no need refetch)
       setVouchers((prev) =>
         prev.map((v) => (v.id === id ? { ...v, isValid: !v.isValid } : v))
       );
@@ -105,7 +128,6 @@ export default function VoucherModal({
     try {
       await voucherService.toggleStatusVisibility(id);
 
-      // Update UI instantly (no need refetch)
       setVouchers((prev) =>
         prev.map((v) => (v.id === id ? { ...v, isVisible: !v.isVisible } : v))
       );
@@ -130,112 +152,174 @@ export default function VoucherModal({
     getVouchers();
   };
 
+  const handleUpdated = () => {
+    setOpenEdit(false);
+    getVouchers();
+  };
+
+  const openVoucherDetail = (voucher: VoucherEntity) => {
+    setSelectedVoucher(voucher);
+    setOpenDetail(true);
+  };
+
+  const openVoucherEdit = (voucher: VoucherEntity) => {
+    setSelectedVoucher(voucher);
+    setOpenEdit(true);
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="flex flex-col w-full max-w-5xl max-h-[100dvh] overflow-y-auto">
           <DialogHeader className="flex flex-row items-center justify-between">
             <DialogTitle>Voucher List</DialogTitle>
           </DialogHeader>
 
-          {/* CONTENT */}
-          <div className="mt-4">
-            {loading && (
-              <div className="flex justify-center py-10">
-                <Loader2 className="animate-spin w-6 h-6" />
-              </div>
-            )}
+          <div className="flex-1 overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Code</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Visibility</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Quota</TableHead>
+                  <TableHead>Period</TableHead>
+                  <TableHead className="w-[50px]">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="py-6 text-center text-muted-foreground"
+                    >
+                      <Loader2 className="animate-spin w-6 h-6 inline" />
+                    </TableCell>
+                  </TableRow>
+                )}
 
-            {!loading && vouchers.length === 0 && (
-              <p className="text-center text-muted-foreground">
-                No vouchers available.
-              </p>
-            )}
+                {!loading && vouchers.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={8}
+                      className="py-6 text-center text-muted-foreground"
+                    >
+                      No vouchers available.
+                    </TableCell>
+                  </TableRow>
+                )}
 
-            {!loading && vouchers.length > 0 && (
-              <div className="space-y-3 max-h-[60vh] overflow-auto pr-2">
-                {vouchers.map((voucher) => (
-                  <div
-                    key={voucher.id}
-                    className="border p-4 rounded-xl flex justify-between items-center"
-                  >
-                    <div className="space-y-1">
-                      <h3 className="font-semibold text-lg">
-                        {voucher.voucherName}
-                      </h3>
-                      <p
-                        className={`text-xs font-semibold ${
-                          voucher.isValid ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        Status: {voucher.isValid ? "ACTIVE" : "INACTIVE"}
-                      </p>
-                      <p
-                        className={`text-xs font-semibold ${
-                          voucher.isVisible ? "text-green-600" : "text-red-600"
-                        }`}
-                      >
-                        Visibility:{" "}
-                        {voucher.isVisible ? "VISIBLE" : "INVISIBLE"}
-                      </p>
-
-                      <p className="text-sm text-muted-foreground">
-                        Type: {voucher.type}
-                        {voucher.type === "PERSENTASE" &&
-                          ` • ${formatNumeric(voucher.percentage ?? 0)}%`}
-                        {voucher.type === "NOMINAL" &&
-                          ` • Rp ${formatNumeric(voucher.nominal ?? 0)}`}
-                      </p>
-
-                      {voucher.maxDiscount && (
-                        <p className="text-sm text-muted-foreground">
-                          Max: Rp {formatNumeric(voucher.maxDiscount) ?? 0}
-                        </p>
-                      )}
-
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(voucher.dateStart).toLocaleDateString()} –{" "}
+                {!loading &&
+                  vouchers.map((voucher) => (
+                    <TableRow key={voucher.id}>
+                      <TableCell className="font-mono font-medium">
+                        {voucher.voucherCode}
+                      </TableCell>
+                      <TableCell>{voucher.voucherName}</TableCell>
+                      <TableCell>
+                        <span
+                          className={
+                            voucher.isValid
+                              ? "text-green-600 font-semibold text-xs"
+                              : "text-red-600 font-semibold text-xs"
+                          }
+                        >
+                          {voucher.isValid ? "ACTIVE" : "INACTIVE"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={
+                            voucher.isVisible
+                              ? "text-green-600 font-semibold text-xs"
+                              : "text-red-600 font-semibold text-xs"
+                          }
+                        >
+                          {voucher.isVisible ? "VISIBLE" : "INVISIBLE"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {voucher.type}
+                          {voucher.type === "PERSENTASE" &&
+                            ` \u2022 ${formatNumeric(voucher.percentage ?? 0)}%`}
+                          {voucher.type === "NOMINAL" &&
+                            ` \u2022 Rp ${formatNumeric(voucher.nominal ?? 0)}`}
+                          {voucher.maxDiscount != null && (
+                            <span className="block text-muted-foreground text-xs">
+                              Max: Rp {formatNumeric(voucher.maxDiscount)}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {formatQuotaDisplay(
+                          voucher.usageCount ?? 0,
+                          voucher.maxGlobalUsage
+                        )}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                        {new Date(voucher.dateStart).toLocaleDateString()}
+                        {" \u2013 "}
                         {new Date(voucher.dateEnd).toLocaleDateString()}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col xl:flex-row gap-2">
-                      <Button
-                        size="sm"
-                        className="hover:bg-slate-400"
-                        variant={voucher.isValid ? "secondary" : "default"}
-                        onClick={() => handleToggle(voucher.id)}
-                      >
-                        {voucher.isValid ? "Deactivate" : "Activate"}
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        className="hover:bg-slate-400"
-                        variant={voucher.isVisible ? "secondary" : "default"}
-                        onClick={() => handleToggleVisibility(voucher.id)}
-                      >
-                        {voucher.isVisible ? "Invisible" : "Visible"}
-                      </Button>
-
-                      <Button
-                        size="icon"
-                        variant="destructive"
-                        className="place-self-end"
-                        onClick={() => handleDelete(voucher.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem
+                              onClick={() => openVoucherDetail(voucher)}
+                            >
+                              View details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => openVoucherEdit(voucher)}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleToggle(voucher.id)}
+                            >
+                              {voucher.isValid ? "Deactivate" : "Activate"}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleToggleVisibility(voucher.id)}
+                            >
+                              {voucher.isVisible
+                                ? "Make invisible"
+                                : "Make visible"}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => handleDelete(voucher.id)}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
           </div>
-          <Button size="sm" onClick={() => setOpenCreate(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Voucher
-          </Button>
+
+          <div className="flex justify-end mt-4">
+            <Button size="sm" onClick={() => setOpenCreate(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Voucher
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -243,6 +327,19 @@ export default function VoucherModal({
         open={openCreate}
         onOpenChange={setOpenCreate}
         onSuccess={handleCreated}
+      />
+
+      <VoucherDetailModal
+        voucher={selectedVoucher}
+        open={openDetail}
+        onOpenChange={setOpenDetail}
+      />
+
+      <VoucherEditModal
+        voucher={selectedVoucher}
+        open={openEdit}
+        onOpenChange={setOpenEdit}
+        onSuccess={handleUpdated}
       />
     </>
   );

@@ -26,8 +26,10 @@ import {
 import { VoucherEntity } from "@/types/voucher.type";
 
 import { BOOKING_STATUS_MAP } from "@/lib/constants";
+import { extractErrorMessage } from "@/lib/error-handler";
 import { instrumentSans, staatliches } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
+import { getVoucherErrorTitle } from "@/lib/voucher-errors";
 
 import { XIcon } from "lucide-react";
 import { notFound, useParams, useRouter } from "next/navigation";
@@ -105,14 +107,15 @@ export default function BookingDetailPage() {
     ].includes(booking.status);
 
   const fetchVoucher = useCallback(
-    async (voucherName: string): Promise<VoucherEntity | null> => {
+    async (voucherCode: string): Promise<VoucherEntity | null> => {
       try {
-        if (!voucherName.trim()) return null;
-        return await voucherService.fetchActiveVoucherByVoucherName(
-          voucherName
+        if (!voucherCode.trim()) return null;
+        return await voucherService.fetchActiveVoucherByVoucherCode(
+          voucherCode
         );
       } catch (error) {
-        handleAsyncError(error, "Apply voucher failed", "Apply voucher failed");
+        const message = extractErrorMessage(error, "Apply voucher failed");
+        handleAsyncError(error, message, getVoucherErrorTitle(message));
         return null;
       }
     },
@@ -150,7 +153,8 @@ export default function BookingDetailPage() {
         router.push(`/payments/${payment.id}`);
       }
     } catch (error) {
-      handleAsyncError(error, "Payment failed", "Payment failed");
+      const message = extractErrorMessage(error, "Payment failed");
+      handleAsyncError(error, message, getVoucherErrorTitle(message));
     }
   }, [
     booking,
@@ -208,7 +212,7 @@ export default function BookingDetailPage() {
 
       <div
         className={cn(
-          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 lg:px-10 items-center w-full lg:px-20",
+          "pt-[90px] lg:pt-[110px] pb-8 lg:pb-[110px] px-4 items-center w-full lg:px-20",
           instrumentSans.className
         )}
       >
