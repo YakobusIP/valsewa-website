@@ -2,6 +2,7 @@ export type VoucherType = "PERSENTASE" | "NOMINAL";
 
 export type Voucher = {
   id: number;
+  voucherCode: string;
   voucherName: string;
   isValid: boolean;
   isVisible: boolean;

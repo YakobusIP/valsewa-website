@@ -56,16 +56,16 @@ export class VoucherController {
     }
   };
 
-  getActiveVoucherByVoucherName = async (
+  getActiveVoucherByVoucherCode = async (
     req: Request,
     res: Response,
     next: NextFunction
   ) => {
     try {
-      const { voucherName } = req.params;
+      const { voucherCode } = req.params;
 
       const data =
-        await this.voucherService.getActiveVoucherByVoucherName(voucherName);
+        await this.voucherService.getActiveVoucherByVoucherCode(voucherCode);
 
       return res.json(data);
     } catch (error) {
@@ -112,6 +112,7 @@ export class VoucherController {
   createVoucher = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const {
+        voucherCode,
         voucherName,
         type,
         percentage,
@@ -125,6 +126,7 @@ export class VoucherController {
       } = req.body;
 
       await this.voucherService.create({
+        voucherCode,
         voucherName,
         type,
         percentage,
@@ -159,6 +161,7 @@ export class VoucherController {
         "dateStart",
         "isValid",
         "isVisible",
+        "voucherCode",
         "voucherName"
       ] as const;
 

@@ -88,10 +88,20 @@ export class VoucherService {
         ...notDeletedWhere,
         ...(query
           ? {
-              voucherName: {
-                contains: query,
-                mode: "insensitive"
-              }
+              OR: [
+                {
+                  voucherCode: {
+                    contains: query,
+                    mode: "insensitive"
+                  }
+                },
+                {
+                  voucherName: {
+                    contains: query,
+                    mode: "insensitive"
+                  }
+                }
+              ]
             }
           : {})
       };
@@ -163,12 +173,12 @@ export class VoucherService {
     }
   };
 
-  getActiveVoucherByVoucherName = async (voucherName: string) => {
+  getActiveVoucherByVoucherCode = async (voucherCode: string) => {
     try {
       const now = new Date();
       const voucher = await prisma.voucher.findFirst({
         where: {
-          voucherName,
+          voucherCode,
           ...notDeletedWhere,
           isValid: true,
           isVisible: true,
@@ -187,6 +197,7 @@ export class VoucherService {
   };
 
   create = async (data: {
+    voucherCode: string;
     voucherName: string;
     type: Type;
     percentage?: number;
@@ -199,11 +210,19 @@ export class VoucherService {
     dateEnd: Date;
   }) => {
     try {
+      if (!data.voucherCode?.trim()) {
+        throw new BadRequestError("Voucher code is required");
+      }
+
+      if (!data.voucherName?.trim()) {
+        throw new BadRequestError("Voucher name is required");
+      }
+
       const exists = await prisma.voucher.findUnique({
-        where: { voucherName: data.voucherName }
+        where: { voucherCode: data.voucherCode }
       });
 
-      if (exists) throw new BadRequestError("Voucher already exists");
+      if (exists) throw new BadRequestError("Voucher code already exists");
 
       this.validateTypeFields(data.type, data.percentage, data.nominal);
       this.validateBudgetFields(data);
@@ -211,6 +230,7 @@ export class VoucherService {
 
       return await prisma.voucher.create({
         data: {
+          voucherCode: data.voucherCode,
           voucherName: data.voucherName,
           type: data.type,
           percentage: data.type === "PERSENTASE" ? data.percentage : null,

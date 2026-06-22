@@ -25,9 +25,9 @@ class VoucherRouter {
       this.voucherController.getActiveVouchers
     );
     this.router.get(
-      "/active/:voucherName",
+      "/active/:voucherCode",
       customerMiddleware,
-      this.voucherController.getActiveVoucherByVoucherName
+      this.voucherController.getActiveVoucherByVoucherCode
     );
     this.router.get(
       "/:id/usage/summary",

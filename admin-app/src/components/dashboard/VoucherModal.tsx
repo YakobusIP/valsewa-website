@@ -179,6 +179,7 @@ export default function VoucherModal({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Code</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Visibility</TableHead>
@@ -192,7 +193,7 @@ export default function VoucherModal({
                 {loading && (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className="py-6 text-center text-muted-foreground"
                     >
                       <Loader2 className="animate-spin w-6 h-6 inline" />
@@ -203,7 +204,7 @@ export default function VoucherModal({
                 {!loading && vouchers.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={8}
                       className="py-6 text-center text-muted-foreground"
                     >
                       No vouchers available.
@@ -214,9 +215,10 @@ export default function VoucherModal({
                 {!loading &&
                   vouchers.map((voucher) => (
                     <TableRow key={voucher.id}>
-                      <TableCell className="font-medium">
-                        {voucher.voucherName}
+                      <TableCell className="font-mono font-medium">
+                        {voucher.voucherCode}
                       </TableCell>
+                      <TableCell>{voucher.voucherName}</TableCell>
                       <TableCell>
                         <span
                           className={

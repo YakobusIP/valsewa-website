@@ -25,7 +25,7 @@ type PaymentSummaryProps = {
   paymentMethod: PAYMENT_METHOD_REQUEST | null;
   voucher: VoucherEntity | null;
   setVoucher: (value: VoucherEntity | null) => void;
-  fetchVoucher: (voucherName: string) => Promise<VoucherEntity | null>;
+  fetchVoucher: (voucherCode: string) => Promise<VoucherEntity | null>;
   setBookingFree: (value: boolean) => void;
   setTotalPayment: (value: number) => void;
   onSubmit: () => Promise<void>;
@@ -42,7 +42,7 @@ function PaymentSummary({
   onSubmit
 }: PaymentSummaryProps) {
   const [loading, setLoading] = useState(false);
-  const [voucherName, setVoucherName] = useState("");
+  const [voucherCode, setVoucherCode] = useState("");
   const [isApplyingVoucher, setIsApplyingVoucher] = useState(false);
 
   const isDisabled = !booking || !paymentMethod;
@@ -107,7 +107,7 @@ function PaymentSummary({
 
         if (!result) {
           setVoucher(null);
-          setVoucherName("");
+          setVoucherCode("");
           return;
         }
 
@@ -121,7 +121,7 @@ function PaymentSummary({
             description: formatMinimumOrderMessage(result.minOrderValue)
           });
           setVoucher(null);
-          setVoucherName("");
+          setVoucherCode("");
           return;
         }
 
@@ -143,11 +143,11 @@ function PaymentSummary({
 
   const handleVoucherKeyPress = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && voucherName.trim()) {
-        onApplyVoucher(voucherName);
+      if (e.key === "Enter" && voucherCode.trim()) {
+        onApplyVoucher(voucherCode);
       }
     },
-    [voucherName, onApplyVoucher]
+    [voucherCode, onApplyVoucher]
   );
 
   const handleSubmit = async () => {
@@ -186,8 +186,8 @@ function PaymentSummary({
           <div className="flex flex-row gap-2 max-tablet:gap-0 border border-[#F9FAFB] rounded-lg p-3 mt-2">
             <input
               type="text"
-              value={voucherName}
-              onChange={(e) => setVoucherName(e.target.value)}
+              value={voucherCode}
+              onChange={(e) => setVoucherCode(e.target.value)}
               onKeyPress={handleVoucherKeyPress}
               placeholder="Enter Promo Code"
               className="flex-1 px-3 py-2 text-sm bg-[#1C1C1C] rounded outline-none"
@@ -197,8 +197,8 @@ function PaymentSummary({
 
             <button
               type="button"
-              onClick={() => onApplyVoucher(voucherName)}
-              disabled={!voucherName.trim() || isApplyingVoucher}
+              onClick={() => onApplyVoucher(voucherCode)}
+              disabled={!voucherCode.trim() || isApplyingVoucher}
               className="px-4 py-2 text-sm sm:text-base bg-[#C70515] text-[#D9D9D9] font-semibold rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#b81a1a] focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black"
               aria-label="Apply promo code"
             >

@@ -44,8 +44,9 @@ function VoucherCard({ voucher, selected, onSelect }: VoucherCardProps) {
     >
       <div className="flex flex-col gap-2">
         <p className="text-xs text-zinc-300">
-          Promo code: {voucher.voucherName}
+          Promo code: {voucher.voucherCode}
         </p>
+        <p className="text-sm text-zinc-400">{voucher.voucherName}</p>
         <p className="text-3xl font-bold text-white">
           {voucher.type === "PERSENTASE"
             ? `${voucher.percentage}%`
@@ -73,7 +74,7 @@ function VoucherCard({ voucher, selected, onSelect }: VoucherCardProps) {
 
 type VoucherModalProps = {
   voucher: VoucherEntity | null;
-  handleApplyVoucher: (voucherName: string | null) => void;
+  handleApplyVoucher: (voucherCode: string | null) => void;
   isApplyingVoucher: boolean;
   isDailyDrop: boolean;
 };
@@ -86,7 +87,7 @@ export default function VoucherModal({
 }: VoucherModalProps) {
   const [open, setOpen] = useState(false);
 
-  const [selectedVoucherName, setSelectedVoucherName] = useState<string | null>(
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState<string | null>(
     null
   );
   const [vouchers, setVouchers] = useState<VoucherEntity[]>([]);
@@ -115,7 +116,7 @@ export default function VoucherModal({
   useEffect(() => {
     if (!open) return;
 
-    setSelectedVoucherName(voucher?.voucherName ?? null);
+    setSelectedVoucherCode(voucher?.voucherCode ?? null);
   }, [open, voucher]);
 
   return (
@@ -148,24 +149,24 @@ export default function VoucherModal({
                 <VoucherCard
                   key={v.id}
                   voucher={v}
-                  selected={selectedVoucherName === v.voucherName}
-                  onSelect={() => setSelectedVoucherName(v.voucherName)}
+                  selected={selectedVoucherCode === v.voucherCode}
+                  onSelect={() => setSelectedVoucherCode(v.voucherCode)}
                 />
               ))}
           </div>
 
           <p className="text-center text-sm text-zinc-400">
-            {selectedVoucherName ? "1 Voucher Applied" : "No Voucher Applied"}
+            {selectedVoucherCode ? "1 Voucher Applied" : "No Voucher Applied"}
           </p>
 
           <DialogFooter className="flex-col gap-3">
             <Button
               className="bg-red-600 text-white w-full"
               onClick={() => {
-                handleApplyVoucher(selectedVoucherName);
+                handleApplyVoucher(selectedVoucherCode);
                 setOpen(false);
               }}
-              disabled={!selectedVoucherName || isApplyingVoucher}
+              disabled={!selectedVoucherCode || isApplyingVoucher}
             >
               {isApplyingVoucher && (
                 <Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
