@@ -11,8 +11,8 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import { toast } from "@/hooks/useToast";
@@ -92,9 +92,7 @@ export default function SettingsModal({
 
       const promises: Promise<unknown>[] = [];
 
-      promises.push(
-        settingService.updateSetting(SETTING_KEY, reminderText)
-      );
+      promises.push(settingService.updateSetting(SETTING_KEY, reminderText));
 
       promises.push(
         settingService.updateSetting(
@@ -172,7 +170,9 @@ export default function SettingsModal({
             </p>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="password-expiry-days">Customer Password Expiry (days)</Label>
+            <Label htmlFor="password-expiry-days">
+              Customer Password Expiry (days)
+            </Label>
             <Input
               id="password-expiry-days"
               type="number"
@@ -181,8 +181,8 @@ export default function SettingsModal({
               onChange={(e) => setPasswordExpiryDays(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Recalculates expiry for all customers. Anyone past the new limit
-              is deactivated immediately.
+              Menghitung ulang masa berlaku semua customer. Akun yang sudah
+              melewati batas baru akan langsung dinonaktifkan.
             </p>
           </div>
           <div className="grid gap-4 py-2">
