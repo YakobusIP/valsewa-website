@@ -16,7 +16,7 @@ export default function VoucherStatisticsGrid({ summary, isLoading }: Props) {
       value: summary?.totalUsage ?? 0
     },
     {
-      title: "Total GMV",
+      title: "Total Transaction",
       value: new Intl.NumberFormat("id-ID", {
         style: "currency",
         currency: "IDR"

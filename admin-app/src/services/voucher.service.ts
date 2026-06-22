@@ -11,6 +11,7 @@ import { handleAxiosError, interceptedAxios } from "@/lib/axios";
 
 export type VoucherEntity = {
   id: number;
+  voucherCode: string;
   voucherName: string;
   isValid: boolean;
   isVisible: boolean;

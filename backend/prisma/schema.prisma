@@ -287,7 +287,8 @@ model Voucher {
   id              Int       @id @default(autoincrement())
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  voucherName     String    @unique
+  voucherCode     String    @unique
+  voucherName     String
   isValid         Boolean   @default(true)
   isVisible       Boolean   @default(true)
   type            Type

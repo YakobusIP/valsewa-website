@@ -107,11 +107,11 @@ export default function BookingDetailPage() {
     ].includes(booking.status);
 
   const fetchVoucher = useCallback(
-    async (voucherName: string): Promise<VoucherEntity | null> => {
+    async (voucherCode: string): Promise<VoucherEntity | null> => {
       try {
-        if (!voucherName.trim()) return null;
-        return await voucherService.fetchActiveVoucherByVoucherName(
-          voucherName
+        if (!voucherCode.trim()) return null;
+        return await voucherService.fetchActiveVoucherByVoucherCode(
+          voucherCode
         );
       } catch (error) {
         const message = extractErrorMessage(error, "Apply voucher failed");

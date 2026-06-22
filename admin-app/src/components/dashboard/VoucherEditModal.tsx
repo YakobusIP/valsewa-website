@@ -169,7 +169,12 @@ export default function VoucherEditModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full xl:w-3/5 overflow-y-auto max-h-[100dvh]">
         <DialogHeader>
-          <DialogTitle>Edit Voucher: {voucher.voucherName}</DialogTitle>
+          <DialogTitle>
+            Edit Voucher: {voucher.voucherName}{" "}
+            <span className="text-muted-foreground font-mono text-base">
+              ({voucher.voucherCode})
+            </span>
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">

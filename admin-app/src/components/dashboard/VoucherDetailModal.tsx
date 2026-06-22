@@ -125,7 +125,12 @@ export default function VoucherDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="flex flex-col w-full max-w-5xl max-h-[100dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{voucher.voucherName}</DialogTitle>
+          <DialogTitle>
+            {voucher.voucherName}{" "}
+            <span className="text-muted-foreground font-mono text-base">
+              ({voucher.voucherCode})
+            </span>
+          </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-wrap gap-3 text-sm">

@@ -8,6 +8,7 @@ export type VoucherEntity = {
   createdAt: Date;
   updatedAt: Date;
   type: TYPE;
+  voucherCode: string;
   voucherName: string;
   isValid: boolean;
   isVisible: boolean;
