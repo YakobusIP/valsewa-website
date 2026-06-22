@@ -2,7 +2,9 @@ import { prisma } from "../lib/prisma";
 import { InternalServerError } from "../lib/error";
 import { validateTime } from "../lib/utils";
 import {
+  DEFAULT_PASSWORD_EXPIRY_DAYS,
   OPERATIONAL_HOURS_KEY,
+  PASSWORD_EXPIRY_DAYS_KEY,
   OperationalHours,
   UpdateOperationalHoursRequest
 } from "../types/setting.type";
@@ -40,6 +42,18 @@ export class SettingService {
     } catch {
       throw new InternalServerError("Invalid operational hours format");
     }
+  };
+
+  getPasswordExpiryDays = async (): Promise<number> => {
+    const raw = await this.getSetting(PASSWORD_EXPIRY_DAYS_KEY);
+    if (!raw) return DEFAULT_PASSWORD_EXPIRY_DAYS;
+
+    const days = Number.parseInt(raw, 10);
+    if (!Number.isFinite(days) || days < 1) {
+      return DEFAULT_PASSWORD_EXPIRY_DAYS;
+    }
+
+    return days;
   };
 
   updateOperationalHours = async (data: UpdateOperationalHoursRequest) => {

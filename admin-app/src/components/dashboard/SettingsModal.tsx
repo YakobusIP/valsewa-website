@@ -12,6 +12,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 import { toast } from "@/hooks/useToast";
@@ -27,8 +28,10 @@ export default function SettingsModal({
   const [reminderText, setReminderText] = useState("");
   const [openTime, setOpenTime] = useState("");
   const [closeTime, setCloseTime] = useState("");
+  const [passwordExpiryDays, setPasswordExpiryDays] = useState("30");
 
   const SETTING_KEY = "reminder_text";
+  const PASSWORD_EXPIRY_DAYS_KEY = "password_expiry_days";
 
   const fetchReminderText = async () => {
     setLoading(true);
@@ -64,13 +67,40 @@ export default function SettingsModal({
     }
   };
 
+  const fetchPasswordExpiryDays = async () => {
+    try {
+      const data = await settingService.getSetting(PASSWORD_EXPIRY_DAYS_KEY);
+      setPasswordExpiryDays(data.value || "30");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast({
+          variant: "destructive",
+          title: "Error fetching password expiry setting",
+          description: error.message
+        });
+      }
+    }
+  };
+
   const handleSave = async () => {
     setLoading(true);
     try {
+      const expiryDays = Number.parseInt(passwordExpiryDays, 10);
+      if (!Number.isFinite(expiryDays) || expiryDays < 1) {
+        throw new Error("Password expiry days must be at least 1");
+      }
+
       const promises: Promise<unknown>[] = [];
 
       promises.push(
         settingService.updateSetting(SETTING_KEY, reminderText)
+      );
+
+      promises.push(
+        settingService.updateSetting(
+          PASSWORD_EXPIRY_DAYS_KEY,
+          String(expiryDays)
+        )
       );
 
       if (openTime || closeTime) {
@@ -115,6 +145,7 @@ export default function SettingsModal({
     if (open) {
       fetchReminderText();
       fetchOperationalHours();
+      fetchPasswordExpiryDays();
     }
   }, [open]);
 
@@ -138,6 +169,20 @@ export default function SettingsModal({
             <p className="text-xs text-muted-foreground">
               Anda dapat menggunakan placeholder seperti {"{username}"},{" "}
               {"{password}"}, {"{accountCode}"}, dan {"{expired}"}.
+            </p>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="password-expiry-days">Customer Password Expiry (days)</Label>
+            <Input
+              id="password-expiry-days"
+              type="number"
+              min={1}
+              value={passwordExpiryDays}
+              onChange={(e) => setPasswordExpiryDays(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Recalculates expiry for all customers. Anyone past the new limit
+              is deactivated immediately.
             </p>
           </div>
           <div className="grid gap-4 py-2">

@@ -10,9 +10,9 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 
-import { CreateVoucherPayload, VoucherType } from "@/types/voucher.type";
-
 import { toast } from "@/hooks/useToast";
+
+import { CreateVoucherPayload, VoucherType } from "@/types/voucher.type";
 
 type VoucherForm = {
   voucherCode: string;
@@ -244,19 +244,6 @@ export default function VoucherCreateModal({
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block mb-1 text-sm font-medium">
-              Voucher Code <span className="text-destructive">*</span>
-            </label>
-            <input
-              name="voucherCode"
-              value={form.voucherCode}
-              onChange={handleChange}
-              placeholder="Enter unique promo code"
-              className="border w-full p-2 rounded-md"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1 text-sm font-medium">
               Voucher Name <span className="text-destructive">*</span>
             </label>
             <input
@@ -264,6 +251,19 @@ export default function VoucherCreateModal({
               value={form.voucherName}
               onChange={handleChange}
               placeholder="Enter voucher display name"
+              className="border w-full p-2 rounded-md"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-sm font-medium">
+              Voucher Code <span className="text-destructive">*</span>
+            </label>
+            <input
+              name="voucherCode"
+              value={form.voucherCode}
+              onChange={handleChange}
+              placeholder="Enter unique promo code"
               className="border w-full p-2 rounded-md"
             />
           </div>

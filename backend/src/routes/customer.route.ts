@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { CustomerService } from "../services/customer.service";
 import { CustomerController } from "../controllers/customer.controller";
+import { SettingService } from "../services/setting.service";
 import { authMiddleware } from "../middleware/auth.middleware";
 import { customerMiddleware } from "../middleware/customer.middleware";
 import { schedulerMiddleware } from "../middleware/scheduler.middleware";
@@ -12,7 +13,8 @@ class CustomerRouter {
 
   constructor() {
     this.router = Router();
-    this.customerService = new CustomerService();
+    const settingService = new SettingService();
+    this.customerService = new CustomerService(settingService);
     this.customerController = new CustomerController(this.customerService);
     this.initializeRoutes();
   }
