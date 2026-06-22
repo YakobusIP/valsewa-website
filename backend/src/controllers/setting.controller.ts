@@ -1,9 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { SettingService } from "../services/setting.service";
+import { CustomerService } from "../services/customer.service";
 import { BadRequestError } from "../lib/error";
+import { PASSWORD_EXPIRY_DAYS_KEY } from "../types/setting.type";
 
 export class SettingController {
-  constructor(private readonly settingService: SettingService) {}
+  constructor(
+    private readonly settingService: SettingService,
+    private readonly customerService: CustomerService
+  ) {}
 
   getSetting = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -22,6 +27,25 @@ export class SettingController {
 
       if (typeof value !== "string") {
         throw new BadRequestError("Value must be a string");
+      }
+
+      if (key === PASSWORD_EXPIRY_DAYS_KEY) {
+        const newExpiryDays = Number.parseInt(value, 10);
+        if (!Number.isFinite(newExpiryDays) || newExpiryDays < 1) {
+          throw new BadRequestError(
+            "Password expiry days must be a positive number"
+          );
+        }
+
+        const previousExpiryDays =
+          await this.settingService.getPasswordExpiryDays();
+
+        if (previousExpiryDays !== newExpiryDays) {
+          await this.customerService.recalculatePasswordExpiry(
+            previousExpiryDays,
+            newExpiryDays
+          );
+        }
       }
 
       const updated = await this.settingService.updateSetting(key, value);

@@ -140,7 +140,6 @@ model Customer {
   password          String
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
-  passwordChangedAt DateTime  @default(now())
   isActive          Boolean   @default(true)
   passwordExpireAt  DateTime?
   currentStreak     Int       @default(0)

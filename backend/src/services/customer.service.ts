@@ -1,13 +1,17 @@
 import { Prisma } from "@prisma/client";
 import { BadRequestError, InternalServerError } from "../lib/error";
 import { prisma } from "../lib/prisma";
+import { addDays, subtractDays } from "../lib/utils";
 import { Metadata } from "../types/metadata.type";
 import bcrypt from "bcrypt";
 import { getContextLogger } from "../lib/request-context";
+import { SettingService } from "./setting.service";
 
 const customerLogger = () => getContextLogger({ component: "customer" });
 
 export class CustomerService {
+  constructor(private readonly settingService: SettingService) {}
+
   getAllCustomers = async (
     page?: number,
     limit?: number,
@@ -78,14 +82,15 @@ export class CustomerService {
     try {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       const activeStatus = true;
+      const expiryDays = await this.settingService.getPasswordExpiryDays();
+      const now = new Date();
 
       const user = await prisma.customer.update({
         where: { id },
         data: {
           password: hashedPassword,
-          passwordChangedAt: new Date(),
           isActive: activeStatus,
-          passwordExpireAt: addDays(new Date(), 30)
+          passwordExpireAt: addDays(now, expiryDays)
         }
       });
 
@@ -106,7 +111,7 @@ export class CustomerService {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
-
+      const expiryDays = await this.settingService.getPasswordExpiryDays();
       const now = new Date();
 
       const user = await prisma.customer.create({
@@ -114,7 +119,7 @@ export class CustomerService {
           username,
           password: hashedPassword,
           isActive: true,
-          passwordExpireAt: addDays(now, 30)
+          passwordExpireAt: addDays(now, expiryDays)
         }
       });
 
@@ -216,9 +221,59 @@ export class CustomerService {
       throw new InternalServerError((error as Error).message);
     }
   };
+
+  recalculatePasswordExpiry = async (
+    previousExpiryDays: number,
+    newExpiryDays: number
+  ) => {
+    try {
+      const now = new Date();
+      const customers = await prisma.customer.findMany({
+        select: {
+          id: true,
+          passwordExpireAt: true,
+          createdAt: true
+        }
+      });
+
+      let deactivatedCount = 0;
+
+      await prisma.$transaction(
+        customers.map((customer) => {
+          const passwordSetAt = customer.passwordExpireAt
+            ? subtractDays(customer.passwordExpireAt, previousExpiryDays)
+            : customer.createdAt;
+          const newExpireAt = addDays(passwordSetAt, newExpiryDays);
+          const expired = newExpireAt <= now;
+
+          if (expired) {
+            deactivatedCount += 1;
+          }
+
+          return prisma.customer.update({
+            where: { id: customer.id },
+            data: {
+              passwordExpireAt: newExpireAt,
+              ...(expired ? { isActive: false } : {})
+            }
+          });
+        })
+      );
+
+      customerLogger().info(
+        {
+          event: "password_expiry_recalculated",
+          previousExpiryDays,
+          newExpiryDays,
+          customerCount: customers.length,
+          deactivatedCount
+        },
+        "Recalculated customer password expiry"
+      );
+
+      return { customerCount: customers.length, deactivatedCount };
+    } catch (error) {
+      throw new InternalServerError((error as Error).message);
+    }
+  };
 }
-const addDays = (date: Date, days: number) => {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-};
