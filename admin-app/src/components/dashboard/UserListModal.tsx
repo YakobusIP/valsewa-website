@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Table,
@@ -37,6 +38,7 @@ import { toast } from "@/hooks/useToast";
 import { Customer } from "@/types/customer.type";
 
 import { Loader2, PlusIcon } from "lucide-react";
+import { useDebounce } from "use-debounce";
 
 import { Badge } from "../ui/badge";
 
@@ -67,15 +69,24 @@ export default function UserListModal({
     useState<PendingStatusChange | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [hideInactive, setHideInactive] = useState(true);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch] = useDebounce(search, 500);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setSearch("");
+      return;
+    }
 
     const fetchUsers = async () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await customerService.fetchAll();
+        const res = await customerService.fetchAll(
+          undefined,
+          undefined,
+          debouncedSearch || undefined
+        );
         setUsers(res.data || []);
       } catch (err) {
         console.error(err);
@@ -86,7 +97,7 @@ export default function UserListModal({
     };
 
     fetchUsers();
-  }, [open]);
+  }, [open, debouncedSearch]);
 
   const openChangePassword = (user: User) => {
     setSelectedUser(user);
@@ -161,18 +172,26 @@ export default function UserListModal({
             <DialogDescription>Manage registered customers</DialogDescription>
           </DialogHeader>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="hide-inactive-customers"
-              checked={hideInactive}
-              onCheckedChange={(checked) => setHideInactive(checked === true)}
+          <div className="flex flex-col gap-3">
+            <Input
+              placeholder="Search username..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
-            <Label
-              htmlFor="hide-inactive-customers"
-              className="text-sm font-normal cursor-pointer"
-            >
-              Hide deactivated customers
-            </Label>
+
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="hide-inactive-customers"
+                checked={hideInactive}
+                onCheckedChange={(checked) => setHideInactive(checked === true)}
+              />
+              <Label
+                htmlFor="hide-inactive-customers"
+                className="text-sm font-normal cursor-pointer"
+              >
+                Hide deactivated customers
+              </Label>
+            </div>
           </div>
 
           <div className="flex-1 overflow-auto">
@@ -217,9 +236,11 @@ export default function UserListModal({
                       colSpan={6}
                       className="py-6 text-center text-muted-foreground"
                     >
-                      {hideInactive && users.some((u) => !u.isActive)
-                        ? "No active customers found"
-                        : "No customers found"}
+                      {debouncedSearch
+                        ? "No customers found for this username"
+                        : hideInactive && users.some((u) => !u.isActive)
+                          ? "No active customers found"
+                          : "No customers found"}
                     </TableCell>
                   </TableRow>
                 )}
