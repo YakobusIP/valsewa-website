@@ -181,7 +181,6 @@ export class VoucherService {
           voucherCode,
           ...notDeletedWhere,
           isValid: true,
-          isVisible: true,
           dateStart: { lte: now },
           dateEnd: { gte: now }
         }
@@ -603,7 +602,6 @@ export class VoucherService {
     if (
       !voucher ||
       !voucher.isValid ||
-      !voucher.isVisible ||
       now < voucher.dateStart ||
       now > voucher.dateEnd
     ) {

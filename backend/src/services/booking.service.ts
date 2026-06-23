@@ -958,7 +958,6 @@ export class BookingService {
           if (
             !voucherEntity ||
             !voucherEntity.isValid ||
-            !voucherEntity.isVisible ||
             now < voucherEntity.dateStart ||
             now > voucherEntity.dateEnd
           ) {
@@ -1435,7 +1434,6 @@ export class BookingService {
             if (
               !lockedVoucherEntity ||
               !lockedVoucherEntity.isValid ||
-              !lockedVoucherEntity.isVisible ||
               now < lockedVoucherEntity.dateStart ||
               now > lockedVoucherEntity.dateEnd
             ) {
