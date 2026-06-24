@@ -54,7 +54,7 @@ import { PriceTier } from "@/types/pricetier.type";
 import { Skin } from "@/types/skin.type";
 
 import { ranks } from "@/lib/constants";
-import { cn, convertHoursToDays, generatePassword } from "@/lib/utils";
+import { cn, convertHoursToDays, generateAccountPassword } from "@/lib/utils";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -279,7 +279,7 @@ export default function AccountDetailModal({
   };
 
   const generateAndSetPassword = () => {
-    const newPassword = generatePassword();
+    const newPassword = generateAccountPassword();
     form.setValue("password", newPassword, { shouldValidate: true });
     form.setValue("passwordResetRequired", false);
   };
