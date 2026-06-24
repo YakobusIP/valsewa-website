@@ -50,6 +50,19 @@ export const formatBookingDuration = (
   return parts.length > 0 ? parts.join(" ") : duration;
 };
 
+export function generateAccountPassword() {
+  const lowercase = "abcdefghijklmnopqrstuvwxyz";
+  const numbers = "0123456789";
+
+  const getRandomChars = (source: string, length: number) =>
+    Array.from(
+      { length },
+      () => source[Math.floor(Math.random() * source.length)]
+    ).join("");
+
+  return getRandomChars(lowercase, 4) + getRandomChars(numbers, 4);
+}
+
 export function generatePassword() {
   const lowercase = "abcdefghijkmnpqrstuvwxyz";
   const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";
