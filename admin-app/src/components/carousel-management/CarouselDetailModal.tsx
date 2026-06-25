@@ -40,6 +40,7 @@ export default function CarouselDetailModal({
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [duration, setDuration] = useState<number | "">(10);
+  const [url, setUrl] = useState<string>("");
   const [isLoadingSave, setIsLoadingSave] = useState(false);
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
 
@@ -47,9 +48,11 @@ export default function CarouselDetailModal({
     if (slide) {
       setPreview(slide.image.imageUrl);
       setDuration(slide.duration);
+      setUrl(slide.url ?? "");
     } else {
       setPreview(null);
       setDuration(10);
+      setUrl("");
     }
 
     setFile(null);
@@ -103,10 +106,12 @@ export default function CarouselDetailModal({
 
       // Convert empty duration to 0
       const finalDuration = typeof duration === "string" ? 0 : duration;
+      const finalUrl = url.trim() || null;
 
       if (isEditMode) {
         const payload: Partial<CarouselSlideRequest> = {
-          duration: finalDuration
+          duration: finalDuration,
+          url: finalUrl
         };
         if (imageId !== undefined) {
           payload.imageId = imageId;
@@ -115,7 +120,8 @@ export default function CarouselDetailModal({
       } else {
         const payload: CarouselSlideRequest = {
           imageId: imageId!,
-          duration: finalDuration
+          duration: finalDuration,
+          url: finalUrl
         };
         await carouselSlideService.create(payload);
       }
@@ -192,6 +198,17 @@ export default function CarouselDetailModal({
                   }
                 }
               }}
+            />
+          </div>
+
+          <div className="grid w-full max-w-sm items-center gap-1.5 mb-4">
+            <Label htmlFor="url">URL (optional)</Label>
+            <Input
+              type="text"
+              id="url"
+              placeholder="https://example.com or /accounts/abc"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
             />
           </div>
 

@@ -147,6 +147,55 @@ export default function AccountDetailsPage() {
     return 0;
   }
 
+  function isSameCalendarDay(a: Date, b: Date) {
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
+  }
+
+  const bookingDateRange = useMemo(() => {
+    if (!bookDate || !selectedDuration) return null;
+
+    const from = new Date(bookDate);
+    from.setHours(0, 0, 0, 0);
+
+    const totalHours =
+      parseDurationToHours(selectedDuration.value.duration) * qty;
+    const to = new Date(from.getTime() + totalHours * 60 * 60 * 1000 - 1);
+    to.setHours(0, 0, 0, 0);
+
+    return { from, to };
+  }, [bookDate, selectedDuration, qty]);
+
+  const bookingCalendarModifiers = useMemo(() => {
+    if (!bookingDateRange) return undefined;
+
+    const { from, to } = bookingDateRange;
+
+    return {
+      booking_start: (date: Date) => isSameCalendarDay(date, from),
+      booking_end: (date: Date) => isSameCalendarDay(date, to),
+      booking_middle: (date: Date) => {
+        const normalized = new Date(date);
+        normalized.setHours(0, 0, 0, 0);
+        return normalized > from && normalized < to;
+      }
+    };
+  }, [bookingDateRange]);
+
+  const bookingCalendarClassName =
+    "rounded-md border border-neutral-800 bg-black text-white p-2 max-sm:scale-75 origin-top -mt-2 -mb-16 [&_.rdp-day]:bg-transparent [&_.rdp-day_disabled]:bg-transparent [&_.rdp-day_today]:border [&_.rdp-day_today]:border-red-500 [&_.rdp-day_today]:bg-transparent [&_.rdp-day_today]:text-white [&_.rdp-day]:text-white [&_.rdp-day]:h-7 [&_.rdp-day]:w-7 [&_.rdp-day]:text-xs [&_.rdp-head_cell]:text-neutral-400 [&_.rdp-head_cell]:text-[0.65rem] [&_.rdp-head_cell]:font-normal [&_.rdp-caption_label]:text-white [&_.rdp-caption_label]:text-sm [&_.rdp-nav_button]:text-white [&_.rdp-nav_button]:h-6 [&_.rdp-nav_button]:w-6 [&_.rdp-day[aria-selected=true]]:bg-red-500 [&_.rdp-day[aria-selected=true]]:text-white [&_.rdp-day[aria-selected=true]]:shadow-[0_0_0_2px_rgba(239,68,68,0.5)]";
+
+  const bookingCalendarModifierClassNames = {
+    booking_start:
+      "!bg-red-500 !text-white shadow-[0_0_0_2px_rgba(239,68,68,0.5)] rounded-md",
+    booking_middle: "!bg-red-500/40 !text-white rounded-none",
+    booking_end:
+      "!bg-red-500 !text-white shadow-[0_0_0_2px_rgba(239,68,68,0.5)] rounded-md"
+  };
+
   const getStartDateTime = (): Date | null => {
     if (!bookDate || !startTime) return null;
 
@@ -761,25 +810,9 @@ export default function AccountDetailsPage() {
                         disabled={(date) =>
                           date < new Date(new Date().setHours(0, 0, 0, 0))
                         }
-                        className="rounded-md border border-neutral-800 bg-black text-white p-2 max-sm:scale-75 origin-top -mt-2 -mb-16
-
-                                                    [&_.rdp-day]:bg-transparent
-                                                    [&_.rdp-day_disabled]:bg-transparent
-
-                                                    [&_.rdp-day_today]:border
-                                                    [&_.rdp-day_today]:border-red-500
-                                                    [&_.rdp-day_today]:bg-transparent
-                                                    [&_.rdp-day_today]:text-white
-
-                                                    [&_.rdp-day]:text-white [&_.rdp-day]:h-7 [&_.rdp-day]:w-7 [&_.rdp-day]:text-xs
-                                                    [&_.rdp-head_cell]:text-neutral-400 [&_.rdp-head_cell]:text-[0.65rem] [&_.rdp-head_cell]:font-normal
-                                                    [&_.rdp-caption_label]:text-white [&_.rdp-caption_label]:text-sm
-                                                    [&_.rdp-nav_button]:text-white [&_.rdp-nav_button]:h-6 [&_.rdp-nav_button]:w-6
-
-                                                    [&_.rdp-day[aria-selected=true]]:bg-red-500
-                                                    [&_.rdp-day[aria-selected=true]]:text-white
-                                                    [&_.rdp-day[aria-selected=true]]:shadow-[0_0_0_2px_rgba(239,68,68,0.5)]
-                                                    "
+                        modifiers={bookingCalendarModifiers}
+                        modifiersClassNames={bookingCalendarModifierClassNames}
+                        className={bookingCalendarClassName}
                       />
                     </div>
 
@@ -1246,25 +1279,9 @@ export default function AccountDetailsPage() {
                         disabled={(date) =>
                           date < new Date(new Date().setHours(0, 0, 0, 0))
                         }
-                        className="rounded-md border border-neutral-800 bg-black text-white p-2 max-sm:scale-75 origin-top -mt-2 -mb-16
-
-                                                    [&_.rdp-day]:bg-transparent
-                                                    [&_.rdp-day_disabled]:bg-transparent
-
-                                                    [&_.rdp-day_today]:border
-                                                    [&_.rdp-day_today]:border-red-500
-                                                    [&_.rdp-day_today]:bg-transparent
-                                                    [&_.rdp-day_today]:text-white
-
-                                                    [&_.rdp-day]:text-white [&_.rdp-day]:h-7 [&_.rdp-day]:w-7 [&_.rdp-day]:text-xs
-                                                    [&_.rdp-head_cell]:text-neutral-400 [&_.rdp-head_cell]:text-[0.65rem] [&_.rdp-head_cell]:font-normal
-                                                    [&_.rdp-caption_label]:text-white [&_.rdp-caption_label]:text-sm
-                                                    [&_.rdp-nav_button]:text-white [&_.rdp-nav_button]:h-6 [&_.rdp-nav_button]:w-6
-
-                                                    [&_.rdp-day[aria-selected=true]]:bg-red-500
-                                                    [&_.rdp-day[aria-selected=true]]:text-white
-                                                    [&_.rdp-day[aria-selected=true]]:shadow-[0_0_0_2px_rgba(239,68,68,0.5)]
-                                                    "
+                        modifiers={bookingCalendarModifiers}
+                        modifiersClassNames={bookingCalendarModifierClassNames}
+                        className={bookingCalendarClassName}
                       />
                     </div>
 
