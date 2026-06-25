@@ -33,6 +33,7 @@ export class CarouselSlideService {
     data: Partial<{
       imageId: number;
       duration: number;
+      url: string | null;
     }>
   ) => {
     try {
@@ -46,11 +47,16 @@ export class CarouselSlideService {
       const updateData: {
         imageId?: number;
         duration?: number;
+        url?: string | null;
       } = {};
       let toDelete: number | null = null;
 
       if (data.duration !== undefined) {
         updateData.duration = data.duration;
+      }
+
+      if (data.url !== undefined) {
+        updateData.url = data.url;
       }
 
       if (data.imageId !== undefined) {

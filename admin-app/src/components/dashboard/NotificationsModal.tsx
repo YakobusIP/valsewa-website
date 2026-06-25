@@ -30,7 +30,7 @@ import {
   UpdateResetLogRequest
 } from "@/types/account.type";
 
-import { generatePassword } from "@/lib/utils";
+import { generateAccountPassword } from "@/lib/utils";
 
 import { format } from "date-fns";
 import { BellIcon, CopyIcon, XIcon } from "lucide-react";
@@ -63,7 +63,7 @@ export default function NotificationsModal({
   };
 
   const generateAndSetPassword = (id: number) => {
-    const newPassword = generatePassword();
+    const newPassword = generateAccountPassword();
     setPasswords((prev) => ({ ...prev, [id]: newPassword }));
     copyToClipboard(newPassword);
   };

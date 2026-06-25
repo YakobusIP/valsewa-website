@@ -58,6 +58,7 @@ export type CarouselSlide = {
   id: number;
   image: UploadResponse;
   duration: number;
+  url: string | null;
 };
 
 type AccountEntityRequest = Omit<

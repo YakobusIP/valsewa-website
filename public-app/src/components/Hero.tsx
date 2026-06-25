@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, useRef } from "react";
+import { type CSSProperties, type ReactNode, useRef } from "react";
 
 import HeroAgentLayer from "@/components/hero/HeroAgentLayer";
 import HeroNotchShape from "@/components/hero/HeroNotchShape";
@@ -23,6 +23,7 @@ import { CarouselSlide } from "@/types/account.type";
 
 import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
+import Link from "next/link";
 
 interface HeroProps {
   initialCarousel: CarouselSlide[];
@@ -31,6 +32,76 @@ interface HeroProps {
 }
 
 const HERO_SLIDE_DURATION = 5000;
+
+const slideWrapperClassName = "relative block h-full w-full";
+
+function isExternalUrl(url: string) {
+  return /^https?:\/\//i.test(url);
+}
+
+function getInternalHref(url: string) {
+  return url.startsWith("/") ? url : `/${url}`;
+}
+
+function CarouselSlideWrapper({
+  url,
+  children
+}: {
+  url: string | null;
+  children: ReactNode;
+}) {
+  if (!url) {
+    return <div className={slideWrapperClassName}>{children}</div>;
+  }
+
+  if (isExternalUrl(url)) {
+    return (
+      <a
+        href={url}
+        className={`${slideWrapperClassName} cursor-pointer`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <Link
+      href={getInternalHref(url)}
+      className={`${slideWrapperClassName} cursor-pointer`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function CarouselSlideContent({ slide }: { slide: CarouselSlide }) {
+  if (slide.image.type === "VIDEO") {
+    return (
+      <video
+        src={slide.image.imageUrl}
+        className="object-cover w-full h-full"
+        autoPlay
+        muted
+        loop
+        playsInline
+      />
+    );
+  }
+
+  return (
+    <Image
+      loading="lazy"
+      src={slide.image.imageUrl}
+      alt="Carousel Image"
+      fill
+      className="object-cover w-full h-full"
+      unoptimized
+    />
+  );
+}
 
 export default function Hero({
   initialCarousel,
@@ -104,25 +175,9 @@ export default function Hero({
                   {initialCarousel?.map((slide, index) => (
                     <CarouselItem key={index}>
                       <AspectRatio ratio={4 / 5}>
-                        {slide.image.type === "VIDEO" ? (
-                          <video
-                            src={slide.image.imageUrl}
-                            className="object-cover w-full h-full"
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                          />
-                        ) : (
-                          <Image
-                            loading="lazy"
-                            src={slide.image.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover w-full h-full"
-                            unoptimized
-                          />
-                        )}
+                        <CarouselSlideWrapper url={slide.url}>
+                          <CarouselSlideContent slide={slide} />
+                        </CarouselSlideWrapper>
                       </AspectRatio>
                     </CarouselItem>
                   ))}
@@ -153,27 +208,9 @@ export default function Hero({
                 <CarouselContent className="h-full">
                   {initialCarousel?.map((item, index) => (
                     <CarouselItem key={index} className="h-full">
-                      <div className="relative w-full h-full">
-                        {item.image.type === "VIDEO" ? (
-                          <video
-                            src={item.image.imageUrl}
-                            className="object-cover w-full h-full"
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
-                          />
-                        ) : (
-                          <Image
-                            loading="lazy"
-                            src={item.image.imageUrl}
-                            alt="Carousel Image"
-                            fill
-                            className="object-cover w-full h-full"
-                            unoptimized
-                          />
-                        )}
-                      </div>
+                      <CarouselSlideWrapper url={item.url}>
+                        <CarouselSlideContent slide={item} />
+                      </CarouselSlideWrapper>
                     </CarouselItem>
                   ))}
                 </CarouselContent>
