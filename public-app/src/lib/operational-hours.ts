@@ -9,6 +9,12 @@ export type OperationalBounds = {
   lastOrderMinutes: number;
 };
 
+export function is24HourOperation(
+  operationalHours: OperationalHoursEntity | null | undefined
+): boolean {
+  return operationalHours?.is24Hours === true;
+}
+
 function getMinutesInTimezone(at: Date, tz: string): number {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: tz,
@@ -28,6 +34,7 @@ function getMinutesInTimezone(at: Date, tz: string): number {
 export function getOperationalBounds(
   operationalHours: OperationalHoursEntity | null
 ): OperationalBounds | null {
+  if (is24HourOperation(operationalHours)) return null;
   if (!operationalHours?.open || !operationalHours?.close) return null;
 
   const tz = operationalHours.timezone || DEFAULT_OPERATIONS_TZ;
@@ -54,6 +61,8 @@ export function isOutsideOperationalHours(
   operationalHours: OperationalHoursEntity | null,
   at: Date = new Date()
 ): boolean {
+  if (is24HourOperation(operationalHours)) return false;
+
   const bounds = getOperationalBounds(operationalHours);
   if (!bounds) return false;
 
@@ -65,6 +74,8 @@ export function isOutsideOperationalHours(
 export function getOperationalHoursLabel(
   operationalHours: OperationalHoursEntity | null
 ): string | null {
+  if (is24HourOperation(operationalHours)) return null;
+
   const bounds = getOperationalBounds(operationalHours);
   if (!bounds || !operationalHours) return null;
 

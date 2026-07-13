@@ -18,7 +18,8 @@ const DEFAULT_OPERATIONAL_HOURS = {
   open: "10:00",
   close: "22:00",
   lastOrderBufferInMinutes: 30,
-  timezone: "Asia/Jakarta"
+  timezone: "Asia/Jakarta",
+  is24Hours: false
 };
 
 type PriceTierRow = {
