@@ -16,9 +16,16 @@ export type OperationalBounds = {
   lastOrderMinutes: number;
 };
 
+export function is24HourOperation(
+  operationalHours: OperationalHours | null | undefined
+): boolean {
+  return operationalHours?.is24Hours === true;
+}
+
 export function getOperationalBounds(
   operationalHours: OperationalHours | null
 ): OperationalBounds | null {
+  if (is24HourOperation(operationalHours)) return null;
   if (!operationalHours?.open || !operationalHours?.close) return null;
 
   const tz = operationalHours.timezone ?? WIB_TZ;
@@ -45,6 +52,8 @@ export function isOutsideOperationalHours(
   operationalHours: OperationalHours | null,
   at: Date = new Date()
 ): boolean {
+  if (is24HourOperation(operationalHours)) return false;
+
   const bounds = getOperationalBounds(operationalHours);
   if (!bounds || !at) return false;
 
@@ -58,7 +67,7 @@ export function assertScheduledBookingWithinOperationalHours(
   operationalHours: OperationalHours | null,
   startAt: Date
 ): void {
-  if (!operationalHours) return;
+  if (!operationalHours || is24HourOperation(operationalHours)) return;
 
   const bounds = getOperationalBounds(operationalHours);
   if (!bounds) return;

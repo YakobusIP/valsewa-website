@@ -523,6 +523,7 @@
         close: { type: string, example: "23:59" }
         lastOrderBufferInMinutes: { type: integer }
         timezone: { type: string }
+        is24Hours: { type: boolean, example: false }
 
     UpdateOperationalHoursRequest:
       type: object
@@ -530,6 +531,7 @@
         open: { type: string, example: "00:00" }
         close: { type: string, example: "23:59" }
         lastOrderBufferInMinutes: { type: integer }
+        is24Hours: { type: boolean, example: false }
 
     ErrorResponse:
       type: object

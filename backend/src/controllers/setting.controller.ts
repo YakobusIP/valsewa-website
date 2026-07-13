@@ -74,7 +74,8 @@ export class SettingController {
     next: NextFunction
   ) => {
     try {
-      const { open, close, lastOrderBufferInMinutes, timezone } = req.body;
+      const { open, close, lastOrderBufferInMinutes, timezone, is24Hours } =
+        req.body;
 
       if (!open || !close) {
         throw new BadRequestError("Missing required fields.");
@@ -84,7 +85,8 @@ export class SettingController {
         open,
         close,
         lastOrderBufferInMinutes,
-        timezone
+        timezone,
+        is24Hours
       });
       return res.json(updated);
     } catch (error) {
