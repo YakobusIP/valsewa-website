@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { settingService } from "@/services/setting.service";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ export default function SettingsModal({
   const [reminderText, setReminderText] = useState("");
   const [openTime, setOpenTime] = useState("");
   const [closeTime, setCloseTime] = useState("");
+  const [is24Hours, setIs24Hours] = useState(false);
   const [passwordExpiryDays, setPasswordExpiryDays] = useState("30");
 
   const SETTING_KEY = "reminder_text";
@@ -56,6 +58,7 @@ export default function SettingsModal({
       const data = await settingService.getOperationalHours();
       setOpenTime(data.open);
       setCloseTime(data.close);
+      setIs24Hours(data.is24Hours === true);
     } catch (error) {
       if (error instanceof Error) {
         toast({
@@ -101,19 +104,16 @@ export default function SettingsModal({
         )
       );
 
-      if (openTime || closeTime) {
-        if (!openTime || !closeTime) {
-          throw new Error("Operational hours must be fully filled");
-        }
-
-        if (openTime >= closeTime) {
+      if (openTime && closeTime) {
+        if (!is24Hours && openTime >= closeTime) {
           throw new Error("Open time must be earlier than close time");
         }
 
         promises.push(
           settingService.updateOperationalHours({
             open: openTime,
-            close: closeTime
+            close: closeTime,
+            is24Hours
           })
         );
       }
@@ -196,7 +196,8 @@ export default function SettingsModal({
                     type="time"
                     value={openTime}
                     onChange={(e) => setOpenTime(e.target.value)}
-                    className="border border-gray-300 rounded-md px-2 py-2"
+                    disabled={is24Hours}
+                    className="border border-gray-300 rounded-md px-2 py-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
 
@@ -206,13 +207,31 @@ export default function SettingsModal({
                     type="time"
                     value={closeTime}
                     onChange={(e) => setCloseTime(e.target.value)}
-                    className="border border-gray-300 rounded-md px-2 py-2"
+                    disabled={is24Hours}
+                    className="border border-gray-300 rounded-md px-2 py-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
               </div>
 
               <p className="text-xs text-muted-foreground">
                 Last order akan otomatis dihitung 30 menit sebelum jam tutup.
+              </p>
+
+              <div className="flex items-center gap-2 pt-1">
+                <Checkbox
+                  id="is-24-hours"
+                  checked={is24Hours}
+                  onCheckedChange={(checked) => setIs24Hours(checked === true)}
+                />
+                <Label
+                  htmlFor="is-24-hours"
+                  className="text-sm font-normal leading-none"
+                >
+                  24-hour operation
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Ketika diaktifkan, booking dapat dilakukan kapan saja dan daily drop akan reset setiap tengah malam WIB.
               </p>
             </div>
           </div>

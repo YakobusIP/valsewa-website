@@ -7,11 +7,13 @@ export type OperationalHoursEntity = {
   close: string;
   lastOrderBufferInMinutes: number;
   timezone: string;
+  is24Hours?: boolean;
 };
 
 export type UpdateOperationalHoursRequest = {
   open: string;
   close: string;
+  is24Hours?: boolean;
 };
 
 const createSettingService = () => {

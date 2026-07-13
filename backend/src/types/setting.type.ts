@@ -3,13 +3,15 @@ type OperationalHours = {
   close: string;
   lastOrderBufferInMinutes: number;
   timezone: string;
+  is24Hours?: boolean;
 };
 
 type UpdateOperationalHoursRequest = {
   open: string;
   close: string;
-  lastOrderBufferInMinutes: number;
+  lastOrderBufferInMinutes?: number;
   timezone?: string;
+  is24Hours?: boolean;
 };
 
 export const OPERATIONAL_HOURS_KEY = "OPERATIONAL_HOURS";

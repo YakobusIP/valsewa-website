@@ -15,6 +15,8 @@ import { Dialog, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
 import { PublicDailyDrop } from "@/types/dailydrop.type";
 import { OperationalHoursEntity } from "@/types/setting.type";
 
+import { is24HourOperation } from "@/lib/operational-hours";
+
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -85,11 +87,19 @@ function useDailyDropCountdown(
     if (!hours) return;
 
     const tz = hours.timezone || "Asia/Jakarta";
-    const [openH, openM] = hours.open.split(":").map(Number);
+    const openParts = hours.open.split(":").map(Number);
+    const is24Hours = is24HourOperation(hours);
 
     function getTargetMs(): number {
       const now = new Date();
       const { y, mo, d } = getDateInTz(tz, now);
+
+      if (is24Hours) {
+        const todayOpenMs = getOpenMsForDate(tz, y, mo, d, 0, 0);
+        return todayOpenMs + 24 * 3_600_000;
+      }
+
+      const [openH, openM] = openParts;
       const todayOpenMs = getOpenMsForDate(tz, y, mo, d, openH, openM);
       if (Date.now() < todayOpenMs) return todayOpenMs;
       return todayOpenMs + 24 * 3_600_000;
@@ -172,6 +182,12 @@ type OpenedDropEntry = { slot: number; accountId: number };
 
 function getDropDayKey(hours: OperationalHoursEntity | null): string {
   const tz = hours?.timezone || "Asia/Jakarta";
+
+  if (is24HourOperation(hours)) {
+    const today = getDateInTz(tz, new Date());
+    return `dailydrop_opened_${today.y}-${today.mo}-${today.d}`;
+  }
+
   const openStr = hours?.open ?? "09:00";
   const [openH, openM] = openStr.split(":").map(Number);
 

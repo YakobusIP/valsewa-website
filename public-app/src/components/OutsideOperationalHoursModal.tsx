@@ -65,6 +65,8 @@ export default function OutsideOperationalHoursModal({
     return `${operationalHours.open} - ${last}`;
   }, [operationalHours]);
 
+  if (operationalHours?.is24Hours) return null;
+
   return (
     <Dialog
       open={open}

@@ -58,12 +58,12 @@ export class SettingService {
 
   updateOperationalHours = async (data: UpdateOperationalHoursRequest) => {
     try {
-      const { open, close, lastOrderBufferInMinutes, timezone } = data;
+      const { open, close, lastOrderBufferInMinutes, timezone, is24Hours } =
+        data;
       validateTime(open);
       validateTime(close);
 
-      // optional: enforce open < close
-      if (open >= close) {
+      if (!is24Hours && open >= close) {
         throw new Error("Open time must be earlier than close time");
       }
 
@@ -71,7 +71,8 @@ export class SettingService {
         open,
         close,
         lastOrderBufferInMinutes: lastOrderBufferInMinutes ?? 30,
-        timezone: timezone ?? "Asia/Jakarta"
+        timezone: timezone ?? "Asia/Jakarta",
+        is24Hours: is24Hours === true
       };
 
       return await this.updateSetting(
