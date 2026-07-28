@@ -25,7 +25,13 @@ export default function DesktopBrandSwitcher({
           <button
             key={brand}
             type="button"
-            onClick={() => setActiveBrand(brand)}
+            onClick={() => {
+              if (brand === "valjubel") {
+                window.location.href = "https://valjubel.com";
+                return;
+              }
+              setActiveBrand(brand);
+            }}
             className="relative flex items-center justify-center px-[var(--hero-switcher-item-padding-x)] py-2.5 rounded-xl cursor-pointer transition hover:bg-white/10"
           >
             {isActive && (
