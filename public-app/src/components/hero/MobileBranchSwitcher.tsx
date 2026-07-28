@@ -35,7 +35,9 @@ export default function MobileBrandSwitcher({
 
       {/* VALJUBEL */}
       <button
-        onClick={() => setActiveBrand("valjubel")}
+        onClick={() => {
+          window.location.href = "https://valjubel.com";
+        }}
         className={`${baseButtonClass} ${
           activeBrand === "valjubel"
             ? "bg-[#770000] shadow-lg shadow-red-900/50"
