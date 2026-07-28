@@ -52,6 +52,10 @@ export default function CatalogueClient({
         router.push("/");
         return;
       }
+      if (brand === "valjubel") {
+        window.location.href = "https://valjubel.com";
+        return;
+      }
       setActiveBrand(brand);
     },
     [router]
