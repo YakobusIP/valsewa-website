@@ -16,9 +16,10 @@ export const COMP_TIERS = [
   "B - COMP",
   "A - COMP",
   "S - COMP",
-  "SSS - COMP"
+  "SSS - COMP",
+  "TAZZ - COMP"
 ] as const;
-export const UNRATED_TIERS = ["C", "B", "A", "S", "SSS"] as const;
+export const UNRATED_TIERS = ["C", "B", "A", "S", "SSS", "TAZZ"] as const;
 
 function tierLabel(t: string) {
   return t.replace(" - COMP", "");
