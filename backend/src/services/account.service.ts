@@ -66,6 +66,8 @@ export class AccountService {
   ];
 
   private priceTierOrder = [
+    "TAZZ-COMP",
+    "TAZZ",
     "SSS-COMP",
     "SSS",
     "S-COMP",
@@ -78,7 +80,7 @@ export class AccountService {
     "C"
   ];
 
-  private idTierOrder = ["SSS", "S", "A", "B", "C"];
+  private idTierOrder = ["TAZZ", "SSS", "S", "A", "B", "C"];
 
   // private sortAccountsByRank = <T extends { accountRank: string }>(
   //   data: T[],
