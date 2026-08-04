@@ -71,6 +71,16 @@ export const parseDurationToHours = (duration: string): number => {
   }, 0);
 };
 
+/** Shortest duration first. Stable for equal durations. */
+export const sortPriceListByDuration = <T extends { duration: string }>(
+  priceList: T[]
+): T[] => {
+  return [...priceList].sort(
+    (a, b) =>
+      parseDurationToHours(a.duration) - parseDurationToHours(b.duration)
+  );
+};
+
 export const parseToDate = (dateStr?: string): Date | null => {
   if (!dateStr) return null;
 

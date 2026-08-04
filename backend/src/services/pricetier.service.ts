@@ -6,6 +6,7 @@ import {
   PrismaUniqueError
 } from "../lib/error";
 import { prisma } from "../lib/prisma";
+import { sortPriceListByDuration } from "../lib/utils";
 import { Metadata } from "../types/metadata.type";
 import {
   CreatePriceTierRequest,
@@ -21,6 +22,13 @@ function validateDuration(input: string) {
       "Invalid duration format. Use 'Xd Yh' (e.g., '1d 2h')."
     );
   }
+}
+
+function withSortedPriceList<T extends { priceList: PriceList[] }>(tier: T): T {
+  return {
+    ...tier,
+    priceList: sortPriceListByDuration(tier.priceList)
+  };
 }
 
 export class PriceTierService {
@@ -45,9 +53,7 @@ export class PriceTierService {
           take: limit,
           skip: skip,
           include: {
-            priceList: {
-              orderBy: { createdAt: "desc" }
-            }
+            priceList: true
           }
         });
 
@@ -66,9 +72,7 @@ export class PriceTierService {
         data = await prisma.priceTier.findMany({
           where: whereCriteria,
           include: {
-            priceList: {
-              orderBy: { createdAt: "desc" }
-            }
+            priceList: true
           }
         });
         metadata = {
@@ -79,7 +83,7 @@ export class PriceTierService {
         };
       }
 
-      return [data, metadata];
+      return [data.map(withSortedPriceList), metadata];
     } catch (error) {
       throw new InternalServerError((error as Error).message);
     }
@@ -98,7 +102,7 @@ export class PriceTierService {
 
       if (!priceTier) throw new NotFoundError("Price tier not found!");
 
-      return priceTier;
+      return withSortedPriceList(priceTier);
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
@@ -223,7 +227,7 @@ export class PriceTierService {
           return updated;
         });
 
-        return result;
+        return withSortedPriceList(result);
       }
 
       const updated = await prisma.priceTier.update({
@@ -237,7 +241,7 @@ export class PriceTierService {
         include: { priceList: true }
       });
 
-      return updated;
+      return withSortedPriceList(updated);
     } catch (error) {
       if (error instanceof NotFoundError || error instanceof BadRequestError) {
         throw error;
