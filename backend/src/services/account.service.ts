@@ -27,12 +27,30 @@ import {
 } from "../types/account.type";
 import { Metadata } from "../types/metadata.type";
 import { UploadService } from "./upload.service";
-import { parseDurationToHours } from "../lib/utils";
+import { parseDurationToHours, sortPriceListByDuration } from "../lib/utils";
 import { getDailyDropWindow } from "../lib/operational-window";
 import { getContextLogger } from "../lib/request-context";
 import { env } from "../lib/env";
 
 const accountLogger = () => getContextLogger({ component: "account" });
+
+type WithPriceList = {
+  priceTier?: {
+    priceList?: Array<{ duration: string } & Record<string, unknown>>;
+  } | null;
+};
+
+function withSortedAccountPriceList<T extends WithPriceList>(account: T): T {
+  if (!account.priceTier?.priceList) return account;
+
+  return {
+    ...account,
+    priceTier: {
+      ...account.priceTier,
+      priceList: sortPriceListByDuration(account.priceTier.priceList)
+    }
+  };
+}
 
 export class AccountService {
   constructor(private readonly uploadService: UploadService) {}
@@ -703,10 +721,10 @@ export class AccountService {
       const enrichedData = filteredData.map((datum) => {
         const b = bookingMap.get(datum.id) ?? [];
 
-        return {
+        return withSortedAccountPriceList({
           ...datum,
           currentExpireAt: b[0]?.endAt ?? null
-        };
+        });
       });
       const enrichDurationMs = Date.now() - enrichStart;
 
@@ -885,7 +903,7 @@ export class AccountService {
         take: 2
       });
 
-      return {
+      return withSortedAccountPriceList({
         ...account,
         currentBookingDate: bookings[0]?.startAt ?? null,
         currentBookingDuration: bookings[0]
@@ -897,7 +915,7 @@ export class AccountService {
           ? parseDurationToHours(bookings[1]?.duration)
           : null,
         nextExpireAt: bookings[1]?.endAt ?? null
-      };
+      });
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
@@ -960,7 +978,7 @@ export class AccountService {
         select: { discount: true, priceListId: true }
       });
 
-      return {
+      return withSortedAccountPriceList({
         ...account,
         currentBookingDate: bookings[0]?.startAt ?? null,
         currentBookingDuration: bookings[0]
@@ -973,7 +991,7 @@ export class AccountService {
           : null,
         nextExpireAt: bookings[1]?.endAt ?? null,
         dailyDrop
-      };
+      });
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
@@ -1041,7 +1059,7 @@ export class AccountService {
         select: { discount: true, priceListId: true }
       });
 
-      return {
+      return withSortedAccountPriceList({
         ...account,
         currentBookingDate: bookings[0]?.startAt ?? null,
         currentBookingDuration: bookings[0]
@@ -1054,7 +1072,7 @@ export class AccountService {
           : null,
         nextExpireAt: bookings[1]?.endAt ?? null,
         dailyDrop
-      };
+      });
     } catch (error) {
       if (error instanceof NotFoundError) {
         throw error;
