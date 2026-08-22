@@ -9,15 +9,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Slider } from "@/components/ui/slider";
 
+import { PRICE_MAX, PRICE_MIN } from "@/lib/catalogue-filters";
 import { cn } from "@/lib/utils";
 
 import { Input } from "../ui/input";
 
-const PRICE_MIN = 0;
-const PRICE_MAX = 1_000_000;
-
 function formatIDR(n: number) {
   return n.toLocaleString("id-ID");
+}
+
+function parsePriceInput(raw: string, fallback: number): number {
+  if (raw.trim() === "") return fallback;
+  const value = Number(raw);
+  return Number.isFinite(value) ? value : fallback;
 }
 
 interface PriceDropdownProps {
@@ -28,6 +32,8 @@ interface PriceDropdownProps {
 export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
   const [open, setOpen] = useState(false);
   const [localRange, setLocalRange] = useState<[number, number]>(priceRange);
+  const [minInput, setMinInput] = useState(String(priceRange[0]));
+  const [maxInput, setMaxInput] = useState(String(priceRange[1]));
 
   const [min, max] = localRange;
   const isDefault = min === PRICE_MIN && max === PRICE_MAX;
@@ -43,7 +49,31 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
 
   useEffect(() => {
     setLocalRange(priceRange);
+    setMinInput(String(priceRange[0]));
+    setMaxInput(String(priceRange[1]));
   }, [priceRange]);
+
+  const syncRange = (next: [number, number]) => {
+    setLocalRange(next);
+    setMinInput(String(next[0]));
+    setMaxInput(String(next[1]));
+  };
+
+  const commitMin = () => {
+    const parsed = parsePriceInput(minInput, PRICE_MIN);
+    const value = Math.min(Math.max(parsed, PRICE_MIN), localRange[1]);
+    const next: [number, number] = [value, localRange[1]];
+    syncRange(next);
+    onChange(next);
+  };
+
+  const commitMax = () => {
+    const parsed = parsePriceInput(maxInput, PRICE_MAX);
+    const value = Math.min(Math.max(parsed, localRange[0]), PRICE_MAX);
+    const next: [number, number] = [localRange[0], value];
+    syncRange(next);
+    onChange(next);
+  };
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -76,7 +106,7 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
         align="start"
         sideOffset={8}
         className="z-50 bg-neutral-900 border border-white/20 rounded-xl shadow-xl min-w-[280px] p-4"
-        onCloseAutoFocus={(e) => e.preventDefault()} // prevent focus jump
+        onCloseAutoFocus={(e) => e.preventDefault()}
         onInteractOutside={() => {
           // allow outside click to close
         }}
@@ -91,17 +121,14 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
               <Input
                 type="number"
                 inputMode="numeric"
-                value={localRange[0]}
+                value={minInput}
                 min={PRICE_MIN}
                 max={max}
                 step={5000}
                 onChange={(e) => {
-                  const value = Number(e.target.value || 0);
-                  setLocalRange([value, localRange[1]]);
+                  setMinInput(e.target.value);
                 }}
-                onBlur={() => {
-                  onChange(localRange);
-                }}
+                onBlur={commitMin}
                 className="h-10 rounded-lg bg-white border-neutral-800 text-black"
               />
             </div>
@@ -111,17 +138,14 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
               <Input
                 type="number"
                 inputMode="numeric"
-                value={localRange[1]}
+                value={maxInput}
                 min={min}
                 max={PRICE_MAX}
                 step={5000}
                 onChange={(e) => {
-                  const value = Number(e.target.value || 0);
-                  setLocalRange([localRange[0], value]);
+                  setMaxInput(e.target.value);
                 }}
-                onBlur={() => {
-                  onChange(localRange);
-                }}
+                onBlur={commitMax}
                 className="h-10 rounded-lg bg-white border-neutral-800 text-black"
               />
             </div>
@@ -135,12 +159,14 @@ export function PriceDropdown({ priceRange, onChange }: PriceDropdownProps) {
             onValueChange={(v) => {
               const a = v[0] ?? PRICE_MIN;
               const b = v[1] ?? PRICE_MAX;
-              setLocalRange([Math.min(a, b), Math.max(a, b)]);
+              syncRange([Math.min(a, b), Math.max(a, b)]);
             }}
             onValueCommit={(v) => {
               const a = v[0] ?? PRICE_MIN;
               const b = v[1] ?? PRICE_MAX;
-              onChange([Math.min(a, b), Math.max(a, b)]);
+              const next: [number, number] = [Math.min(a, b), Math.max(a, b)];
+              syncRange(next);
+              onChange(next);
             }}
             className="my-4"
           />
