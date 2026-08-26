@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 import { RANKS } from "./RankDropdown";
-import { COMP_TIERS, UNRATED_TIERS } from "./TierDropdown";
+import { COMP_TIERS } from "./TierDropdown";
 
 interface FilterBottomSheetProps {
   open: boolean;
@@ -119,62 +119,25 @@ export function FilterBottomSheet({
           {/* Tier */}
           <div>
             <h3 className="text-white font-semibold mb-3">Tier</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {/* Competitive */}
-              <div>
-                <p className="text-xs text-white/40 font-semibold mb-2 uppercase">
-                  Competitive
-                </p>
-                <div className="space-y-1.5">
-                  {COMP_TIERS.map((t) => {
-                    const checked = selectedTiers.includes(t);
-                    return (
-                      <div
-                        key={t}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 cursor-pointer"
-                        onClick={() =>
-                          onTiersChange(toggleItem(selectedTiers, t))
-                        }
-                      >
-                        <Checkbox
-                          checked={checked}
-                          className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
-                        />
-                        <span className="text-sm text-white">
-                          {tierLabel(t)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Unrated */}
-              <div>
-                <p className="text-xs text-white/40 font-semibold mb-2 uppercase">
-                  Unrated
-                </p>
-                <div className="space-y-1.5">
-                  {UNRATED_TIERS.map((t) => {
-                    const checked = selectedTiers.includes(t);
-                    return (
-                      <div
-                        key={t}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 cursor-pointer"
-                        onClick={() =>
-                          onTiersChange(toggleItem(selectedTiers, t))
-                        }
-                      >
-                        <Checkbox
-                          checked={checked}
-                          className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
-                        />
-                        <span className="text-sm text-white">{t}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+            <div className="space-y-1.5">
+              {COMP_TIERS.map((t) => {
+                const checked = selectedTiers.includes(t);
+                return (
+                  <div
+                    key={t}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 cursor-pointer"
+                    onClick={() =>
+                      onTiersChange(toggleItem(selectedTiers, t))
+                    }
+                  >
+                    <Checkbox
+                      checked={checked}
+                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
+                    />
+                    <span className="text-sm text-white">{tierLabel(t)}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 

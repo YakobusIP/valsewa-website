@@ -5,6 +5,7 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { AccountEntity } from "@/types/account.type";
 
 import { staatliches } from "@/lib/fonts";
+import { getLowestTierLabel } from "@/lib/pricing";
 import { cn, getRankImageUrl } from "@/lib/utils";
 
 import Image from "next/image";
@@ -26,6 +27,7 @@ export default function InventoryAccountCard({
   openInNewTab = false
 }: InventoryAccountCardProps) {
   const inUse = item.availabilityStatus === "IN_USE";
+  const tierLabel = getLowestTierLabel(item);
 
   return (
     <Link
@@ -93,30 +95,18 @@ export default function InventoryAccountCard({
               </div>
             </div>
 
-            <div
-              className={cn(
-                "flex cursor-pointer items-center justify-center gap-0.5 text-blue-400 hover:text-blue-300 pl-4 max-w-[80px] tablet:max-w-[90px] xl:max-w-[120px] desktop:max-w-full",
-                compact ? "text-[0.5rem]" : "text-[0.4rem] tablet:text-xs"
-              )}
-            >
-              {item.isCompetitive ? (
-                <Image
-                  src="/cardneed/compe.svg"
-                  alt="Competitive"
-                  width={60}
-                  height={30}
-                  className="w-auto h-6 tablet:h-6 xl:h-10 desktop:h-10"
-                />
-              ) : (
-                <Image
-                  src="/cardneed/unrated.svg"
-                  alt="Unrated"
-                  width={60}
-                  height={30}
-                  className="w-auto h-6 tablet:h-6 xl:h-10 desktop:h-10"
-                />
-              )}
-            </div>
+            {tierLabel && (
+              <p
+                className={cn(
+                  "font-antonio font-bold tracking-normal text-white whitespace-nowrap text-right",
+                  compact
+                    ? "text-[0.5rem]"
+                    : "text-[0.4rem] tablet:text-xs xl:text-base desktop:text-lg"
+                )}
+              >
+                {tierLabel}
+              </p>
+            )}
           </div>
 
           {/* IMAGE */}
