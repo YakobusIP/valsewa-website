@@ -847,7 +847,7 @@ export class AccountService {
           totalRentHour: true,
           skinCount: true,
           skinList: true,
-          priceTier: true,
+          priceTier: { include: { priceList: true } },
           thumbnail: true,
           otherImages: true,
           isCompetitive: true,

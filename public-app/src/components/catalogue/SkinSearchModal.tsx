@@ -35,7 +35,7 @@ export function SkinSearchModal({
   const [filteredSkins, setFilteredSkins] = useState<Skin[]>([]);
   const [query, setQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [hasFetched, setHasFetched] = useState(false);
+  const [lastFetchedQuery, setLastFetchedQuery] = useState<string | null>(null);
   const [debouncedQuery, setDebouncedQuery] = useState(query);
 
   useEffect(() => {
@@ -51,7 +51,7 @@ export function SkinSearchModal({
   useEffect(() => {
     if (!open) return;
 
-    if (!debouncedQuery && hasFetched) return; // prevent refetch
+    if (lastFetchedQuery !== null && debouncedQuery === lastFetchedQuery) return;
 
     let cancelled = false;
     setIsLoading(true);
@@ -60,13 +60,13 @@ export function SkinSearchModal({
       if (cancelled) return;
       setFilteredSkins(result);
       setIsLoading(false);
-      setHasFetched(true);
+      setLastFetchedQuery(debouncedQuery);
     });
 
     return () => {
       cancelled = true;
     };
-  }, [open, debouncedQuery, hasFetched]);
+  }, [open, debouncedQuery, lastFetchedQuery]);
 
   const selectedIds = useMemo(
     () => new Set(selectedSkins.map((s) => s.id)),
