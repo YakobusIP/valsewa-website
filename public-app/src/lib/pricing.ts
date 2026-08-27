@@ -1,5 +1,6 @@
 import { AccountEntity, PriceList } from "@/types/account.type";
 
+// Pricing helpers for catalogue display and duration parsing.
 export function parseDurationToHours(duration: string): number {
   const lower = duration.toLowerCase().trim();
 
