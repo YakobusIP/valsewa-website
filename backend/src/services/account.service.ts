@@ -6,6 +6,8 @@ import {
   Skin,
   Status
 } from "@prisma/client";
+
+// Account service — core business logic for inventory and bookings.
 import { addHours, subDays } from "date-fns";
 import Fuse, { IFuseOptions } from "fuse.js";
 import {
