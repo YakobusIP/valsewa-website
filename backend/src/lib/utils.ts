@@ -81,6 +81,28 @@ export const sortPriceListByDuration = <T extends { duration: string }>(
   );
 };
 
+export const formatDurationShort = (duration: string): string => {
+  const lower = duration.toLowerCase().trim();
+  const matches = Array.from(
+    lower.matchAll(/(\d+(?:\.\d+)?)\s*(d|day|days|h|hr|hrs|hour|hours)\b/g)
+  );
+
+  let days = 0;
+  let hours = 0;
+
+  for (const match of matches) {
+    const value = Number(match[1]);
+    const unit = match[2];
+    if (unit.startsWith("d")) days += value;
+    else hours += value;
+  }
+
+  if (days > 0 && hours > 0) return `${days}d${hours}h`;
+  if (days > 0) return `${days}d`;
+  if (hours > 0) return `${hours}h`;
+  return duration.trim();
+};
+
 export const parseToDate = (dateStr?: string): Date | null => {
   if (!dateStr) return null;
 

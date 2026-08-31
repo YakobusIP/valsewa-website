@@ -3,8 +3,15 @@ export type PriceItem = {
   price: string;
 };
 
+export type TierPriceItem = {
+  id: string;
+  price: string;
+  priceK: number;
+  duration: string;
+};
+
 export type PublicPricesResponse = {
-  compTiers: PriceItem[];
-  tiers: PriceItem[];
+  compTiers: TierPriceItem[];
+  tiers: TierPriceItem[];
   ranks: PriceItem[];
 };

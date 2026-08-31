@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { useCompTierPrices } from "@/hooks/useCompTierPrices";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
@@ -9,6 +11,7 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 
+import { getTierFilterLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 export const COMP_TIERS = [
@@ -20,10 +23,6 @@ export const COMP_TIERS = [
   "TAZZ - COMP"
 ] as const;
 
-function tierLabel(t: string) {
-  return t.replace(" - COMP", "");
-}
-
 interface TierDropdownProps {
   selectedTiers: string[];
   onChange: (tiers: string[]) => void;
@@ -31,6 +30,7 @@ interface TierDropdownProps {
 
 export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
   const [open, setOpen] = useState(false);
+  const tierPrices = useCompTierPrices();
 
   const toggle = (t: string) => {
     onChange(
@@ -41,7 +41,9 @@ export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
   };
 
   let label =
-    selectedTiers.length === 0 ? null : tierLabel(selectedTiers[0]);
+    selectedTiers.length === 0
+      ? null
+      : getTierFilterLabel(selectedTiers[0], tierPrices);
 
   const extraCount = selectedTiers.length - 1;
 
@@ -83,7 +85,7 @@ export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
       <PopoverContent
         align="start"
         sideOffset={8}
-        className="z-50 bg-neutral-900 border border-white/20 rounded-xl shadow-xl min-w-[180px] p-4"
+        className="z-50 bg-neutral-900 border border-white/20 rounded-xl shadow-xl min-w-[220px] p-4"
       >
         <div className="space-y-1">
           {COMP_TIERS.map((t) => {
@@ -109,7 +111,9 @@ export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
                   aria-hidden="true"
                   className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 pointer-events-none"
                 />
-                <span className="text-sm text-white">{tierLabel(t)}</span>
+                <span className="text-sm text-white">
+                  {getTierFilterLabel(t, tierPrices)}
+                </span>
               </div>
             );
           })}
