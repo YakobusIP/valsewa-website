@@ -47,12 +47,16 @@ export default function ExploreCatalog() {
         <p className="text-white text-xs">Don’t miss out our updates:</p>
 
         <div className="flex gap-6 my-3 text-white text-[9px] tablet:text-xs flex-wrap justify-center">
-          <span className="flex items-center gap-2 font-antonio">
+          <Link
+            href="https://www.instagram.com/valsewaaa"
+            target="_blank"
+            className="flex items-center gap-2 font-antonio cursor-pointer"
+          >
             <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALSEWA
-          </span>
+          </Link>
           <Link
-            href="https://www.instagram.com/valforum?igsh=bTQ3OHQyenBmZ2Yw&utm_source=qr"
+            href="https://www.instagram.com/valforum.id/"
             target="_blank"
             className="flex items-center gap-2 font-antonio cursor-pointer"
           >
@@ -60,20 +64,12 @@ export default function ExploreCatalog() {
             VALFORUM
           </Link>
           <Link
-            href="https://www.instagram.com/valjubel.vf?igsh=a2M3d2ludHpsaWFl"
+            href="https://www.instagram.com/valjubel.idn/"
             target="_blank"
             className="flex items-center gap-2 font-antonio cursor-pointer"
           >
             <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
             VALJUBEL
-          </Link>
-          <Link
-            href="https://www.instagram.com/valjoki?igsh=MW5jZG5pb24yaGh1dA=="
-            target="_blank"
-            className="flex items-center gap-2 font-antonio cursor-pointer"
-          >
-            <Image src="/home/Instagram.svg" alt="" width={16} height={16} />
-            VALJOKI
           </Link>
         </div>
 

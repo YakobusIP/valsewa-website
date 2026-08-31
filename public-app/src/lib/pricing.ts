@@ -58,3 +58,21 @@ export function getLowestTierLabel(account: AccountEntity): string | null {
 
   return `${code} - ${priceK}k/${duration}`;
 }
+
+export function formatTierFilterLabel(
+  code: string,
+  priceK: number,
+  duration: string
+): string {
+  return `${code} - ${priceK}k/${duration}`;
+}
+
+export function getTierFilterLabel(
+  tierValue: string,
+  tierPrices: Record<string, { priceK: number; duration: string }>
+): string {
+  const code = tierValue.replace(" - COMP", "");
+  const price = tierPrices[code];
+  if (!price) return code;
+  return formatTierFilterLabel(code, price.priceK, price.duration);
+}

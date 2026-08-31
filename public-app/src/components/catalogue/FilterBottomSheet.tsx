@@ -2,10 +2,13 @@
 
 import { useEffect } from "react";
 
+import { useCompTierPrices } from "@/hooks/useCompTierPrices";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Slider } from "@/components/ui/slider";
 
+import { getTierFilterLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 import Image from "next/image";
@@ -31,10 +34,6 @@ function toggleItem<T>(arr: T[], item: T): T[] {
   return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item];
 }
 
-function tierLabel(t: string) {
-  return t.replace(" - COMP", "");
-}
-
 export function FilterBottomSheet({
   open,
   onClose,
@@ -48,6 +47,8 @@ export function FilterBottomSheet({
   onApply,
   onResetAll
 }: FilterBottomSheetProps) {
+  const tierPrices = useCompTierPrices();
+
   // Optional: prevent background scroll
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -134,7 +135,9 @@ export function FilterBottomSheet({
                       checked={checked}
                       className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600"
                     />
-                    <span className="text-sm text-white">{tierLabel(t)}</span>
+                    <span className="text-sm text-white">
+                      {getTierFilterLabel(t, tierPrices)}
+                    </span>
                   </div>
                 );
               })}
