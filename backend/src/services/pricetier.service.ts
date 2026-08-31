@@ -6,7 +6,10 @@ import {
   PrismaUniqueError
 } from "../lib/error";
 import { prisma } from "../lib/prisma";
-import { sortPriceListByDuration } from "../lib/utils";
+import {
+  formatDurationShort,
+  sortPriceListByDuration
+} from "../lib/utils";
 import { Metadata } from "../types/metadata.type";
 import {
   CreatePriceTierRequest,
@@ -368,25 +371,41 @@ export class PriceTierService {
         return `Rp ${inK}k`;
       };
 
-      const lrTiers: { id: string; price: string }[] = [];
-      const normalTiers: { id: string; price: string }[] = [];
+      const compTiers: {
+        id: string;
+        price: string;
+        priceK: number;
+        duration: string;
+      }[] = [];
+      const normalTiers: {
+        id: string;
+        price: string;
+        priceK: number;
+        duration: string;
+      }[] = [];
 
       for (const tier of priceTiers) {
         if (tier.priceList.length === 0) continue;
 
-        const minNormalPrice = Math.min(
-          ...tier.priceList.map((p) => p.unratedPrice)
-        );
-        const minLowPrice = Math.min(...tier.priceList.map((p) => p.compPrice));
+        const sorted = sortPriceListByDuration(tier.priceList);
+        const shortest = sorted[0];
+        const shortestDuration = formatDurationShort(shortest.duration);
+
+        const compPrice = shortest.compPrice;
+        const unratedPrice = shortest.unratedPrice;
 
         normalTiers.push({
           id: tier.code,
-          price: formatPrice(minNormalPrice)
+          price: formatPrice(unratedPrice),
+          priceK: Math.floor(unratedPrice / 1000),
+          duration: shortestDuration
         });
 
-        lrTiers.push({
+        compTiers.push({
           id: tier.code,
-          price: formatPrice(minLowPrice)
+          price: formatPrice(compPrice),
+          priceK: Math.floor(compPrice / 1000),
+          duration: shortestDuration
         });
       }
 
@@ -452,7 +471,7 @@ export class PriceTierService {
       }
 
       return {
-        lrTiers,
+        compTiers,
         tiers: normalTiers,
         ranks
       };

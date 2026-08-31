@@ -6,6 +6,8 @@ import {
   Skin,
   Status
 } from "@prisma/client";
+
+// Account service — core business logic for inventory and bookings.
 import { addHours, subDays } from "date-fns";
 import Fuse, { IFuseOptions } from "fuse.js";
 import {
@@ -847,7 +849,7 @@ export class AccountService {
           totalRentHour: true,
           skinCount: true,
           skinList: true,
-          priceTier: true,
+          priceTier: { include: { priceList: true } },
           thumbnail: true,
           otherImages: true,
           isCompetitive: true,

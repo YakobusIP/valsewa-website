@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { useCompTierPrices } from "@/hooks/useCompTierPrices";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
@@ -9,6 +11,7 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 
+import { getTierFilterLabel } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 export const COMP_TIERS = [
@@ -19,16 +22,6 @@ export const COMP_TIERS = [
   "SSS - COMP",
   "TAZZ - COMP"
 ] as const;
-export const UNRATED_TIERS = ["C", "B", "A", "S", "SSS", "TAZZ"] as const;
-
-function tierLabel(t: string) {
-  return t.replace(" - COMP", "");
-}
-
-function firstTierDisplay(t: string) {
-  if (t.includes("COMP")) return `Competitive-${tierLabel(t)}`;
-  return t;
-}
 
 interface TierDropdownProps {
   selectedTiers: string[];
@@ -37,6 +30,7 @@ interface TierDropdownProps {
 
 export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
   const [open, setOpen] = useState(false);
+  const tierPrices = useCompTierPrices();
 
   const toggle = (t: string) => {
     onChange(
@@ -47,7 +41,9 @@ export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
   };
 
   let label =
-    selectedTiers.length === 0 ? null : firstTierDisplay(selectedTiers[0]);
+    selectedTiers.length === 0
+      ? null
+      : getTierFilterLabel(selectedTiers[0], tierPrices);
 
   const extraCount = selectedTiers.length - 1;
 
@@ -89,80 +85,38 @@ export function TierDropdown({ selectedTiers, onChange }: TierDropdownProps) {
       <PopoverContent
         align="start"
         sideOffset={8}
-        className="z-50 bg-neutral-900 border border-white/20 rounded-xl shadow-xl min-w-[300px] p-4"
+        className="z-50 bg-neutral-900 border border-white/20 rounded-xl shadow-xl min-w-[220px] p-4"
       >
-        <div className="grid grid-cols-2 gap-4">
-          {/* Competitive */}
-          <div>
-            <p className="text-xs text-white/50 font-semibold mb-2 uppercase tracking-wide">
-              Competitive
-            </p>
-            <div className="space-y-1">
-              {COMP_TIERS.map((t) => {
-                const checked = selectedTiers.includes(t);
-                return (
-                  <div
-                    key={t}
-                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/10 cursor-pointer"
-                    role="checkbox"
-                    aria-checked={checked}
-                    tabIndex={0}
-                    onClick={() => toggle(t)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        toggle(t);
-                      }
-                    }}
-                  >
-                    <Checkbox
-                      checked={checked}
-                      tabIndex={-1}
-                      aria-hidden="true"
-                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 pointer-events-none"
-                    />
-                    <span className="text-sm text-white">{tierLabel(t)}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Unrated */}
-          <div>
-            <p className="text-xs text-white/50 font-semibold mb-2 uppercase tracking-wide">
-              Unrated
-            </p>
-            <div className="space-y-1">
-              {UNRATED_TIERS.map((t) => {
-                const checked = selectedTiers.includes(t);
-                return (
-                  <div
-                    key={t}
-                    className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/10 cursor-pointer"
-                    role="checkbox"
-                    aria-checked={checked}
-                    tabIndex={0}
-                    onClick={() => toggle(t)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
-                        toggle(t);
-                      }
-                    }}
-                  >
-                    <Checkbox
-                      checked={checked}
-                      tabIndex={-1}
-                      aria-hidden="true"
-                      className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 pointer-events-none"
-                    />
-                    <span className="text-sm text-white">{t}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+        <div className="space-y-1">
+          {COMP_TIERS.map((t) => {
+            const checked = selectedTiers.includes(t);
+            return (
+              <div
+                key={t}
+                className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-white/10 cursor-pointer"
+                role="checkbox"
+                aria-checked={checked}
+                tabIndex={0}
+                onClick={() => toggle(t)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggle(t);
+                  }
+                }}
+              >
+                <Checkbox
+                  checked={checked}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  className="border-white/50 data-[state=checked]:bg-red-600 data-[state=checked]:border-red-600 pointer-events-none"
+                />
+                <span className="text-sm text-white">
+                  {getTierFilterLabel(t, tierPrices)}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </PopoverContent>
     </Popover>
