@@ -1,19 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { VoucherEntity, voucherService } from "@/services/voucher.service";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -69,6 +59,7 @@ export default function VoucherModal({
   const [isDeleting, setIsDeleting] = useState(false);
   const [openDetail, setOpenDetail] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+  const cancelDeleteRef = useRef<HTMLButtonElement>(null);
 
   const getVouchers = useCallback(async () => {
     try {
@@ -89,8 +80,18 @@ export default function VoucherModal({
   }, []);
 
   useEffect(() => {
-    if (open) getVouchers();
+    if (open) {
+      getVouchers();
+      return;
+    }
+
+    setVoucherToDelete(null);
+    setIsDeleting(false);
   }, [open, getVouchers]);
+
+  useEffect(() => {
+    if (voucherToDelete) cancelDeleteRef.current?.focus();
+  }, [voucherToDelete]);
 
   const handleDelete = async () => {
     if (!voucherToDelete || isDeleting) return;
@@ -101,7 +102,6 @@ export default function VoucherModal({
 
       setVouchers((prev) => prev.filter((v) => v.id !== voucherToDelete.id));
       setVoucherToDelete(null);
-      document.body.style.removeProperty("pointer-events");
 
       toast({
         title: "Deleted",
@@ -186,20 +186,78 @@ export default function VoucherModal({
     setOpenEdit(true);
   };
 
-  const requestDelete = (voucher: VoucherEntity) => {
-    window.setTimeout(() => setVoucherToDelete(voucher), 0);
-  };
-
-  const closeDeleteDialog = () => {
+  const closeDeleteConfirmation = () => {
     if (isDeleting) return;
     setVoucherToDelete(null);
-    document.body.style.removeProperty("pointer-events");
   };
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="flex flex-col w-full max-w-5xl max-h-[100dvh] overflow-y-auto">
+      <Dialog
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && voucherToDelete) {
+            closeDeleteConfirmation();
+            return;
+          }
+          onOpenChange(nextOpen);
+        }}
+      >
+        <DialogContent className="relative flex flex-col w-full max-w-5xl max-h-[100dvh] overflow-hidden">
+          {voucherToDelete && (
+            <div
+              className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+              onClick={closeDeleteConfirmation}
+            >
+              <div
+                role="alertdialog"
+                aria-modal="true"
+                aria-labelledby="delete-voucher-title"
+                aria-describedby="delete-voucher-description"
+                className="grid w-full max-w-lg gap-4 border bg-background p-6 shadow-lg sm:rounded-lg"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className="flex flex-col space-y-2 text-center sm:text-left">
+                  <h2
+                    id="delete-voucher-title"
+                    className="text-lg font-semibold"
+                  >
+                    Delete voucher?
+                  </h2>
+                  <p
+                    id="delete-voucher-description"
+                    className="text-sm text-muted-foreground"
+                  >
+                    {`"${voucherToDelete.voucherName}" (${voucherToDelete.voucherCode}) will be removed from the list.`}
+                  </p>
+                </div>
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
+                  <Button
+                    ref={cancelDeleteRef}
+                    type="button"
+                    variant="outline"
+                    className="mt-2 sm:mt-0"
+                    disabled={isDeleting}
+                    onClick={closeDeleteConfirmation}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={isDeleting}
+                    onClick={() => void handleDelete()}
+                  >
+                    {isDeleting && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <DialogHeader className="flex flex-row items-center justify-between">
             <DialogTitle>Voucher List</DialogTitle>
           </DialogHeader>
@@ -296,7 +354,7 @@ export default function VoucherModal({
                         {new Date(voucher.dateEnd).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu modal={false}>
+                        <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
                               <span className="sr-only">Open menu</span>
@@ -330,7 +388,7 @@ export default function VoucherModal({
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
-                              onSelect={() => requestDelete(voucher)}
+                              onClick={() => setVoucherToDelete(voucher)}
                             >
                               Delete
                             </DropdownMenuItem>
@@ -370,43 +428,6 @@ export default function VoucherModal({
         onOpenChange={setOpenEdit}
         onSuccess={handleUpdated}
       />
-
-      <AlertDialog
-        open={voucherToDelete !== null}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) closeDeleteDialog();
-        }}
-      >
-        <AlertDialogContent
-          onCloseAutoFocus={(event) => {
-            event.preventDefault();
-            document.body.style.removeProperty("pointer-events");
-          }}
-        >
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete voucher?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {voucherToDelete
-                ? `"${voucherToDelete.voucherName}" (${voucherToDelete.voucherCode}) will be removed from the list.`
-                : "This voucher will be removed from the list."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={(e) => {
-                e.preventDefault();
-                void handleDelete();
-              }}
-            >
-              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }
