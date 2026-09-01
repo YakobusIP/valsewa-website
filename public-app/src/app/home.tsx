@@ -13,6 +13,8 @@ import { DailyDropModal } from "@/components/dailydrop/DailyDropModal";
 
 import { CarouselSlide } from "@/types/account.type";
 
+import type { BrandSlug } from "@/lib/brand";
+
 interface Props {
   initialCarousel: CarouselSlide[];
 }
@@ -20,9 +22,7 @@ export default function Home({ initialCarousel }: Props) {
   const [isScrolled, setIsScrolled] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
 
-  const [activeBrand, setActiveBrand] = useState<
-    "valsewa" | "valjubel" | "valjoki"
-  >("valsewa");
+  const [activeBrand, setActiveBrand] = useState<BrandSlug>("valsewa");
   const [isDailyDropOpen, setIsDailyDropOpen] = useState(false);
 
   // Calculate and set scrollbar width as CSS variable

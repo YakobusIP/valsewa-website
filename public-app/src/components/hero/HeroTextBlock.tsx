@@ -1,3 +1,5 @@
+import { type BrandSlug, getBrandLogoPath } from "@/lib/brand";
+
 import Image from "next/image";
 
 export default function HeroTextBlock({
@@ -5,25 +7,13 @@ export default function HeroTextBlock({
   activeBrand = "valsewa"
 }: {
   className?: string;
-  activeBrand?: "valsewa" | "valjubel" | "valjoki";
+  activeBrand?: BrandSlug;
 }) {
-  const getTitle = () => {
-    switch (activeBrand) {
-      case "valjubel":
-      case "valsewa":
-        return "WORLD'S #1";
-      case "valjoki":
-        return "MOST TRUSTED";
-      default:
-        return "WORLD'S #1";
-    }
-  };
+  const getTitle = () => "WORLD'S #1";
   const getSubtitle = () => {
     switch (activeBrand) {
       case "valjubel":
         return "FOR BUYING AND SELLING\nVALORANT ACCOUNTS";
-      case "valjoki":
-        return "VALORANT ACCOUNT\nBOOSTING SERVICE";
       case "valsewa":
       default:
         return "VALORANT ACCOUNT\nRENTAL SITE";
@@ -37,7 +27,7 @@ export default function HeroTextBlock({
       {/* Logo - Desktop only */}
       <div className="hidden md:flex items-center gap-3 mb-4">
         <Image
-          src={`/header/${activeBrand.toUpperCase()}.svg`}
+          src={getBrandLogoPath(activeBrand)}
           alt={activeBrand.toUpperCase()}
           width={200}
           height={70}

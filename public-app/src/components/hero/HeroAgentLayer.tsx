@@ -1,3 +1,4 @@
+import { type BrandSlug } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 import Image from "next/image";
@@ -5,14 +6,12 @@ import Image from "next/image";
 export default function HeroAgentLayer({
   activeBrand = "valsewa"
 }: {
-  activeBrand?: "valsewa" | "valjubel" | "valjoki";
+  activeBrand?: BrandSlug;
 }) {
   const getImage = () => {
     switch (activeBrand) {
       case "valjubel":
         return "/NewHero/Agent Reyna.png";
-      case "valjoki":
-        return "/NewHero/Agent Gekko.png";
       case "valsewa":
       default:
         return "/NewHero/Agent Neon.png";
@@ -26,11 +25,9 @@ export default function HeroAgentLayer({
     >
       <div
         className={cn(
-          activeBrand === "valjoki"
-            ? "md:top-[55%] top-[60%]"
-            : activeBrand === "valjubel"
-              ? "top-[110%] sm:top-[95%] md:top-[125%]"
-              : "top-[110%] sm:top-[95%] md:top-[105%]",
+          activeBrand === "valjubel"
+            ? "top-[110%] sm:top-[95%] md:top-[125%]"
+            : "top-[110%] sm:top-[95%] md:top-[105%]",
           activeBrand === "valjubel"
             ? "left-[10%] sm:left-[10%] md:left-1/2"
             : "left-[10%] sm:left-[20%] md:left-1/2",

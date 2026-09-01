@@ -9,7 +9,8 @@ import {
 import {
   BadRequestError,
   InternalServerError,
-  NotFoundError
+  NotFoundError,
+  PrismaUniqueError
 } from "../lib/error";
 import { prisma } from "../lib/prisma";
 import { Metadata } from "../types/metadata.type";
@@ -217,11 +218,12 @@ export class VoucherService {
         throw new BadRequestError("Voucher name is required");
       }
 
-      const exists = await prisma.voucher.findUnique({
-        where: { voucherCode: data.voucherCode }
+      const exists = await prisma.voucher.findFirst({
+        where: { voucherCode: data.voucherCode, ...notDeletedWhere },
+        select: { id: true }
       });
 
-      if (exists) throw new BadRequestError("Voucher code already exists");
+      if (exists) throw new PrismaUniqueError("Voucher code already exists");
 
       this.validateTypeFields(data.type, data.percentage, data.nominal);
       this.validateBudgetFields(data);
@@ -245,6 +247,15 @@ export class VoucherService {
       });
     } catch (error) {
       if (error instanceof BadRequestError) throw error;
+      if (error instanceof PrismaUniqueError) throw error;
+
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new PrismaUniqueError("Voucher code already exists");
+      }
+
       throw new InternalServerError((error as Error).message);
     }
   };

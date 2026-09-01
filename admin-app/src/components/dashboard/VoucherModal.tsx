@@ -4,6 +4,16 @@ import { useCallback, useEffect, useState } from "react";
 
 import { VoucherEntity, voucherService } from "@/services/voucher.service";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -53,6 +63,10 @@ export default function VoucherModal({
   const [selectedVoucher, setSelectedVoucher] = useState<VoucherEntity | null>(
     null
   );
+  const [voucherToDelete, setVoucherToDelete] = useState<VoucherEntity | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
   const [openDetail, setOpenDetail] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
 
@@ -78,13 +92,15 @@ export default function VoucherModal({
     if (open) getVouchers();
   }, [open, getVouchers]);
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Delete this voucher?")) return;
+  const handleDelete = async () => {
+    if (!voucherToDelete || isDeleting) return;
 
     try {
-      await voucherService.remove(id);
+      setIsDeleting(true);
+      await voucherService.remove(voucherToDelete.id);
 
-      setVouchers((prev) => prev.filter((v) => v.id !== id));
+      setVouchers((prev) => prev.filter((v) => v.id !== voucherToDelete.id));
+      setVoucherToDelete(null);
 
       toast({
         title: "Deleted",
@@ -98,6 +114,8 @@ export default function VoucherModal({
         title: "Delete failed",
         description: errorMessage || "Unknown error"
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -301,7 +319,7 @@ export default function VoucherModal({
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
-                              onClick={() => handleDelete(voucher.id)}
+                              onClick={() => setVoucherToDelete(voucher)}
                             >
                               Delete
                             </DropdownMenuItem>
@@ -341,6 +359,40 @@ export default function VoucherModal({
         onOpenChange={setOpenEdit}
         onSuccess={handleUpdated}
       />
+
+      <AlertDialog
+        open={voucherToDelete !== null}
+        onOpenChange={(isOpen) => {
+          if (!isOpen && !isDeleting) {
+            setVoucherToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete voucher?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {voucherToDelete
+                ? `"${voucherToDelete.voucherName}" (${voucherToDelete.voucherCode}) will be removed from the list.`
+                : "This voucher will be removed from the list."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDelete();
+              }}
+            >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
