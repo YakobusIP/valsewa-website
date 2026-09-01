@@ -38,6 +38,7 @@ import { toast } from "@/hooks/useToast";
 import { AccountEntity, PriceList, UploadResponse } from "@/types/account.type";
 import { OperationalHoursEntity } from "@/types/setting.type";
 
+import type { BrandSlug } from "@/lib/brand";
 import { staatliches } from "@/lib/fonts";
 import { getOperationalHoursLabel } from "@/lib/operational-hours";
 import { cn, getRankImageUrl, isOutsideOperationalHours } from "@/lib/utils";
@@ -79,9 +80,7 @@ export default function AccountDetailsPage() {
   const [endTime, setEndTime] = useState<string>("");
   const { isAuthenticated, customerId } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
-  const [activeBrand, setActiveBrand] = useState<
-    "valsewa" | "valjubel" | "valjoki"
-  >("valsewa");
+  const [activeBrand, setActiveBrand] = useState<BrandSlug>("valsewa");
 
   const [showUnavailableModal, setShowUnavailableModal] = useState(false);
 

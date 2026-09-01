@@ -13,6 +13,7 @@ import {
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 
+import { type BrandSlug, getBrandLogoPath } from "@/lib/brand";
 import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
@@ -25,7 +26,7 @@ import StreakCountdown from "./StreakCountdown";
 import StreakNavbarHoverPanel from "./StreakNavbarHoverPanel";
 
 interface NavbarHomeMobileProps {
-  activeBrand: "valsewa" | "valjubel" | "valjoki";
+  activeBrand: BrandSlug;
   isScrolled: boolean;
 }
 
@@ -36,17 +37,7 @@ const NavbarHomeMobile = ({
   const router = useRouter();
   const [isComponentOpen, setIsComponentOpen] = useState(false);
 
-  const getLogo = () => {
-    switch (activeBrand) {
-      case "valjubel":
-        return "/header/VALJUBEL.svg";
-      case "valjoki":
-        return "/header/VALJOKI.svg";
-      case "valsewa":
-      default:
-        return "/header/VALSEWA.svg";
-    }
-  };
+  const getLogo = () => getBrandLogoPath(activeBrand);
 
   const handleLoginClick = () => {
     setIsComponentOpen(true); // open login modal

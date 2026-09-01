@@ -1,44 +1,11 @@
-// Mobile SVG Notch Shape Component (for screens below xl)
-// The notch covers ~1/3 of the width for the VALSEWA button
+import {
+  MOBILE_NOTCH_VIEWBOX,
+  getMobileRightNotchPath
+} from "@/components/hero/mobile-notch-paths";
+
 export default function HeroNotchShapeMobileRight() {
-  const W = 400;
-  const H = 600;
-
-  // Outer body
-  const r = 12; // outer corner radius
-  const topY = 65; // main body top edge (lower than the tab)
-
-  // Tab (the raised part on the right)
-  const tabW = 120; // width of the tab
-  const tabH = 65; // how much it sticks up above topY
-  const tabR = 12; // roundness of the tab's top-left corner
-
-  const tabTopY = topY - tabH;
-
-  // Tab touches the right corner, so it ends at (W - r) before the rounded corner
-  const tabEndX = W - r;
-  const tabStartX = tabEndX - tabW;
-
-  const safeTabR = Math.min(tabR, tabW / 2 - 1);
-
-  const path = `
-    M ${r} ${H}
-    Q 0 ${H} 0 ${H - r}
-    L 0 ${topY + r}
-    Q 0 ${topY} ${r} ${topY}
-
-    L ${tabStartX} ${topY}
-
-    L ${tabStartX} ${tabTopY + safeTabR}
-    Q ${tabStartX} ${tabTopY} ${tabStartX + safeTabR} ${tabTopY}
-
-    L ${tabEndX} ${tabTopY}
-    Q ${W} ${tabTopY} ${W} ${tabTopY + r}
-
-    L ${W} ${H - r}
-    Q ${W} ${H} ${W - r} ${H}
-    Z
-  `;
+  const { width: W, height: H } = MOBILE_NOTCH_VIEWBOX;
+  const path = getMobileRightNotchPath();
 
   return (
     <svg

@@ -17,6 +17,7 @@ import {
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 
+import { type BrandSlug, getBrandLogoPath } from "@/lib/brand";
 import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
@@ -26,23 +27,10 @@ import Link from "next/link";
 import StreakCountdown from "../StreakCountdown";
 import StreakNavbarHoverPanel from "../StreakNavbarHoverPanel";
 
-type BrandType = "valsewa" | "valjubel" | "valjoki";
-
 interface CatalogueNavbarProps {
-  activeBrand: BrandType;
-  setActiveBrand: (brand: BrandType) => void;
+  activeBrand: BrandSlug;
+  setActiveBrand: (brand: BrandSlug) => void;
   isScrolled: boolean;
-}
-
-function getMobileLogo(activeBrand: BrandType) {
-  switch (activeBrand) {
-    case "valjubel":
-      return "/header/VALJUBEL.svg";
-    case "valjoki":
-      return "/header/VALJOKI.svg";
-    default:
-      return "/header/VALSEWA.svg";
-  }
 }
 
 export function CatalogueNavbar({
@@ -361,7 +349,7 @@ export function CatalogueNavbar({
           <div className="flex items-center justify-center flex-1">
             <figure className="sm:w-[210px] w-[150px]">
               <Image
-                src={getMobileLogo(activeBrand)}
+                src={getBrandLogoPath(activeBrand)}
                 alt={activeBrand}
                 height={80}
                 width={210}

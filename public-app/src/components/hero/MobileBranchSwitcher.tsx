@@ -1,73 +1,60 @@
+import {
+  type BrandSlug,
+  getBrandLogoPath,
+  handleBrandSelection
+} from "@/lib/brand";
+import { cn } from "@/lib/utils";
+
 import Image from "next/image";
 
-// Mobile Brand Switcher Component - Full width with equal buttons
 interface Props {
-  activeBrand: "valsewa" | "valjubel" | "valjoki";
-  setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
+  activeBrand: BrandSlug;
+  setActiveBrand: (brand: BrandSlug) => void;
+  className?: string;
 }
+
+const logoClassName =
+  "h-auto w-[clamp(5.3625rem,24.2vw,6.6rem)] object-contain";
 
 export default function MobileBrandSwitcher({
   activeBrand,
-  setActiveBrand
+  setActiveBrand,
+  className
 }: Props) {
   const baseButtonClass =
-    "flex-1 flex items-center justify-center py-2 rounded-md transition";
+    "flex h-full min-w-0 flex-1 items-center justify-center rounded-md transition";
 
   return (
-    <div className="flex items-stretch w-full pt-[4.5rem] gap-6 px-2">
-      {/* VALSEWA - sits in the notch area */}
+    <div
+      className={cn("flex h-full w-full items-center gap-6 px-2", className)}
+    >
       <button
-        onClick={() => setActiveBrand("valsewa")}
-        className={`${baseButtonClass} ${
-          activeBrand === "valsewa"
-            ? "bg-[#770000] shadow-lg shadow-red-900/50"
-            : "bg-white/10 hover:bg-white/20"
-        }`}
+        onClick={() => handleBrandSelection("valsewa", setActiveBrand)}
+        aria-pressed={activeBrand === "valsewa"}
+        className={baseButtonClass}
       >
         <Image
-          src="/header/VALSEWA.svg"
+          src={getBrandLogoPath("valsewa")}
           alt="VALSEWA"
-          width={200}
-          height={70}
-          className="object-contain w-[70px] sm:w-[90px] h-auto"
+          width={3945}
+          height={935}
+          sizes="40vw"
+          className={logoClassName}
         />
       </button>
 
-      {/* VALJUBEL */}
       <button
-        onClick={() => {
-          window.location.href = "https://valjubel.com";
-        }}
-        className={`${baseButtonClass} ${
-          activeBrand === "valjubel"
-            ? "bg-[#770000] shadow-lg shadow-red-900/50"
-            : "bg-white/10 hover:bg-white/20"
-        }`}
+        onClick={() => handleBrandSelection("valjubel", setActiveBrand)}
+        aria-pressed={activeBrand === "valjubel"}
+        className={baseButtonClass}
       >
         <Image
-          src="/header/VALJUBEL.svg"
+          src={getBrandLogoPath("valjubel")}
           alt="VALJUBEL"
-          width={200}
-          height={70}
-          className="object-contain w-[70px] sm:w-[90px] h-auto"
-        />
-      </button>
-
-      {/* VALJOKI */}
-      <button
-        onClick={() => setActiveBrand("valjoki")}
-        className={`${baseButtonClass} ${
-          activeBrand === "valjoki"
-            ? "bg-[#770000] shadow-lg shadow-red-900/50"
-            : "bg-white/10 hover:bg-white/20"
-        }`}
-      >
-        <Image
-          src="/header/VALJOKI.svg"
-          alt="VALJOKI"
-          width={200}
-          height={70}
-          className="object-contain w-[70px] sm:w-[90px] h-auto"
+          width={3945}
+          height={935}
+          sizes="40vw"
+          className={logoClassName}
         />
       </button>
     </div>
