@@ -52,24 +52,6 @@ export default function MobileBrandSwitcher({
           className="object-contain w-[70px] sm:w-[90px] h-auto"
         />
       </button>
-
-      {/* VALJOKI */}
-      <button
-        onClick={() => setActiveBrand("valjoki")}
-        className={`${baseButtonClass} ${
-          activeBrand === "valjoki"
-            ? "bg-[#770000] shadow-lg shadow-red-900/50"
-            : "bg-white/10 hover:bg-white/20"
-        }`}
-      >
-        <Image
-          src="/header/VALJOKI.svg"
-          alt="VALJOKI"
-          width={200}
-          height={70}
-          className="object-contain w-[70px] sm:w-[90px] h-auto"
-        />
-      </button>
     </div>
   );
 }
