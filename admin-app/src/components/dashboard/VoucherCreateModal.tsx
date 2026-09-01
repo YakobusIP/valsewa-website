@@ -86,7 +86,7 @@ export default function VoucherCreateModal({
 
     setForm((prev) => ({
       ...prev,
-      [name]: name === "voucherCode" ? value.toUpperCase() : value
+      [name]: value
     }));
   };
 
@@ -181,7 +181,7 @@ export default function VoucherCreateModal({
     }
 
     const payload: CreateVoucherPayload = {
-      voucherCode: form.voucherCode.trim().toUpperCase(),
+      voucherCode: form.voucherCode.trim(),
       voucherName: form.voucherName.trim(),
       isValid: form.isValid,
       isVisible: form.isVisible,

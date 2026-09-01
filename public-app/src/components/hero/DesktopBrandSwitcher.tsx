@@ -5,7 +5,7 @@ import Image from "next/image";
 
 type BrandType = "valsewa" | "valjubel" | "valjoki";
 
-const BRANDS: BrandType[] = ["valsewa", "valjubel"];
+const BRANDS: BrandType[] = ["valsewa", "valjubel", "valjoki"];
 
 interface DesktopBrandSwitcherProps {
   activeBrand: BrandType;
