@@ -101,6 +101,7 @@ export default function VoucherModal({
 
       setVouchers((prev) => prev.filter((v) => v.id !== voucherToDelete.id));
       setVoucherToDelete(null);
+      document.body.style.removeProperty("pointer-events");
 
       toast({
         title: "Deleted",
@@ -183,6 +184,16 @@ export default function VoucherModal({
   const openVoucherEdit = (voucher: VoucherEntity) => {
     setSelectedVoucher(voucher);
     setOpenEdit(true);
+  };
+
+  const requestDelete = (voucher: VoucherEntity) => {
+    window.setTimeout(() => setVoucherToDelete(voucher), 0);
+  };
+
+  const closeDeleteDialog = () => {
+    if (isDeleting) return;
+    setVoucherToDelete(null);
+    document.body.style.removeProperty("pointer-events");
   };
 
   return (
@@ -285,7 +296,7 @@ export default function VoucherModal({
                         {new Date(voucher.dateEnd).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <DropdownMenu>
+                        <DropdownMenu modal={false}>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
                               <span className="sr-only">Open menu</span>
@@ -319,7 +330,7 @@ export default function VoucherModal({
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               className="text-destructive focus:text-destructive"
-                              onClick={() => setVoucherToDelete(voucher)}
+                              onSelect={() => requestDelete(voucher)}
                             >
                               Delete
                             </DropdownMenuItem>
@@ -363,12 +374,15 @@ export default function VoucherModal({
       <AlertDialog
         open={voucherToDelete !== null}
         onOpenChange={(isOpen) => {
-          if (!isOpen && !isDeleting) {
-            setVoucherToDelete(null);
-          }
+          if (!isOpen) closeDeleteDialog();
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            document.body.style.removeProperty("pointer-events");
+          }}
+        >
           <AlertDialogHeader>
             <AlertDialogTitle>Delete voucher?</AlertDialogTitle>
             <AlertDialogDescription>
