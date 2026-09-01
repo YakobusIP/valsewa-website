@@ -187,7 +187,7 @@ function PaymentSummary({
             <input
               type="text"
               value={voucherCode}
-              onChange={(e) => setVoucherCode(e.target.value)}
+              onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
               onKeyPress={handleVoucherKeyPress}
               placeholder="Enter Promo Code"
               className="flex-1 px-3 py-2 text-sm bg-[#1C1C1C] rounded outline-none"
