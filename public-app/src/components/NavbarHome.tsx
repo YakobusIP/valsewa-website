@@ -10,6 +10,7 @@ import { heroChromeVars } from "@/components/hero/heroChromeMetrics";
 import { useActiveBooking } from "@/hooks/useActiveBooking";
 import { useAuth } from "@/hooks/useAuth";
 
+import type { BrandSlug } from "@/lib/brand";
 import { calculateDaysRented, calculateTimeRemaining } from "@/lib/utils";
 
 import { ListPlus, MoreHorizontal, User } from "lucide-react";
@@ -24,8 +25,8 @@ import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 interface NavbarProps {
-  activeBrand: "valsewa" | "valjubel" | "valjoki";
-  setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
+  activeBrand: BrandSlug;
+  setActiveBrand: (brand: BrandSlug) => void;
   isScrolled: boolean;
 }
 

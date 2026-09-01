@@ -5,7 +5,6 @@ import { type CSSProperties, type ReactNode, useRef } from "react";
 import HeroAgentLayer from "@/components/hero/HeroAgentLayer";
 import HeroNotchShape from "@/components/hero/HeroNotchShape";
 import HeroNotchShapeMobileLeft from "@/components/hero/HeroNotchShapeMobileLeft";
-import HeroNotchShapeMobileMiddle from "@/components/hero/HeroNotchShapeMobileMiddle";
 import HeroNotchShapeMobileRight from "@/components/hero/HeroNotchShapeMobileRight";
 import HeroTextBlock from "@/components/hero/HeroTextBlock";
 import MobileBrandSwitcher from "@/components/hero/MobileBranchSwitcher";
@@ -21,14 +20,16 @@ import {
 
 import { CarouselSlide } from "@/types/account.type";
 
+import type { BrandSlug } from "@/lib/brand";
+
 import Autoplay from "embla-carousel-autoplay";
 import Image from "next/image";
 import Link from "next/link";
 
 interface HeroProps {
   initialCarousel: CarouselSlide[];
-  activeBrand: "valsewa" | "valjubel" | "valjoki";
-  setActiveBrand: (brand: "valsewa" | "valjubel" | "valjoki") => void;
+  activeBrand: BrandSlug;
+  setActiveBrand: (brand: BrandSlug) => void;
 }
 
 const HERO_SLIDE_DURATION = 5000;
@@ -137,8 +138,6 @@ export default function Hero({
         {/* Mobile/Tablet: SVG Notch Shape */}
         {activeBrand === "valsewa" ? (
           <HeroNotchShapeMobileLeft />
-        ) : activeBrand === "valjubel" ? (
-          <HeroNotchShapeMobileMiddle />
         ) : (
           <HeroNotchShapeMobileRight />
         )}
@@ -148,6 +147,7 @@ export default function Hero({
           <MobileBrandSwitcher
             activeBrand={activeBrand}
             setActiveBrand={setActiveBrand}
+            className="items-stretch pt-[4.5rem]"
           />
         </div>
 
@@ -224,9 +224,6 @@ export default function Hero({
 
         {activeBrand === "valsewa" && (
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-[#C70515] pointer-events-none rounded-2xl mt-32 md:mt-16" />
-        )}
-        {activeBrand === "valjoki" && (
-          <div className="absolute inset-0 bg-gradient-to-br from-black via-[#111111] to-[#FDE047]/70 pointer-events-none rounded-2xl mt-32 md:mt-16" />
         )}
         {activeBrand === "valjubel" && (
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-[#6D28D9]/15 to-[#A855F7]/70 pointer-events-none rounded-2xl mt-32 md:mt-16" />

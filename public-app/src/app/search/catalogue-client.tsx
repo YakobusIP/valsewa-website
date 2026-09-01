@@ -15,6 +15,7 @@ import { DailyDropModal } from "@/components/dailydrop/DailyDropModal";
 import { AccountEntity } from "@/types/account.type";
 import { Skin } from "@/types/skin.type";
 
+import { type BrandSlug, handleBrandSelection } from "@/lib/brand";
 import { SORT_MAP, SortOption } from "@/lib/catalogue-filters";
 import {
   CatalogueFilters,
@@ -27,8 +28,6 @@ import {
 
 import { useRouter } from "next/navigation";
 import { useDebounce } from "use-debounce";
-
-type BrandType = "valsewa" | "valjubel" | "valjoki";
 
 interface CatalogueClientProps {
   initialAccounts: AccountEntity[];
@@ -44,19 +43,15 @@ export default function CatalogueClient({
   const router = useRouter();
 
   // Brand
-  const [activeBrand, setActiveBrand] = useState<BrandType>("valsewa");
+  const [activeBrand, setActiveBrand] = useState<BrandSlug>("valsewa");
 
   const handleSetActiveBrand = useCallback(
-    (brand: BrandType) => {
+    (brand: BrandSlug) => {
       if (brand === "valsewa") {
         router.push("/");
         return;
       }
-      if (brand === "valjubel") {
-        window.location.href = "https://valjubel.com";
-        return;
-      }
-      setActiveBrand(brand);
+      handleBrandSelection(brand, setActiveBrand);
     },
     [router]
   );

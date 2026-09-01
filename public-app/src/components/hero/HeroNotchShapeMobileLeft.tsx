@@ -1,41 +1,11 @@
-// Mobile SVG Notch Shape Component (for screens below xl)
-// The notch covers ~1/3 of the width for the VALSEWA button
+import {
+  MOBILE_NOTCH_VIEWBOX,
+  getMobileLeftNotchPath
+} from "@/components/hero/mobile-notch-paths";
+
 export default function HeroNotchShapeMobileLeft() {
-  const W = 400;
-  const H = 600;
-
-  // Outer corner radius (matches your path: 12 + 588/388 usage)
-  const r = 12;
-
-  // Notch geometry (unchanged)
-  const notchFlatX = 118;
-  const notchX = 130;
-  const innerCurveX = 142;
-
-  const innerVertY = 43;
-  const notchH = 65;
-
-  // Right-side top transition (unchanged)
-  const rightCornerX = 388; // W - r
-  const topRightY = 67; // little step you had after 65
-
-  const notchPath = `
-    M ${r} ${H}
-    Q 0 ${H} 0 ${H - r}
-    L 0 ${r}
-    Q 0 0 ${r} 0
-
-    L ${notchFlatX} 0
-    Q ${notchX} 0 ${notchX} ${r}
-    L ${notchX} ${innerVertY}
-    Q ${notchX} ${notchH} ${innerCurveX} ${notchH}
-
-    L ${rightCornerX} ${notchH}
-    Q ${W} ${notchH} ${W} ${topRightY}
-    L ${W} ${H - r}
-    Q ${W} ${H} ${rightCornerX} ${H}
-    Z
-  `;
+  const { width: W, height: H } = MOBILE_NOTCH_VIEWBOX;
+  const notchPath = getMobileLeftNotchPath();
 
   return (
     <svg
