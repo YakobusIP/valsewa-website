@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
+import { cn, restoreBodyPointerEvents } from "@/lib/utils";
 
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronRight, Circle } from "lucide-react";
@@ -58,7 +58,7 @@ DropdownMenuSubContent.displayName =
 const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
->(({ className, sideOffset = 4, ...props }, ref) => (
+>(({ className, sideOffset = 4, onCloseAutoFocus, ...props }, ref) => (
   <DropdownMenuPrimitive.Portal>
     <DropdownMenuPrimitive.Content
       ref={ref}
@@ -68,6 +68,10 @@ const DropdownMenuContent = React.forwardRef<
         className
       )}
       {...props}
+      onCloseAutoFocus={(event) => {
+        restoreBodyPointerEvents();
+        onCloseAutoFocus?.(event);
+      }}
     />
   </DropdownMenuPrimitive.Portal>
 ));

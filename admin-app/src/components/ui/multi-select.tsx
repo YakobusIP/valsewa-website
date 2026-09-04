@@ -1029,7 +1029,10 @@ export const MultiSelect = React.forwardRef<MultiSelectRef, MultiSelectProps>(
               touchAction: "manipulation"
             }}
             align="start"
-            onEscapeKeyDown={() => setIsPopoverOpen(false)}
+            onEscapeKeyDown={(event) => {
+              event.preventDefault();
+              setIsPopoverOpen(false);
+            }}
           >
             <Command shouldFilter={false}>
               {searchable && (

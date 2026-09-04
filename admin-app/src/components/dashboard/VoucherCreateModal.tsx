@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { voucherService } from "@/services/voucher.service";
 
@@ -58,17 +58,6 @@ export default function VoucherCreateModal({
     dateStart: "",
     dateEnd: ""
   });
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onOpenChange(false);
-    };
-
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, [open, onOpenChange]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>

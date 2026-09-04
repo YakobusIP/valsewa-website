@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { cn } from "@/lib/utils";
+import { cn, restoreBodyPointerEvents } from "@/lib/utils";
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 
@@ -25,6 +25,7 @@ const PopoverContent = React.forwardRef<
       align = "center",
       sideOffset = 4,
       disablePortal = false,
+      onCloseAutoFocus,
       ...props
     },
     ref
@@ -39,6 +40,10 @@ const PopoverContent = React.forwardRef<
           className
         )}
         {...props}
+        onCloseAutoFocus={(event) => {
+          restoreBodyPointerEvents();
+          onCloseAutoFocus?.(event);
+        }}
       />
     );
 

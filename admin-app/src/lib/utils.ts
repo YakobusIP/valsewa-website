@@ -5,6 +5,44 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const OPEN_NESTED_OVERLAY_SELECTOR = [
+  "[data-radix-select-viewport]",
+  "[data-radix-popper-content-wrapper]",
+  "[data-radix-menu-content]"
+].join(",");
+
+export function hasOpenNestedOverlay() {
+  return Boolean(document.querySelector(OPEN_NESTED_OVERLAY_SELECTOR));
+}
+
+export function restoreBodyPointerEvents() {
+  const sync = () => {
+    const openModals = document.querySelectorAll<HTMLElement>(
+      '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]'
+    );
+
+    if (openModals.length === 0) {
+      document.body.style.removeProperty("pointer-events");
+      return;
+    }
+
+    document.body.style.pointerEvents = "none";
+    openModals.forEach((el) => {
+      el.style.pointerEvents = "auto";
+    });
+    document
+      .querySelectorAll<HTMLElement>("[data-dialog-overlay][data-state='open']")
+      .forEach((el) => {
+        el.style.pointerEvents = "auto";
+      });
+  };
+
+  window.setTimeout(sync, 0);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(sync);
+  });
+}
+
 export function convertHoursToDays(hours?: number | string | null) {
   if (!hours || typeof hours !== "number") return undefined;
   const days = Math.floor(hours / 24);
