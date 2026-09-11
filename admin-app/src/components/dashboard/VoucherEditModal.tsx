@@ -23,6 +23,7 @@ type VoucherForm = {
   maxGlobalUsage: string;
   maxUsagePerUser: string;
   dateEnd: string;
+  isVisible: boolean;
 };
 
 type VoucherEditModalProps = {
@@ -64,7 +65,8 @@ export default function VoucherEditModal({
     minOrderValue: "",
     maxGlobalUsage: "",
     maxUsagePerUser: "",
-    dateEnd: ""
+    dateEnd: "",
+    isVisible: false
   });
 
   useEffect(() => {
@@ -74,15 +76,16 @@ export default function VoucherEditModal({
       minOrderValue: voucher.minOrderValue?.toString() ?? "",
       maxGlobalUsage: voucher.maxGlobalUsage?.toString() ?? "",
       maxUsagePerUser: voucher.maxUsagePerUser?.toString() ?? "",
-      dateEnd: toDateTimeLocal(voucher.dateEnd)
+      dateEnd: toDateTimeLocal(voucher.dateEnd),
+      isVisible: voucher.isVisible
     });
   }, [open, voucher]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: value
+      [name]: type === "checkbox" ? checked : value
     }));
   };
 
@@ -144,6 +147,11 @@ export default function VoucherEditModal({
 
     try {
       await voucherService.update(voucher.id, payload);
+
+      if (form.isVisible !== voucher.isVisible) {
+        await voucherService.toggleStatusVisibility(voucher.id);
+      }
+
       toast({
         title: "Updated",
         description: "Voucher updated successfully"
@@ -263,6 +271,21 @@ export default function VoucherEditModal({
               Must be today or later.
             </p>
           </div>
+
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              name="isInvisible"
+              checked={!form.isVisible}
+              onChange={(e) =>
+                setForm((prev) => ({
+                  ...prev,
+                  isVisible: !e.target.checked
+                }))
+              }
+            />
+            Invisible
+          </label>
 
           <div className="flex justify-end gap-3 pt-4">
             <Button

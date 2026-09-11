@@ -208,6 +208,7 @@ export class VoucherService {
     maxUsagePerUser?: number | null;
     dateStart: Date;
     dateEnd: Date;
+    isVisible?: boolean;
   }) => {
     try {
       if (!data.voucherCode?.trim()) {
@@ -242,7 +243,8 @@ export class VoucherService {
           maxUsagePerUser: data.maxUsagePerUser ?? null,
           dateStart: data.dateStart,
           dateEnd: data.dateEnd,
-          isValid: true
+          isValid: true,
+          ...(data.isVisible !== undefined && { isVisible: data.isVisible })
         }
       });
     } catch (error) {
