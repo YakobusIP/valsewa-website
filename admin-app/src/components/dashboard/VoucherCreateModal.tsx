@@ -47,7 +47,7 @@ export default function VoucherCreateModal({
     voucherCode: "",
     voucherName: "",
     isValid: true,
-    isVisible: true,
+    isVisible: false,
     type: "PERSENTASE",
     percentage: "",
     nominal: "",
@@ -201,7 +201,7 @@ export default function VoucherCreateModal({
         voucherCode: "",
         voucherName: "",
         isValid: true,
-        isVisible: true,
+        isVisible: false,
         type: "PERSENTASE",
         percentage: "",
         nominal: "",
@@ -396,16 +396,32 @@ export default function VoucherCreateModal({
             </div>
           </div>
 
-          {/* Active Checkbox */}
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              name="isValid"
-              checked={form.isValid}
-              onChange={handleChange}
-            />
-            Active
-          </label>
+          <div className="flex flex-wrap gap-6">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="isValid"
+                checked={form.isValid}
+                onChange={handleChange}
+              />
+              Active
+            </label>
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="isInvisible"
+                checked={!form.isVisible}
+                onChange={(e) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    isVisible: !e.target.checked
+                  }))
+                }
+              />
+              Invisible
+            </label>
+          </div>
 
           {/* Footer */}
           <div className="flex justify-end gap-3 pt-4">
