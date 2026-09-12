@@ -122,7 +122,8 @@ export class VoucherController {
         maxGlobalUsage,
         maxUsagePerUser,
         dateStart,
-        dateEnd
+        dateEnd,
+        isVisible
       } = req.body;
 
       await this.voucherService.create({
@@ -136,7 +137,8 @@ export class VoucherController {
         maxGlobalUsage: toOptionalNumber(maxGlobalUsage),
         maxUsagePerUser: toOptionalNumber(maxUsagePerUser),
         dateStart: new Date(dateStart),
-        dateEnd: new Date(dateEnd)
+        dateEnd: new Date(dateEnd),
+        ...(typeof isVisible === "boolean" && { isVisible })
       });
 
       return res.status(201).json({
