@@ -148,7 +148,7 @@ export function buildTitle(f: CatalogueFilters): string {
 
   const lead = parts.length ? `${parts.join(" · ")} accounts` : "Catalogue";
   const tail = priceClause ? ` ${priceClause}` : "";
-  return `${lead}${tail} | Valsewa`;
+  return `${lead}${tail} | Sewa Akun Terbesar di Indonesia`;
 }
 
 export function buildDescription(f: CatalogueFilters): string {

@@ -5,11 +5,12 @@ import type { Metadata } from "next";
 import Home from "./home";
 
 export const metadata: Metadata = {
-  title: "Valsewa | Sewa akun Valorant terpercaya",
+  title: "Valsewa | Sewa Akun Terbesar di Indonesia",
   description:
     "Sewa akun Valorant terpercaya dengan katalog lengkap, termasuk daftar skin eksklusif dan harga sewa kompetitif. Nikmati pengalaman bermain yang maksimal dengan akun berkualitas dan layanan terbaik.",
   keywords: [
     "sewa akun valorant",
+    "sewa akun terbesar di indonesia",
     "akun valorant",
     "skin valorant",
     "harga sewa akun",

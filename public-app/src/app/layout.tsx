@@ -18,7 +18,12 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Valsewa",
-  description: "Valsewa App"
+  description: "Valsewa App",
+  icons: {
+    icon: [{ url: "/favicon.png", type: "image/png" }],
+    apple: "/favicon.png",
+    shortcut: "/favicon.png"
+  }
 };
 
 export default function RootLayout({
