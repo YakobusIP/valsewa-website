@@ -98,7 +98,6 @@ const NavbarHomeMobile = ({
       <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-8 gap-1">
         {/* LEFT */}
         <div className="flex items-center w-auto gap-1">
-          <StreamerShowdownLink className="h-11 w-11" />
           <button onClick={handleSearchClick}>
             <div className="flex items-center justify-left w-10 h-10 rounded-lg md:hover:bg-white/10 transition">
               <Image
@@ -109,6 +108,7 @@ const NavbarHomeMobile = ({
               />
             </div>
           </button>
+          <StreamerShowdownLink className="h-11 w-11" />
         </div>
 
         {/* CENTER */}
