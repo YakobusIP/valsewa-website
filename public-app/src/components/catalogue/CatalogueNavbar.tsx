@@ -5,6 +5,7 @@ import { type CSSProperties, Fragment, useEffect, useState } from "react";
 import { customerService } from "@/services/customer.service";
 
 import LoginPage from "@/components/LoginPage";
+import StreamerShowdownLink from "@/components/StreamerShowdownLink";
 import DesktopBrandSwitcher from "@/components/hero/DesktopBrandSwitcher";
 import { heroChromeVars } from "@/components/hero/heroChromeMetrics";
 import { Button } from "@/components/ui/button";
@@ -129,6 +130,7 @@ export function CatalogueNavbar({
 
           {/* RIGHT: Top Up + Auth */}
           <div className="flex items-center desktop:gap-4 gap-2 pl-2">
+            <StreamerShowdownLink className="h-14 w-14" />
             <Link href="https://valforum.com/top-up">
               <Button className="hidden lg:flex border border-white/30 rounded-xl hover:border-white transition">
                 <Image
@@ -345,8 +347,11 @@ export function CatalogueNavbar({
         }`}
       >
         <div className="mx-auto max-w-[1920px] h-[64px] flex items-center px-4 gap-1">
+          <div className="flex shrink-0 items-center">
+            <StreamerShowdownLink className="h-11 w-11" />
+          </div>
           {/* CENTER: brand logo */}
-          <div className="flex items-center justify-center flex-1">
+          <div className="flex min-w-0 flex-1 items-center justify-center">
             <figure className="sm:w-[210px] w-[150px]">
               <Image
                 src={getBrandLogoPath(activeBrand)}
