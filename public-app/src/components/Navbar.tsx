@@ -15,6 +15,7 @@ import Link from "next/link";
 
 import LoginPage from "./LoginPage";
 import StreakCountdown from "./StreakCountdown";
+import StreamerShowdownLink from "./StreamerShowdownLink";
 import StreakNavbarHoverPanel from "./StreakNavbarHoverPanel";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -90,6 +91,7 @@ const Navbar = ({ onLoginModalOpenChange }: NavbarProps) => {
 
         {/* NAV RIGHT SIDE */}
         <div className="pr-7 flex items-center gap-4">
+          <StreamerShowdownLink className="h-14 w-14" />
           {/* SEARCH */}
           <Link href="/search">
             <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
