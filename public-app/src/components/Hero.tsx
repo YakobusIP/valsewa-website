@@ -197,29 +197,31 @@ export default function Hero({
             activeBrand={activeBrand}
           />
 
-          {/* RIGHT – CAROUSEL (Desktop only) */}
-          <div className="absolute hidden md:flex top-[var(--hero-notch-height)] bottom-0 right-0">
-            <div className="h-full aspect-[4/5] ml-auto rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border-2 border-white shadow-xl">
-              <Carousel
-                className="w-full h-full [&>div]:h-full"
-                plugins={[desktopAutoplay]}
-                opts={{ loop: true }}
-              >
-                <CarouselContent className="h-full">
-                  {initialCarousel?.map((item, index) => (
-                    <CarouselItem key={index} className="h-full">
-                      <CarouselSlideWrapper url={item.url}>
-                        <CarouselSlideContent slide={item} />
-                      </CarouselSlideWrapper>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
+          {/* RIGHT – CAROUSEL (tablet and desktop) */}
+          {initialCarousel.length > 0 && (
+            <div className="absolute hidden md:flex top-[var(--hero-notch-height)] bottom-0 right-0">
+              <div className="h-full aspect-[4/5] ml-auto rounded-2xl overflow-hidden bg-white/5 backdrop-blur-md border-2 border-white shadow-xl">
+                <Carousel
+                  className="w-full h-full [&>div]:h-full"
+                  plugins={[desktopAutoplay]}
+                  opts={{ loop: true }}
+                >
+                  <CarouselContent className="h-full">
+                    {initialCarousel.map((item, index) => (
+                      <CarouselItem key={index} className="h-full">
+                        <CarouselSlideWrapper url={item.url}>
+                          <CarouselSlideContent slide={item} />
+                        </CarouselSlideWrapper>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
 
-                <CarouselPrevious className="left-2 z-10 h-8 w-8 bg-[#0F0F0F] border border-white/10 shadow-none text-white hover:bg-neutral-950 hover:text-white" />
-                <CarouselNext className="right-2 z-10 h-8 w-8 bg-[#0F0F0F] border border-white/10 shadow-none text-white hover:bg-neutral-950 hover:text-white" />
-              </Carousel>
+                  <CarouselPrevious className="left-2 z-10 h-8 w-8 bg-[#0F0F0F] border border-white/10 shadow-none text-white hover:bg-neutral-950 hover:text-white" />
+                  <CarouselNext className="right-2 z-10 h-8 w-8 bg-[#0F0F0F] border border-white/10 shadow-none text-white hover:bg-neutral-950 hover:text-white" />
+                </Carousel>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {activeBrand === "valsewa" && (
