@@ -20,7 +20,7 @@ export const COMP_TIERS = [
   "A - COMP",
   "S - COMP",
   "SSS - COMP",
-  "TAZZ - COMP"
+  "LIMITED - COMP"
 ] as const;
 
 interface TierDropdownProps {
