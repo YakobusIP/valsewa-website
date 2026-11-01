@@ -6,6 +6,7 @@ import DailyDrop from "@/components/DailyDrop";
 import ExploreCatalog from "@/components/ExploreCatalog";
 import Hero from "@/components/Hero";
 import HowToOrder from "@/components/HowToOrder";
+import LandingWelcomeDialog from "@/components/LandingWelcomeDialog";
 import NavbarHome from "@/components/NavbarHome";
 import NavbarHomeMobile from "@/components/NavbarHomeMobile";
 import RecommendedSection from "@/components/RecommendedSection";
@@ -100,6 +101,7 @@ export default function Home({ initialCarousel }: Props) {
         open={isDailyDropOpen}
         onClose={() => setIsDailyDropOpen(false)}
       />
+      <LandingWelcomeDialog />
     </Fragment>
   );
 }
