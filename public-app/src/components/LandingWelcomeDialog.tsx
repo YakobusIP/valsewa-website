@@ -28,12 +28,15 @@ const ADMIN_WHATSAPP_URL =
 const WHATSAPP_COMMUNITY_URL =
   "https://whatsapp.com/channel/0029VbCWZbpL7UVUiAkkQR2s";
 
-// Shown on every visit to the home page until the visitor opts out.
+// Shown on every visit to the home page; opting out hides it for a day.
 const OPTED_OUT_KEY = "vf_landing_welcome:opted_out";
+const OPT_OUT_MS = 24 * 60 * 60 * 1000;
 
 function hasOptedOut(): boolean {
   try {
-    return window.localStorage.getItem(OPTED_OUT_KEY) != null;
+    const optedOutAt = Number(window.localStorage.getItem(OPTED_OUT_KEY));
+    // A missing or unreadable value comes out as 0 or NaN, so it shows.
+    return Date.now() - optedOutAt < OPT_OUT_MS;
   } catch {
     return false;
   }
