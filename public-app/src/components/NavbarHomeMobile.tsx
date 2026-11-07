@@ -23,7 +23,6 @@ import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
 import StreakCountdown from "./StreakCountdown";
-import StreamerShowdownLink from "./StreamerShowdownLink";
 import StreakNavbarHoverPanel from "./StreakNavbarHoverPanel";
 
 interface NavbarHomeMobileProps {
@@ -108,7 +107,6 @@ const NavbarHomeMobile = ({
               />
             </div>
           </button>
-          <StreamerShowdownLink className="h-11 w-11" />
         </div>
 
         {/* CENTER */}

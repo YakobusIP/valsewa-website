@@ -20,7 +20,6 @@ import { useRouter } from "next/navigation";
 
 import LoginPage from "./LoginPage";
 import StreakCountdown from "./StreakCountdown";
-import StreamerShowdownLink from "./StreamerShowdownLink";
 import StreakNavbarHoverPanel from "./StreakNavbarHoverPanel";
 import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -144,7 +143,6 @@ function NavbarHome({ activeBrand, setActiveBrand, isScrolled }: NavbarProps) {
         </div>
         {/* NAV RIGHT SIDE */}
         <div className="flex items-center desktop:gap-4 gap-2">
-          <StreamerShowdownLink className="h-14 w-14" />
           {/* SEARCH */}
           <button onClick={handleSearchClick}>
             <div className="flex items-center justify-center border border-white/30 rounded-xl w-10 h-10 hover:border-white transition">
