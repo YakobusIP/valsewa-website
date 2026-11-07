@@ -161,3 +161,57 @@ body {
   font-style: normal;
   font-display: swap;
 }
+
+/* Landing welcome dialog: the title sharpens out of a blur while the options
+   rise in one after another (each sets its own animation-delay). */
+@keyframes landing-welcome-focus {
+  from {
+    filter: blur(8px);
+    opacity: 0.25;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+@keyframes landing-welcome-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.landing-welcome-focus {
+  animation: landing-welcome-focus 0.8s ease-out 0.1s both;
+}
+.landing-welcome-rise {
+  animation: landing-welcome-rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+/* A glass glint that sweeps left to right once each time an option is
+   hovered; it parks just off the left edge in between. */
+@keyframes landing-welcome-shine {
+  from {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(600%) skewX(-20deg);
+  }
+}
+.landing-welcome-shine {
+  transform: translateX(-150%) skewX(-20deg);
+}
+.group:hover .landing-welcome-shine,
+.group:focus-visible .landing-welcome-shine {
+  animation: landing-welcome-shine 0.75s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-welcome-focus,
+  .landing-welcome-rise,
+  .group:hover .landing-welcome-shine,
+  .group:focus-visible .landing-welcome-shine {
+    animation: none;
+  }
+}

@@ -1,8 +1,6 @@
 "use client";
 
 import BackToSearchLink from "@/components/BackToSearchLink";
-import StreamerShowdownLink from "@/components/StreamerShowdownLink";
-
 import Image from "next/image";
 import Link from "next/link";
 
@@ -47,7 +45,6 @@ const NavbarMobile = ({ onBack, isLoading = false }: Props) => {
           />
         )}
         <div className="flex min-w-0 items-center gap-2">
-          <StreamerShowdownLink className="h-11 w-11" />
           <Link href="/" aria-label="Valsewa home" className="min-w-0">
             <figure className="w-[160px] sm:w-[200px]">
               <Image
